@@ -386,11 +386,6 @@ XFAIL_PATTERNS: dict[str, str] = {
     # state-pollution bug (caching / shared mutable state in the
     # ufunc/SymmetricTensor pipeline) is fixed. Out of scope for this PR.
     "*TestUfunc::test_reduction_with_where*": NEEDS_TRIAGE,
-    # ZeroDivisionError in _normalize_axis when ndim==0 (0-d array as out=)
-    # flopscope's axis normalisation does `axis % ndim` without guarding for
-    # ndim==0; logical_and/logical_or/logical_xor hit this via ufunc.reduce
-    # on 0-d output arrays. Unrelated to issue-70.
-    "*TestUfunc::test_logical_ufuncs_support_anything*": NEEDS_TRIAGE,
     # isclose(np.inf, -np.inf) returns a FlopscopeArray, not the np.False_
     # singleton. The test uses `is np.False_` identity check which fails for
     # any array subclass. SUBCLASS_RETURN / BEHAVIORAL_SHIM pattern.
@@ -431,6 +426,12 @@ XFAIL_PATTERNS: dict[str, str] = {
     "TestSVDHermitian::test_empty_herm_cases": NEEDS_TRIAGE,
     "TestSVDHermitian::test_generalized_herm_cases": NEEDS_TRIAGE,
     "TestSVDHermitian::test_generalized_empty_herm_cases": NEEDS_TRIAGE,
+    # numpy.linalg.pinv(a, hermitian=True) calls svd internally; svd's
+    # `transpose(u * sgn)` reaches `swapaxes` from inside an fnp wrapper and
+    # trips the __array_function__ tripwire. Same root cause as the
+    # TestSVDHermitian entries above; PR #100's triage sweep missed these.
+    "TestPinvHermitian::test_herm_cases": NEEDS_TRIAGE,
+    "TestPinvHermitian::test_generalized_herm_cases": NEEDS_TRIAGE,
     # numpy.polynomial.polyval — flopscope wrapper subclass / dispatch
     # diverges from numpy expectation. Surfaced by harness fix; out of scope.
     "TestEvaluation::test_polyval": NEEDS_TRIAGE,
