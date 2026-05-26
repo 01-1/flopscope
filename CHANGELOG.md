@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.4.1 (2026-05-26)
+
+Bug-fix release for the broken `flopscope[server]` extra in v0.4.0.
+
+### Fixed
+
+- The `flopscope[server]` extra now correctly pins
+  `flopscope-server==0.4.1` (matching the rest of the release). In
+  v0.4.0 the extra was stuck at `flopscope-server==0.3.0` because the
+  pin location was not tracked by commitizen's `version_files`, so
+  `pip install "flopscope[server]==0.4.0"` from PyPI was
+  **unresolvable** (it pulled flopscope-server 0.3.0, which in turn
+  requires flopscope==0.3.0, conflicting with the 0.4.0 root).
+- `pip install "flopscope[server]==0.4.1"` resolves cleanly.
+
+### Tooling
+
+- `commitizen.version_files` now includes
+  `pyproject.toml:flopscope-server==` so the `[server]` extra pin
+  follows future bumps automatically.
+- `scripts/check_version_sync.py` now compares 8 version locations
+  (added the `[server]` extra pin) and would catch this regression
+  in CI. `tests/test_check_version_sync.py` includes a corresponding
+  guard test (`test_server_extra_pin_drift_detected`).
+- Drift-detection tests in `tests/test_check_version_sync.py` are
+  now version-agnostic (they read the current X.Y.Z from
+  `pyproject.toml` at test time instead of hardcoding it). v0.4.0's
+  main CI failed after the bump because hardcoded `"0.3.0"` strings
+  no longer matched.
+
 ## v0.4.0 (2026-05-26)
 
 Follow-up to v0.3.0 that completes the multi-package PyPI release. All
