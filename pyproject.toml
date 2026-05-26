@@ -11,6 +11,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+server = ["flopscope-server==0.3.0"]
 dev = [
     "commitizen>=4.0",
     "gitlint>=0.19",
@@ -105,3 +106,10 @@ dev = [
     "hypothesis>=6.151.10",
     "pytest-xdist>=3.8.0",
 ]
+
+# Local-development override: resolve flopscope-server from the in-tree
+# subdirectory rather than PyPI. The published wheel metadata only contains
+# the `Requires-Dist: flopscope-server==0.3.0` from [optional-dependencies];
+# this [tool.uv.sources] block is uv-specific and never lands in any wheel.
+[tool.uv.sources]
+flopscope-server = { path = "flopscope-server", editable = true }
