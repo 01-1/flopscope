@@ -6,7 +6,9 @@ build-backend = "hatchling.build"
 name = "flopscope-client"
 version = "0.3.0"
 description = "Lightweight flopscope client — drop-in replacement with no numpy dependency"
+readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
 dependencies = [
     "pyzmq>=26.0.0",
     "msgpack>=1.0.0",
