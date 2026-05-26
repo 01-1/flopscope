@@ -122,6 +122,139 @@ After all configured Trusted Publishers and the shared environment are
 set up, the next `v*` tag push will trigger the publish flow
 end-to-end — and a single approval click covers all matrix publishes.
 
+## Manual publish from a maintainer's machine (fallback)
+
+The normal path is the matrix workflow described above. Use this section only
+when GitHub Actions is unavailable or won't fire (Actions outage, repo policy
+glitch, etc.) and you need to ship a release right now. This path bypasses
+Trusted Publishing, the `pypi` environment approval gate, and the auto-created
+GitHub Release.
+
+### One-time setup
+
+1. Install [`twine`](https://twine.readthedocs.io/) as a uv-managed tool
+   (keeps it out of project dependencies):
+
+   ```bash
+   uv tool install twine
+   ```
+
+2. Generate three **project-scoped** PyPI API tokens, one per project. For
+   each of `flopscope`, `flopscope-server`, `flopscope-client`:
+
+   - Go to https://pypi.org/manage/account/token/
+   - Click "Add API token"
+   - **Token name:** something self-descriptive (e.g. `flopscope-manual-2026`)
+   - **Scope:** "Project: flopscope" (scope to a single project — not "Entire account")
+   - Copy the `pypi-...` token immediately; PyPI will not show it again
+
+3. Add all three tokens to `~/.pypirc` (chmod 600 the file). Per-project
+   sections let twine pick the right one based on the wheel's distribution
+   name:
+
+   ```ini
+   [distutils]
+   index-servers =
+       flopscope
+       flopscope-server
+       flopscope-client
+
+   [flopscope]
+   repository = https://upload.pypi.org/legacy/
+   username = __token__
+   password = pypi-AgEIcHlwaS5vcmcCJ...  # token scoped to flopscope
+
+   [flopscope-server]
+   repository = https://upload.pypi.org/legacy/
+   username = __token__
+   password = pypi-AgEIcHlwaS5vcmcCJ...  # token scoped to flopscope-server
+
+   [flopscope-client]
+   repository = https://upload.pypi.org/legacy/
+   username = __token__
+   password = pypi-AgEIcHlwaS5vcmcCJ...  # token scoped to flopscope-client
+   ```
+
+   ```bash
+   chmod 600 ~/.pypirc
+   ```
+
+### Publishing v\<X.Y.Z\> manually
+
+Assumes the bump commit + `vX.Y.Z` tag already exist on `main` (use
+`cz bump --increment <PATCH|MINOR>` as usual to produce them; the
+difference is only that the GH workflow won't run).
+
+1. Build all three packages from the tagged commit:
+
+   ```bash
+   git checkout vX.Y.Z
+   rm -rf dist flopscope-server/dist flopscope-client/dist
+   uv build
+   (cd flopscope-server && uv build)
+   (cd flopscope-client && uv build)
+   ```
+
+2. Verify each wheel's metadata is what you expect — particularly the
+   `Requires-Dist` cross-pin in flopscope-server and the `Provides-Extra: server`
+   in flopscope:
+
+   ```bash
+   unzip -p dist/flopscope-X.Y.Z-py3-none-any.whl flopscope-X.Y.Z.dist-info/METADATA \
+     | grep -E "^(Name|Version|Requires-Dist|Provides-Extra):"
+   unzip -p flopscope-server/dist/flopscope_server-X.Y.Z-py3-none-any.whl \
+     flopscope_server-X.Y.Z.dist-info/METADATA \
+     | grep -E "^(Name|Version|Requires-Dist):"
+   unzip -p flopscope-client/dist/flopscope_client-X.Y.Z-py3-none-any.whl \
+     flopscope_client-X.Y.Z.dist-info/METADATA \
+     | grep -E "^(Name|Version|Requires-Dist):"
+   ```
+
+3. Upload each wheel + sdist with `twine`, pointing at the per-project section
+   of `~/.pypirc`:
+
+   ```bash
+   uv tool run twine upload --repository flopscope dist/*
+   uv tool run twine upload --repository flopscope-server flopscope-server/dist/*
+   uv tool run twine upload --repository flopscope-client flopscope-client/dist/*
+   ```
+
+   Twine prints a https://pypi.org/project/.../ URL after each successful
+   upload. If a previous attempt already uploaded any of the files, add
+   `--skip-existing` to make the command idempotent.
+
+4. Create the GitHub Release manually (the workflow would normally do this):
+
+   ```bash
+   version=X.Y.Z
+   awk -v ver="v$version" '
+     $1 == "##" && $2 == ver { capture = 1; next }
+     $1 == "##" && capture { exit }
+     capture { print }
+   ' CHANGELOG.md > /tmp/release-notes.md
+
+   gh release create "v$version" --title "v$version" --notes-file /tmp/release-notes.md
+   ```
+
+### Trade-offs vs the workflow
+
+The manual path skips four safety nets the workflow gives you:
+
+- **Environment approval gate.** Anyone with the API tokens can publish; there
+  is no second-pair-of-eyes click. Scope tokens narrowly and rotate them after
+  use if leaked or no longer needed.
+- **Trusted Publishing audit trail.** PyPI records "uploaded by API token X"
+  instead of "uploaded by GH workflow run #..." — harder to trace.
+- **Auto-generated GitHub Release with notes from CHANGELOG.** Step 4 above
+  is the manual replacement.
+- **Matrix isolation.** Network/IO failures during upload could leave a
+  partial publish (e.g., flopscope uploaded but flopscope-server failed).
+  In that case re-run only the failed `twine upload` with `--skip-existing`.
+
+Once Actions is healthy again, **switch back to the workflow path** — delete
+the API tokens you created for the manual publish, and the next `vX.Y.Z` tag
+push will go through Trusted Publishing as normal.
+
 ## Related references
 
 - `[tool.commitizen]` in [pyproject.toml](https://github.com/AIcrowd/flopscope/blob/main/pyproject.toml) — release tooling config
