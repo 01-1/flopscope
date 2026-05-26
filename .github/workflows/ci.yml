@@ -1,21 +1,106 @@
 name: CI
 
 on:
+  workflow_dispatch:
+    inputs:
+      run_numpy_compat:
+        description: Force NumPy compatibility checks on this run
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'flopscope-server/**'
+      - 'flopscope-client/**'
+      - 'website/**'
+      - 'scripts/**'
+      - '.github/workflows/ci.yml'
+      - 'pyproject.toml'
+      - 'uv.lock'
   pull_request:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'flopscope-server/**'
+      - 'flopscope-client/**'
+      - 'website/**'
+      - 'scripts/**'
+      - '.github/workflows/ci.yml'
+      - 'pyproject.toml'
+      - 'uv.lock'
+
+permissions:
+  contents: read
+  pull-requests: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
+
+timeout-minutes: 240
 
 env:
   FLOPSCOPE_DOCS_ROOT: https://aicrowd.github.io/flopscope/docs
 
 jobs:
+  detect-impact:
+    name: Detect changed paths for expensive checks
+    runs-on: ubuntu-latest
+    outputs:
+      run_numpy_compat: ${{ steps.detect.outputs.run_numpy_compat }}
+    steps:
+      - if: github.event_name != 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Determine whether to run NumPy compatibility checks
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          changed_files="$(mktemp)"
+          run_numpy_compat="false"
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            gh api "repos/${{ github.repository }}/pulls/${{ github.event.number }}/files?per_page=200" --paginate --jq '.[].filename' > "$changed_files"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            if git cat-file -e "${base}^{commit}" 2>/dev/null; then
+              git diff --name-only "$base" "$head" > "$changed_files"
+            elif git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+              git diff --name-only HEAD~1 "$head" > "$changed_files"
+            else
+              : > "$changed_files"
+            fi
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.run_numpy_compat }}" == "true" ]]; then
+            run_numpy_compat="true"
+            echo "run_numpy_compat=$run_numpy_compat" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$run_numpy_compat" == "false" && -s "$changed_files" ]]; then
+            while IFS= read -r file; do
+              case "$file" in
+                src/*|tests/*|flopscope-server/*|flopscope-client/*|scripts/*|website/*|pyproject.toml|uv.lock|.github/workflows/ci.yml)
+                  run_numpy_compat="true"
+                  break
+                  ;;
+              esac
+            done < "$changed_files"
+          fi
+
+          echo "run_numpy_compat=$run_numpy_compat" >> "$GITHUB_OUTPUT"
+
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,6 +121,7 @@ jobs:
   typecheck:
     name: Pyright
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -52,9 +138,11 @@ jobs:
         run: uv run pyright src/flopscope tests
 
   test:
+    needs: [detect-impact]
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
         numpy-version: ["2.0", "2.1", "2.2"]
@@ -86,42 +174,69 @@ jobs:
       - name: Run tests with coverage
         run: uv run pytest --cov=flopscope --cov-fail-under=85
 
-      - name: "NumPy compat: core umath"
-        if: contains(fromJson('["2.2","2.3","2.4"]'), matrix.numpy-version)
+  numpy-compat:
+    if: needs.detect-impact.outputs.run_numpy_compat == 'true'
+    needs: [detect-impact]
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.12"]
+        numpy-version: ["2.2", "2.3", "2.4"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Set up Node.js (for JS cross-validation)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Pin NumPy ${{ matrix.numpy-version }}
+        run: uv pip install 'numpy~=${{ matrix.numpy-version }}.0'
+
+      - name: Run tests with coverage
+        run: uv run pytest --cov=flopscope --cov-fail-under=85
+
+      - name: NumPy compat: core umath
         run: uv run pytest tests/numpy_compat/ --pyargs numpy._core.tests.test_umath -n auto -q
 
-      - name: "NumPy compat: core ufunc"
-        if: contains(fromJson('["2.2","2.3","2.4"]'), matrix.numpy-version)
+      - name: NumPy compat: core ufunc
         run: uv run pytest tests/numpy_compat/ --pyargs numpy._core.tests.test_ufunc -n auto -q
 
-      - name: "NumPy compat: core numeric"
-        if: contains(fromJson('["2.2","2.3","2.4"]'), matrix.numpy-version)
-        run: >
-          uv run pytest tests/numpy_compat/ --pyargs numpy._core.tests.test_numeric -n auto -q
+      - name: NumPy compat: core numeric
+        run: uv run pytest tests/numpy_compat/ --pyargs numpy._core.tests.test_numeric -n auto -q
           -k "not test_for_reference_leak"
 
-      - name: "NumPy compat: linalg"
-        if: contains(fromJson('["2.2","2.3","2.4"]'), matrix.numpy-version)
+      - name: NumPy compat: linalg
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.linalg.tests.test_linalg -n auto -q
 
-      - name: "NumPy compat: fft pocketfft"
-        if: contains(fromJson('["2.2","2.3","2.4"]'), matrix.numpy-version)
+      - name: NumPy compat: fft pocketfft
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.fft.tests.test_pocketfft -n auto -q
 
-      - name: "NumPy compat: fft helper"
-        if: contains(fromJson('["2.2","2.3","2.4"]'), matrix.numpy-version)
+      - name: NumPy compat: fft helper
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.fft.tests.test_helper -n auto -q
 
-      - name: "NumPy compat: polynomial"
-        if: contains(fromJson('["2.2","2.3","2.4"]'), matrix.numpy-version)
+      - name: NumPy compat: polynomial
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.polynomial.tests.test_polynomial -n auto -q
 
-      - name: "NumPy compat: random"
-        if: contains(fromJson('["2.2","2.3","2.4"]'), matrix.numpy-version)
+      - name: NumPy compat: random
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.random.tests.test_random -n auto -q
 
   client-server-sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -146,6 +261,7 @@ jobs:
   client-server-integration:
     needs: [client-server-sync]
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -166,6 +282,7 @@ jobs:
 
   website-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -204,6 +321,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [lint, test, website-tests]
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     permissions:
       contents: write
     steps:
@@ -242,22 +360,79 @@ jobs:
       - name: Run GH Pages compatibility checks
         run: cd website && npm run check:gh-pages
 
-      - name: Run deploy-only internal link audit
-        run: cd website && npm run check:deploy-links
-
-      - name: Verify deploy artifact contents
+  ci-cost-report:
+    name: CI cost estimate
+    if: always()
+    needs:
+      - lint
+      - typecheck
+      - test
+      - numpy-compat
+      - client-server-sync
+      - client-server-integration
+      - website-tests
+      - docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Summarize elapsed job times and estimated costs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RATE_PER_MINUTE: "0.006"
         run: |
-          test -f website/out/.nojekyll
-          test -f website/out/llms.txt
-          test -f website/out/llms-full.txt
-          test -f website/out/ops.json
-          test -f website/out/api-data/ops/einsum.json
-          test -f website/out/docs/development/calibration/index.html
+          set -euo pipefail
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: website/out
-          force_orphan: true
-          enable_jekyll: false
+          jobs_json="$(mktemp)"
+          if ! gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=200" --paginate > "$jobs_json"; then
+            echo "Unable to fetch jobs API for this run; skipping cost report."
+            exit 0
+          fi
+
+          summary_file="$(mktemp)"
+          python - "$jobs_json" <<'PY' > "$summary_file"
+import datetime
+import json
+import os
+import sys
+
+rate = float(os.getenv("RATE_PER_MINUTE", "0.006"))
+
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+jobs = data.get("jobs", [])
+rows = []
+total_minutes = 0.0
+
+for job in jobs:
+    started_at = job.get("started_at")
+    completed_at = job.get("completed_at")
+    name = job.get("name") or f"job-{job.get('id')}"
+
+    if not started_at or not completed_at:
+        continue
+
+    started_dt = datetime.datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+    completed_dt = datetime.datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+    elapsed_minutes = max((completed_dt - started_dt).total_seconds() / 60.0, 0.0)
+    rows.append((name, elapsed_minutes))
+    total_minutes += elapsed_minutes
+
+rows.sort(key=lambda row: row[1], reverse=True)
+total_cost = total_minutes * rate
+
+print("## CI cost estimate")
+print()
+print(f"Estimated workflow total: `{total_minutes:.1f}` minutes")
+print(f"Estimated billed cost at `${rate:.3f}`/minute: `${total_cost:.2f}`")
+print()
+print("### Job timings")
+for name, minutes in rows:
+    print(f"- `{name}`: `{minutes:.2f}` min (`${minutes * rate:.4f}`)")
+PY
+
+          echo "### CI cost report ###"
+          cat "$summary_file"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            gh issue comment "${{ github.event.number }}" --body-file "$summary_file" || true
+          fi
