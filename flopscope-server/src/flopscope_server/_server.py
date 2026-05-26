@@ -8,6 +8,7 @@ from time import monotonic, perf_counter_ns
 import msgpack
 import zmq
 
+import flopscope
 from flopscope_server._protocol import (
     InvalidRequestError,
     decode_request,
@@ -102,6 +103,10 @@ class FlopscopeServer:
 
         t1 = perf_counter_ns()
         op = msg["op"]
+
+        # --- Pre-session ops (no active session required) ---
+        if op == "hello":
+            return self._handle_hello(msg)
 
         # --- Session lifecycle ops ---
         if op == "budget_open":
@@ -244,6 +249,44 @@ class FlopscopeServer:
         t3 = perf_counter_ns()
         # No session to record to (already closed); that's fine.
         return response_bytes
+
+    # ------------------------------------------------------------------
+    # Handshake
+    # ------------------------------------------------------------------
+
+    def _handle_hello(self, msg: dict) -> bytes:
+        """Compare client and server flopscope versions.
+
+        Returns an ok response carrying the server's leading X.Y.Z when
+        the client reports a matching version, or a ``VersionMismatch``
+        error otherwise. The handshake is intentionally session-free so
+        clients can detect mismatch before opening a budget.
+        """
+        kwargs = msg.get("kwargs") or {}
+        client_version = kwargs.get("client_version") if isinstance(kwargs, dict) else None
+        server_xyz = flopscope.__version__.split("+", 1)[0]
+
+        if not isinstance(client_version, str) or not client_version:
+            return encode_error_response(
+                "VersionMismatch",
+                f"client did not report a flopscope version; server is {server_xyz}",
+            )
+
+        if client_version != server_xyz:
+            return encode_error_response(
+                "VersionMismatch",
+                (
+                    f"flopscope-client {client_version} cannot talk to "
+                    f"flopscope-server {server_xyz}: versions must match. "
+                    "Install matched versions: see "
+                    "https://pypi.org/project/flopscope/ for the latest."
+                ),
+            )
+
+        return msgpack.packb(
+            {"status": "ok", "server_version": server_xyz},
+            use_bin_type=True,
+        )
 
     # ------------------------------------------------------------------
     # Session reaping

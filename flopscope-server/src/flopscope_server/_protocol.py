@@ -23,6 +23,7 @@ from flopscope._registry import REGISTRY
 #: Protocol-level ops not in the numpy REGISTRY.
 _PROTOCOL_OPS: frozenset[str] = frozenset(
     {
+        "hello",
         "budget_open",
         "budget_close",
         "budget_status",
