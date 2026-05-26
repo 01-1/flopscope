@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Discard git's hook-protocol stdin so downstream tools don't pick it up.
+# Same defensive pattern as .githooks/pre-push and `make lint-commits`.
+exec </dev/null
+
+# Validate the in-progress commit message against the conventional-commit
+# convention defined in .gitlint. See AGENTS.md for the spec and examples.
+#
+# Triggered by `git commit` after the user writes the message, before the
+# commit is recorded. Non-zero exit aborts the commit.
+exec uv run --quiet gitlint --ignore-stdin --msg-filename "$1"
