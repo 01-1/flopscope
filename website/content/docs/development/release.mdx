@@ -101,21 +101,13 @@ project name being published.
 1. Go to https://pypi.org/manage/account/publishing/
 2. Click "Add a new pending publisher"
 3. Fill in (repeat with each project name in turn):
-   - PyPI Project Name: `flopscope`, then `flopscope-server`
+   - PyPI Project Name: `flopscope`, then `flopscope-server`, then
+     `flopscope-client`
    - Owner: `AIcrowd`
    - Repository name: `flopscope`
    - Workflow name: `pypi-publish.yml`
    - Environment name: `pypi`
 4. Save each one.
-
-> **Note on `flopscope-client`** — as of v0.3.0 the `flopscope-client`
-> Trusted Publisher cannot be created because the publisher-create form
-> returns a server-side 500 on PyPI. The identical form succeeded for
-> `flopscope-server`. Until PyPI is fixed (or the name is overridden
-> via admin@pypi.org support), `flopscope-client` is excluded from both
-> matrices in `.github/workflows/pypi-publish.yml`. Once unblocked,
-> re-add the publisher and put `flopscope-client` back into both build
-> and publish matrices, then cut a follow-up release.
 
 **On GitHub — create the `pypi` environment with required reviewers
 (do this once; it is shared across all matrix-publish jobs):**
