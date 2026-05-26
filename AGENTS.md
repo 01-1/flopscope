@@ -101,6 +101,50 @@ git push --follow-tags
 Pre-releases: `uv run cz bump --prerelease alpha` → produces tags like
 `v0.3.0a0`.
 
+### What happens after `git push --follow-tags`
+
+The tag push triggers
+[`.github/workflows/pypi-publish.yml`](.github/workflows/pypi-publish.yml),
+which:
+
+1. Builds the sdist + wheel with `uv build`
+2. Pauses for approval in the `pypi` GitHub environment (manual gate)
+3. Publishes to PyPI via Trusted Publishing (OIDC; no API token stored
+   in repo secrets)
+4. Creates a GitHub Release whose body is the matching CHANGELOG section
+   for that tag
+
+End result: `uv add flopscope` / `pip install flopscope` works ~2 minutes
+after a maintainer clicks "approve" on the `publish-pypi` job.
+
+### First-time PyPI setup (one-time per project)
+
+Before the first release will succeed, configure two things outside the
+repo:
+
+**On PyPI — add a Trusted Publisher:**
+
+1. Go to https://pypi.org/manage/account/publishing/
+2. Click "Add a new pending publisher"
+3. Fill in:
+   - PyPI Project Name: `flopscope`
+   - Owner: `AIcrowd`
+   - Repository name: `flopscope`
+   - Workflow name: `pypi-publish.yml`
+   - Environment name: `pypi`
+4. Save
+
+**On GitHub — create the `pypi` environment with required reviewers:**
+
+1. Go to https://github.com/AIcrowd/flopscope/settings/environments
+2. Click "New environment", name it `pypi`
+3. Under "Deployment protection rules" → "Required reviewers", add the
+   release maintainers
+4. Save
+
+After both are configured, the next `v*` tag push will trigger the
+publish flow end-to-end.
+
 ## Local commit hooks
 
 The repo ships a `commit-msg` hook at `.githooks/commit-msg` that runs
