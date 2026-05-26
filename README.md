@@ -108,10 +108,20 @@ Blocked operations (I/O, config, and system calls) raise a helpful `AttributeErr
 
 ### Installation
 
+Latest stable release from PyPI:
+
 ```bash
-pip install git+https://github.com/AIcrowd/flopscope.git
+uv add flopscope
 # or
+pip install flopscope
+```
+
+Latest development version from git:
+
+```bash
 uv add git+https://github.com/AIcrowd/flopscope.git
+# or
+pip install git+https://github.com/AIcrowd/flopscope.git
 ```
 
 ### Basic Usage

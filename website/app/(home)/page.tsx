@@ -64,7 +64,7 @@ const navCards = [
   },
 ];
 
-const installCode = 'uv add git+https://github.com/AIcrowd/flopscope.git';
+const installCode = 'uv add flopscope';
 
 const numpyCode = `import numpy as np
 
@@ -129,7 +129,7 @@ type Token = {
 
 const installLine: Token[] = [
   { text: 'uv', className: TOKENS.func },
-  { text: ' add git+https://github.com/AIcrowd/flopscope.git', className: TOKENS.string },
+  { text: ' add flopscope', className: TOKENS.string },
 ];
 
 const numpyLines: Token[][] = [

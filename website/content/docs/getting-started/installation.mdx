@@ -5,15 +5,35 @@ title: "Installation"
 *Use this page when setting up flopscope for the first time.*
 
 **You will learn:**
-- How to install flopscope as a dependency or for development
+- How to install the latest stable release from PyPI
+- How to install the bleeding-edge version directly from git
+- How to set up a development install
 - How to verify your installation works
 - How to fix common installation pitfalls
 
-## Install as a dependency
+## Install the latest stable release (PyPI)
+
+```bash
+uv add flopscope
+# or with pip
+pip install flopscope
+```
+
+Use this for most cases. Releases follow [Semantic Versioning](https://semver.org/);
+see the [CHANGELOG](https://github.com/AIcrowd/flopscope/blob/main/CHANGELOG.md)
+for what's in each release.
+
+## Install the bleeding-edge version (git)
 
 ```bash
 uv add git+https://github.com/AIcrowd/flopscope.git
+# or with pip
+pip install git+https://github.com/AIcrowd/flopscope.git
 ```
+
+Use this if you need a fix or feature that hasn't shipped to PyPI yet.
+Append `@<ref>` to pin to a branch, tag, or commit — e.g.
+`...flopscope.git@main` or `...flopscope.git@v0.2.0`.
 
 ## Install for development
 
@@ -22,6 +42,8 @@ git clone https://github.com/AIcrowd/flopscope.git
 cd flopscope
 uv sync --all-extras
 ```
+
+This gives you an editable install plus the `dev`, `docs`, and `sympy` extras.
 
 ## Verify installation
 
