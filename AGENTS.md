@@ -107,34 +107,60 @@ The tag push triggers
 [`.github/workflows/pypi-publish.yml`](.github/workflows/pypi-publish.yml),
 which:
 
-1. Builds the sdist + wheel with `uv build`
-2. Pauses for approval in the `pypi` GitHub environment (manual gate)
-3. Publishes to PyPI via Trusted Publishing (OIDC; no API token stored
-   in repo secrets)
-4. Creates a GitHub Release whose body is the matching CHANGELOG section
-   for that tag
+1. Builds three wheels in parallel via a matrix job — one each for
+   `flopscope`, `flopscope-server`, and `flopscope-client`.
+2. Pauses for approval in the `pypi` GitHub environment (manual gate).
+   A single approval click covers all three matrix-publish jobs.
+3. Publishes the three packages to PyPI in parallel via Trusted
+   Publishing (OIDC; no API token stored in repo secrets).
+4. Creates one GitHub Release whose body is the matching CHANGELOG
+   section for that tag.
 
-End result: `uv add flopscope` / `pip install flopscope` works ~2 minutes
-after a maintainer clicks "approve" on the `publish-pypi` job.
+End result: `pip install flopscope==X.Y.Z`,
+`pip install flopscope-server==X.Y.Z`, and
+`pip install flopscope-client==X.Y.Z` all work ~2 minutes after a
+maintainer clicks "approve" on the `pypi` environment gate.
+
+### Multi-package release (since v0.3.0)
+
+`flopscope`, `flopscope-server`, and `flopscope-client` are released
+in lockstep at the same version. `cz bump` updates all three
+pyproject versions, all three `__version__` strings, AND the
+cross-package pin (`flopscope==X.Y.Z` in `flopscope-server`'s
+dependencies) via the `version_files` config in `[tool.commitizen]`.
+
+Before tagging, `check-sync-versions` asserts that all seven version
+locations agree (3 pyproject versions, 3 `__version__` strings, 1
+cross-pin). To run locally:
+
+```bash
+make check-sync-versions
+```
+
+CI runs this in the `client-server-sync` job on every PR, so drift
+introduced by hand-edits is caught before merge.
 
 ### First-time PyPI setup (one-time per project)
 
 Before the first release will succeed, configure two things outside the
-repo:
+repo. For the multi-package release, the Trusted Publisher steps must
+be repeated for **each** of the three PyPI project names.
 
-**On PyPI — add a Trusted Publisher:**
+**On PyPI — add a Trusted Publisher (do this three times):**
 
 1. Go to https://pypi.org/manage/account/publishing/
 2. Click "Add a new pending publisher"
-3. Fill in:
-   - PyPI Project Name: `flopscope`
+3. Fill in (repeat with each project name in turn):
+   - PyPI Project Name: `flopscope`, then `flopscope-server`, then
+     `flopscope-client`
    - Owner: `AIcrowd`
    - Repository name: `flopscope`
    - Workflow name: `pypi-publish.yml`
    - Environment name: `pypi`
-4. Save
+4. Save each one.
 
-**On GitHub — create the `pypi` environment with required reviewers:**
+**On GitHub — create the `pypi` environment with required reviewers
+(do this once; it is shared across all three matrix-publish jobs):**
 
 1. Go to https://github.com/AIcrowd/flopscope/settings/environments
 2. Click "New environment", name it `pypi`
@@ -142,8 +168,9 @@ repo:
    release maintainers
 4. Save
 
-After both are configured, the next `v*` tag push will trigger the
-publish flow end-to-end.
+After all three Trusted Publishers and the shared environment are
+configured, the next `v*` tag push will trigger the publish flow
+end-to-end — and a single approval click covers all three publishes.
 
 ## Local commit hooks
 
