@@ -318,6 +318,7 @@ class TestSendRecv:
             {"status": "ok", "result": 99}
         )
         conn._socket = mock_socket
+        conn._handshake_done = True  # bypass the lazy version handshake
 
         raw = encode_request("test_op")
         result = conn.send_recv(raw)
@@ -333,6 +334,7 @@ class TestSendRecv:
         mock_socket = MagicMock()
         mock_socket.recv.return_value = self._make_response({"status": "ok"})
         conn._socket = mock_socket
+        conn._handshake_done = True  # bypass the lazy version handshake
 
         raw = encode_request("test_op")
         result = conn.send_recv(raw)
@@ -353,6 +355,7 @@ class TestSendRecv:
             {"status": "error", "error_type": "FlopscopeServerError", "message": "boom"}
         )
         conn._socket = mock_socket
+        conn._handshake_done = True  # bypass the lazy version handshake
 
         raw = encode_request("op")
         with pytest.raises(FlopscopeServerError, match="boom"):
@@ -374,6 +377,7 @@ class TestSendRecv:
             }
         )
         conn._socket = mock_socket
+        conn._handshake_done = True  # bypass the lazy version handshake
 
         raw = encode_request("dot")
         with pytest.raises(BudgetExhaustedError):

@@ -1,6 +1,6 @@
 [project]
 name = "flopscope"
-version = "0.2.0"
+version = "0.3.0"
 description = "NumPy-compatible math primitives with FLOP counting for the Mechanistic Estimation Challenge"
 requires-python = ">=3.10"
 license = "MIT"
@@ -11,6 +11,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+server = ["flopscope-server==0.3.0"]
 dev = [
     "commitizen>=4.0",
     "gitlint>=0.19",
@@ -46,6 +47,14 @@ tag_format = "v$version"
 update_changelog_on_bump = true
 major_version_zero = true
 changelog_incremental = true
+version_files = [
+    "src/flopscope/__init__.py:^__version__",
+    "flopscope-server/pyproject.toml:^version",
+    "flopscope-server/src/flopscope_server/__init__.py:^__version__",
+    "flopscope-server/pyproject.toml:flopscope==",
+    "flopscope-client/pyproject.toml:^version",
+    "flopscope-client/src/flopscope/__init__.py:^__version__",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -105,3 +114,10 @@ dev = [
     "hypothesis>=6.151.10",
     "pytest-xdist>=3.8.0",
 ]
+
+# Local-development override: resolve flopscope-server from the in-tree
+# subdirectory rather than PyPI. The published wheel metadata only contains
+# the `Requires-Dist: flopscope-server==0.3.0` from [optional-dependencies];
+# this [tool.uv.sources] block is uv-specific and never lands in any wheel.
+[tool.uv.sources]
+flopscope-server = { path = "flopscope-server", editable = true }

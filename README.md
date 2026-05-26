@@ -117,6 +117,28 @@ uv add flopscope
 pip install flopscope
 ```
 
+For the server-side toolkit (heavy install plus the flopscope-server
+process for remote-execution architectures):
+
+```bash
+pip install "flopscope[server]"
+# equivalently:
+pip install flopscope-server
+```
+
+For the lightweight client (proxies all calls to a remote
+flopscope-server over ZMQ; no numpy dependency), build from the
+`flopscope-client/` subdirectory:
+
+```bash
+pip install "flopscope-client @ git+https://github.com/AIcrowd/flopscope.git#subdirectory=flopscope-client"
+```
+
+The client occupies the same `import flopscope` namespace as the main
+package — install it *instead of* `flopscope`, not alongside. A PyPI
+release of flopscope-client is pending; see
+[CHANGELOG.md](CHANGELOG.md) for status.
+
 Latest development version from git:
 
 ```bash

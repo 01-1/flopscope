@@ -41,6 +41,11 @@ def encode_request(op: str, args=None, kwargs=None) -> bytes:
     )
 
 
+def encode_hello(client_version: str) -> bytes:
+    """Encode a `hello` op carrying the client's leading X.Y.Z version."""
+    return encode_request("hello", kwargs={"client_version": client_version})
+
+
 def encode_create_from_data(data: bytes, shape: list, dtype: str) -> bytes:
     """Encode a create_from_data request."""
     return encode_request("create_from_data", args=[data, shape, dtype])

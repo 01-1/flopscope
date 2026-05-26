@@ -1,5 +1,46 @@
 # Changelog
 
+## v0.3.0 (2026-05-26)
+
+Synchronized multi-package release. The `flopscope-server` package is
+published to PyPI for the first time, versioned in lockstep with
+`flopscope`. The `flopscope-client` package is built and tested in this
+release but its PyPI publish is deferred to a follow-up release pending
+resolution of a PyPI Trusted Publisher bug (the publisher-create form
+returns 500 for the `flopscope-client` project name despite the
+identical request succeeding for `flopscope-server`).
+
+### Added
+
+- `flopscope[server]` extra: `pip install "flopscope[server]"` installs
+  both flopscope and flopscope-server, exact-pinned to the same version.
+- `flopscope-server` first PyPI release. Server-side runtime for the
+  client/server architecture; pulls in flopscope as a dependency.
+- Runtime version handshake between client and server: the first
+  request from a flopscope-client to a flopscope-server compares
+  versions and raises `ConnectionError` with both versions on mismatch.
+  Code lives in both packages so the contract is in place for the
+  follow-up flopscope-client PyPI release.
+
+### Changed
+
+- `flopscope.__version__` now reflects the synchronized release line
+  (still suffixed `+np<numpy_version>`).
+- `flopscope-server`'s `flopscope` dependency is now an exact pin
+  (`flopscope==0.3.0`) so server and library always travel together.
+
+### Tooling
+
+- Commitizen `version_files` is configured to update all version
+  strings across the three packages in one `cz bump` invocation,
+  including the cross-package pin.
+- New `scripts/check_version_sync.py` and `make check-sync-versions`
+  catch drift in CI before merge.
+- `.github/workflows/pypi-publish.yml` is now a matrix workflow:
+  one `v*` tag triggers three parallel builds, three parallel
+  publishes (gated by a single `pypi` environment approval), and one
+  GitHub Release.
+
 ## v0.2.0 (2026-05-26)
 
 First PyPI release.

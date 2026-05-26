@@ -1,8 +1,9 @@
 name: PyPI publish
 
 # Triggered when a `v*` tag is pushed (typically via `cz bump` followed by
-# `git push --follow-tags`). See AGENTS.md → "Release process" for the
-# end-to-end flow and the one-time PyPI Trusted Publisher setup.
+# `git push --follow-tags`). Publishes all published packages at the tagged
+# version under a single environment approval. See the Release docs at
+# website/content/docs/development/release.mdx.
 
 on:
   push:
@@ -13,17 +14,32 @@ on:
 permissions: {}
 
 # Never run two publish jobs for the same tag in parallel. Don't cancel an
-# in-flight publish if another tag arrives — let it finish atomically.
+# in-flight publish if another tag arrives -- let it finish atomically.
 concurrency:
   group: pypi-publish-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  # NOTE: flopscope-client is intentionally absent from both matrices in this
+  # release. A PyPI bug currently blocks creating a Trusted Publisher for the
+  # `flopscope-client` project (server-side 500 on the publisher-create form,
+  # despite the identical request succeeding for `flopscope-server`). The
+  # package's version is bumped + handshake code is present, so the next
+  # release that includes it just needs to add the entries back in both
+  # matrices. Track the unblock in the PyPI bug filed for this issue.
   build:
-    name: Build sdist + wheel
+    name: Build ${{ matrix.package.name }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - name: flopscope
+            path: .
+          - name: flopscope-server
+            path: flopscope-server
     steps:
       - uses: actions/checkout@v4
 
@@ -31,24 +47,32 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: Build distributions
+        working-directory: ${{ matrix.package.path }}
         run: uv build
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist/
+          name: dist-${{ matrix.package.name }}
+          path: ${{ matrix.package.path }}/dist/
           if-no-files-found: error
 
   publish-pypi:
-    name: Publish to PyPI
+    name: Publish ${{ matrix.package.name }} to PyPI
     needs: build
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - name: flopscope
+          - name: flopscope-server
     # The `pypi` environment in repo settings has Required Reviewers
-    # configured, so this job pauses for a human approval before running.
+    # configured. A single approval click in this environment covers both
+    # matrix entries that share it.
     environment:
       name: pypi
-      url: https://pypi.org/project/flopscope/
+      url: https://pypi.org/project/${{ matrix.package.name }}/
     permissions:
       # Required for Trusted Publishing (OIDC). No long-lived token stored.
       id-token: write
@@ -56,7 +80,7 @@ jobs:
       - name: Download dist artifact
         uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: dist-${{ matrix.package.name }}
           path: dist/
 
       - name: Publish to PyPI
@@ -82,7 +106,7 @@ jobs:
             capture { print }
           ' CHANGELOG.md > release-notes.md
 
-          # Fallback if no matching section (defensive — shouldn't happen if cz bump was used).
+          # Fallback if no matching section (defensive -- shouldn't happen if cz bump was used).
           if [ ! -s release-notes.md ]; then
             printf 'Release %s\n\nSee CHANGELOG.md for details.\n' "${GITHUB_REF_NAME}" > release-notes.md
           fi

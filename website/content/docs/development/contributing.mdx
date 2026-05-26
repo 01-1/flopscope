@@ -44,6 +44,93 @@ make install
 
 `make install` runs `uv sync --all-extras` and configures the local git hooks.
 
+## Commit conventions
+
+Every commit on this repo MUST follow the
+[Conventional Commits](https://www.conventionalcommits.org/) spec. The
+title format is:
+
+```
+<type>[(scope)][!]: <subject>
+```
+
+### Allowed types
+
+| Type       | When to use                                          |
+|------------|------------------------------------------------------|
+| `feat`     | A new user-visible feature                           |
+| `fix`      | A bug fix                                            |
+| `docs`     | Docs-only change                                     |
+| `style`    | Formatting / whitespace; no logic change             |
+| `refactor` | Code restructuring with no behavior change           |
+| `perf`     | Performance improvement                              |
+| `test`     | Adding or fixing tests                               |
+| `build`    | Build system, deps, packaging                        |
+| `ci`       | CI workflows                                         |
+| `chore`    | Tooling / housekeeping that doesn't fit above        |
+| `revert`   | Reverting a prior commit                             |
+
+(Source of truth: `.gitlint`.)
+
+### Rules
+
+- Title MUST start with one of the types above
+- Scope is optional, in parens: `fix(reduction-cost): handle 0-d arrays`
+- Breaking changes: append `!` after the type/scope, OR put `BREAKING CHANGE:`
+  in the footer
+- Title MUST be ≤ 90 chars
+- Imperative mood ("add X" not "added X")
+- No trailing period
+
+### Examples
+
+GOOD:
+
+```
+fix(reduction-cost): handle 0-d arrays in _normalize_axis
+test(numpy-compat): xfail TestSVDHermitian variants
+chore: bump scipy floor to >=1.10
+feat!: rewrite einsum cost model to direct-event α/M
+```
+
+BAD:
+
+```
+update stuff             ← missing type
+FIX: broken thing        ← wrong case
+Fix bug                  ← capital + missing colon
+fix(): empty scope       ← empty scope
+fix some bug.            ← trailing period
+```
+
+### Local commit hooks
+
+The repo ships a `commit-msg` hook at `.githooks/commit-msg` that runs
+`gitlint` on every `git commit`. `make install` (above) configures this
+hook via `git config core.hooksPath .githooks`. After that, any commit
+with a bad message is rejected at commit time, instead of failing later
+in CI.
+
+### Validating messages programmatically
+
+When automation needs to validate a candidate message before invoking
+`git commit`:
+
+```bash
+# Validate a candidate message file
+uv run gitlint --msg-filename path/to/message-file
+
+# One-off validation of a candidate string
+echo "fix: my proposed message" | uv run gitlint --ignore-stdin --staged
+
+# Commitizen has a parallel check (same rules, slightly different errors)
+uv run cz check --message "fix: my proposed message"
+```
+
+If `gitlint` exits non-zero, the message will also fail the `commit-msg`
+hook and the CI `lint-commits` job. Fix the message before committing
+rather than retrying via `git commit --amend`.
+
 ## Which environment to use
 
 The root environment covers the core package, linting, docs, and the main test
