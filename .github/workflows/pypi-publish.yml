@@ -1,9 +1,9 @@
 name: PyPI publish
 
 # Triggered when a `v*` tag is pushed (typically via `cz bump` followed by
-# `git push --follow-tags`). Publishes all three packages (flopscope,
-# flopscope-server, flopscope-client) at the tagged version under a single
-# environment approval. See AGENTS.md -> "Release process".
+# `git push --follow-tags`). Publishes all published packages at the tagged
+# version under a single environment approval. See the Release docs at
+# website/content/docs/development/release.mdx.
 
 on:
   push:
