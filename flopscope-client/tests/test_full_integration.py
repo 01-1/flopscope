@@ -431,3 +431,45 @@ class TestErrorPropagation:
             b = we.array([4.0, 5.0, 6.0])
             result = we.add(a, b)
             assert result.tolist() == [5.0, 7.0, 9.0]
+
+
+# ===========================================================================
+# Category 8: Version handshake (added in v0.3.0)
+# ===========================================================================
+
+
+class TestVersionHandshake:
+    def test_handshake_completes_transparently_on_first_op(self):
+        """A fresh Connection performs the version handshake on first send_recv."""
+        import flopscope as we
+        from flopscope._connection import get_connection
+
+        conn = get_connection()
+        assert conn._handshake_done is False
+
+        with we.BudgetContext(flop_budget=1_000):
+            a = we.array([1.0, 2.0, 3.0])
+            b = we.array([4.0, 5.0, 6.0])
+            we.add(a, b)
+
+        assert conn._handshake_done is True
+
+    def test_handshake_rejects_version_mismatch(self):
+        """A client whose __version__ doesn't match the server fails fast."""
+        import flopscope
+        import flopscope as we
+        from flopscope._connection import reset_connection
+
+        reset_connection()
+        original = flopscope.__version__
+        flopscope.__version__ = "9.99.99"
+        try:
+            with pytest.raises(ConnectionError) as excinfo:
+                with we.BudgetContext(flop_budget=1_000):
+                    we.array([1.0, 2.0, 3.0])
+            msg = str(excinfo.value)
+            assert "9.99.99" in msg
+            assert original.split("+", 1)[0] in msg
+        finally:
+            flopscope.__version__ = original
+            reset_connection()
