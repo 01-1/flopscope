@@ -3,7 +3,6 @@
 import { usePathname } from 'fumadocs-core/framework';
 import { SidebarItem } from 'fumadocs-ui/components/sidebar/base';
 import { useFolderDepth } from 'fumadocs-ui/components/sidebar/base';
-import { STANDALONE_SYMMETRY_AWARE_EINSUM_URL } from '@/lib/docsTree';
 
 function normalizePath(path) {
   return path === '/' ? path : path.replace(/\/+$/, '');
@@ -12,8 +11,7 @@ function normalizePath(path) {
 export default function DocsSidebarItem({ item }) {
   const pathname = usePathname();
   const depth = useFolderDepth();
-  const isStandaloneLaunch = item.url === STANDALONE_SYMMETRY_AWARE_EINSUM_URL;
-  const active = !isStandaloneLaunch && normalizePath(pathname) === normalizePath(item.url);
+  const active = normalizePath(pathname) === normalizePath(item.url);
   const itemOffset = `calc(${2 + 3 * depth} * var(--spacing))`;
   const itemClasses = [
     'relative flex flex-row items-center gap-2 rounded-lg p-2 text-start text-fd-muted-foreground wrap-anywhere [&_svg]:size-4 [&_svg]:shrink-0 transition-colors hover:bg-fd-accent/50 hover:text-fd-accent-foreground/80 hover:transition-none data-[active=true]:text-fd-primary data-[active=true]:hover:transition-colors',
@@ -28,10 +26,8 @@ export default function DocsSidebarItem({ item }) {
       icon={item.icon}
       className={itemClasses}
       style={{ paddingInlineStart: itemOffset }}
-      external={isStandaloneLaunch ? false : item.external}
+      external={item.external}
       active={active}
-      target={isStandaloneLaunch ? '_blank' : undefined}
-      rel={isStandaloneLaunch ? 'noreferrer noopener' : undefined}
     >
       {item.name}
     </SidebarItem>

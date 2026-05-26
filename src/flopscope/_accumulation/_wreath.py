@@ -1,7 +1,5 @@
 """Direct enumerator for the wreath product ∏_i (H_i ≀ S_{m_i}).
 
-Port of website/components/symmetry-aware-einsum-contractions/engine/wreath.js.
-
 `i` indexes identical-operand groups (operands sharing the same name).
 `H_i` is each operand's declared axis symmetry on its own axes.
 `m_i` is the number of copies of operand i.

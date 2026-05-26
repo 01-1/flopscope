@@ -58,11 +58,6 @@ const navCards = [
     link: '/docs/understanding/flop-counting-model',
   },
   {
-    title: 'Symmetry explorer',
-    desc: 'Interactive einsum symmetry visualization.',
-    link: '/symmetry-aware-einsum-contractions',
-  },
-  {
     title: 'For AI agents',
     desc: 'Machine-readable resources and rules.',
     link: '/docs/api/for-agents',

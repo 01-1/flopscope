@@ -1,7 +1,5 @@
 """The four mixed-shape accumulation regimes plus functionalProjection.
 
-Port of website/components/symmetry-aware-einsum-contractions/engine/regimes/*.js.
-
 Each regime is a Regime instance with `recognize(ctx) -> Verdict` and
 `compute(ctx) -> RegimeOutput`. The dispatcher in _ladder.py iterates them
 in priority order; functionalProjection is checked first (Stage 2a) and the

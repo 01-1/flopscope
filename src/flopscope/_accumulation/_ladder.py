@@ -1,8 +1,5 @@
 """Regime ladder dispatcher and supporting data types.
 
-Port of website/components/symmetry-aware-einsum-contractions/engine/accumulationCount.js
-plus the regime contract from regimes/index.js.
-
 The ladder runs per-component:
     Stage 1: trivial short-circuit (|G| ≤ 1)
     Stage 2a: functionalProjection takes priority (covers shape ∈ {allVisible, allSummed,

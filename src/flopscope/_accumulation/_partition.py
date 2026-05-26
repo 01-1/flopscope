@@ -1,7 +1,5 @@
 """Typed set partition utilities for the partitionCount regime.
 
-Port of website/components/symmetry-aware-einsum-contractions/engine/partition/typedPartitions.js.
-
 A typed equality pattern is a partition of label positions where blocks may only merge
 positions sharing a domain class (same numeric size n_s). The partitionCount regime sums
 over typed-partition orbits; each contribution is `falling_factorial(n_s, b_s) / |Ḡ_x̃|`

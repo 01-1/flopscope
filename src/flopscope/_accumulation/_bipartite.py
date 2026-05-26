@@ -1,6 +1,5 @@
 """Bipartite graph + incidence matrix construction for the σ-loop.
 
-Port of website/components/symmetry-aware-einsum-contractions/engine/algorithm.js
 (buildBipartite + buildIncidenceMatrix only — runSigmaLoop lives in _detection.py).
 """
 

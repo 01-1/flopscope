@@ -1,7 +1,5 @@
 """Size-aware Burnside lemma for orbit counting under heterogeneous label dimensions.
 
-Port of website/components/symmetry-aware-einsum-contractions/engine/sizeAware/burnside.js.
-
 M = (1 / |G|) · Σ_{g ∈ G} ∏_{c ∈ cycles(g)} n_c
 
 where n_c is the common size of the labels in cycle c. Within any cycle of a valid

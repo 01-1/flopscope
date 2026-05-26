@@ -1,8 +1,4 @@
-"""σ-loop, π-canonical derivation, and whole-expression G_pt construction.
-
-Port of website/components/symmetry-aware-einsum-contractions/engine/algorithm.js
-(runSigmaLoop only) and fullGroup.js (in Task 17).
-"""
+"""σ-loop, π-canonical derivation, and whole-expression G_pt construction."""
 
 from __future__ import annotations
 

@@ -1,7 +1,5 @@
 """H = Stab_G(V)|_V helpers and canonical tuple operations.
 
-Port of website/components/symmetry-aware-einsum-contractions/engine/outputOrbit.js.
-
 Permutation convention matches `_perm_group.py`: source -> target arrays.
 For tuple action: out[perm.arr[source]] = tuple[source].
 """

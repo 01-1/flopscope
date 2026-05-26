@@ -1,7 +1,5 @@
 """Shape classifier — Stage 1 of the cost ladder.
 
-Port of website/components/symmetry-aware-einsum-contractions/engine/shapeLayer.js.
-
 The shape classifier is structural and runs before the regime ladder. It produces
 a label that goes onto the per-component output for diagnostic display alongside
 the regime ID. (regime_id is computational; shape is structural.)

@@ -1,7 +1,5 @@
 """Connected-component decomposition of G_pt's label-interaction graph.
 
-Port of website/components/symmetry-aware-einsum-contractions/engine/componentDecomposition.js.
-
 Each component gets its own restricted group (generators + dimino closure), V/W split,
 sizes, and visible_positions. The cost orchestrator invokes the regime ladder per component.
 """
