@@ -1,7 +1,14 @@
-"""Tests for scripts/check_version_sync.py."""
+"""Tests for scripts/check_version_sync.py.
+
+The drift-detection tests must be version-agnostic — they discover the
+repo's current version at test time and inject a *different* version to
+simulate drift. Hardcoding the current version (e.g. "0.3.0") would
+silently break the tests every time `cz bump` ran.
+"""
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import sys
@@ -12,6 +19,10 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / "scripts" / "check_version_sync.py"
 
+_PYPROJECT_VERSION_RE = re.compile(
+    r'^version\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"', re.MULTILINE
+)
+
 
 def _run(cwd: Path) -> subprocess.CompletedProcess[str]:
     """Run the version-sync script with cwd, return CompletedProcess."""
@@ -21,6 +32,24 @@ def _run(cwd: Path) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         text=True,
     )
+
+
+def _current_version(repo: Path) -> str:
+    """Read the X.Y.Z currently in the repo's root pyproject.toml."""
+    text = (repo / "pyproject.toml").read_text()
+    m = _PYPROJECT_VERSION_RE.search(text)
+    assert m is not None, f"no version line found in {repo / 'pyproject.toml'}"
+    return m.group(1)
+
+
+def _other_version(version: str) -> str:
+    """Return a different X.Y.Z guaranteed to differ from `version`.
+
+    Bumps the patch digit by 99 — large enough to avoid colliding with
+    any plausible nearby release, small enough to stay parseable.
+    """
+    major, minor, patch = version.split(".")
+    return f"{major}.{minor}.{int(patch) + 99}"
 
 
 def test_real_repo_is_in_sync():
@@ -59,26 +88,36 @@ def repo_copy(tmp_path: Path) -> Path:
 
 def test_root_pyproject_drift_detected(repo_copy: Path):
     """Bumping root pyproject without bumping subpackages fails the check."""
+    current = _current_version(repo_copy)
+    other = _other_version(current)
     pp = repo_copy / "pyproject.toml"
-    pp.write_text(pp.read_text().replace('version = "0.3.0"', 'version = "0.3.1"', 1))
+    pp.write_text(
+        pp.read_text().replace(f'version = "{current}"', f'version = "{other}"', 1)
+    )
     result = _run(repo_copy)
     assert result.returncode != 0
     combined = (result.stdout + result.stderr).lower()
-    assert "0.3.1" in combined or "0.3.0" in combined
+    assert other in combined or current in combined
 
 
 def test_init_file_drift_detected(repo_copy: Path):
     """Bumping only an __init__ file fails the check."""
+    current = _current_version(repo_copy)
+    other = _other_version(current)
     init = repo_copy / "flopscope-server" / "src" / "flopscope_server" / "__init__.py"
-    init.write_text(init.read_text().replace('"0.3.0"', '"0.3.99"'))
+    init.write_text(init.read_text().replace(f'"{current}"', f'"{other}"'))
     result = _run(repo_copy)
     assert result.returncode != 0
 
 
 def test_cross_pin_drift_detected(repo_copy: Path):
     """Server's flopscope==X.Y.Z pin must match root version."""
+    current = _current_version(repo_copy)
+    other = _other_version(current)
     pp = repo_copy / "flopscope-server" / "pyproject.toml"
-    pp.write_text(pp.read_text().replace('"flopscope==0.3.0"', '"flopscope==0.3.99"'))
+    pp.write_text(
+        pp.read_text().replace(f'"flopscope=={current}"', f'"flopscope=={other}"')
+    )
     result = _run(repo_copy)
     assert result.returncode != 0
     combined = (result.stdout + result.stderr).lower()
@@ -87,7 +126,11 @@ def test_cross_pin_drift_detected(repo_copy: Path):
 
 def test_client_pyproject_drift_detected(repo_copy: Path):
     """Client's pyproject version drift is caught."""
+    current = _current_version(repo_copy)
+    other = _other_version(current)
     pp = repo_copy / "flopscope-client" / "pyproject.toml"
-    pp.write_text(pp.read_text().replace('version = "0.3.0"', 'version = "0.4.0"', 1))
+    pp.write_text(
+        pp.read_text().replace(f'version = "{current}"', f'version = "{other}"', 1)
+    )
     result = _run(repo_copy)
     assert result.returncode != 0
