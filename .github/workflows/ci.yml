@@ -137,6 +137,9 @@ jobs:
       - name: Check generated files are in sync
         run: uv run python scripts/sync_client.py --check
 
+      - name: Check package versions are in lockstep
+        run: uv run python scripts/check_version_sync.py
+
       - name: Run parity tests
         run: uv run pytest tests/test_client_server_parity.py tests/test_serialization_parity.py -v
 

@@ -16,7 +16,7 @@ UV    := uv run
 # Composite targets
 # ---------------------------------------------------------------------------
 .PHONY: ci
-ci: lint lint-commits typecheck test test-numpy-compat check-sync docs-build  ## Run the full CI pipeline locally
+ci: lint lint-commits typecheck test test-numpy-compat check-sync check-sync-versions docs-build  ## Run the full CI pipeline locally
 
 # ---------------------------------------------------------------------------
 # Lint  (mirrors: CI → lint job)
@@ -86,6 +86,10 @@ docs-deploy:  ## Docs deploy is handled by CI on push to main
 check-sync:  ## Verify client is in sync with core library
 	$(UV) python scripts/sync_client.py --check
 	$(UV) pytest tests/test_client_server_parity.py tests/test_serialization_parity.py -v
+
+.PHONY: check-sync-versions
+check-sync-versions:  ## Verify all package versions are in lockstep
+	$(UV) python scripts/check_version_sync.py
 
 .PHONY: sync-client
 sync-client:  ## Regenerate client files from core library
