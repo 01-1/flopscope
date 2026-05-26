@@ -20,6 +20,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # NOTE: flopscope-client is intentionally absent from both matrices in this
+  # release. A PyPI bug currently blocks creating a Trusted Publisher for the
+  # `flopscope-client` project (server-side 500 on the publisher-create form,
+  # despite the identical request succeeding for `flopscope-server`). The
+  # package's version is bumped + handshake code is present, so the next
+  # release that includes it just needs to add the entries back in both
+  # matrices. Track the unblock in the PyPI bug filed for this issue.
   build:
     name: Build ${{ matrix.package.name }}
     runs-on: ubuntu-latest
@@ -33,8 +40,6 @@ jobs:
             path: .
           - name: flopscope-server
             path: flopscope-server
-          - name: flopscope-client
-            path: flopscope-client
     steps:
       - uses: actions/checkout@v4
 
@@ -62,10 +67,9 @@ jobs:
         package:
           - name: flopscope
           - name: flopscope-server
-          - name: flopscope-client
     # The `pypi` environment in repo settings has Required Reviewers
-    # configured. A single approval click in this environment covers all
-    # three matrix entries that share it.
+    # configured. A single approval click in this environment covers both
+    # matrix entries that share it.
     environment:
       name: pypi
       url: https://pypi.org/project/${{ matrix.package.name }}/

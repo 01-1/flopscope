@@ -144,23 +144,32 @@ introduced by hand-edits is caught before merge.
 
 Before the first release will succeed, configure two things outside the
 repo. For the multi-package release, the Trusted Publisher steps must
-be repeated for **each** of the three PyPI project names.
+be repeated for **each** PyPI project name being published.
 
-**On PyPI — add a Trusted Publisher (do this three times):**
+**On PyPI — add a Trusted Publisher (do this for each project name):**
 
 1. Go to https://pypi.org/manage/account/publishing/
 2. Click "Add a new pending publisher"
 3. Fill in (repeat with each project name in turn):
-   - PyPI Project Name: `flopscope`, then `flopscope-server`, then
-     `flopscope-client`
+   - PyPI Project Name: `flopscope`, then `flopscope-server`
    - Owner: `AIcrowd`
    - Repository name: `flopscope`
    - Workflow name: `pypi-publish.yml`
    - Environment name: `pypi`
 4. Save each one.
 
+> **Note on `flopscope-client`** — as of v0.3.0 the
+> `flopscope-client` Trusted Publisher cannot be created because the
+> publisher-create form returns a server-side 500 on PyPI. The
+> identical form succeeded for `flopscope-server`. Until PyPI is
+> fixed (or the name is overridden via admin@pypi.org support),
+> `flopscope-client` is excluded from both matrices in
+> `.github/workflows/pypi-publish.yml`. Once unblocked, re-add the
+> publisher and put `flopscope-client` back into both build and
+> publish matrices, then cut a follow-up release.
+
 **On GitHub — create the `pypi` environment with required reviewers
-(do this once; it is shared across all three matrix-publish jobs):**
+(do this once; it is shared across all matrix-publish jobs):**
 
 1. Go to https://github.com/AIcrowd/flopscope/settings/environments
 2. Click "New environment", name it `pypi`
@@ -168,9 +177,9 @@ be repeated for **each** of the three PyPI project names.
    release maintainers
 4. Save
 
-After all three Trusted Publishers and the shared environment are
-configured, the next `v*` tag push will trigger the publish flow
-end-to-end — and a single approval click covers all three publishes.
+After all configured Trusted Publishers and the shared environment are
+set up, the next `v*` tag push will trigger the publish flow
+end-to-end — and a single approval click covers all matrix publishes.
 
 ## Local commit hooks
 

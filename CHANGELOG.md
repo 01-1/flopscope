@@ -2,9 +2,13 @@
 
 ## v0.3.0 (2026-05-26)
 
-Synchronized multi-package release. The `flopscope-server` and
-`flopscope-client` packages are published to PyPI for the first time,
-versioned in lockstep with `flopscope`.
+Synchronized multi-package release. The `flopscope-server` package is
+published to PyPI for the first time, versioned in lockstep with
+`flopscope`. The `flopscope-client` package is built and tested in this
+release but its PyPI publish is deferred to a follow-up release pending
+resolution of a PyPI Trusted Publisher bug (the publisher-create form
+returns 500 for the `flopscope-client` project name despite the
+identical request succeeding for `flopscope-server`).
 
 ### Added
 
@@ -12,13 +16,11 @@ versioned in lockstep with `flopscope`.
   both flopscope and flopscope-server, exact-pinned to the same version.
 - `flopscope-server` first PyPI release. Server-side runtime for the
   client/server architecture; pulls in flopscope as a dependency.
-- `flopscope-client` first PyPI release. Lightweight drop-in replacement
-  for `flopscope` that proxies all calls to a flopscope-server over
-  ZMQ + msgpack. No numpy dependency; meant to be installed *instead of*
-  `flopscope` in participant environments.
 - Runtime version handshake between client and server: the first
   request from a flopscope-client to a flopscope-server compares
   versions and raises `ConnectionError` with both versions on mismatch.
+  Code lives in both packages so the contract is in place for the
+  follow-up flopscope-client PyPI release.
 
 ### Changed
 

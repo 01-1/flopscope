@@ -127,16 +127,17 @@ pip install flopscope-server
 ```
 
 For the lightweight client (proxies all calls to a remote
-flopscope-server over ZMQ; no numpy dependency). The client occupies
-the same `import flopscope` namespace as the main package — install
-it *instead of* `flopscope`, not alongside:
+flopscope-server over ZMQ; no numpy dependency), build from the
+`flopscope-client/` subdirectory:
 
 ```bash
-pip install flopscope-client
+pip install "flopscope-client @ git+https://github.com/AIcrowd/flopscope.git#subdirectory=flopscope-client"
 ```
 
-All three packages are released in lockstep at the same version. See
-[CHANGELOG.md](CHANGELOG.md) for the release notes.
+The client occupies the same `import flopscope` namespace as the main
+package — install it *instead of* `flopscope`, not alongside. A PyPI
+release of flopscope-client is pending; see
+[CHANGELOG.md](CHANGELOG.md) for status.
 
 Latest development version from git:
 
