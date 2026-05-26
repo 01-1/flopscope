@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.4.0 (2026-05-26)
+
+Follow-up to v0.3.0 that completes the multi-package PyPI release. All
+three packages — `flopscope`, `flopscope-server`, `flopscope-client` —
+are now published in lockstep, each with a polished README rendering
+on its PyPI project page.
+
+### Added
+
+- `flopscope-client` first PyPI release. The Trusted Publisher block
+  on PyPI's side that deferred this package from v0.3.0 was resolved.
+  The package is now in both `build` and `publish-pypi` matrices in
+  `.github/workflows/pypi-publish.yml`, treated identically to
+  `flopscope-server`.
+- Dedicated `README.md` for `flopscope-server` and `flopscope-client`
+  (the root `flopscope` README was already present in-tree but was
+  not wired into PyPI metadata).
+- `license = "MIT"` field added to the server and client pyprojects
+  (only the root previously declared it).
+
+### Fixed
+
+- `[project].readme = "README.md"` added to all three pyproject.toml
+  files. v0.3.0 had published flopscope and flopscope-server with
+  empty descriptions because no readme was configured; v0.4.0
+  backfills them.
+
+### Tooling
+
+- The PyPI publish workflow's environment-approval gate now covers all
+  three matrix entries with a single click.
+
 ## v0.3.0 (2026-05-26)
 
 Synchronized multi-package release. The `flopscope-server` package is
