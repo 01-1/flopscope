@@ -47,6 +47,14 @@ tag_format = "v$version"
 update_changelog_on_bump = true
 major_version_zero = true
 changelog_incremental = true
+version_files = [
+    "src/flopscope/__init__.py:^__version__",
+    "flopscope-server/pyproject.toml:^version",
+    "flopscope-server/src/flopscope_server/__init__.py:^__version__",
+    "flopscope-server/pyproject.toml:flopscope==",
+    "flopscope-client/pyproject.toml:^version",
+    "flopscope-client/src/flopscope/__init__.py:^__version__",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
