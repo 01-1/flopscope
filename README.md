@@ -6,11 +6,11 @@
 
 <div align="center">
 
+[![PyPI version](https://img.shields.io/pypi/v/flopscope.svg)](https://pypi.org/project/flopscope/)
 [![CI](https://github.com/AIcrowd/flopscope/actions/workflows/ci.yml/badge.svg)](https://github.com/AIcrowd/flopscope/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://aicrowd.github.io/flopscope/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/AIcrowd/flopscope/actions/workflows/ci.yml)
 
 </div>
 
@@ -108,7 +108,8 @@ Blocked operations (I/O, config, and system calls) raise a helpful `AttributeErr
 
 ### Installation
 
-Latest stable release from PyPI:
+Latest stable release from [PyPI](https://pypi.org/project/flopscope/)
+(see [release notes](https://github.com/AIcrowd/flopscope/releases)):
 
 ```bash
 uv add flopscope
