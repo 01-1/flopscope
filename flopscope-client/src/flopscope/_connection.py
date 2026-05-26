@@ -89,7 +89,10 @@ class Connection:
             ) from err
 
         response = decode_response(raw)
-        if response.get("status") == "error" and response.get("error_type") == "VersionMismatch":
+        if (
+            response.get("status") == "error"
+            and response.get("error_type") == "VersionMismatch"
+        ):
             raise ConnectionError(
                 f"flopscope-client {client_xyz} cannot talk to this server: "
                 f"{response.get('message', 'version mismatch')}"

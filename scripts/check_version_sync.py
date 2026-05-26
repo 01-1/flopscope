@@ -18,18 +18,32 @@ from __future__ import annotations
 
 import re
 import sys
-import tomllib
 from collections import Counter
 from pathlib import Path
 
 _VERSION_RE = re.compile(r'__version__\s*=\s*f?"([0-9]+\.[0-9]+\.[0-9]+)')
 _CROSS_PIN_RE = re.compile(r'"flopscope==([0-9]+\.[0-9]+\.[0-9]+)"')
+# Matches the `version = "X.Y.Z"` line under `[project]` in pyproject.toml.
+# Anchored at line start to skip the `requires-python = "..."` line and the
+# dependency lines below. The flopscope project keeps a single top-level
+# `version = ...` in each pyproject.toml; we don't try to be a full TOML parser.
+_PYPROJECT_VERSION_RE = re.compile(
+    r'^version\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"', re.MULTILINE
+)
 
 
 def _read_pyproject_version(path: Path) -> str:
-    with path.open("rb") as f:
-        data = tomllib.load(f)
-    return data["project"]["version"]
+    """Extract `[project].version` from a pyproject.toml via regex.
+
+    Avoids `tomllib` because that's Python 3.11+ stdlib; flopscope still
+    supports Python 3.10. The script lives in `scripts/` and we'd rather
+    not add a `tomli` dependency just for this.
+    """
+    text = path.read_text()
+    m = _PYPROJECT_VERSION_RE.search(text)
+    if m is None:
+        raise ValueError(f'no `version = "X.Y.Z"` line found in {path}')
+    return m.group(1)
 
 
 def _read_init_version(path: Path) -> str:
@@ -66,11 +80,7 @@ def collect_versions(root: Path) -> dict[str, str]:
             root / "flopscope-server" / "pyproject.toml"
         ),
         "flopscope-server/src/flopscope_server/__init__.py __version__": _read_init_version(
-            root
-            / "flopscope-server"
-            / "src"
-            / "flopscope_server"
-            / "__init__.py"
+            root / "flopscope-server" / "src" / "flopscope_server" / "__init__.py"
         ),
         "flopscope-server/pyproject.toml flopscope== cross-pin": _read_server_cross_pin(
             root / "flopscope-server" / "pyproject.toml"

@@ -57,9 +57,7 @@ def test_ensure_handshaked_mismatch_raises_connection_error():
         {
             "status": "error",
             "error_type": "VersionMismatch",
-            "message": (
-                "flopscope-client 0.3.0 cannot talk to flopscope-server 0.4.0"
-            ),
+            "message": ("flopscope-client 0.3.0 cannot talk to flopscope-server 0.4.0"),
         },
         use_bin_type=True,
     )

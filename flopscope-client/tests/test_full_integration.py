@@ -441,8 +441,9 @@ class TestErrorPropagation:
 class TestVersionHandshake:
     def test_handshake_completes_transparently_on_first_op(self):
         """A fresh Connection performs the version handshake on first send_recv."""
-        import flopscope as we
         from flopscope._connection import get_connection
+
+        import flopscope as we
 
         conn = get_connection()
         assert conn._handshake_done is False
@@ -456,9 +457,10 @@ class TestVersionHandshake:
 
     def test_handshake_rejects_version_mismatch(self):
         """A client whose __version__ doesn't match the server fails fast."""
+        from flopscope._connection import reset_connection
+
         import flopscope
         import flopscope as we
-        from flopscope._connection import reset_connection
 
         reset_connection()
         original = flopscope.__version__

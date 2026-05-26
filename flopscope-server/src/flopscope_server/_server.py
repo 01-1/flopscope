@@ -263,7 +263,9 @@ class FlopscopeServer:
         clients can detect mismatch before opening a budget.
         """
         kwargs = msg.get("kwargs") or {}
-        client_version = kwargs.get("client_version") if isinstance(kwargs, dict) else None
+        client_version = (
+            kwargs.get("client_version") if isinstance(kwargs, dict) else None
+        )
         server_xyz = flopscope.__version__.split("+", 1)[0]
 
         if not isinstance(client_version, str) or not client_version:

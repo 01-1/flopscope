@@ -8,10 +8,10 @@ handshake must succeed before any budget session can be opened.
 from __future__ import annotations
 
 import msgpack
-
-import flopscope
 from flopscope_server import _protocol
 from flopscope_server._server import FlopscopeServer
+
+import flopscope
 
 
 def _leading_xyz(v: str) -> str:
