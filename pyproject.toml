@@ -1,6 +1,6 @@
 [project]
 name = "flopscope"
-version = "0.2.0"
+version = "0.3.0"
 description = "NumPy-compatible math primitives with FLOP counting for the Mechanistic Estimation Challenge"
 requires-python = ">=3.10"
 license = "MIT"
