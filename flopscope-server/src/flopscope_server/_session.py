@@ -24,6 +24,8 @@ class Session:
 
     def __init__(self, flop_budget: int, flop_multiplier: float = 1.0) -> None:
         self._store = ArrayStore()
+        self._generators: dict[str, Any] = {}
+        self._gen_counter: int = 0
         self._comms_tracker = CommsTracker()
         self._budget_ctx = flops.BudgetContext(
             flop_budget=flop_budget,
@@ -110,6 +112,29 @@ class Session:
         self._store.free(handles)
 
     # ------------------------------------------------------------------
+    # Generator operations (server-side RNG handles)
+    # ------------------------------------------------------------------
+
+    def store_generator(self, gen: Any) -> str:
+        """Store an RNG ``Generator`` and return its handle ID (``g0``, ``g1`` …)."""
+        handle = f"g{self._gen_counter}"
+        self._generators[handle] = gen
+        self._gen_counter += 1
+        return handle
+
+    def get_generator(self, handle: str) -> Any:
+        """Return the ``Generator`` for *handle*.
+
+        Raises
+        ------
+        KeyError
+            If *handle* is not a known generator handle.
+        """
+        if handle not in self._generators:
+            raise KeyError(f"Generator handle {handle!r} not found in store")
+        return self._generators[handle]
+
+    # ------------------------------------------------------------------
     # Budget
     # ------------------------------------------------------------------
 
@@ -162,6 +187,7 @@ class Session:
         budget_summary = self._budget_ctx.summary(by_namespace=show_namespaces)
         comms_summary = self._comms_tracker.summary()
         self._store.clear()
+        self._generators.clear()
         self._is_open = False
 
         return {

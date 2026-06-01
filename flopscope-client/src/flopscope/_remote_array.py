@@ -598,6 +598,85 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
 
 
 # ---------------------------------------------------------------------------
+# RemoteGenerator
+# ---------------------------------------------------------------------------
+
+
+class RemoteGenerator:
+    """Transparent proxy for a server-side numpy ``Generator``.
+
+    ``fnp.random.default_rng(seed)`` returns one of these. Sampling methods
+    dispatch to the server, where the RNG state lives and advances — so the
+    stream is deterministic per seed and FLOP-counted server-side, exactly
+    like the in-process counted Generator.
+    """
+
+    __slots__ = ("_handle_id",)
+
+    def __init__(self, handle_id: str) -> None:
+        self._handle_id = handle_id
+
+    @property
+    def handle_id(self) -> str:
+        return self._handle_id
+
+    def __repr__(self) -> str:
+        return f"RemoteGenerator(handle_id={self._handle_id!r})"
+
+    def _call(self, method: str, *args: Any, **kwargs: Any) -> Any:
+        from flopscope._connection import get_connection
+        from flopscope._protocol import encode_request
+
+        encoded_args = [_encode_arg(self)] + [_encode_arg(a) for a in args]
+        encoded_kwargs = {k: _encode_arg(v) for k, v in kwargs.items()}
+        resp = get_connection().send_recv(
+            encode_request(
+                f"Generator.{method}", args=encoded_args, kwargs=encoded_kwargs
+            )
+        )
+        return _result_from_response(resp)
+
+    def uniform(self, *args, **kwargs):
+        return self._call("uniform", *args, **kwargs)
+
+    def standard_normal(self, *args, **kwargs):
+        return self._call("standard_normal", *args, **kwargs)
+
+    def normal(self, *args, **kwargs):
+        return self._call("normal", *args, **kwargs)
+
+    def integers(self, *args, **kwargs):
+        return self._call("integers", *args, **kwargs)
+
+    def random(self, *args, **kwargs):
+        return self._call("random", *args, **kwargs)
+
+    def standard_exponential(self, *args, **kwargs):
+        return self._call("standard_exponential", *args, **kwargs)
+
+    def exponential(self, *args, **kwargs):
+        return self._call("exponential", *args, **kwargs)
+
+    def poisson(self, *args, **kwargs):
+        return self._call("poisson", *args, **kwargs)
+
+    def binomial(self, *args, **kwargs):
+        return self._call("binomial", *args, **kwargs)
+
+    def beta(self, *args, **kwargs):
+        return self._call("beta", *args, **kwargs)
+
+    def gamma(self, *args, **kwargs):
+        return self._call("gamma", *args, **kwargs)
+
+    def choice(self, *args, **kwargs):
+        return self._call("choice", *args, **kwargs)
+
+    def permutation(self, *args, **kwargs):
+        return self._call("permutation", *args, **kwargs)
+
+
+# ---------------------------------------------------------------------------
 # Module-level helper
 # ---------------------------------------------------------------------------
 
@@ -613,6 +692,9 @@ def _result_from_response(resp: dict) -> RemoteArray | RemoteScalar | tuple | di
     * otherwise           -> raw dict
     """
     result = resp.get("result", {})
+
+    if "gen_id" in result:
+        return RemoteGenerator(result["gen_id"])
 
     if "value" in result:
         return RemoteScalar(value=result["value"], dtype=result.get("dtype", "float64"))
@@ -682,6 +764,8 @@ def _encode_arg(arg):
         return arg._value
     if isinstance(arg, RemoteArray):
         return {"__handle__": arg.handle_id}
+    if isinstance(arg, RemoteGenerator):
+        return {"__gen__": arg.handle_id}
     from flopscope._perm_group import SymmetryGroup
 
     if isinstance(arg, SymmetryGroup):

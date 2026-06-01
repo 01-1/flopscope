@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.2 (2026-06-01)
+
+### Feat
+
+- **ci**: gate numpy compat checks
+
+### Fix
+
+- support fnp.random.default_rng() across the client/server boundary
+
 ## v0.4.1 (2026-05-26)
 
 Bug-fix release for the broken `flopscope[server]` extra in v0.4.0.

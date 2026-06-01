@@ -14,6 +14,27 @@ from flopscope_server._session import Session
 
 _HANDLE_RE = re.compile(r"^a\d+$")
 
+# Generator methods the server will dispatch to a server-side numpy Generator
+# resolved from a ``{"__gen__": handle}`` argument. Array-returning samplers
+# only (``shuffle`` mutates in place and is intentionally excluded).
+_ALLOWED_GEN_METHODS = frozenset(
+    {
+        "uniform",
+        "standard_normal",
+        "normal",
+        "integers",
+        "random",
+        "standard_exponential",
+        "exponential",
+        "poisson",
+        "binomial",
+        "beta",
+        "gamma",
+        "choice",
+        "permutation",
+    }
+)
+
 
 def _make_serializable(obj):
     """Convert a nested structure to be msgpack-safe (no numpy types)."""
@@ -221,6 +242,24 @@ class RequestHandler:
             result = arr.astype(dtype)
             return self._pack_result(result)
 
+        # Generator method calls: op is "Generator.<method>" with the remote
+        # generator handle as the first arg. Resolve it and call the method
+        # server-side, so the RNG state lives + advances on the server (the
+        # stream stays deterministic per seed and FLOP-counted).
+        if op.startswith("Generator."):
+            method = op[len("Generator.") :]
+            if method not in _ALLOWED_GEN_METHODS:
+                return {
+                    "status": "error",
+                    "error_type": "UnsupportedFunctionError",
+                    "message": f"Generator.{method} is not supported by the flopscope server",
+                }
+            gen = self._resolve_arg(raw_args[0])
+            rest = [self._resolve_arg(a) for a in raw_args[1:]]
+            resolved_kwargs = {k: self._resolve_arg(v) for k, v in kwargs.items()}
+            result = getattr(gen, method)(*rest, **resolved_kwargs)
+            return self._pack_result(result)
+
         func = _get_flopscope_func(op)
         resolved_args = [self._resolve_arg(a) for a in raw_args]
         resolved_kwargs = {k: self._resolve_arg(v) for k, v in kwargs.items()}
@@ -247,6 +286,13 @@ class RequestHandler:
                 if isinstance(handle, bytes):
                     handle = handle.decode("utf-8")
                 return self._session.get_array(handle)
+            gen_handle = arg.get("__gen__")
+            if gen_handle is None:
+                gen_handle = arg.get(b"__gen__")
+            if gen_handle is not None:
+                if isinstance(gen_handle, bytes):
+                    gen_handle = gen_handle.decode("utf-8")
+                return self._session.get_generator(gen_handle)
             # SymmetryGroup wire format
             pg_data = arg.get("__symmetry_group__") or arg.get(b"__symmetry_group__")
             if pg_data is not None:
@@ -370,6 +416,10 @@ class RequestHandler:
                 "result": {"value": str(result), "dtype": "str"},
                 "budget": budget,
             }
+        if isinstance(result, np.random.Generator):
+            handle = self._session.store_generator(result)
+            return {"status": "ok", "result": {"gen_id": handle}, "budget": budget}
+
         # Fallback: try to make it serializable
         try:
             serializable = _make_serializable(result)
