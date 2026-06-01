@@ -41,8 +41,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
-timeout-minutes: 240
-
 env:
   FLOPSCOPE_DOCS_ROOT: https://aicrowd.github.io/flopscope/docs
 
@@ -209,29 +207,28 @@ jobs:
       - name: Run tests with coverage
         run: uv run pytest --cov=flopscope --cov-fail-under=85
 
-      - name: NumPy compat: core umath
+      - name: "NumPy compat: core umath"
         run: uv run pytest tests/numpy_compat/ --pyargs numpy._core.tests.test_umath -n auto -q
 
-      - name: NumPy compat: core ufunc
+      - name: "NumPy compat: core ufunc"
         run: uv run pytest tests/numpy_compat/ --pyargs numpy._core.tests.test_ufunc -n auto -q
 
-      - name: NumPy compat: core numeric
-        run: uv run pytest tests/numpy_compat/ --pyargs numpy._core.tests.test_numeric -n auto -q
-          -k "not test_for_reference_leak"
+      - name: "NumPy compat: core numeric"
+        run: uv run pytest tests/numpy_compat/ --pyargs numpy._core.tests.test_numeric -n auto -q -k "not test_for_reference_leak"
 
-      - name: NumPy compat: linalg
+      - name: "NumPy compat: linalg"
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.linalg.tests.test_linalg -n auto -q
 
-      - name: NumPy compat: fft pocketfft
+      - name: "NumPy compat: fft pocketfft"
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.fft.tests.test_pocketfft -n auto -q
 
-      - name: NumPy compat: fft helper
+      - name: "NumPy compat: fft helper"
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.fft.tests.test_helper -n auto -q
 
-      - name: NumPy compat: polynomial
+      - name: "NumPy compat: polynomial"
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.polynomial.tests.test_polynomial -n auto -q
 
-      - name: NumPy compat: random
+      - name: "NumPy compat: random"
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.random.tests.test_random -n auto -q
 
   client-server-sync:
@@ -390,46 +387,46 @@ jobs:
 
           summary_file="$(mktemp)"
           python - "$jobs_json" <<'PY' > "$summary_file"
-import datetime
-import json
-import os
-import sys
+          import datetime
+          import json
+          import os
+          import sys
 
-rate = float(os.getenv("RATE_PER_MINUTE", "0.006"))
+          rate = float(os.getenv("RATE_PER_MINUTE", "0.006"))
 
-with open(sys.argv[1], "r", encoding="utf-8") as f:
-    data = json.load(f)
+          with open(sys.argv[1], "r", encoding="utf-8") as f:
+              data = json.load(f)
 
-jobs = data.get("jobs", [])
-rows = []
-total_minutes = 0.0
+          jobs = data.get("jobs", [])
+          rows = []
+          total_minutes = 0.0
 
-for job in jobs:
-    started_at = job.get("started_at")
-    completed_at = job.get("completed_at")
-    name = job.get("name") or f"job-{job.get('id')}"
+          for job in jobs:
+              started_at = job.get("started_at")
+              completed_at = job.get("completed_at")
+              name = job.get("name") or f"job-{job.get('id')}"
 
-    if not started_at or not completed_at:
-        continue
+              if not started_at or not completed_at:
+                  continue
 
-    started_dt = datetime.datetime.fromisoformat(started_at.replace("Z", "+00:00"))
-    completed_dt = datetime.datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
-    elapsed_minutes = max((completed_dt - started_dt).total_seconds() / 60.0, 0.0)
-    rows.append((name, elapsed_minutes))
-    total_minutes += elapsed_minutes
+              started_dt = datetime.datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+              completed_dt = datetime.datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+              elapsed_minutes = max((completed_dt - started_dt).total_seconds() / 60.0, 0.0)
+              rows.append((name, elapsed_minutes))
+              total_minutes += elapsed_minutes
 
-rows.sort(key=lambda row: row[1], reverse=True)
-total_cost = total_minutes * rate
+          rows.sort(key=lambda row: row[1], reverse=True)
+          total_cost = total_minutes * rate
 
-print("## CI cost estimate")
-print()
-print(f"Estimated workflow total: `{total_minutes:.1f}` minutes")
-print(f"Estimated billed cost at `${rate:.3f}`/minute: `${total_cost:.2f}`")
-print()
-print("### Job timings")
-for name, minutes in rows:
-    print(f"- `{name}`: `{minutes:.2f}` min (`${minutes * rate:.4f}`)")
-PY
+          print("## CI cost estimate")
+          print()
+          print(f"Estimated workflow total: `{total_minutes:.1f}` minutes")
+          print(f"Estimated billed cost at `${rate:.3f}`/minute: `${total_cost:.2f}`")
+          print()
+          print("### Job timings")
+          for name, minutes in rows:
+              print(f"- `{name}`: `{minutes:.2f}` min (`${minutes * rate:.4f}`)")
+          PY
 
           echo "### CI cost report ###"
           cat "$summary_file"
