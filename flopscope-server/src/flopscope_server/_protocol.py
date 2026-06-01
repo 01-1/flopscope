@@ -130,6 +130,10 @@ def validate_request(msg: dict) -> None:
         If the op name is not in :data:`WHITELIST`.
     """
     op = msg.get("op", "")
+    # Generator.<method> ops are dispatched to a server-side RNG handle and are
+    # method-whitelisted in the request handler (_ALLOWED_GEN_METHODS).
+    if op.startswith("Generator."):
+        return
     if op not in WHITELIST:
         raise InvalidRequestError(f"unknown op: {op!r}")
 
