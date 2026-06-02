@@ -45,6 +45,13 @@ class UnsupportedFunctionError(FlopscopeError):
         super().__init__(message)
 
 
+class UnsupportedReturnType(FlopscopeError):
+    """Raised when an op's result cannot be serialized across the client/server boundary."""
+
+    def __init__(self, message: str = "") -> None:
+        super().__init__(message)
+
+
 class FlopscopeWarning(UserWarning):
     """Warning issued when flopscope detects potential numerical issues."""
 
@@ -72,6 +79,7 @@ _FLOPSCOPE_ERRORS: frozenset[str] = frozenset(
         "NoBudgetContextError",
         "SymmetryError",
         "UnsupportedFunctionError",
+        "UnsupportedReturnType",
     }
 )
 
@@ -81,6 +89,7 @@ _ERROR_MAP: dict[str, type[Exception]] = {
     "NoBudgetContextError": NoBudgetContextError,
     "SymmetryError": SymmetryError,
     "UnsupportedFunctionError": UnsupportedFunctionError,
+    "UnsupportedReturnType": UnsupportedReturnType,
     "FlopscopeServerError": FlopscopeServerError,
     "ValueError": ValueError,
     "TypeError": TypeError,

@@ -131,6 +131,16 @@ class UnsupportedFunctionError(FlopscopeError):
         super().__init__(msg)
 
 
+class UnsupportedReturnType(FlopscopeError):
+    """Raised when an op's result cannot be serialized across the client/server boundary.
+
+    The op executed successfully on the server, but its return type is not one
+    the response packer knows how to send back (and is not msgpack-native).
+    Surfaced loudly — rather than silently degrading to ``str()`` — so such gaps
+    are caught by the conformance tests, not by participants.
+    """
+
+
 class FlopscopeWarning(UserWarning):
     """Warning issued when flopscope detects potential numerical issues."""
 

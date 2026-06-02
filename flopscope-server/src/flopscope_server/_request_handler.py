@@ -49,6 +49,28 @@ def _make_serializable(obj):
     return obj
 
 
+_MSGPACK_SCALARS = (type(None), bool, int, float, str, bytes)
+
+
+def _is_msgpack_native(obj) -> bool:
+    """True if *obj* is composed only of msgpack-encodable Python types.
+
+    ``_make_serializable`` flattens numpy types but passes unknown objects
+    through unchanged; this distinguishes a genuinely-encodable result from one
+    that would only fail later inside ``msgpack.packb``.
+    """
+    if isinstance(obj, _MSGPACK_SCALARS):
+        return True
+    if isinstance(obj, (list, tuple)):
+        return all(_is_msgpack_native(item) for item in obj)
+    if isinstance(obj, dict):
+        return all(
+            isinstance(k, (str, bytes, int)) and _is_msgpack_native(v)
+            for k, v in obj.items()
+        )
+    return False
+
+
 #: Maximum allowed array size in bytes (configurable via environment variable).
 MAX_ARRAY_BYTES = int(os.environ.get("FLOPSCOPE_MAX_ARRAY_BYTES", 100 * 1024 * 1024))
 
@@ -111,6 +133,12 @@ class RequestHandler:
             return {
                 "status": "error",
                 "error_type": "UnsupportedFunctionError",
+                "message": str(e),
+            }
+        except flops.UnsupportedReturnType as e:
+            return {
+                "status": "error",
+                "error_type": "UnsupportedReturnType",
                 "message": str(e),
             }
         except (ValueError, TypeError) as e:
@@ -420,16 +448,19 @@ class RequestHandler:
             handle = self._session.store_generator(result)
             return {"status": "ok", "result": {"gen_id": handle}, "budget": budget}
 
-        # Fallback: try to make it serializable
-        try:
-            serializable = _make_serializable(result)
+        # Fallback: flatten nested numpy structures to JSON-safe values. If the
+        # result still isn't msgpack-native, fail loudly + attributably rather
+        # than silently str()-degrading (which previously surfaced downstream as
+        # an opaque "failed to serialize response" error). The registry-driven
+        # conformance test (tests/test_registry_conformance.py) catches any op
+        # whose return type lands here.
+        serializable = _make_serializable(result)
+        if _is_msgpack_native(serializable):
             return {"status": "ok", "result": {"value": serializable}, "budget": budget}
-        except Exception:
-            return {
-                "status": "ok",
-                "result": {"value": str(result), "dtype": "str"},
-                "budget": budget,
-            }
+        raise flops.UnsupportedReturnType(
+            f"{type(result).__name__} is not serializable across the "
+            f"client/server boundary"
+        )
 
 
 # ---------------------------------------------------------------------------

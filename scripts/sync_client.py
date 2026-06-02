@@ -88,6 +88,7 @@ def _generate_errors() -> str:
         "SymmetryError",
         "TimeExhaustedError",
         "UnsupportedFunctionError",
+        "UnsupportedReturnType",
     }
 
     # (class_name, base_class, docstring) in declaration order
@@ -117,6 +118,14 @@ def _generate_errors() -> str:
             "UnsupportedFunctionError",
             "FlopscopeError",
             "Raised when calling a function not available in the installed NumPy.",
+        ),
+        (
+            "UnsupportedReturnType",
+            "FlopscopeError",
+            (
+                "Raised when an op's result cannot be serialized across the "
+                "client/server boundary."
+            ),
         ),
         (
             "FlopscopeWarning",
