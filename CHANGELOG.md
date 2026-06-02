@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.3 (2026-06-02)
+
+### Fix
+
+- **server**: raise UnsupportedReturnType for unpackable results
+
 ## v0.4.2 (2026-06-01)
 
 ### Feat
