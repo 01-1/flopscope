@@ -110,6 +110,10 @@ _p = np.array([0.2, 0.5, 0.8])  # in (0, 1) — valid for ppf
 _six = np.arange(6.0)
 _pos = np.array([[1.2, 1.5, 1.8], [2.1, 2.4, 2.7], [3.0, 3.3, 3.6]])  # >1, positive
 _pos2 = _pos + 0.5
+_iA = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])  # int 3x3
+_iB = np.array([[2, 3, 4], [5, 6, 7], [8, 9, 10]])  # int 3x3
+_ishift = np.array([[1, 1, 2], [2, 1, 1], [1, 2, 1]])  # small int shift amounts
+_iv = np.array([1, 2, 3])  # int vector
 
 # Per-op (args, kwargs) for the irregular `free` / `counted_custom` ops that a
 # category default can't synthesize. ndarray args are auto-encoded as handles.
@@ -191,6 +195,30 @@ EXAMPLE_OVERRIDES: dict[str, tuple[list, dict]] = {
     "stats.norm.pdf": ([_v], {}),
     "stats.norm.cdf": ([_v], {}),
     "stats.norm.ppf": ([_p], {}),
+    # integer-only ufuncs (the category default feeds floats)
+    "bitwise_and": ([_iA, _iB], {}),
+    "bitwise_or": ([_iA, _iB], {}),
+    "bitwise_xor": ([_iA, _iB], {}),
+    "bitwise_not": ([_iA], {}),
+    "bitwise_invert": ([_iA], {}),
+    "invert": ([_iA], {}),
+    "bitwise_count": ([_iA], {}),
+    "bitwise_left_shift": ([_iA, _ishift], {}),
+    "bitwise_right_shift": ([_iA, _ishift], {}),
+    "left_shift": ([_iA, _ishift], {}),
+    "right_shift": ([_iA, _ishift], {}),
+    "gcd": ([_iA, _iB], {}),
+    "lcm": ([_iA, _iB], {}),
+    "ldexp": ([_v, _iv], {}),  # (float, int)
+    # reductions that need a percentile/quantile value or a 1-D input
+    "percentile": ([_B, 50], {}),
+    "quantile": ([_B, 0.5], {}),
+    "nanpercentile": ([_B], {"q": 50}),
+    "nanquantile": ([_B], {"q": 0.5}),
+    "cumulative_sum": ([_v], {}),  # 1-D: no axis required
+    "cumulative_prod": ([_v], {}),
+    # isclose is registry-categorized counted_unary but takes (a, b)
+    "isclose": ([_v, _w], {}),
 }
 
 # Proxyable ops not yet exercised. The coverage guard requires every proxyable
