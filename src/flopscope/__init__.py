@@ -89,6 +89,7 @@ from flopscope.errors import (  # noqa: F401,E402
     SymmetryLossWarning,
     TimeExhaustedError,
     UnsupportedFunctionError,
+    UnsupportedReturnType,
 )
 
 
@@ -229,6 +230,7 @@ __all__ = [
     "SymmetryLossWarning",
     "TimeExhaustedError",
     "UnsupportedFunctionError",
+    "UnsupportedReturnType",
     "__numpy_pinned__",
     "__numpy_supported__",
     "__numpy_version__",
