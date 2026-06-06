@@ -9,7 +9,7 @@ Detection of symmetries is handled by ``_subgraph_symmetry.SubgraphSymmetryOracl
 
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 
 from flopscope._perm_group import SymmetryGroup
@@ -90,6 +90,9 @@ def symmetric_flop_count(
     inner_indices: frozenset[str] | None = None,
     use_inner_symmetry: bool = True,
     per_operand_free_counts: tuple[int, ...] | None = None,
+    input_subscripts: Sequence[str] | None = None,
+    output_subscript: str | None = None,
+    input_shapes: Sequence[Sequence[int]] | None = None,
 ) -> int:
     r"""FLOP count for a symmetric tensor contraction.
 
@@ -111,11 +114,25 @@ def symmetric_flop_count(
         Number of free (non-contracted) indices contributed by each
         operand.  For a pairwise contraction this is ``(s, t)``.
         Reserved for future cost models; not currently used.
+    input_subscripts, output_subscript, input_shapes : optional
+        Per-operand subscripts/shapes for the dense baseline. When provided,
+        they are forwarded to ``flop_count`` so the dense direct-evaluation
+        estimate uses the FMA=2 accumulation cost (the same cost model that
+        billing uses) before the symmetry ratios are applied. Required —
+        ``flop_count`` raises if they are omitted.
     """
     from ._helpers import compute_size_by_dict
 
-    # --- Direct-evaluation estimate ---
-    cost = flop_count(idx_contraction, inner, num_terms, size_dictionary)
+    # --- Direct-evaluation estimate (FMA=2 dense baseline) ---
+    cost = flop_count(
+        idx_contraction,
+        inner,
+        num_terms,
+        size_dictionary,
+        input_subscripts=input_subscripts,
+        output_subscript=output_subscript,
+        input_shapes=input_shapes,
+    )
 
     if output_group is not None and output_indices is not None:
         total = compute_size_by_dict(output_indices, size_dictionary)

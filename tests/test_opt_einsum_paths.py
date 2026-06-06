@@ -128,25 +128,59 @@ def test_size_by_dict() -> None:
 def test_flop_cost() -> None:
     size_dict = dict.fromkeys("abcdef", 10)
 
-    # Loop over an array
-    assert 10 == oe._helpers.flop_count("a", False, 1, size_dict)  # pyright: ignore[reportAttributeAccessIssue]
+    fc = oe._helpers.flop_count  # pyright: ignore[reportAttributeAccessIssue]
 
-    # Hadamard product (*)
-    assert 10 == oe._helpers.flop_count("a", False, 2, size_dict)  # pyright: ignore[reportAttributeAccessIssue]
-    assert 100 == oe._helpers.flop_count("ab", False, 2, size_dict)  # pyright: ignore[reportAttributeAccessIssue]
+    # flop_count now requires subscripts/shapes and routes through the FMA=2
+    # accumulation cost model (the same one billing uses). The legacy FMA=1
+    # `overall_size * max(1, num_terms - 1)` fallback was removed.
 
-    # Legacy fallback (no subscripts): upstream opt_einsum formula
-    # `overall_size * max(1, num_terms - 1)`. The α/M FMA=2 reroute applies
-    # only when real subscripts are passed.
-    # Inner product — no +1 for inner under the legacy formula
-    assert 10 == oe._helpers.flop_count("a", True, 2, size_dict)  # pyright: ignore[reportAttributeAccessIssue]
-    assert 100 == oe._helpers.flop_count("ab", True, 2, size_dict)  # pyright: ignore[reportAttributeAccessIssue]
+    # Loop over an array (a->a): pure copy, no arithmetic (clamped to 1).
+    assert 1 == fc(
+        "a", False, 1, size_dict,
+        input_subscripts=("a",), output_subscript="a", input_shapes=((10,),),
+    )
 
-    # Inner product x3 — op_factor = max(1, 3-1) = 2
-    assert 20 == oe._helpers.flop_count("a", True, 3, size_dict)  # pyright: ignore[reportAttributeAccessIssue]
+    # Hadamard product (a,a->a): 10 multiplies, no reduction.
+    assert 10 == fc(
+        "a", False, 2, size_dict,
+        input_subscripts=("a", "a"), output_subscript="a",
+        input_shapes=((10,), (10,)),
+    )
+    assert 100 == fc(
+        "ab", False, 2, size_dict,
+        input_subscripts=("ab", "ab"), output_subscript="ab",
+        input_shapes=((10, 10), (10, 10)),
+    )
 
-    # GEMM — legacy fallback formula
-    assert 1000 == oe._helpers.flop_count("abc", True, 2, size_dict)  # pyright: ignore[reportAttributeAccessIssue]
+    # Inner product (a,a->): 10 multiplies + 9 adds = 19 under FMA=2.
+    assert 19 == fc(
+        "a", True, 2, size_dict,
+        input_subscripts=("a", "a"), output_subscript="",
+        input_shapes=((10,), (10,)),
+    )
+    assert 199 == fc(
+        "ab", True, 2, size_dict,
+        input_subscripts=("ab", "ab"), output_subscript="",
+        input_shapes=((10, 10), (10, 10)),
+    )
+
+    # Inner product x3 (a,a,a->): 29 under FMA=2.
+    assert 29 == fc(
+        "a", True, 3, size_dict,
+        input_subscripts=("a", "a", "a"), output_subscript="",
+        input_shapes=((10,), (10,), (10,)),
+    )
+
+    # GEMM (ab,bc->ac): 2*1000 - 100 = 1900 under FMA=2.
+    assert 1900 == fc(
+        "abc", True, 2, size_dict,
+        input_subscripts=("ab", "bc"), output_subscript="ac",
+        input_shapes=((10, 10), (10, 10)),
+    )
+
+    # No subscripts/shapes is now an error (no legacy FMA=1 fallback).
+    with pytest.raises(ValueError):
+        fc("abc", True, 2, size_dict)
 
 
 @pytest.mark.skip(reason="oe.contract not vendored")
