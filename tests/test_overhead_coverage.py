@@ -49,13 +49,15 @@ def _has_counted_wrapper_decorator(fn: ast.FunctionDef) -> bool:
 
 def test_every_wrapper_with_budget_deduct_is_decorated():
     """Every function whose body calls budget.deduct(...) must carry
-    @_counted_wrapper. Exceptions: BudgetContext.deduct itself, _call_numpy."""
+    @_counted_wrapper. Exceptions: BudgetContext.deduct itself, _call_numpy,
+    and _einsum_routed_binary (a shared cost-routing helper invoked *by*
+    already-decorated wrappers, so it must not be wrapped a second time)."""
     missing: list[str] = []
     for path in SRC_ROOT.rglob("*.py"):
         if path.name.startswith("test_"):
             continue
         for fn in _functions_with_budget_deduct(path):
-            if fn.name in ("deduct", "_call_numpy"):
+            if fn.name in ("deduct", "_call_numpy", "_einsum_routed_binary"):
                 continue
             if not _has_counted_wrapper_decorator(fn):
                 rel = path.relative_to(SRC_ROOT.parent.parent)
