@@ -604,8 +604,8 @@ class TestVecdot:
         with BudgetContext(flop_budget=10**6) as budget:
             result = vecdot(a, b)
         assert numpy.allclose(result, numpy.vecdot(a, b))
-        # Cost = output_size * contracted_axis = 1 * 3
-        assert budget.flops_used == 3
+        # FMA=2: 1 output * (2*3 - 1) = 5
+        assert budget.flops_used == 5
 
     def test_vecdot_2d(self):
         from flopscope._pointwise import vecdot
@@ -615,8 +615,8 @@ class TestVecdot:
         with BudgetContext(flop_budget=10**6) as budget:
             result = vecdot(a, b)
         assert result.shape == (5,)
-        # Cost = 5 * 4 = 20
-        assert budget.flops_used == 20
+        # FMA=2: 5 outputs * (2*4 - 1) = 5*7 = 35
+        assert budget.flops_used == 35
 
     def test_vecdot_from_list(self):
         """vecdot should convert non-ndarray inputs."""
@@ -826,20 +826,27 @@ class TestDotMatmulSymmetric:
         assert numpy.isclose(result, 32.0)
 
     def test_dot_higher_dim(self):
-        """dot with 3d arrays falls back to a.size * b.size cost."""
+        """dot N-D contracts a[-1] with b[-2] via exact FMA=2 einsum cost.
+
+        a(2,3,4) dot b(2,4,5): output shape (2,3,2,5), contracted K=4.
+        Cost = out_elems * (2*K - 1) = 60 * 7 = 420.
+        Old fallback charged a.size * b.size = 960 (overcount).
+        """
         a = numpy.ones((2, 3, 4))
         b = numpy.ones((2, 4, 5))
         with BudgetContext(flop_budget=10**6) as budget:
             result = dot(a, b)
-        assert budget.flops_used == a.size * b.size
+        # output (2,3,2,5): 60 elements * (2*4-1) = 420
+        assert budget.flops_used == 2 * 3 * 2 * 5 * (2 * 4 - 1)
 
     def test_matmul_higher_dim(self):
-        """matmul with 3d arrays falls back to a.size * b.size cost."""
+        """matmul with 3d arrays uses einsum "...ij,...jk->...ik" cost (FMA=2)."""
         a = numpy.ones((2, 3, 4))
         b = numpy.ones((2, 4, 5))
         with BudgetContext(flop_budget=10**6) as budget:
             result = matmul(a, b)
-        assert budget.flops_used == a.size * b.size
+        # FMA=2: 2*3*5 output elements * (2*4 - 1) = 30 * 7 = 210
+        assert budget.flops_used == 2 * 3 * 5 * (2 * 4 - 1)
 
 
 # ---------------------------------------------------------------------------

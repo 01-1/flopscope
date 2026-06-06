@@ -175,11 +175,9 @@ def lstsq_cost(m: int, n: int, b_cols: int = 1, b_ndim: int = 1) -> int:
     ``svd(m,n) + ut_b + k*c + reconstruction`` where ``k = min(m, n)``
     and ``c = b_cols``.
 
-    When ``b_ndim == 1`` (1D RHS), the intermediate matmuls are 2D×1D
-    (NumPy dispatches ``(k,m)@(m,)`` differently from ``(k,m)@(m,c)``):
-    ``ut_b = k * m * m`` and ``reconstruction = n * k * k``.
-    When ``b_ndim == 2`` (2D RHS), both are standard 2D×2D matmuls:
-    ``ut_b = matmul_cost(k, m, c)`` and ``reconstruction = matmul_cost(n, k, c)``.
+    Both 1-D and 2-D RHS branches use ``matmul_cost``:
+    ``ut_b = matmul_cost(k, m, b_cols)`` and
+    ``reconstruction = matmul_cost(n, k, b_cols)``.
 
     Issue #69 (was previously just ``svd_cost`` ignoring the
     back-substitution).
@@ -189,24 +187,12 @@ def lstsq_cost(m: int, n: int, b_cols: int = 1, b_ndim: int = 1) -> int:
     k = min(m, n)
     c = b_cols
     svd = svd_cost(m, n)
-    # NOTE (#69): the 1D-b path uses `k*m*m` / `n*k*k` directly instead of
-    # `matmul_cost(k, m, 1)` / `matmul_cost(n, k, 1)` because `fnp.matmul`'s
-    # 2D×1D code path currently uses the einsum fallback (charging
-    # `a.size * b.size`) rather than the canonical FMA-1 formula. The
-    # parity test (`tests/test_issue_69_cost_parity.py::test_cost_parity[lstsq]`)
-    # would fail if we used `matmul_cost` here, because the oracle calls
-    # `fnp.matmul` and the wrapper would then disagree. When `fnp.matmul`'s
-    # 2D×1D charge is fixed in a separate issue, switch both branches to
-    # `matmul_cost` for symmetry.
+    # matmul 2D×1D is now exact (== matmul_cost), so both b_ndim branches use it.
     if b_ndim == 1:
-        # 2D@1D matmul: (k, m) @ (m,) charges k * m * m
-        ut_b = k * m * m
-        # 2D@1D matmul: (n, k) @ (k,) charges n * k * k
-        reconstruction = n * k * k
+        ut_b = matmul_cost(k, m, 1)
+        reconstruction = matmul_cost(n, k, 1)
     else:
-        # 2D@2D matmul: (k, m) @ (m, c) -> matmul_cost(k, m, c)
         ut_b = matmul_cost(k, m, c)
-        # 2D@2D matmul: (n, k) @ (k, c) -> matmul_cost(n, k, c)
         reconstruction = matmul_cost(n, k, c)
     divide_by_s = k * c
     return max(svd + ut_b + divide_by_s + reconstruction, 1)

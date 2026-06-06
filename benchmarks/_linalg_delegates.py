@@ -95,7 +95,7 @@ def _analytical_cost(op_name: str) -> int:
         "tensorinv": 64**3,  # n^3 after reshape
         "tensorsolve": 64**3,  # n^3 after reshape
         "trace": 10_000,  # min(m,n)
-        "vecdot": 1000 * 512,  # batch*K
+        "vecdot": 1000 * (2 * 512 - 1),  # FMA=2: batch * (2*K - 1)
         "vector_norm": 2 * 10_000_000,  # 2*numel (FMA=2)
     }
     return costs[short]

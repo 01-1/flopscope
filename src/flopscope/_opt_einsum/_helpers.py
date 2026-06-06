@@ -124,23 +124,34 @@ def flop_count(
     scalar-op counts (multiplies and adds counted separately, with the
     off-by-one accumulator-init credit applied).
 
-    Legacy fallback (when subscripts/shapes are not provided): the old
-    overall_size * op_factor formula with FMA=1 (inner does not add an extra
-    op).
+    ``input_subscripts`` and ``input_shapes`` are required: they describe the
+    operands' axes so the accumulation cost model can be invoked. There is no
+    legacy FMA=1 fallback — every caller (billing and contraction-path search)
+    threads subscripts/shapes so both use the same FMA=2 cost model.
 
     Examples:
     --------
-    >>> flop_count('abc', False, 1, {'a': 2, 'b':3, 'c':5})
-    30
+    >>> # ab,bc->ac matmul (a=2, b=3, c=5): 2*2*3*5 - 2*5 = 50
+    >>> flop_count(
+    ...     'abc', True, 2, {'a': 2, 'b': 3, 'c': 5},
+    ...     input_subscripts=('ab', 'bc'),
+    ...     output_subscript='ac',
+    ...     input_shapes=((2, 3), (3, 5)),
+    ... )
+    50
 
-    >>> flop_count('abc', True, 2, {'a': 2, 'b':3, 'c':5})
-    30
+    >>> # ab-> full reduction (a=2, b=3): sum of 6 cells, off-by-one credit = 5
+    >>> flop_count(
+    ...     'ab', True, 1, {'a': 2, 'b': 3},
+    ...     input_subscripts=('ab',),
+    ...     output_subscript='',
+    ...     input_shapes=((2, 3),),
+    ... )
+    5
 
     """
     if input_subscripts is None or input_shapes is None:
-        overall_size = compute_size_by_dict(idx_contraction, size_dictionary)
-        op_factor = max(1, num_terms - 1)
-        return overall_size * op_factor
+        raise ValueError("flop_count requires input_subscripts and input_shapes")
 
     from flopscope._accumulation._cost import compute_accumulation_cost
 

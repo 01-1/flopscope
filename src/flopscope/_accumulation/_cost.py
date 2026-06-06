@@ -381,18 +381,29 @@ def _build_size_map(
     input_parts: _Seq[str],
     shapes: _Seq[_Seq[int]],
 ) -> dict[str, int]:
-    """Build label → size from operand shapes. Validates that each label
-    appears with consistent sizes across operands."""
+    """Build label → size from operand shapes.
+
+    A label may legitimately appear with sizes ``{1, n}`` across operands: that
+    is NumPy broadcasting (the size-1 axis broadcasts to ``n``), so the label's
+    size is the broadcast extent ``n``. This is how batched/broadcast
+    contractions (e.g. ``matmul``/``vecdot`` with a size-1 batch axis on one
+    operand) reach the cost model. A mismatch where neither size is ``1``
+    (e.g. 3 vs 4) is a genuine inconsistency and raises.
+    """
     size_map: dict[str, int] = {}
     for part, shape in zip(input_parts, shapes, strict=True):
         for label, dim in zip(part, shape, strict=True):
             existing = size_map.get(label)
-            if existing is not None and existing != dim:
+            if existing is None or existing == dim:
+                size_map[label] = dim
+            elif existing == 1 or dim == 1:
+                # NumPy broadcasting: a size-1 axis broadcasts to the other extent.
+                size_map[label] = max(existing, dim)
+            else:
                 raise ValueError(
                     f"label '{label}' has inconsistent sizes {existing} and {dim} "
                     f"across operands"
                 )
-            size_map[label] = dim
     return size_map
 
 

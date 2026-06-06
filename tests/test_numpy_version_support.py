@@ -39,8 +39,8 @@ def test_vecdot_cost():
     with BudgetContext(flop_budget=1_000_000) as ctx:
         result = fnp.vecdot(a, b)
     assert result.shape == (10,)
-    # Cost = output_size * contracted_axis = 10 * 5 = 50
-    assert ctx.flops_used == 50
+    # FMA=2: 10 outputs * (2*5 - 1) = 10*9 = 90
+    assert ctx.flops_used == 90
 
 
 @pytest.mark.skipif(hasattr(np, "vecdot"), reason="only on numpy < 2.1")
@@ -57,8 +57,8 @@ def test_matvec_cost():
     with BudgetContext(flop_budget=1_000_000) as ctx:
         result = fnp.matvec(A, v)
     assert result.shape == (3,)
-    # Cost = output_size * contracted_axis = 3 * 4 = 12
-    assert ctx.flops_used == 12
+    # FMA=2: 3 outputs * (2*4 - 1) = 3*7 = 21
+    assert ctx.flops_used == 21
 
 
 @pytest.mark.skipif(hasattr(np, "matvec"), reason="only on numpy < 2.2")
@@ -75,8 +75,8 @@ def test_vecmat_cost():
     with BudgetContext(flop_budget=1_000_000) as ctx:
         result = fnp.vecmat(v, A)
     assert result.shape == (4,)
-    # Cost = output_size * contracted_axis = 4 * 3 = 12
-    assert ctx.flops_used == 12
+    # FMA=2: 4 outputs * (2*3 - 1) = 4*5 = 20
+    assert ctx.flops_used == 20
 
 
 @pytest.mark.skipif(hasattr(np, "vecmat"), reason="only on numpy < 2.2")
@@ -93,8 +93,8 @@ def test_matvec_batched():
     with BudgetContext(flop_budget=1_000_000) as ctx:
         result = fnp.matvec(A, v)
     assert result.shape == (2, 3)
-    # Cost = output_size * contracted_axis = 6 * 4 = 24
-    assert ctx.flops_used == 24
+    # FMA=2: 6 outputs * (2*4 - 1) = 6*7 = 42
+    assert ctx.flops_used == 42
 
 
 @pytest.mark.skipif(not hasattr(np, "bitwise_count"), reason="requires numpy >= 2.1")

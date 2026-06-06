@@ -234,10 +234,10 @@ def test_binary_numel(name, we):
     assert cost == 100, f"{name}: expected numel=100, got {cost}"
 
 
-def test_vecdot_batch_times_k(we):
-    # formula: batch * K (output_size * contracted_axis)
+def test_vecdot_fma2(we):
+    # FMA=2: 5 outputs * (2*10 - 1) = 5*19 = 95
     cost = _cost_of(we.vecdot, numpy.random.rand(5, 10), numpy.random.rand(5, 10))
-    assert cost == 50, f"vecdot: expected 5*10=50, got {cost}"
+    assert cost == 95, f"vecdot: expected 5*(2*10-1)=95, got {cost}"
 
 
 # ---------------------------------------------------------------------------
@@ -480,10 +480,15 @@ class TestLinalgSolvers:
         assert _cost_of(we.linalg.inv, numpy.random.rand(8, 8)) == 512
 
     def test_lstsq_mnk(self, we):
-        # lstsq_cost(10,5,b_cols=1,b_ndim=1): svd=250, ut_b=k*m*m=5*10*10=500, divide=5, recon=n*k*k=5*5*5=125 -> 880
+        # lstsq_cost(10,5,b_cols=1,b_ndim=1):
+        #   k=5, svd=10*5*5=250
+        #   ut_b=matmul_cost(5,10,1)=2*5*10*1-5*1=95
+        #   divide=5*1=5
+        #   reconstruction=matmul_cost(5,5,1)=2*5*5*1-5*1=45
+        #   total=250+95+5+45=395
         assert (
             _cost_of(we.linalg.lstsq, numpy.random.rand(10, 5), numpy.random.rand(10))
-            == 880
+            == 395
         )
 
     def test_pinv_mnk(self, we):
@@ -561,11 +566,12 @@ class TestLinalgDelegates:
         )
 
     def test_vecdot(self, we):
+        # FMA=2: 5 outputs * (2*10 - 1) = 5*19 = 95
         assert (
             _cost_of(
                 we.linalg.vecdot, numpy.random.rand(5, 10), numpy.random.rand(5, 10)
             )
-            == 50
+            == 95
         )
 
     def test_cross(self, we):

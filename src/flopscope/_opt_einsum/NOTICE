@@ -31,8 +31,8 @@ _contract.py
 
 _helpers.py
 ──────────────────────────────────────────────────
-  flop_count() — computes per-step FLOP cost using flopscope's FMA convention.
-  Default FMA = 1; configurable via flopscope.configure(fma_cost=2).
+  flop_count() — computes per-step FLOP cost via the accumulation model.
+  FLOP costs use the FMA=2 textbook convention; there is no fma_cost setting.
 
 _hsluv.py
 ──────────────────────────────────────────────────
@@ -49,7 +49,7 @@ Originally vendored as a full fork (2026-04-03) to support symmetry-aware
 path search via SubgraphSymmetryOracle. After the symmetry-aware einsum cost
 rewrite (2026-05-07) made path search symmetry-agnostic, the fork's
 customizations collapsed to:
-  - FMA=1 cost convention
+  - FMA=2 cost convention
   - Custom PathInfo/StepInfo shape with rich-render display
 
 This adapter package was created (2026-05-07) by deleting the bulk of the

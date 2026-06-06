@@ -72,8 +72,8 @@ def _analytical_cost(op: str, **kwargs: int) -> int:
         "vdot": 1_000_000,
         # vecdot: batched dot product A(1000,512) . B(1000,512)
         # Output (1000,) with contracted axis 512.
-        # Runtime charges result.size * contracted = 1000 * 512 (FMA=2 textbook).
-        "vecdot": 1000 * 512,
+        # FMA=2: result.size * (2*contracted - 1) = 1000 * (2*512 - 1) = 1000 * 1023.
+        "vecdot": 1000 * (2 * 512 - 1),
         # outer: outer product of two 5000-element vectors
         "outer": 5000 * 5000,
         # tensordot: A(64,64,64) . B(64,64,64) axes=1 -> contract last of A with first of B

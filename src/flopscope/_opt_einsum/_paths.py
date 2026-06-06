@@ -181,6 +181,9 @@ def calc_k12_flops(
         from flopscope._config import get_setting
 
         idx_removed = either - k12
+        k1_sub = "".join(sorted(k1))
+        k2_sub = "".join(sorted(k2))
+        out_sub = "".join(sorted(k12))
         cost = symmetric_flop_count(
             either,
             inner,
@@ -191,9 +194,29 @@ def calc_k12_flops(
             inner_group=subset_sym.inner,
             inner_indices=idx_removed if idx_removed else None,
             use_inner_symmetry=bool(get_setting("use_inner_symmetry")),
+            input_subscripts=(k1_sub, k2_sub),
+            output_subscript=out_sub,
+            input_shapes=(
+                tuple(size_dict[c] for c in k1_sub),
+                tuple(size_dict[c] for c in k2_sub),
+            ),
         )
     else:
-        cost = flop_count(either, inner, 2, size_dict)
+        k1_sub = "".join(sorted(k1))
+        k2_sub = "".join(sorted(k2))
+        out_sub = "".join(sorted(k12))
+        cost = flop_count(
+            either,
+            inner,
+            2,
+            size_dict,
+            input_subscripts=(k1_sub, k2_sub),
+            output_subscript=out_sub,
+            input_shapes=(
+                tuple(size_dict[c] for c in k1_sub),
+                tuple(size_dict[c] for c in k2_sub),
+            ),
+        )
 
     return k12, cost, sym12
 
@@ -210,7 +233,20 @@ def _compute_oversize_flops(
     idx_contraction = frozenset.union(*map(inputs.__getitem__, remaining))  # type: ignore
     inner = idx_contraction - output
     num_terms = len(remaining)
-    return flop_count(idx_contraction, bool(inner), num_terms, size_dict)
+    # `remaining` holds integer indices into `inputs` (see the
+    # ``map(inputs.__getitem__, remaining)`` above); the parameter annotation
+    # is loose, hence the ignore — consistent with the line above.
+    op_subs = tuple("".join(sorted(inputs[r])) for r in remaining)  # type: ignore[index]
+    out_sub = "".join(sorted(output))
+    return flop_count(
+        idx_contraction,
+        bool(inner),
+        num_terms,
+        size_dict,
+        input_subscripts=op_subs,
+        output_subscript=out_sub,
+        input_shapes=tuple(tuple(size_dict[c] for c in sub) for sub in op_subs),
+    )
 
 
 def optimal(

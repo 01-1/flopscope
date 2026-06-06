@@ -1251,41 +1251,10 @@ if hasattr(_np, "vecdot"):
 
     @_counted_wrapper
     def vecdot(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:  # pyright: ignore[reportRedeclaration]
-        """Counted version of np.vecdot.
-
-        Vector dot product along last axis. Each output element is the dot
-        product of two vectors of length K (the last axis), costing K FLOPs.
-        Total cost = batch_size * K = numel(a) when a and b have the same shape.
-        """
-        budget = require_budget()
-        if not isinstance(a, _np.ndarray):
-            a = _np.asarray(a)
-        if not isinstance(b, _np.ndarray):
-            b = _np.asarray(b)
-        # Cost = output_elements * contracted_axis_size
-        # For vecdot, the last axis is contracted.
-        contracted = a.shape[-1] if a.ndim > 0 else 1
-        out_shape = (
-            _np.broadcast_shapes(a.shape[:-1], b.shape[:-1]) if a.ndim > 0 else ()
+        """Counted version of np.vecdot (vector dot product along last axis)."""
+        return _einsum_routed_binary(
+            "vecdot", _np.vecdot, "...n,...n->...", a, b, **kwargs
         )
-        cost = (
-            _builtins.max(int(_np.prod(out_shape)) * contracted, 1)
-            if out_shape
-            else contracted
-        )
-        out = kwargs.pop("out", None)
-        out_stripped = _to_base_ndarray(out) if out is not None else None
-        with budget.deduct(
-            "vecdot", flop_cost=cost, subscripts=None, shapes=(a.shape, b.shape)
-        ):
-            result = _call_numpy(
-                _np.vecdot,
-                _to_base_ndarray(a),
-                _to_base_ndarray(b),
-                out=out_stripped,
-                **kwargs,
-            )
-        return out if out is not None else result  # type: ignore[return-value]
 
 else:
 
@@ -1297,37 +1266,14 @@ if hasattr(_np, "matvec"):
 
     @_counted_wrapper
     def matvec(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:  # pyright: ignore[reportRedeclaration]
-        """Counted version of np.matvec.
+        """Counted version of np.matvec (matrix-vector product).
 
-        Matrix-vector product. A is (..., m, n), v is (..., n), result is (..., m).
-        Cost = output_size * contracted_axis (A's last axis).
+        A is (..., m, n), v is (..., n), result is (..., m). Cost is the exact
+        einsum accumulation cost, counting batch/broadcast on either operand.
         """
-        budget = require_budget()
-        if not isinstance(a, _np.ndarray):
-            a = _np.asarray(a)
-        if not isinstance(b, _np.ndarray):
-            b = _np.asarray(b)
-        contracted = a.shape[-1] if a.ndim > 0 else 1
-        # output shape: (..., m) where m = a.shape[-2]
-        out_m = a.shape[-2] if a.ndim >= 2 else 1
-        batch = a.shape[:-2] if a.ndim > 2 else ()
-        cost = _builtins.max(
-            int(_np.prod(batch)) * out_m * contracted if batch else out_m * contracted,
-            1,
+        return _einsum_routed_binary(
+            "matvec", _np.matvec, "...mn,...n->...m", a, b, **kwargs
         )
-        out = kwargs.pop("out", None)
-        out_stripped = _to_base_ndarray(out) if out is not None else None
-        with budget.deduct(
-            "matvec", flop_cost=cost, subscripts=None, shapes=(a.shape, b.shape)
-        ):
-            result = _call_numpy(
-                _np.matvec,
-                _to_base_ndarray(a),
-                _to_base_ndarray(b),
-                out=out_stripped,
-                **kwargs,
-            )
-        return out if out is not None else result  # type: ignore[return-value]
 
 else:
 
@@ -1339,37 +1285,14 @@ if hasattr(_np, "vecmat"):
 
     @_counted_wrapper
     def vecmat(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:  # pyright: ignore[reportRedeclaration]
-        """Counted version of np.vecmat.
+        """Counted version of np.vecmat (vector-matrix product).
 
-        Vector-matrix product. v is (..., n), A is (..., n, m), result is (..., m).
-        Cost = output_size * contracted_axis (v's last axis).
+        v is (..., n), A is (..., n, m), result is (..., m). Cost is the exact
+        einsum accumulation cost, counting batch/broadcast on either operand.
         """
-        budget = require_budget()
-        if not isinstance(a, _np.ndarray):
-            a = _np.asarray(a)
-        if not isinstance(b, _np.ndarray):
-            b = _np.asarray(b)
-        contracted = a.shape[-1] if a.ndim > 0 else 1
-        # output shape: (..., m) where m = b.shape[-1]
-        out_m = b.shape[-1] if b.ndim >= 2 else 1
-        batch = b.shape[:-2] if b.ndim > 2 else ()
-        cost = _builtins.max(
-            int(_np.prod(batch)) * out_m * contracted if batch else out_m * contracted,
-            1,
+        return _einsum_routed_binary(
+            "vecmat", _np.vecmat, "...n,...nm->...m", a, b, **kwargs
         )
-        out = kwargs.pop("out", None)
-        out_stripped = _to_base_ndarray(out) if out is not None else None
-        with budget.deduct(
-            "vecmat", flop_cost=cost, subscripts=None, shapes=(a.shape, b.shape)
-        ):
-            result = _call_numpy(
-                _np.vecmat,
-                _to_base_ndarray(a),
-                _to_base_ndarray(b),
-                out=out_stripped,
-                **kwargs,
-            )
-        return out if out is not None else result  # type: ignore[return-value]
 
 else:
 
@@ -1790,44 +1713,104 @@ else:
 # ---------------------------------------------------------------------------
 
 
-@_counted_wrapper
-def dot(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
-    """Counted version of np.dot."""
+def _einsum_routed_binary(
+    op_name: str,
+    np_fn: Any,
+    subs: str,
+    a: Any,
+    b: Any,
+    *,
+    errstate: bool = False,
+    nan_check: bool = False,
+    out: Any = None,
+    **call_kwargs: Any,
+) -> Any:
+    """Route a binary contraction op's cost + output-symmetry through the einsum
+    accumulation model (FMA=2) and run its native numpy op.
+
+    `subs` is the einsum subscript string for this call's operand layout
+    (built by the per-op subscript helper). Charges `op_name` exactly once
+    (so each op keeps its own weight), preserves operand symmetry/aliasing via
+    `_resolve_cost_and_output_symmetry`, and wraps a symmetric result as
+    `SymmetricTensor` — mirroring the existing matmul/dot 2-D behavior.
+    """
+    from flopscope._einsum import _resolve_cost_and_output_symmetry
+
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
     if not isinstance(b, _np.ndarray):
         b = _np.asarray(b)
-    subs: str | None
+    info = _resolve_cost_and_output_symmetry(subs, a, b)
+    inputs_were_whest = isinstance(a, _np.ndarray) and (
+        type(a) is not _np.ndarray or type(b) is not _np.ndarray
+    )
+    if out is not None:
+        call_kwargs = {**call_kwargs, "out": _to_base_ndarray(out)}
+    with budget.deduct(
+        op_name,
+        flop_cost=info.accumulation.total,
+        subscripts=info.canonical_subscripts,
+        shapes=(a.shape, b.shape),
+    ):
+        if errstate:
+            with _np.errstate(divide="ignore", over="ignore", invalid="ignore"):
+                result = _call_numpy(
+                    np_fn, _to_base_ndarray(a), _to_base_ndarray(b), **call_kwargs
+                )
+        else:
+            result = _call_numpy(
+                np_fn, _to_base_ndarray(a), _to_base_ndarray(b), **call_kwargs
+            )
+    if nan_check:
+        maybe_check_nan_inf(result, op_name)
+    if out is not None:
+        result = out
+    if info.output_symmetry is not None:
+        _validate_result_symmetry(result, info.output_symmetry)
+        return SymmetricTensor(_np.asarray(result), symmetry=info.output_symmetry)
+    return _asflopscope(result) if inputs_were_whest else result
+
+
+def _outer_contract_subscripts(
+    a_ndim: int, b_ndim: int, *, b_contract_axis: int
+) -> str:
+    """Distinct-label einsum subscripts for an outer-product-style contraction
+    (np.dot / np.inner, ndim >= 2): contract a's last axis with b's
+    `b_contract_axis` (e.g. -1 for inner, -2 for dot). Output = a's free axes
+    then b's free axes.
+    """
+    import string as _string
+
+    letters = iter(_string.ascii_lowercase + _string.ascii_uppercase)
+    a_labels = [next(letters) for _ in range(a_ndim)]
+    b_labels = [next(letters) for _ in range(b_ndim)]
+    b_ax = b_contract_axis % b_ndim
+    b_labels[b_ax] = a_labels[-1]  # tie the contracted axes
+    out = "".join(a_labels[:-1]) + "".join(
+        lab for ax, lab in enumerate(b_labels) if ax != b_ax
+    )
+    return f"{''.join(a_labels)},{''.join(b_labels)}->{out}"
+
+
+@_counted_wrapper
+def dot(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
+    """Counted version of np.dot."""
+    if not isinstance(a, _np.ndarray):
+        a = _np.asarray(a)
+    if not isinstance(b, _np.ndarray):
+        b = _np.asarray(b)
     if a.ndim == 2 and b.ndim == 2:
         subs = "ij,jk->ik"
     elif a.ndim == 1 and b.ndim == 1:
         subs = "i,i->"
+    elif b.ndim == 1:
+        subs = _outer_contract_subscripts(a.ndim, 1, b_contract_axis=-1)
     else:
-        subs = None
-    if subs is None:
-        cost: int = a.size * b.size
-        output_sym = None
-        canonical_subs: str | None = None
-    else:
-        from flopscope._einsum import _resolve_cost_and_output_symmetry
-
-        info = _resolve_cost_and_output_symmetry(subs, a, b)
-        cost = info.accumulation.total
-        output_sym = info.output_symmetry
-        canonical_subs = info.canonical_subscripts
-    inputs_were_whest = isinstance(a, _np.ndarray) and (
-        type(a) is not _np.ndarray or type(b) is not _np.ndarray
+        subs = _outer_contract_subscripts(a.ndim, b.ndim, b_contract_axis=-2)
+    return _einsum_routed_binary(  # type: ignore[return-value]
+        "dot", _np.dot, subs, a, b, errstate=False, nan_check=True
     )
-    with budget.deduct(
-        "dot", flop_cost=cost, subscripts=canonical_subs, shapes=(a.shape, b.shape)
-    ):
-        result = _call_numpy(_np.dot, _to_base_ndarray(a), _to_base_ndarray(b))
-    maybe_check_nan_inf(result, "dot")
-    if output_sym is not None:
-        _validate_result_symmetry(result, output_sym)
-        return SymmetricTensor(_np.asarray(result), symmetry=output_sym)  # type: ignore[return-value]
-    return _asflopscope(result) if inputs_were_whest else result  # type: ignore[return-value]
 
 
 attach_docstring(dot, _np.dot, "counted_custom", "depends on operand dimensions")
@@ -1836,44 +1819,21 @@ attach_docstring(dot, _np.dot, "counted_custom", "depends on operand dimensions"
 @_counted_wrapper
 def matmul(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
     """Counted version of np.matmul."""
-    budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
     if not isinstance(b, _np.ndarray):
         b = _np.asarray(b)
-    # Subscripts for the 2D×2D and 1D×1D cases; everything else falls
-    # back to a dense size×size estimate (batched matmul, mixed ndim).
-    subs: str | None
-    if a.ndim == 2 and b.ndim == 2:
-        subs = "ij,jk->ik"
-    elif a.ndim == 1 and b.ndim == 1:
+    if a.ndim == 1 and b.ndim == 1:
         subs = "i,i->"
+    elif a.ndim == 1:
+        subs = "k,...kn->...n"  # (k,) @ (...,k,n) -> (...,n)
+    elif b.ndim == 1:
+        subs = "...mk,k->...m"  # (...,m,k) @ (k,) -> (...,m)
     else:
-        subs = None
-    if subs is None:
-        cost: int = a.size * b.size
-        output_sym = None
-        canonical_subs: str | None = None
-    else:
-        from flopscope._einsum import _resolve_cost_and_output_symmetry
-
-        info = _resolve_cost_and_output_symmetry(subs, a, b)
-        cost = info.accumulation.total
-        output_sym = info.output_symmetry
-        canonical_subs = info.canonical_subscripts
-    inputs_were_whest = isinstance(a, _np.ndarray) and (
-        type(a) is not _np.ndarray or type(b) is not _np.ndarray
+        subs = "...ij,...jk->...ik"  # 2-D and batched/broadcast N-D
+    return _einsum_routed_binary(
+        "matmul", _np.matmul, subs, a, b, errstate=True, nan_check=True
     )
-    with budget.deduct(
-        "matmul", flop_cost=cost, subscripts=canonical_subs, shapes=(a.shape, b.shape)
-    ):
-        with _np.errstate(divide="ignore", over="ignore", invalid="ignore"):
-            result = _call_numpy(_np.matmul, _to_base_ndarray(a), _to_base_ndarray(b))
-    maybe_check_nan_inf(result, "matmul")
-    if output_sym is not None:
-        _validate_result_symmetry(result, output_sym)
-        return SymmetricTensor(_np.asarray(result), symmetry=output_sym)  # type: ignore[return-value]
-    return _asflopscope(result) if inputs_were_whest else result  # type: ignore[return-value]
 
 
 attach_docstring(matmul, _np.matmul, "counted_custom", "depends on operand dimensions")
@@ -1886,42 +1846,23 @@ attach_docstring(matmul, _np.matmul, "counted_custom", "depends on operand dimen
 
 @_counted_wrapper
 def inner(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
-    """Counted version of np.inner."""
-    budget = require_budget()
+    """Counted version of np.inner.
+
+    # routes through the shared helper -> wraps tracked inputs like dot/matmul
+    """
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
     if not isinstance(b, _np.ndarray):
         b = _np.asarray(b)
-    subs: str | None
     if a.ndim == 1 and b.ndim == 1:
         subs = "i,i->"
     elif a.ndim == 2 and b.ndim == 2:
         subs = "ij,kj->ik"
     else:
-        subs = None
-    if subs is None:
-        cost: int = (
-            a.size
-            if (a.ndim <= 1 and b.ndim <= 1)
-            else a.size * (b.shape[-1] if b.ndim > 1 else 1)
-        )
-        output_sym = None
-        canonical_subs: str | None = None
-    else:
-        from flopscope._einsum import _resolve_cost_and_output_symmetry
-
-        info = _resolve_cost_and_output_symmetry(subs, a, b)
-        cost = info.accumulation.total
-        output_sym = info.output_symmetry
-        canonical_subs = info.canonical_subscripts
-    with budget.deduct(
-        "inner", flop_cost=cost, subscripts=canonical_subs, shapes=(a.shape, b.shape)
-    ):
-        result = _call_numpy(_np.inner, _to_base_ndarray(a), _to_base_ndarray(b))
-    if output_sym is not None:
-        _validate_result_symmetry(result, output_sym)
-        return SymmetricTensor(_np.asarray(result), symmetry=output_sym)  # type: ignore[return-value]
-    return result  # type: ignore[return-value]
+        subs = _outer_contract_subscripts(a.ndim, b.ndim, b_contract_axis=-1)
+    return _einsum_routed_binary(  # type: ignore[return-value]
+        "inner", _np.inner, subs, a, b, errstate=False, nan_check=False
+    )
 
 
 attach_docstring(inner, _np.inner, "counted_custom", "product of matching dims")
@@ -2348,7 +2289,7 @@ def convolve(a: ArrayLike, v: ArrayLike, mode: str = "full") -> FlopscopeArray:
 
 
 attach_docstring(
-    convolve, _np.convolve, "counted_custom", "2*n*m - n - m FLOPs (FMA=1)"
+    convolve, _np.convolve, "counted_custom", "2*n*m - n - m FLOPs (FMA=2)"
 )
 
 
@@ -2374,7 +2315,7 @@ def correlate(a: ArrayLike, v: ArrayLike, mode: str = "valid") -> FlopscopeArray
 
 
 attach_docstring(
-    correlate, _np.correlate, "counted_custom", "2*n*m - n - m FLOPs (FMA=1)"
+    correlate, _np.correlate, "counted_custom", "2*n*m - n - m FLOPs (FMA=2)"
 )
 
 
