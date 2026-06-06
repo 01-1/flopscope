@@ -1772,6 +1772,27 @@ def _einsum_routed_binary(
     return _asflopscope(result) if inputs_were_whest else result
 
 
+def _outer_contract_subscripts(
+    a_ndim: int, b_ndim: int, *, b_contract_axis: int
+) -> str:
+    """Distinct-label einsum subscripts for an outer-product-style contraction
+    (np.dot / np.inner, ndim >= 2): contract a's last axis with b's
+    `b_contract_axis` (e.g. -1 for inner, -2 for dot). Output = a's free axes
+    then b's free axes.
+    """
+    import string as _string
+
+    letters = iter(_string.ascii_lowercase + _string.ascii_uppercase)
+    a_labels = [next(letters) for _ in range(a_ndim)]
+    b_labels = [next(letters) for _ in range(b_ndim)]
+    b_ax = b_contract_axis % b_ndim
+    b_labels[b_ax] = a_labels[-1]  # tie the contracted axes
+    out = "".join(a_labels[:-1]) + "".join(
+        lab for ax, lab in enumerate(b_labels) if ax != b_ax
+    )
+    return f"{''.join(a_labels)},{''.join(b_labels)}->{out}"
+
+
 @_counted_wrapper
 def dot(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
     """Counted version of np.dot."""
@@ -1779,28 +1800,17 @@ def dot(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
         a = _np.asarray(a)
     if not isinstance(b, _np.ndarray):
         b = _np.asarray(b)
-    subs: str | None
     if a.ndim == 2 and b.ndim == 2:
         subs = "ij,jk->ik"
     elif a.ndim == 1 and b.ndim == 1:
         subs = "i,i->"
+    elif b.ndim == 1:
+        subs = _outer_contract_subscripts(a.ndim, 1, b_contract_axis=-1)
     else:
-        subs = None
-    if subs is not None:
-        return _einsum_routed_binary(  # type: ignore[return-value]
-            "dot", _np.dot, subs, a, b, errstate=False, nan_check=True
-        )
-    budget = require_budget()
-    cost: int = a.size * b.size
-    inputs_were_whest = isinstance(a, _np.ndarray) and (
-        type(a) is not _np.ndarray or type(b) is not _np.ndarray
+        subs = _outer_contract_subscripts(a.ndim, b.ndim, b_contract_axis=-2)
+    return _einsum_routed_binary(  # type: ignore[return-value]
+        "dot", _np.dot, subs, a, b, errstate=False, nan_check=True
     )
-    with budget.deduct(
-        "dot", flop_cost=cost, subscripts=None, shapes=(a.shape, b.shape)
-    ):
-        result = _call_numpy(_np.dot, _to_base_ndarray(a), _to_base_ndarray(b))
-    maybe_check_nan_inf(result, "dot")
-    return _asflopscope(result) if inputs_were_whest else result  # type: ignore[return-value]
 
 
 attach_docstring(dot, _np.dot, "counted_custom", "depends on operand dimensions")
@@ -1836,33 +1846,23 @@ attach_docstring(matmul, _np.matmul, "counted_custom", "depends on operand dimen
 
 @_counted_wrapper
 def inner(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
-    """Counted version of np.inner."""
+    """Counted version of np.inner.
+
+    # routes through the shared helper -> wraps tracked inputs like dot/matmul
+    """
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
     if not isinstance(b, _np.ndarray):
         b = _np.asarray(b)
-    subs: str | None
     if a.ndim == 1 and b.ndim == 1:
         subs = "i,i->"
     elif a.ndim == 2 and b.ndim == 2:
         subs = "ij,kj->ik"
     else:
-        subs = None
-    if subs is not None:
-        return _einsum_routed_binary(  # type: ignore[return-value]
-            "inner", _np.inner, subs, a, b, errstate=False, nan_check=False
-        )
-    budget = require_budget()
-    cost: int = (
-        a.size
-        if (a.ndim <= 1 and b.ndim <= 1)
-        else a.size * (b.shape[-1] if b.ndim > 1 else 1)
+        subs = _outer_contract_subscripts(a.ndim, b.ndim, b_contract_axis=-1)
+    return _einsum_routed_binary(  # type: ignore[return-value]
+        "inner", _np.inner, subs, a, b, errstate=False, nan_check=False
     )
-    with budget.deduct(
-        "inner", flop_cost=cost, subscripts=None, shapes=(a.shape, b.shape)
-    ):
-        result = _call_numpy(_np.inner, _to_base_ndarray(a), _to_base_ndarray(b))
-    return result  # type: ignore[return-value]
 
 
 attach_docstring(inner, _np.inner, "counted_custom", "product of matching dims")
