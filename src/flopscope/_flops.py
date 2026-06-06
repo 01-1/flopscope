@@ -204,8 +204,9 @@ def svd_cost(m: int, n: int, k: int | None = None) -> int:
 def matmul_cost(m: int, k: int, n: int) -> int:
     """FLOP cost of a single 2D matmul ``(m, k) @ (k, n) -> (m, n)``.
 
-    Formula: ``2 * m * k * n - m * n`` (FMA=1 convention with accumulator
-    off-by-one), matching what ``fnp.matmul`` charges per 2D call via the
+    Formula: ``2 * m * k * n - m * n`` (FMA=2 textbook: multiplies and adds
+    counted separately, with accumulator off-by-one), matching what
+    ``fnp.matmul`` charges per 2D call via the
     einsum machinery (``_resolve_cost_and_output_symmetry`` on the
     canonical subscripts ``ij,jk->ik``).
 

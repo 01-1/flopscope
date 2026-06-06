@@ -2289,7 +2289,7 @@ def convolve(a: ArrayLike, v: ArrayLike, mode: str = "full") -> FlopscopeArray:
 
 
 attach_docstring(
-    convolve, _np.convolve, "counted_custom", "2*n*m - n - m FLOPs (FMA=1)"
+    convolve, _np.convolve, "counted_custom", "2*n*m - n - m FLOPs (FMA=2)"
 )
 
 
@@ -2315,7 +2315,7 @@ def correlate(a: ArrayLike, v: ArrayLike, mode: str = "valid") -> FlopscopeArray
 
 
 attach_docstring(
-    correlate, _np.correlate, "counted_custom", "2*n*m - n - m FLOPs (FMA=1)"
+    correlate, _np.correlate, "counted_custom", "2*n*m - n - m FLOPs (FMA=2)"
 )
 
 

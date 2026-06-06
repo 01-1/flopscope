@@ -69,7 +69,7 @@ class StepInfo:
     """Einsum subscript for this step, e.g. ``"ijk,ai->ajk"``."""
 
     flop_cost: int
-    """FLOP cost (FMA = 1 op)."""
+    """FLOP cost (FMA=2 via the accumulation model)."""
 
     input_shapes: list[tuple[int, ...]]
     """Shapes of the input operands for this step."""
@@ -84,7 +84,7 @@ class StepInfo:
     """SymmetryGroup of the output, or None."""
 
     dense_flop_cost: int = 0
-    """FLOP cost without symmetry (FMA = 1 op)."""
+    """FLOP cost without symmetry (FMA=2 via the accumulation model)."""
 
     symmetry_savings: float = 0.0
     """Fraction saved: ``1 - (flop_cost / dense_flop_cost)``. Zero when no symmetry."""
@@ -144,10 +144,10 @@ class PathInfo:
     """Per-step diagnostics."""
 
     naive_cost: int
-    """Naive (single-step) FLOP cost (FMA = 1 op)."""
+    """Naive (single-step) FLOP cost (FMA=2 via the accumulation model)."""
 
     optimized_cost: int
-    """Sum of per-step costs (FMA = 1 op)."""
+    """Sum of per-step costs (FMA=2 via the accumulation model)."""
 
     largest_intermediate: int
     """Number of elements in the largest intermediate tensor."""
@@ -181,7 +181,7 @@ class PathInfo:
 
     @property
     def opt_cost(self) -> Decimal:
-        """Legacy: opt_einsum-style cost (FMA = 1 op)."""
+        """Legacy: opt_einsum-style cost (upstream opt_einsum FMA=2 convention)."""
         return Decimal(self._oe_opt_cost)
 
     @property
@@ -1159,9 +1159,9 @@ def build_path_info(
     """Adapt upstream opt_einsum's PathInfo to flopscope's PathInfo.
 
     Per-step ``flop_cost`` is recomputed using flopscope's
-    ``_helpers.flop_count`` (FMA = 1 by default; configurable via the
-    ``fma_cost`` setting). ``naive_cost`` and ``optimized_cost`` are also
-    recomputed from the per-step costs.
+    ``_helpers.flop_count`` (FMA=2 textbook convention via the accumulation
+    model; there is no ``fma_cost`` setting). ``naive_cost`` and
+    ``optimized_cost`` are also recomputed from the per-step costs.
 
     Parameters
     ----------

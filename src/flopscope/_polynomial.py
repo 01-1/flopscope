@@ -102,7 +102,7 @@ def polyval(p: ArrayLike, x: ArrayLike) -> FlopscopeArray:
 
 
 attach_docstring(
-    polyval, _np.polyval, "counted_custom", "m * deg FLOPs (Horner's method, FMA=1)"
+    polyval, _np.polyval, "counted_custom", "2 * m * deg FLOPs (Horner's method, FMA=2)"
 )
 
 

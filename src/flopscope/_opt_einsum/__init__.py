@@ -2,8 +2,8 @@
 
 Re-exports contract_path from upstream and the flopscope PathInfo/StepInfo
 adapters. Path search algorithms come from upstream; per-step FLOP costs are
-recomputed using flopscope's FMA convention (default 1, configurable via the
-``fma_cost`` setting).
+recomputed using the FMA=2 textbook convention via the accumulation model
+(there is no ``fma_cost`` setting).
 
 See LICENSE and NOTICE in this directory for attribution to opt_einsum.
 """
