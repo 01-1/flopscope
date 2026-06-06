@@ -80,8 +80,13 @@ class TestLstsq:
             from flopscope.numpy.linalg import lstsq
 
             lstsq(A, b, rcond=None)
-            # lstsq_cost(6,4,b_cols=1,b_ndim=1): svd=96, ut_b=k*m*m=4*6*6=144, divide=4, recon=n*k*k=4*4*4=64 -> 308
-            assert budget.flops_used == 308
+            # lstsq_cost(6,4,b_cols=1,b_ndim=1):
+            #   k=4, svd=6*4*4=96
+            #   ut_b=matmul_cost(4,6,1)=2*4*6*1-4*1=44
+            #   divide=4*1=4
+            #   reconstruction=matmul_cost(4,4,1)=2*4*4*1-4*1=28
+            #   total=96+44+4+28=172
+            assert budget.flops_used == 172
 
 
 class TestPinv:

@@ -860,8 +860,13 @@ class TestLinalgSolversExtended:
         b = numpy.random.rand(5)
         with BudgetContext(flop_budget=10**9) as budget:
             lstsq(a, b, rcond=None)
-        # lstsq_cost(5,3,b_cols=1,b_ndim=1): svd=45, ut_b=k*m*m=3*5*5=75, divide=3, recon=n*k*k=3*3*3=27 -> 150
-        assert budget.flops_used == 150
+        # lstsq_cost(5,3,b_cols=1,b_ndim=1):
+        #   k=3, svd=5*3*3=45
+        #   ut_b=matmul_cost(3,5,1)=2*3*5*1-3*1=27
+        #   divide=3*1=3
+        #   reconstruction=matmul_cost(3,3,1)=2*3*3*1-3*1=15
+        #   total=45+27+3+15=90
+        assert budget.flops_used == 90
 
     def test_pinv(self):
         from flopscope.numpy.linalg._solvers import pinv
