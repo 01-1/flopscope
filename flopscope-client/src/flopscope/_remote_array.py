@@ -10,6 +10,7 @@ from __future__ import annotations
 import struct
 from typing import Any
 
+from flopscope._dispatch import timed_dispatch
 from flopscope._math_compat import prod as _prod
 
 # ---------------------------------------------------------------------------
@@ -363,6 +364,7 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
 
     # -- data access (auto-fetch from server) -------------------------------
 
+    @timed_dispatch
     def _fetch_data(self) -> tuple[bytes, tuple, str]:
         """Fetch the raw data from the server.
 
@@ -378,11 +380,13 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
         result = resp.get("result", {})
         return result["data"], tuple(result["shape"]), result["dtype"]
 
+    @timed_dispatch
     def tolist(self) -> Any:
         """Fetch data and convert to a nested Python list."""
         data, shape, dtype = self._fetch_data()
         return _bytes_to_list(data, shape, dtype)
 
+    @timed_dispatch
     def __repr__(self) -> str:
         try:
             values = self.tolist()
@@ -393,9 +397,11 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
                 f"shape={self._shape}, dtype={self._dtype!r})"
             )
 
+    @timed_dispatch
     def __str__(self) -> str:
         return self.__repr__()
 
+    @timed_dispatch
     def __float__(self) -> float:
         if self.size != 1:
             raise TypeError("only size-1 arrays can be converted to Python scalars")
@@ -406,6 +412,7 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
             result = result[0]
         return float(result)
 
+    @timed_dispatch
     def __int__(self) -> int:
         if self.size != 1:
             raise TypeError("only size-1 arrays can be converted to Python scalars")
@@ -415,6 +422,7 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
             result = result[0]
         return int(result)
 
+    @timed_dispatch
     def __bool__(self) -> bool:
         if self.size != 1:
             raise ValueError(
@@ -432,6 +440,7 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
         for i in range(self._shape[0]):
             yield self[i]
 
+    @timed_dispatch
     def __getitem__(self, key):
         """Index into the array, dispatching to the server.
 
@@ -456,6 +465,7 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
 
     # -- operator overloads (dispatch to server) ----------------------------
 
+    @timed_dispatch
     def _dispatch_op(self, op_name: str, *args: Any, **kwargs: Any) -> Any:
         """Encode and send an operation to the server, return the result."""
         from flopscope._connection import get_connection
@@ -623,6 +633,7 @@ class RemoteGenerator:
     def __repr__(self) -> str:
         return f"RemoteGenerator(handle_id={self._handle_id!r})"
 
+    @timed_dispatch
     def _call(self, method: str, *args: Any, **kwargs: Any) -> Any:
         from flopscope._connection import get_connection
         from flopscope._protocol import encode_request

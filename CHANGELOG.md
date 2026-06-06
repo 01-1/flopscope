@@ -152,3 +152,28 @@ See the [README](README.md) for the API overview and the
 full API reference.
 
 ## Unreleased
+
+### Fix
+
+- **flopscope timing split**: `BudgetContext` now reports a precise client/server
+  decomposition — `backend` = pure server numpy kernel, `overhead` = all flopscope
+  machinery (client dispatch + wire + server marshaling), `residual` = the
+  participant's own Python only. The server reports `compute_time` as kernel-only;
+  the client times the full op dispatch (including result reconstruction). Fixes
+  the prior all-zero (and the later round-trip-approximation) behavior on the
+  server-backed path.
+- **flopscope cost queries**: `flops.einsum_cost` / `flops.svd_cost` now count their
+  server round-trip as `overhead` (via `@timed_dispatch`) instead of leaking it into
+  the billed `residual` bucket when a participant calls them inside a budget context.
+  The implicit global-default budget-open round-trip is likewise wrapped defensively.
+- **flopscope flops_used cache**: `BudgetContext.__exit__` now refreshes `flops_used`
+  from the server's `budget_breakdown` in the `budget_close` response (it is nested at
+  `result.budget_breakdown`, one level deeper than `budget_status`). A plain `with`
+  block now reports the authoritative server count — and `render_budget_summary()`
+  shows it — without the prior `summary()`-call workaround.
+
+### Added
+
+- **budget summary timing**: `render_budget_summary()` now shows a session
+  wall-time breakdown (backend / overhead / residual) beneath FLOP usage, in both
+  the Rich and plain-text renderers, surfacing the per-context timing split.
