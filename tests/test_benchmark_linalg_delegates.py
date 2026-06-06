@@ -76,7 +76,8 @@ class TestAnalyticalCost:
         assert _analytical_cost("linalg.trace") == 10_000
 
     def test_vecdot_cost(self):
-        assert _analytical_cost("linalg.vecdot") == 1000 * 512
+        # FMA=2: 1000 outputs * (2*512 - 1) = 1000 * 1023
+        assert _analytical_cost("linalg.vecdot") == 1000 * (2 * 512 - 1)
 
     def test_vector_norm_cost(self):
         assert (

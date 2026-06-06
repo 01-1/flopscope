@@ -234,10 +234,10 @@ def test_binary_numel(name, we):
     assert cost == 100, f"{name}: expected numel=100, got {cost}"
 
 
-def test_vecdot_batch_times_k(we):
-    # formula: batch * K (output_size * contracted_axis)
+def test_vecdot_fma2(we):
+    # FMA=2: 5 outputs * (2*10 - 1) = 5*19 = 95
     cost = _cost_of(we.vecdot, numpy.random.rand(5, 10), numpy.random.rand(5, 10))
-    assert cost == 50, f"vecdot: expected 5*10=50, got {cost}"
+    assert cost == 95, f"vecdot: expected 5*(2*10-1)=95, got {cost}"
 
 
 # ---------------------------------------------------------------------------
@@ -561,11 +561,12 @@ class TestLinalgDelegates:
         )
 
     def test_vecdot(self, we):
+        # FMA=2: 5 outputs * (2*10 - 1) = 5*19 = 95
         assert (
             _cost_of(
                 we.linalg.vecdot, numpy.random.rand(5, 10), numpy.random.rand(5, 10)
             )
-            == 50
+            == 95
         )
 
     def test_cross(self, we):
