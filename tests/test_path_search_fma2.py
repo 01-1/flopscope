@@ -41,9 +41,7 @@ def test_binary_einsum_unaffected():
 def test_three_operand_chain_strongly_prefers_one_order():
     # ab,bc,cd->ad with shapes chosen so the two association orders differ by
     # ~8x. (A@B)@C is cheap, A@(B@C) is expensive; the cheapest must win.
-    A, B, C = (
-        fnp.asarray(rng.standard_normal(s)) for s in [(5, 40), (40, 5), (5, 40)]
-    )
+    A, B, C = (fnp.asarray(rng.standard_normal(s)) for s in [(5, 40), (40, 5), (5, 40)])
     total = _cost("ab,bc,cd->ad", A, B, C)
     o1 = (2 * 5 * 40 * 5 - 5 * 5) + (2 * 5 * 5 * 40 - 5 * 40)  # (A@B)@C
     o2 = (2 * 40 * 5 * 40 - 40 * 40) + (2 * 5 * 40 * 40 - 5 * 40)  # A@(B@C)

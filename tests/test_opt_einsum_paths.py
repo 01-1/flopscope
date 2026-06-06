@@ -136,45 +136,74 @@ def test_flop_cost() -> None:
 
     # Loop over an array (a->a): pure copy, no arithmetic (clamped to 1).
     assert 1 == fc(
-        "a", False, 1, size_dict,
-        input_subscripts=("a",), output_subscript="a", input_shapes=((10,),),
+        "a",
+        False,
+        1,
+        size_dict,
+        input_subscripts=("a",),
+        output_subscript="a",
+        input_shapes=((10,),),
     )
 
     # Hadamard product (a,a->a): 10 multiplies, no reduction.
     assert 10 == fc(
-        "a", False, 2, size_dict,
-        input_subscripts=("a", "a"), output_subscript="a",
+        "a",
+        False,
+        2,
+        size_dict,
+        input_subscripts=("a", "a"),
+        output_subscript="a",
         input_shapes=((10,), (10,)),
     )
     assert 100 == fc(
-        "ab", False, 2, size_dict,
-        input_subscripts=("ab", "ab"), output_subscript="ab",
+        "ab",
+        False,
+        2,
+        size_dict,
+        input_subscripts=("ab", "ab"),
+        output_subscript="ab",
         input_shapes=((10, 10), (10, 10)),
     )
 
     # Inner product (a,a->): 10 multiplies + 9 adds = 19 under FMA=2.
     assert 19 == fc(
-        "a", True, 2, size_dict,
-        input_subscripts=("a", "a"), output_subscript="",
+        "a",
+        True,
+        2,
+        size_dict,
+        input_subscripts=("a", "a"),
+        output_subscript="",
         input_shapes=((10,), (10,)),
     )
     assert 199 == fc(
-        "ab", True, 2, size_dict,
-        input_subscripts=("ab", "ab"), output_subscript="",
+        "ab",
+        True,
+        2,
+        size_dict,
+        input_subscripts=("ab", "ab"),
+        output_subscript="",
         input_shapes=((10, 10), (10, 10)),
     )
 
     # Inner product x3 (a,a,a->): 29 under FMA=2.
     assert 29 == fc(
-        "a", True, 3, size_dict,
-        input_subscripts=("a", "a", "a"), output_subscript="",
+        "a",
+        True,
+        3,
+        size_dict,
+        input_subscripts=("a", "a", "a"),
+        output_subscript="",
         input_shapes=((10,), (10,), (10,)),
     )
 
     # GEMM (ab,bc->ac): 2*1000 - 100 = 1900 under FMA=2.
     assert 1900 == fc(
-        "abc", True, 2, size_dict,
-        input_subscripts=("ab", "bc"), output_subscript="ac",
+        "abc",
+        True,
+        2,
+        size_dict,
+        input_subscripts=("ab", "bc"),
+        output_subscript="ac",
         input_shapes=((10, 10), (10, 10)),
     )
 

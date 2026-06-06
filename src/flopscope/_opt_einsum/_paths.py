@@ -245,9 +245,7 @@ def _compute_oversize_flops(
         size_dict,
         input_subscripts=op_subs,
         output_subscript=out_sub,
-        input_shapes=tuple(
-            tuple(size_dict[c] for c in sub) for sub in op_subs
-        ),
+        input_shapes=tuple(tuple(size_dict[c] for c in sub) for sub in op_subs),
     )
 
 
