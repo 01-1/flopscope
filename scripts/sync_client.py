@@ -91,6 +91,14 @@ def _generate_errors() -> str:
         "UnsupportedReturnType",
     }
 
+    # Classes whose default message must be non-empty (match core's guidance).
+    _DEFAULT_MESSAGES = {
+        "NoBudgetContextError": (
+            "No active BudgetContext. "
+            "Wrap your code in `with flopscope.BudgetContext(...):`."
+        ),
+    }
+
     # (class_name, base_class, docstring) in declaration order
     _CLASSES = [
         ("FlopscopeError", "Exception", "Base exception for all flopscope errors."),
@@ -176,8 +184,11 @@ def _generate_errors() -> str:
         lines.append(f"class {cls_name}({base}):\n")
         lines.append(f'    """{doc}"""\n')
         if cls_name in _CUSTOM_INIT_CLASSES:
+            default = _DEFAULT_MESSAGES.get(cls_name, "")
             lines.append("\n")
-            lines.append('    def __init__(self, message: str = "") -> None:\n')
+            lines.append(
+                f"    def __init__(self, message: str = {default!r}) -> None:\n"
+            )
             lines.append("        super().__init__(message)\n")
         lines.append("\n\n")
 
@@ -236,6 +247,21 @@ def _generate_perm_group() -> str:
     """Copy _perm_group.py from core (pure Python, no numpy dependency)."""
     core_path = (
         Path(__file__).resolve().parent.parent / "src" / "flopscope" / "_perm_group.py"
+    )
+    content = core_path.read_text()
+    return _HEADER + "\n" + content
+
+
+def _generate_config() -> str:
+    """Copy _config.py from core (pure Python; the client needs it because the
+    copied _perm_group._dimino does `from flopscope._config import get_setting`).
+    The `configure(einsum_path_cache_size=...)` branch defers an import of
+    `flopscope._einsum` (absent on the client); it is never reached by client
+    code paths (the client does not cache einsum paths), so the verbatim copy is
+    safe and keeps the file in lockstep with core.
+    """
+    core_path = (
+        Path(__file__).resolve().parent.parent / "src" / "flopscope" / "_config.py"
     )
     content = core_path.read_text()
     return _HEADER + "\n" + content
@@ -384,6 +410,14 @@ def main():
     _write_or_check(
         _CLIENT_SRC / "_perm_group.py",
         _generate_perm_group(),
+        args.check,
+        diffs,
+    )
+
+    print("Generating config...")
+    _write_or_check(
+        _CLIENT_SRC / "_config.py",
+        _generate_config(),
         args.check,
         diffs,
     )
