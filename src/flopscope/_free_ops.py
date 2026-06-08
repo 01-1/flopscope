@@ -16,7 +16,7 @@ import numpy as _np
 from numpy.typing import ArrayLike, DTypeLike
 
 from flopscope import _symmetry_transport as _st
-from flopscope._budget import _call_numpy, _counted_wrapper
+from flopscope._budget import _call_numpy, _call_user_code, _counted_wrapper
 from flopscope._docstrings import attach_docstring
 from flopscope._ndarray import (
     FlopscopeArray,
@@ -1787,7 +1787,7 @@ attach_docstring(fromfile, _np.fromfile, "free", "0 FLOPs")
 def fromfunction(*args, **kwargs):
     """Construct array by executing function over each coordinate. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.fromfunction(*args, **kwargs)
+    result = _call_user_code(budget, _np.fromfunction, *args, **kwargs)
     cost = result.size if hasattr(result, "size") else 1
     with budget.deduct("fromfunction", flop_cost=cost, subscripts=None, shapes=()):
         pass  # numpy call already executed above
@@ -1801,7 +1801,7 @@ attach_docstring(fromfunction, _np.fromfunction, "free", "0 FLOPs")
 def fromiter(*args, **kwargs):
     """Create array from iterable object. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.fromiter(*args, **kwargs)
+    result = _call_user_code(budget, _np.fromiter, *args, **kwargs)
     cost = result.size if hasattr(result, "size") else 1
     with budget.deduct("fromiter", flop_cost=cost, subscripts=None, shapes=()):
         pass  # numpy call already executed above

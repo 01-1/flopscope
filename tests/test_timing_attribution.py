@@ -1,6 +1,7 @@
 """Timing-bucket attribution tests (issue: callback/data-movement misattribution)."""
 import time
 
+import numpy as np
 import pytest
 
 import flopscope as flops
@@ -61,3 +62,31 @@ def test_user_code_nested_flopscope_op_not_double_counted():
         + s["residual_wall_time_s"],
         abs=1e-6,
     )
+
+
+CALLBACK_SLEEP = 0.05
+
+
+def _sleepy(*_a, **_k):
+    time.sleep(CALLBACK_SLEEP)
+    return 0.0
+
+
+@pytest.mark.parametrize("invoke", [
+    lambda: fnp.apply_along_axis(lambda row: _sleepy(), 1, fnp.array(np.zeros((1, 3)))),
+    lambda: fnp.apply_over_axes(
+        lambda a, ax: (_sleepy(), np.sum(a, axis=ax, keepdims=True))[1],
+        fnp.array(np.zeros((1, 3))), [1]),
+    lambda: fnp.piecewise(
+        fnp.array(np.zeros(3)), [np.array([True, False, False])],
+        [lambda v: (_sleepy(), 0.0)[1], 0.0]),
+    lambda: fnp.fromfunction(lambda i, j: (_sleepy(), i + j)[1], (2, 2), dtype=float),
+    lambda: fnp.fromiter((_ for _ in [_sleepy()]), dtype=float),
+], ids=["apply_along_axis", "apply_over_axes", "piecewise", "fromfunction", "fromiter"])
+def test_callback_ops_bill_callback_to_residual(invoke):
+    flops.budget_reset()
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as b:
+        invoke()
+    s = b.summary_dict()
+    assert s["residual_wall_time_s"] >= 0.03, s
+    assert s["flopscope_overhead_time_s"] < 0.02, s
