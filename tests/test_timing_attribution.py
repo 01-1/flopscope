@@ -72,6 +72,10 @@ def _sleepy(*_a, **_k):
     return 0.0
 
 
+def _lazy_sleepy_gen():
+    yield _sleepy()
+
+
 @pytest.mark.parametrize("invoke", [
     lambda: fnp.apply_along_axis(lambda row: _sleepy(), 1, fnp.array(np.zeros((1, 3)))),
     lambda: fnp.apply_over_axes(
@@ -81,7 +85,7 @@ def _sleepy(*_a, **_k):
         fnp.array(np.zeros(3)), [np.array([True, False, False])],
         [lambda v: (_sleepy(), 0.0)[1], 0.0]),
     lambda: fnp.fromfunction(lambda i, j: (_sleepy(), i + j)[1], (2, 2), dtype=float),
-    lambda: fnp.fromiter((_ for _ in [_sleepy()]), dtype=float),
+    lambda: fnp.fromiter(_lazy_sleepy_gen(), dtype=float),
 ], ids=["apply_along_axis", "apply_over_axes", "piecewise", "fromfunction", "fromiter"])
 def test_callback_ops_bill_callback_to_residual(invoke):
     flops.budget_reset()

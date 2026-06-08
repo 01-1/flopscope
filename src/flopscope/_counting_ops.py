@@ -371,7 +371,15 @@ def apply_along_axis(
     budget = require_budget()
     if not isinstance(arr, _np.ndarray):
         arr = _np.asarray(arr)
-    result = _call_user_code(budget, _np.apply_along_axis, func1d, axis, _to_base_ndarray(arr), *args, **kwargs)
+    result = _call_user_code(
+        budget,
+        _np.apply_along_axis,
+        func1d,
+        axis,
+        _to_base_ndarray(arr),
+        *args,
+        **kwargs,
+    )
     cost = result.size if hasattr(result, "size") else 1
     with budget.deduct(
         "apply_along_axis", flop_cost=cost, subscripts=None, shapes=(arr.shape,)
@@ -398,7 +406,9 @@ def apply_over_axes(
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
-    result = _call_user_code(budget, _np.apply_over_axes, func, _to_base_ndarray(a), axes)
+    result = _call_user_code(
+        budget, _np.apply_over_axes, func, _to_base_ndarray(a), axes
+    )
     cost = result.size if hasattr(result, "size") else 1
     with budget.deduct(
         "apply_over_axes", flop_cost=cost, subscripts=None, shapes=(a.shape,)
@@ -427,7 +437,15 @@ def piecewise(
     budget = require_budget()
     if not isinstance(x, _np.ndarray):
         x = _np.asarray(x)
-    result = _call_user_code(budget, _np.piecewise, _to_base_ndarray(x), _to_base_ndarray_tree(condlist), funclist, *args, **kw)
+    result = _call_user_code(
+        budget,
+        _np.piecewise,
+        _to_base_ndarray(x),
+        _to_base_ndarray_tree(condlist),
+        funclist,
+        *args,
+        **kw,
+    )
     cost = x.size
     with budget.deduct("piecewise", flop_cost=cost, subscripts=None, shapes=(x.shape,)):
         pass
