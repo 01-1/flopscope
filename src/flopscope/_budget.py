@@ -160,7 +160,7 @@ class _DeferredOpTimer:
         self._cost: int | None = None
         self._block_t0: float | None = None
         self._backend_duration_s: float = 0.0
-        self._prev_timer: Any = None
+        self._prev_timer: _OpTimer | _DeferredOpTimer | None = None
 
     def set_cost(self, flop_cost: int) -> None:
         self._cost = flop_cost
@@ -172,11 +172,10 @@ class _DeferredOpTimer:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> Literal[False]:
-        if self._block_t0 is not None:
-            block_duration = time.perf_counter() - self._block_t0
-            in_block_overhead = max(block_duration - self._backend_duration_s, 0.0)
-        else:
-            in_block_overhead = 0.0
+        block_duration = time.perf_counter() - self._block_t0  # type: ignore[operator]
+        in_block_overhead = max(block_duration - self._backend_duration_s, 0.0)
+        # Pop first so a nested _call_numpy after this block attributes to the
+        # restored (outer) timer, not this exited one.
         self._budget._current_op_timer = self._prev_timer
         # Attribute the measured time regardless of how we exit.
         self._budget._total_flopscope_backend_time += self._backend_duration_s

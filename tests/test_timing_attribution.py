@@ -159,3 +159,40 @@ def test_deduct_after_overshoot_raises_without_recording():
         fake()
     assert b.flops_used == 0
     assert all(rec.op_name != "tile" for rec in b.op_log)
+
+
+def test_deduct_after_without_set_cost_raises_runtime_error():
+    flops.budget_reset()
+    with flops.BudgetContext(flop_budget=10**9, quiet=True):
+
+        @_counted_wrapper
+        def fake():
+            budget = get_active_budget()
+            assert budget is not None
+            with pytest.raises(RuntimeError, match="set_cost"):
+                with budget.deduct_after("tile", subscripts=None, shapes=()):
+                    pass  # forgot to call set_cost
+
+        fake()
+
+
+def test_deduct_after_attributes_backend_even_when_block_raises():
+    from flopscope._budget import _call_numpy
+
+    flops.budget_reset()
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as b:
+
+        @_counted_wrapper
+        def fake():
+            budget = get_active_budget()
+            assert budget is not None
+            with pytest.raises(ValueError):
+                with budget.deduct_after("tile", subscripts=None, shapes=()) as op:
+                    _call_numpy(time.sleep, 0.04)
+                    raise ValueError("boom")
+
+        fake()
+    s = b.summary_dict()
+    assert s["flopscope_backend_time_s"] >= 0.02, s  # backend attributed despite raise
+    assert b.flops_used == 0  # nothing charged on the raising path
+    assert all(rec.op_name != "tile" for rec in b.op_log)  # nothing recorded
