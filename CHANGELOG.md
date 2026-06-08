@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.0 (2026-06-08)
+
+### BREAKING CHANGE
+
+- consumers reading these attributes (e.g.
+ctx.residual_wall_time) must update to the _s names; there are no aliases.
+
+### Refactor
+
+- **budget**: rename BudgetContext timing props to _s suffix (#117)
+
 ## v0.5.0 (2026-06-06)
 
 ### BREAKING CHANGE
