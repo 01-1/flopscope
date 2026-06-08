@@ -151,6 +151,29 @@ def _call_numpy(fn: Any, *args: Any, **kwargs: Any) -> Any:
             budget._current_op_timer._backend_duration_s += d
 
 
+def _call_user_code(budget: BudgetContext, fn: Any, *args: Any, **kwargs: Any) -> Any:
+    """Run user-supplied code (a callback or iterable) and attribute its
+    *non-nested* wall time to residual rather than flopscope overhead.
+
+    Snapshots backend+overhead, runs ``fn``, and adds ``wall − nested`` to
+    ``budget._total_user_code_time`` (where ``nested`` is any backend/overhead
+    accrued by flopscope ops the callback itself ran). ``_counted_wrapper``
+    subtracts this delta from its overhead remainder, so the time lands in
+    ``residual_wall_time_s`` (= wall − backend − overhead).
+    """
+    b0 = budget._total_flopscope_backend_time
+    o0 = budget._total_flopscope_overhead_time
+    t0 = time.perf_counter()
+    try:
+        return fn(*args, **kwargs)
+    finally:
+        wall = time.perf_counter() - t0
+        nested = (budget._total_flopscope_backend_time - b0) + (
+            budget._total_flopscope_overhead_time - o0
+        )
+        budget._total_user_code_time += max(wall - nested, 0.0)
+
+
 def _counted_wrapper(fn):
     """Decorator that brackets a flopscope wrapper and bills its non-numpy,
     non-nested-overhead time to flopscope_overhead_time_s.
@@ -170,6 +193,7 @@ def _counted_wrapper(fn):
         fs_t0 = time.perf_counter()
         backend_baseline = budget._total_flopscope_backend_time
         overhead_baseline = budget._total_flopscope_overhead_time
+        usercode_baseline = budget._total_user_code_time
         ops_before = len(budget._op_log)
         try:
             return fn(*args, **kwargs)
@@ -177,7 +201,10 @@ def _counted_wrapper(fn):
             wall = time.perf_counter() - fs_t0
             backend_delta = budget._total_flopscope_backend_time - backend_baseline
             overhead_delta = budget._total_flopscope_overhead_time - overhead_baseline
-            wrapper_own_overhead = max(wall - backend_delta - overhead_delta, 0.0)
+            usercode_delta = budget._total_user_code_time - usercode_baseline
+            wrapper_own_overhead = max(
+                wall - backend_delta - overhead_delta - usercode_delta, 0.0
+            )
             budget._total_flopscope_overhead_time += wrapper_own_overhead
             ops_added = list(range(ops_before, len(budget._op_log)))
             if ops_added and wrapper_own_overhead > 0:
@@ -448,6 +475,7 @@ class BudgetContext:
         self._wall_time_s: float | None = None
         self._total_flopscope_backend_time: float = 0.0
         self._total_flopscope_overhead_time: float = 0.0
+        self._total_user_code_time: float = 0.0
         self._pre_enter_overhead: float = 0.0
         self._current_op_timer: _OpTimer | None = None
         self._recorded_flops_used = 0
