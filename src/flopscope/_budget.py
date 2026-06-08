@@ -84,7 +84,7 @@ class _OpTimer:
         self._op_index = op_index
         self._block_t0: float | None = None
         self._backend_duration_s: float = 0.0
-        self._prev_timer: _OpTimer | None = None
+        self._prev_timer: _OpTimer | _DeferredOpTimer | None = None
 
     def __enter__(self) -> _OpTimer:
         self._block_t0 = time.perf_counter()
@@ -172,8 +172,11 @@ class _DeferredOpTimer:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> Literal[False]:
-        block_duration = time.perf_counter() - self._block_t0
-        in_block_overhead = max(block_duration - self._backend_duration_s, 0.0)
+        if self._block_t0 is not None:
+            block_duration = time.perf_counter() - self._block_t0
+            in_block_overhead = max(block_duration - self._backend_duration_s, 0.0)
+        else:
+            in_block_overhead = 0.0
         self._budget._current_op_timer = self._prev_timer
         # Attribute the measured time regardless of how we exit.
         self._budget._total_flopscope_backend_time += self._backend_duration_s
@@ -578,7 +581,7 @@ class BudgetContext:
         self._total_flopscope_overhead_time: float = 0.0
         self._total_user_code_time: float = 0.0
         self._pre_enter_overhead: float = 0.0
-        self._current_op_timer: _OpTimer | None = None
+        self._current_op_timer: _OpTimer | _DeferredOpTimer | None = None
         self._recorded_flops_used = 0
         self._recorded_op_count = 0
         self._recorded_flopscope_backend_time = 0.0

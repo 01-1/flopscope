@@ -1,4 +1,5 @@
 """Timing-bucket attribution tests (issue: callback/data-movement misattribution)."""
+
 import time
 
 import numpy as np
@@ -15,6 +16,7 @@ def test_user_code_time_lands_in_residual_not_overhead():
     @_counted_wrapper
     def fake_callback_op():
         budget = get_active_budget()
+        assert budget is not None
         _call_user_code(budget, time.sleep, 0.05)
 
     flops.budget_reset()
@@ -38,6 +40,7 @@ def test_user_code_nested_flopscope_op_not_double_counted():
     @_counted_wrapper
     def fake_callback_with_inner_op():
         budget = get_active_budget()
+        assert budget is not None
 
         def cb():
             time.sleep(0.03)
@@ -76,17 +79,35 @@ def _lazy_sleepy_gen():
     yield _sleepy()
 
 
-@pytest.mark.parametrize("invoke", [
-    lambda: fnp.apply_along_axis(lambda row: _sleepy(), 1, fnp.array(np.zeros((1, 3)))),
-    lambda: fnp.apply_over_axes(
-        lambda a, ax: (_sleepy(), np.sum(a, axis=ax, keepdims=True))[1],
-        fnp.array(np.zeros((1, 3))), [1]),
-    lambda: fnp.piecewise(
-        fnp.array(np.zeros(3)), [np.array([True, False, False])],
-        [lambda v: (_sleepy(), 0.0)[1], 0.0]),
-    lambda: fnp.fromfunction(lambda i, j: (_sleepy(), i + j)[1], (2, 2), dtype=float),
-    lambda: fnp.fromiter(_lazy_sleepy_gen(), dtype=float),
-], ids=["apply_along_axis", "apply_over_axes", "piecewise", "fromfunction", "fromiter"])
+@pytest.mark.parametrize(
+    "invoke",
+    [
+        lambda: fnp.apply_along_axis(
+            lambda row: _sleepy(), 1, fnp.array(np.zeros((1, 3)))
+        ),
+        lambda: fnp.apply_over_axes(
+            lambda a, ax: (_sleepy(), np.sum(a, axis=ax, keepdims=True))[1],
+            fnp.array(np.zeros((1, 3))),
+            [1],
+        ),
+        lambda: fnp.piecewise(
+            fnp.array(np.zeros(3)),
+            [np.array([True, False, False])],
+            [lambda v: (_sleepy(), 0.0)[1], 0.0],
+        ),
+        lambda: fnp.fromfunction(
+            lambda i, j: (_sleepy(), i + j)[1], (2, 2), dtype=float
+        ),
+        lambda: fnp.fromiter(_lazy_sleepy_gen(), dtype=float),
+    ],
+    ids=[
+        "apply_along_axis",
+        "apply_over_axes",
+        "piecewise",
+        "fromfunction",
+        "fromiter",
+    ],
+)
 def test_callback_ops_bill_callback_to_residual(invoke):
     flops.budget_reset()
     with flops.BudgetContext(flop_budget=10**9, quiet=True) as b:
@@ -101,12 +122,15 @@ def test_deduct_after_attributes_call_to_backend_and_charges():
 
     flops.budget_reset()
     with flops.BudgetContext(flop_budget=10**9, quiet=True) as b:
+
         @_counted_wrapper
         def fake_movement():
             budget = get_active_budget()
+            assert budget is not None
             with budget.deduct_after("tile", subscripts=None, shapes=()) as op:
                 _call_numpy(time.sleep, 0.05)  # stand-in for numpy data movement
                 op.set_cost(1000)
+
         fake_movement()
     s = b.summary_dict()
     assert b.flops_used == 1000  # weight("tile") == 1.0
@@ -123,12 +147,15 @@ def test_deduct_after_attributes_call_to_backend_and_charges():
 def test_deduct_after_overshoot_raises_without_recording():
     flops.budget_reset()
     with flops.BudgetContext(flop_budget=100, quiet=True) as b:
+
         @_counted_wrapper
         def fake():
             budget = get_active_budget()
+            assert budget is not None
             with pytest.raises(flops.errors.BudgetExhaustedError):
                 with budget.deduct_after("tile", subscripts=None, shapes=()) as op:
                     op.set_cost(1000)  # exceeds budget of 100
+
         fake()
     assert b.flops_used == 0
     assert all(rec.op_name != "tile" for rec in b.op_log)
