@@ -198,12 +198,18 @@ def test_deduct_after_attributes_backend_even_when_block_raises():
     assert all(rec.op_name != "tile" for rec in b.op_log)  # nothing recorded
 
 
-@pytest.mark.parametrize("invoke", [
-    lambda big: flops.numpy.tile(big, (2, 2)),
-    lambda big: flops.numpy.repeat(big, 4, axis=0),
-    lambda big: flops.numpy.take(flops.numpy.reshape(big, (-1,)), np.arange(big.size // 2)),
-    lambda big: flops.numpy.resize(big, (big.shape[0] * 2, big.shape[1] * 2)),
-], ids=["tile", "repeat", "take", "resize"])
+@pytest.mark.parametrize(
+    "invoke",
+    [
+        lambda big: flops.numpy.tile(big, (2, 2)),
+        lambda big: flops.numpy.repeat(big, 4, axis=0),
+        lambda big: flops.numpy.take(
+            flops.numpy.reshape(big, (-1,)), np.arange(big.size // 2)
+        ),
+        lambda big: flops.numpy.resize(big, (big.shape[0] * 2, big.shape[1] * 2)),
+    ],
+    ids=["tile", "repeat", "take", "resize"],
+)
 def test_data_movement_ops_bill_to_backend(invoke):
     big = flops.numpy.array(np.random.randn(2000, 2000))
     flops.budget_reset()
