@@ -94,3 +94,41 @@ def test_callback_ops_bill_callback_to_residual(invoke):
     s = b.summary_dict()
     assert s["residual_wall_time_s"] >= 0.03, s
     assert s["flopscope_overhead_time_s"] < 0.02, s
+
+
+def test_deduct_after_attributes_call_to_backend_and_charges():
+    from flopscope._budget import _call_numpy
+
+    flops.budget_reset()
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as b:
+        @_counted_wrapper
+        def fake_movement():
+            budget = get_active_budget()
+            with budget.deduct_after("tile", subscripts=None, shapes=()) as op:
+                _call_numpy(time.sleep, 0.05)  # stand-in for numpy data movement
+                op.set_cost(1000)
+        fake_movement()
+    s = b.summary_dict()
+    assert b.flops_used == 1000  # weight("tile") == 1.0
+    assert s["flopscope_backend_time_s"] >= 0.03, s
+    assert s["flopscope_overhead_time_s"] < 0.02, s
+    assert s["wall_time_s"] == pytest.approx(
+        s["flopscope_backend_time_s"]
+        + s["flopscope_overhead_time_s"]
+        + s["residual_wall_time_s"],
+        abs=1e-6,
+    )
+
+
+def test_deduct_after_overshoot_raises_without_recording():
+    flops.budget_reset()
+    with flops.BudgetContext(flop_budget=100, quiet=True) as b:
+        @_counted_wrapper
+        def fake():
+            budget = get_active_budget()
+            with pytest.raises(flops.errors.BudgetExhaustedError):
+                with budget.deduct_after("tile", subscripts=None, shapes=()) as op:
+                    op.set_cost(1000)  # exceeds budget of 100
+        fake()
+    assert b.flops_used == 0
+    assert all(rec.op_name != "tile" for rec in b.op_log)

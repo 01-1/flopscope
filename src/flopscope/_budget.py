@@ -126,6 +126,105 @@ class _OpTimer:
         return False
 
 
+class _DeferredOpTimer:
+    """Timer for ops whose FLOP cost is only known after the numpy call runs.
+
+    Used as ``with budget.deduct_after(name, ...) as op: result =
+    _call_numpy(...); op.set_cost(...)``. Times the block like ``_OpTimer`` (so
+    the numpy call is recorded as backend), then on exit performs the
+    cost-dependent work ``deduct()`` normally does up front: weight -> budget
+    check -> charge -> append the ``OpRecord``. Charging at exit matches the
+    existing run-then-charge behavior of these ops (they already ran numpy
+    before the budget check), so a single-op overshoot still raises
+    ``BudgetExhaustedError`` without recording the op.
+    """
+
+    __slots__ = (
+        "_budget",
+        "_op_name",
+        "_subscripts",
+        "_shapes",
+        "_cost",
+        "_block_t0",
+        "_backend_duration_s",
+        "_prev_timer",
+    )
+
+    def __init__(
+        self, budget: BudgetContext, op_name: str, subscripts: str | None, shapes: tuple
+    ):
+        self._budget = budget
+        self._op_name = op_name
+        self._subscripts = subscripts
+        self._shapes = shapes
+        self._cost: int | None = None
+        self._block_t0: float | None = None
+        self._backend_duration_s: float = 0.0
+        self._prev_timer: Any = None
+
+    def set_cost(self, flop_cost: int) -> None:
+        self._cost = flop_cost
+
+    def __enter__(self) -> _DeferredOpTimer:
+        self._block_t0 = time.perf_counter()
+        self._prev_timer = self._budget._current_op_timer
+        self._budget._current_op_timer = self
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> Literal[False]:
+        block_duration = time.perf_counter() - self._block_t0
+        in_block_overhead = max(block_duration - self._backend_duration_s, 0.0)
+        self._budget._current_op_timer = self._prev_timer
+        # Attribute the measured time regardless of how we exit.
+        self._budget._total_flopscope_backend_time += self._backend_duration_s
+        self._budget._total_flopscope_overhead_time += in_block_overhead
+        if exc_type is not None:
+            return False  # propagate; nothing charged or recorded
+        if self._cost is None:
+            raise RuntimeError(
+                f"deduct_after({self._op_name!r}): set_cost() was never called"
+            )
+        from flopscope._weights import get_weight
+
+        weight = get_weight(self._op_name)
+        adjusted_cost = int(self._cost * self._budget._flop_multiplier * weight)
+        if adjusted_cost > self._budget.flops_remaining:
+            raise BudgetExhaustedError(
+                self._op_name,
+                flop_cost=adjusted_cost,
+                flops_remaining=self._budget.flops_remaining,
+            )
+        self._budget._flops_used += adjusted_cost
+        now = time.perf_counter()
+        offset = (
+            now - self._budget._start_time
+            if self._budget._start_time is not None
+            else None
+        )
+        self._budget._op_log.append(
+            OpRecord(
+                op_name=self._op_name,
+                subscripts=self._subscripts,
+                shapes=self._shapes,
+                flop_cost=adjusted_cost,
+                cumulative=self._budget._flops_used,
+                namespace=self._budget.namespace,
+                flopscope_context_start_offset_s=offset,
+                flopscope_backend_duration_s=self._backend_duration_s,
+                flopscope_overhead_duration_s=in_block_overhead,
+            )
+        )
+        if self._budget._deadline is not None and now > self._budget._deadline:
+            from flopscope.errors import TimeExhaustedError
+
+            raise TimeExhaustedError(
+                self._op_name,
+                elapsed_s=now - self._budget._start_time,  # type: ignore[operator]
+                limit_s=self._budget._wall_time_limit_s,  # type: ignore[arg-type]
+            )
+        return False
+
+
 def _call_numpy(fn: Any, *args: Any, **kwargs: Any) -> Any:
     """Invoke a numpy callable, attributing only its wall time to backend time.
 
@@ -639,6 +738,16 @@ class BudgetContext:
                     )
                     + deduct_body_time
                 )
+
+    def deduct_after(
+        self, op_name: str, *, subscripts: str | None, shapes: tuple
+    ) -> _DeferredOpTimer:
+        """Like :meth:`deduct`, but the FLOP cost is supplied via ``op.set_cost``
+        inside the block and charged at block exit. Use for ops whose cost
+        depends on the result; the numpy call runs inside the timer (via
+        ``_call_numpy``) and is recorded as backend time.
+        """
+        return _DeferredOpTimer(self, op_name, subscripts, shapes)
 
     def summary_dict(self, by_namespace: bool = False) -> dict:
         """Return structured summary data for this budget context.
