@@ -160,6 +160,8 @@ def _call_user_code(budget: BudgetContext, fn: Any, *args: Any, **kwargs: Any) -
     accrued by flopscope ops the callback itself ran). ``_counted_wrapper``
     subtracts this delta from its overhead remainder, so the time lands in
     ``residual_wall_time_s`` (= wall − backend − overhead).
+    Unlike ``_call_numpy``, the caller passes ``budget`` explicitly (it is
+    always in scope inside ``_counted_wrapper``).
     """
     b0 = budget._total_flopscope_backend_time
     o0 = budget._total_flopscope_overhead_time
