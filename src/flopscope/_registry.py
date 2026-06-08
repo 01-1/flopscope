@@ -1667,11 +1667,13 @@ REGISTRY: dict[str, dict] = {
     },
     "fromfunction": {
         "category": "counted_custom",
+        "local_callback": True,
         "module": "numpy",
         "notes": "Construct array by executing function over each coordinate. Cost: numel(output).",
     },
     "fromiter": {
         "category": "counted_custom",
+        "local_callback": True,
         "module": "numpy",
         "notes": "Create array from an iterable. Cost: numel(output).",
     },
@@ -3109,16 +3111,19 @@ REGISTRY: dict[str, dict] = {
     },
     "piecewise": {
         "category": "counted_custom",
+        "local_callback": True,
         "module": "numpy",
         "notes": "Piecewise function. Cost: numel(input).",
     },
     "apply_along_axis": {
         "category": "counted_custom",
+        "local_callback": True,
         "module": "numpy",
         "notes": "Apply function along axis. Cost: numel(output). Inner function costs tracked separately.",
     },
     "apply_over_axes": {
         "category": "counted_custom",
+        "local_callback": True,
         "module": "numpy",
         "notes": "Apply function over multiple axes. Cost: numel(output).",
     },
