@@ -326,7 +326,10 @@ def unique(ar: ArrayLike, **kwargs: Any) -> FlopscopeArray | tuple[FlopscopeArra
         and not _returns_tuple
         and ar_arr.dtype.kind in _UNSORTED_IN_NP_2_3
     ):
-        result = _np.sort(_to_base_ndarray(result))
+        with budget.deduct_after("sort", subscripts=None, shapes=()) as _op:
+            sorted_result = _call_numpy(_np.sort, _to_base_ndarray(result))
+            _op.set_cost(max(result.size, 1))
+        result = sorted_result
     return result  # type: ignore[return-value]
 
 
