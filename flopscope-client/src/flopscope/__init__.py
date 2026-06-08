@@ -55,6 +55,7 @@ from flopscope.errors import (  # noqa: E402
     FlopscopeServerError,
     FlopscopeWarning,
     NoBudgetContextError,
+    RemoteCallbackError,
     SymmetryError,
 )
 
@@ -92,6 +93,7 @@ from flopscope._registry import (  # noqa: E402
     iter_proxyable,
 )
 from flopscope._registry_data import FUNCTION_CATEGORIES as _FC  # noqa: E402
+from flopscope._registry_data import LOCAL_CALLBACK_OPS  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Constants (no server round-trip needed)
@@ -128,12 +130,23 @@ def _make_proxy(op_name: str):
     """Create a proxy function that dispatches *op_name* to the server."""
 
     def proxy(*args: Any, **kwargs: Any):
-        conn = get_connection()
         encoded_args = [_encode_arg(a) for a in args]
         encoded_kwargs = {k: _encode_arg(v) for k, v in kwargs.items()}
-        resp = conn.send_recv(
-            encode_request(op_name, args=encoded_args, kwargs=encoded_kwargs)
-        )
+        try:
+            request = encode_request(op_name, args=encoded_args, kwargs=encoded_kwargs)
+        except (TypeError, ValueError) as exc:
+            # Callback ops (apply_along_axis, …) carry a Python callable that
+            # msgpack can't serialize. Surface a clear error instead of the
+            # opaque "can not serialize 'function' object".
+            if op_name in LOCAL_CALLBACK_OPS:
+                raise RemoteCallbackError(
+                    f"{op_name}() requires a Python callback, which the "
+                    f"client/server backend cannot execute remotely. Run it "
+                    f"in the in-process flopscope backend, or precompute the "
+                    f"result."
+                ) from exc
+            raise
+        resp = get_connection().send_recv(request)
         return _result_from_response(resp)
 
     proxy.__name__ = op_name
