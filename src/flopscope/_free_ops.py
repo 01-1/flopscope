@@ -1345,10 +1345,9 @@ def bmat(*args, **kwargs):
             stripped_args.append(_to_base_ndarray_tree(arg))
         else:
             stripped_args.append(arg)
-    result = _np.bmat(*stripped_args, **kwargs)
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("bmat", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("bmat", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.bmat, *stripped_args, **kwargs)
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result
 
 
@@ -1497,10 +1496,11 @@ def concat(
 ) -> FlopscopeArray:
     """Join arrays along an axis. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.concat(_to_base_ndarray_tree(arrays), axis=axis, **kwargs)  # type: ignore[arg-type, call-overload]
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("concat", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("concat", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.concat, _to_base_ndarray_tree(arrays), axis=axis, **kwargs
+        )  # type: ignore[arg-type, call-overload]
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
@@ -1623,10 +1623,9 @@ def dstack(tup: Sequence[ArrayLike]) -> FlopscopeArray:
     budget = require_budget()
     for a in tup:
         _warn_if_symmetric(a, "dstack")
-    result = _np.dstack(_to_base_ndarray_tree(tup))  # type: ignore[arg-type]
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("dstack", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("dstack", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.dstack, _to_base_ndarray_tree(tup))  # type: ignore[arg-type]
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
