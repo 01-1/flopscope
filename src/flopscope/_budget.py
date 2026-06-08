@@ -646,6 +646,11 @@ class BudgetContext:
 
     @property
     def flopscope_backend_time_s(self) -> float:
+        """Wall-clock seconds of the counted NumPy/BLAS/LAPACK backend calls.
+
+        Includes the numpy call of data-movement ops (e.g. ``tile``, ``take``,
+        ``pad``, ``resize``), which run inside ``deduct_after``.
+        """
         return self._total_flopscope_backend_time
 
     @property
@@ -668,7 +673,9 @@ class BudgetContext:
 
         This is the measured wall-clock remainder outside the backend calls and
         flopscope's own dispatch/accounting work: user Python between ops,
-        time.sleep, GC pauses, and un-instrumented NumPy.
+        time.sleep, GC pauses, and un-instrumented NumPy. User-callback ops
+        (``apply_along_axis``, ``apply_over_axes``, ``piecewise``,
+        ``fromfunction``, ``fromiter``) attribute their callback wall time here.
         """
         if self._wall_time_s is None:
             return None

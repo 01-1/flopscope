@@ -129,9 +129,9 @@ When the time limit is exceeded, Flopscope raises `TimeExhaustedError` at the ne
 operation boundary. The summary exposes four timing views that decompose wall time exactly:
 
 - `wall_time_s`: total elapsed time for the context
-- `flopscope_backend_time_s`: time spent inside the underlying NumPy / BLAS / LAPACK backend calls being counted
+- `flopscope_backend_time_s`: time spent inside the underlying NumPy / BLAS / LAPACK backend calls being counted (including data-movement ops like `tile`, `take`, `pad`, `resize`)
 - `flopscope_overhead_time_s`: time spent in flopscope's own dispatch code (wrapper preambles, FLOP cost computation, view-casts, post-call wrapping, `maybe_check_nan_inf` when opted in via `flopscope.configure(check_nan_inf=True)`)
-- `residual_wall_time_s`: the measured wall-clock remainder outside backend calls and flopscope overhead (user Python between ops, `time.sleep`, GC pauses, un-instrumented numpy)
+- `residual_wall_time_s`: the measured wall-clock remainder outside backend calls and flopscope overhead (user Python between ops, `time.sleep`, GC pauses, un-instrumented numpy, and the callback time of `apply_along_axis` / `apply_over_axes` / `piecewise` / `fromfunction` / `fromiter`)
 
 The identity `wall_time_s = flopscope_backend_time_s + flopscope_overhead_time_s + residual_wall_time_s` holds within numerical tolerance.
 
