@@ -120,10 +120,10 @@ reset_weights()
 Weights are applied centrally in `BudgetContext.deduct()`. Every counted operation passes its `op_name` to `deduct()`, which looks up the weight and multiplies it into the cost:
 
 ```
-adjusted_cost = analytical_cost * flop_multiplier * weight(op_name)
+adjusted_cost = analytical_cost * weight(op_name)
 ```
 
-Weights compose with `flop_multiplier` and with symmetry reductions -- symmetry reduces the element count, the weight scales the per-element cost, and both apply independently.
+Symmetry reductions and weights apply independently -- symmetry reduces the element count, the weight scales the per-element cost.
 
 ## How measurement works
 
