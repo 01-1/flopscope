@@ -1148,7 +1148,10 @@ def test_budget_context_has_no_multiplier():
     import flopscope as flops
 
     with pytest.raises(TypeError):
-        flops.BudgetContext(flop_budget=1000, flop_multiplier=0.0)
+        flops.BudgetContext(
+            flop_budget=1000,
+            flop_multiplier=0.0,  # pyright: ignore[reportCallIssue]
+        )
 
 
 def test_cost_is_weight_only():
