@@ -90,11 +90,12 @@ def _generate_errors() -> str:
     _CUSTOM_INIT_CLASSES = {
         "BudgetExhaustedError",
         "NoBudgetContextError",
+        "RemoteCallbackError",
+        "RemoteSerializationError",
         "SymmetryError",
         "TimeExhaustedError",
         "UnsupportedFunctionError",
         "UnsupportedReturnType",
-        "RemoteCallbackError",
     }
 
     # Classes whose default message must be non-empty (match core's guidance).
@@ -148,6 +149,15 @@ def _generate_errors() -> str:
                 "Raised when a callback-taking op (e.g. apply_along_axis) is "
                 "invoked on the client/server backend, which cannot execute "
                 "Python callbacks remotely."
+            ),
+        ),
+        (
+            "RemoteSerializationError",
+            "FlopscopeError",
+            (
+                "Raised when an argument to a remote op cannot be serialized "
+                "for the client/server backend (e.g. a generator, lambda, or "
+                "custom object)."
             ),
         ),
         (

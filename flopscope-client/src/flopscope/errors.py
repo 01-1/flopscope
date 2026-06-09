@@ -62,6 +62,13 @@ class RemoteCallbackError(FlopscopeError):
         super().__init__(message)
 
 
+class RemoteSerializationError(FlopscopeError):
+    """Raised when an argument to a remote op cannot be serialized for the client/server backend (e.g. a generator, lambda, or custom object)."""
+
+    def __init__(self, message: str = "") -> None:
+        super().__init__(message)
+
+
 class FlopscopeWarning(UserWarning):
     """Warning issued when flopscope detects potential numerical issues."""
 
@@ -95,6 +102,7 @@ _FLOPSCOPE_ERRORS: frozenset[str] = frozenset(
         "UnsupportedFunctionError",
         "UnsupportedReturnType",
         "RemoteCallbackError",
+        "RemoteSerializationError",
     }
 )
 
@@ -106,6 +114,7 @@ _ERROR_MAP: dict[str, type[Exception]] = {
     "UnsupportedFunctionError": UnsupportedFunctionError,
     "UnsupportedReturnType": UnsupportedReturnType,
     "RemoteCallbackError": RemoteCallbackError,
+    "RemoteSerializationError": RemoteSerializationError,
     "FlopscopeServerError": FlopscopeServerError,
     "ValueError": ValueError,
     "TypeError": TypeError,
