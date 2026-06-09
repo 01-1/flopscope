@@ -16,7 +16,7 @@ UV    := uv run
 # Composite targets
 # ---------------------------------------------------------------------------
 .PHONY: ci
-ci: lint lint-commits typecheck test test-numpy-compat check-sync check-sync-versions docs-build  ## Run the full CI pipeline locally
+ci: lint check-lock lint-commits typecheck test test-numpy-compat check-sync check-sync-versions docs-build  ## Run the full CI pipeline locally
 
 # ---------------------------------------------------------------------------
 # Lint  (mirrors: CI → lint job)
@@ -90,6 +90,21 @@ check-sync:  ## Verify client is in sync with core library
 .PHONY: check-sync-versions
 check-sync-versions:  ## Verify all package versions are in lockstep
 	$(UV) python scripts/check_version_sync.py
+
+# Note: bare `uv lock --check` (NOT `$(UV)` = `uv run`, and NOT `uv sync`).
+# `uv sync` would silently refresh a stale lock instead of failing — which is
+# how the lockfiles drifted a release behind unnoticed. `--check` only reports.
+.PHONY: check-lock
+check-lock:  ## Verify all three uv.lock files are in sync with their pyproject.toml
+	uv lock --check
+	uv lock --check --directory flopscope-server
+	uv lock --check --directory flopscope-client
+
+.PHONY: relock
+relock:  ## Refresh all three uv.lock files (run after a version bump; fixes check-lock)
+	uv lock
+	uv lock --directory flopscope-server
+	uv lock --directory flopscope-client
 
 .PHONY: sync-client
 sync-client:  ## Regenerate client files from core library

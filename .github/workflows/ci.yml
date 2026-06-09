@@ -116,6 +116,29 @@ jobs:
       - name: Conventional commits (gitlint)
         run: gitlint --commits origin/main..HEAD
 
+  lockfiles:
+    name: uv lockfiles up to date
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      # Validates the *committed* lockfiles as-is. Deliberately runs only
+      # `uv lock --check` and never `uv sync`: a plain `uv sync` silently
+      # refreshes a stale lock in the checkout and would mask the drift —
+      # which is exactly how all three locks fell a release behind unnoticed.
+      - name: Check uv lockfiles are up to date
+        run: |
+          uv lock --check
+          uv lock --check --directory flopscope-server
+          uv lock --check --directory flopscope-client
+
   typecheck:
     name: Pyright
     runs-on: ubuntu-latest
@@ -362,6 +385,7 @@ jobs:
     if: always()
     needs:
       - lint
+      - lockfiles
       - typecheck
       - test
       - numpy-compat
