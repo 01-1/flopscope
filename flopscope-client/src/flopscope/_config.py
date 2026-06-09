@@ -94,6 +94,19 @@ def configure(**kwargs: object) -> None:
             validator(value)  # type: ignore[call-arg]
         _SETTINGS[key] = value
 
+    if kwargs:
+        import warnings
+
+        from flopscope.errors import ConfigureNoOpWarning
+
+        warnings.warn(
+            "flops.configure() configures the in-process flopscope backend only; "
+            "it is a no-op on flopscope-client and the evaluation servers, so "
+            "these settings will not affect a graded submission.",
+            ConfigureNoOpWarning,
+            stacklevel=2,
+        )
+
     if "einsum_path_cache_size" in kwargs:
         # The lightweight client ships this module verbatim (see
         # scripts/sync_client.py) but has no ``flopscope._einsum`` — einsum-path

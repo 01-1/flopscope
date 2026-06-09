@@ -192,6 +192,16 @@ def _generate_errors() -> str:
                 "``flops.configure(callback_warnings=False)``."
             ),
         ),
+        (
+            "ConfigureNoOpWarning",
+            "FlopscopeWarning",
+            (
+                "Warning issued when flops.configure() is called. configure "
+                "affects the in-process flopscope backend only; it is a no-op on "
+                "flopscope-client and the evaluation servers, so its settings do "
+                "not carry into a graded submission."
+            ),
+        ),
         # client-only
         (
             "FlopscopeServerError",

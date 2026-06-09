@@ -28,7 +28,7 @@ import warnings
 import pytest
 
 import flopscope.numpy as fnp
-from flopscope.errors import RemoteCallbackWarning
+from flopscope.errors import ConfigureNoOpWarning, RemoteCallbackWarning
 
 
 def _call(op: str) -> None:
@@ -73,3 +73,10 @@ def test_non_callback_op_does_not_warn():
         with warnings.catch_warnings():
             warnings.simplefilter("error", RemoteCallbackWarning)
             fnp.matmul(fnp.ones((3, 3)), fnp.ones((3, 3)))
+
+
+def test_configure_warns_it_is_a_noop_remotely():
+    # configure() works in-process but is a no-op on the client/eval servers;
+    # it warns so participants don't expect it to affect a graded submission.
+    with pytest.warns(ConfigureNoOpWarning):
+        flops.configure(symmetry_warnings=True)

@@ -85,6 +85,10 @@ class RemoteCallbackWarning(FlopscopeWarning):
     """Warning issued when a callback-taking op (e.g. apply_along_axis) is called in-process; it raises RemoteCallbackError on the remote (client/server) backend. Suppress with ``flops.configure(callback_warnings=False)``."""
 
 
+class ConfigureNoOpWarning(FlopscopeWarning):
+    """Warning issued when flops.configure() is called. configure affects the in-process flopscope backend only; it is a no-op on flopscope-client and the evaluation servers, so its settings do not carry into a graded submission."""
+
+
 class FlopscopeServerError(FlopscopeError):
     """Server-side error that does not map to a more specific exception."""
 

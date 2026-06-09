@@ -175,6 +175,14 @@ class RemoteCallbackWarning(FlopscopeWarning):
     """
 
 
+class ConfigureNoOpWarning(FlopscopeWarning):
+    """Warning issued when ``flops.configure()`` is called. ``configure``
+    affects the in-process flopscope backend only; it is a no-op on
+    ``flopscope-client`` and the evaluation servers, so its settings do not
+    carry into a graded submission.
+    """
+
+
 # Used by _user_stacklevel() to skip frames inside the flopscope package.
 _FLOPSCOPE_PKG_DIR = os.path.dirname(os.path.abspath(__file__))
 
