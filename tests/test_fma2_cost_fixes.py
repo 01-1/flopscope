@@ -33,3 +33,9 @@ def test_multi_dot_promotes_1d_operands():
     # v·M·w is a matvec chain: honest ~ 2*64*64 + 2*64, not 2*64^3.
     c = cost(lambda: fnp.linalg.multi_dot([v, M, w]))
     assert c < 2 * 64 * 64 * 64 // 10  # nowhere near the 1-D-as-k overcount
+
+
+def test_polymul_equals_convolve():
+    a = fnp.asarray(np.random.rand(500))
+    b = fnp.asarray(np.random.rand(400))
+    assert cost(lambda: fnp.polymul(a, b)) == cost(lambda: fnp.convolve(a, b))

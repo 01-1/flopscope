@@ -618,7 +618,7 @@ class TestPolynomial:
         assert _cost_of(we.polyint, numpy.ones(5)) == 5
 
     def test_polymul(self, we):
-        assert _cost_of(we.polymul, numpy.ones(5), numpy.ones(3)) == 15
+        assert _cost_of(we.polymul, numpy.ones(5), numpy.ones(3)) == 22
 
     def test_polydiv(self, we):
         assert _cost_of(we.polydiv, numpy.ones(5), numpy.ones(3)) == 15

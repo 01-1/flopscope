@@ -169,12 +169,12 @@ def test_polymul_result():
 
 
 def test_polymul_cost():
-    # len 2 * len 3 -> cost = 6
+    # len 2 * len 3 -> cost = 2*2*3 - 2 - 3 = 7 (FMA=2 convolution formula)
     a1 = numpy.array([1.0, 2.0])
     a2 = numpy.array([3.0, 4.0, 5.0])
     with BudgetContext(flop_budget=10**6) as budget:
         polymul(a1, a2)
-        assert budget.flops_used == 6
+        assert budget.flops_used == 7
 
 
 def test_polymul_no_budget():

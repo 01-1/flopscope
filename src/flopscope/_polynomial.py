@@ -48,8 +48,8 @@ def polyint_cost(n: int) -> int:
 
 
 def polymul_cost(n1: int, n2: int) -> int:
-    """Cost for polymul: n1 * n2 FLOPs."""
-    return max(n1 * n2, 1)
+    """Cost for polymul: 2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2)."""
+    return max(2 * n1 * n2 - n1 - n2, 1)
 
 
 def polydiv_cost(n1: int, n2: int) -> int:

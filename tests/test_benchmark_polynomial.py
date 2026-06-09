@@ -34,7 +34,8 @@ class TestAnalyticalCost:
         assert _analytical_cost("roots", 100, 10) == 10**3
 
     def test_polymul(self):
-        assert _analytical_cost("polymul", 100, 10) == 11**2
+        # FMA=2 convolution formula: 2*(degree+1)^2 - 2*(degree+1) = 2*121 - 22 = 220
+        assert _analytical_cost("polymul", 100, 10) == 2 * 11**2 - 2 * 11
 
     def test_polydiv(self):
         assert _analytical_cost("polydiv", 100, 10) == 11**2
