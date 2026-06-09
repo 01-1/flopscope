@@ -2179,6 +2179,16 @@
     "has_flopscope_examples": false,
     "has_inherited_examples": true
   },
+  "load": {
+    "coverage_status": "derived",
+    "example_count": 1,
+    "example_source": "derived",
+    "example_sources": [
+      "https://numpy.org/doc/stable/reference/generated/numpy.load.html"
+    ],
+    "has_flopscope_examples": false,
+    "has_inherited_examples": true
+  },
   "log": {
     "coverage_status": "derived",
     "example_count": 1,
@@ -4543,6 +4553,36 @@
     "example_source": "derived",
     "example_sources": [
       "https://numpy.org/doc/stable/reference/generated/numpy.row_stack.html"
+    ],
+    "has_flopscope_examples": false,
+    "has_inherited_examples": true
+  },
+  "save": {
+    "coverage_status": "derived",
+    "example_count": 1,
+    "example_source": "derived",
+    "example_sources": [
+      "https://numpy.org/doc/stable/reference/generated/numpy.save.html"
+    ],
+    "has_flopscope_examples": false,
+    "has_inherited_examples": true
+  },
+  "savez": {
+    "coverage_status": "derived",
+    "example_count": 1,
+    "example_source": "derived",
+    "example_sources": [
+      "https://numpy.org/doc/stable/reference/generated/numpy.savez.html"
+    ],
+    "has_flopscope_examples": false,
+    "has_inherited_examples": true
+  },
+  "savez_compressed": {
+    "coverage_status": "derived",
+    "example_count": 1,
+    "example_source": "derived",
+    "example_sources": [
+      "https://numpy.org/doc/stable/reference/generated/numpy.savez_compressed.html"
     ],
     "has_flopscope_examples": false,
     "has_inherited_examples": true

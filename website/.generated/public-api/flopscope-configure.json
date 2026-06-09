@@ -32,6 +32,114 @@
                     },
                     {
                       "kind": "code",
+                      "text": "False"
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", suppress\n"
+                    },
+                    {
+                      "display_text": "RemoteCallbackWarning",
+                      "explicit_title": false,
+                      "external_url": "",
+                      "href": "",
+                      "kind": "role_reference",
+                      "original_target": "flopscope.errors.RemoteCallbackWarning",
+                      "role": "class",
+                      "suppress_link": false,
+                      "target": "errors.RemoteCallbackWarning",
+                      "unresolved": true
+                    },
+                    {
+                      "kind": "text",
+                      "text": " warnings emitted when a\ncallback-taking op ("
+                    },
+                    {
+                      "external_url": "",
+                      "href": "/docs/api/numpy/apply-along-axis/",
+                      "kind": "link",
+                      "target": "apply_along_axis",
+                      "text": "apply_along_axis"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " etc.) is called in-process.\nDefault "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "True"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "data_type": "bool",
+              "inline": [
+                {
+                  "kind": "text",
+                  "text": "If "
+                },
+                {
+                  "kind": "code",
+                  "text": "False"
+                },
+                {
+                  "kind": "text",
+                  "text": ", suppress\n"
+                },
+                {
+                  "display_text": "RemoteCallbackWarning",
+                  "explicit_title": false,
+                  "external_url": "",
+                  "href": "",
+                  "kind": "role_reference",
+                  "original_target": "flopscope.errors.RemoteCallbackWarning",
+                  "role": "class",
+                  "suppress_link": false,
+                  "target": "errors.RemoteCallbackWarning",
+                  "unresolved": true
+                },
+                {
+                  "kind": "text",
+                  "text": " warnings emitted when a\ncallback-taking op ("
+                },
+                {
+                  "external_url": "",
+                  "href": "/docs/api/numpy/apply-along-axis/",
+                  "kind": "link",
+                  "target": "apply_along_axis",
+                  "text": "apply_along_axis"
+                },
+                {
+                  "kind": "text",
+                  "text": " etc.) is called in-process.\nDefault "
+                },
+                {
+                  "kind": "code",
+                  "text": "True"
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ],
+              "name": "callback_warnings",
+              "type": "field_list"
+            },
+            {
+              "body_blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "If "
+                    },
+                    {
+                      "kind": "code",
                       "text": "True"
                     },
                     {
@@ -495,6 +603,12 @@
     "raw_blocks": [],
     "unresolved_references": [
       {
+        "display_text": "RemoteCallbackWarning",
+        "original_target": "flopscope.errors.RemoteCallbackWarning",
+        "role": "class",
+        "target": "flops.errors.RemoteCallbackWarning"
+      },
+      {
         "display_text": "FlopscopeWarning",
         "original_target": "flopscope.errors.FlopscopeWarning",
         "role": "class",
@@ -515,7 +629,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.configure",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_config.py#L31",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_config.py#L32",
   "href": "/docs/api/flopscope/configure/",
   "import_path": "flopscope.configure",
   "is_operation_cost_leaf": false,
@@ -529,6 +643,16 @@
   "numpy_ref": "",
   "operation": null,
   "parameters": [
+    {
+      "body": [
+        "If ``False``, suppress",
+        ":class:`~flopscope.errors.RemoteCallbackWarning` warnings emitted when a",
+        "callback-taking op (``apply_along_axis`` etc.) is called in-process.",
+        "Default ``True``."
+      ],
+      "name": "callback_warnings",
+      "type": "bool"
+    },
     {
       "body": [
         "If ``True``, scan every counted op's output for NaN/Inf values and",

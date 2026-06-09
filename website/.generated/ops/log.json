@@ -606,7 +606,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.log",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L343",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L364",
   "href": "/docs/api/numpy/log/",
   "legacy_href": "/docs/api/ops/log/",
   "module": "numpy",
@@ -663,8 +663,8 @@
     }
   ],
   "previous": {
-    "href": "/docs/api/numpy/linspace/",
-    "label": "fnp.linspace"
+    "href": "/docs/api/numpy/load/",
+    "label": "fnp.load"
   },
   "provenance_label": "Adapted from NumPy docs",
   "provenance_ref": "np.log",

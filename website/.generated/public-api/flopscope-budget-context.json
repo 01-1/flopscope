@@ -50,28 +50,6 @@
                   "inline": [
                     {
                       "kind": "text",
-                      "text": "Multiplier applied to all FLOP costs. Default 1."
-                    }
-                  ],
-                  "type": "paragraph"
-                }
-              ],
-              "data_type": "float, optional",
-              "inline": [
-                {
-                  "kind": "text",
-                  "text": "Multiplier applied to all FLOP costs. Default 1."
-                }
-              ],
-              "name": "flop_multiplier",
-              "type": "field_list"
-            },
-            {
-              "body_blocks": [
-                {
-                  "inline": [
-                    {
-                      "kind": "text",
                       "text": "When "
                     },
                     {
@@ -254,7 +232,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.BudgetContext",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_budget.py#L389",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_budget.py#L489",
   "href": "/docs/api/flopscope/budget-context/",
   "import_path": "flopscope.BudgetContext",
   "is_operation_cost_leaf": false,
@@ -274,13 +252,6 @@
       ],
       "name": "flop_budget",
       "type": "int"
-    },
-    {
-      "body": [
-        "Multiplier applied to all FLOP costs. Default 1."
-      ],
-      "name": "flop_multiplier",
-      "type": "float, optional"
     },
     {
       "body": [
@@ -313,7 +284,7 @@
   "returns": [],
   "schema_version": 1,
   "see_also": [],
-  "signature": "flopscope.BudgetContext(flop_budget: 'int', flop_multiplier: 'float' = 1.0, quiet: 'bool' = False, namespace: 'str | None' = None, wall_time_limit_s: 'float | None' = None)",
+  "signature": "flopscope.BudgetContext(flop_budget: 'int', quiet: 'bool' = False, namespace: 'str | None' = None, wall_time_limit_s: 'float | None' = None)",
   "slug": "flopscope-budget-context",
   "summary": "Context manager for FLOP budget enforcement.",
   "upstream_source_url": "",

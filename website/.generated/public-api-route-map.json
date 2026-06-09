@@ -2916,6 +2916,15 @@
       "module": "numpy",
       "slug": "flopscope-numpy-linspace"
     },
+    "/docs/api/numpy/load/": {
+      "callable": true,
+      "canonical_name": "flopscope.numpy.load",
+      "href": "/docs/api/numpy/load/",
+      "import_path": "flopscope.numpy.load",
+      "kind": "function",
+      "module": "numpy",
+      "slug": "flopscope-numpy-load"
+    },
     "/docs/api/numpy/log/": {
       "callable": true,
       "canonical_name": "flopscope.numpy.log",
@@ -5201,6 +5210,33 @@
       "kind": "function",
       "module": "numpy",
       "slug": "flopscope-numpy-row-stack"
+    },
+    "/docs/api/numpy/save/": {
+      "callable": true,
+      "canonical_name": "flopscope.numpy.save",
+      "href": "/docs/api/numpy/save/",
+      "import_path": "flopscope.numpy.save",
+      "kind": "function",
+      "module": "numpy",
+      "slug": "flopscope-numpy-save"
+    },
+    "/docs/api/numpy/savez-compressed/": {
+      "callable": true,
+      "canonical_name": "flopscope.numpy.savez_compressed",
+      "href": "/docs/api/numpy/savez-compressed/",
+      "import_path": "flopscope.numpy.savez_compressed",
+      "kind": "function",
+      "module": "numpy",
+      "slug": "flopscope-numpy-savez-compressed"
+    },
+    "/docs/api/numpy/savez/": {
+      "callable": true,
+      "canonical_name": "flopscope.numpy.savez",
+      "href": "/docs/api/numpy/savez/",
+      "import_path": "flopscope.numpy.savez",
+      "kind": "function",
+      "module": "numpy",
+      "slug": "flopscope-numpy-savez"
     },
     "/docs/api/numpy/searchsorted/": {
       "callable": true,

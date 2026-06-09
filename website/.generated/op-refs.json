@@ -1169,6 +1169,11 @@
     "href": "/docs/api/numpy/linspace/",
     "label": "fnp.linspace"
   },
+  "load": {
+    "canonical_name": "load",
+    "href": "/docs/api/numpy/load/",
+    "label": "fnp.load"
+  },
   "log": {
     "canonical_name": "log",
     "href": "/docs/api/numpy/log/",
@@ -2388,6 +2393,21 @@
     "canonical_name": "row_stack",
     "href": "/docs/api/numpy/row-stack/",
     "label": "fnp.row_stack"
+  },
+  "save": {
+    "canonical_name": "save",
+    "href": "/docs/api/numpy/save/",
+    "label": "fnp.save"
+  },
+  "savez": {
+    "canonical_name": "savez",
+    "href": "/docs/api/numpy/savez/",
+    "label": "fnp.savez"
+  },
+  "savez_compressed": {
+    "canonical_name": "savez_compressed",
+    "href": "/docs/api/numpy/savez-compressed/",
+    "label": "fnp.savez_compressed"
   },
   "searchsorted": {
     "canonical_name": "searchsorted",

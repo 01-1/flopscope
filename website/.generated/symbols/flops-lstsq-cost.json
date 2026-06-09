@@ -303,67 +303,27 @@
           "inline": [
             {
               "kind": "text",
-              "text": "When "
+              "text": "Both 1-D and 2-D RHS branches use "
             },
             {
               "kind": "code",
-              "text": "b_ndim == 1"
+              "text": "matmul_cost"
             },
             {
               "kind": "text",
-              "text": " (1D RHS), the intermediate matmuls are 2D\u00d71D\n(NumPy dispatches "
+              "text": ":\n"
             },
             {
               "kind": "code",
-              "text": "(k,m)@(m,)"
+              "text": "ut_b = matmul_cost(k, m, b_cols)"
             },
             {
               "kind": "text",
-              "text": " differently from "
+              "text": " and\n"
             },
             {
               "kind": "code",
-              "text": "(k,m)@(m,c)"
-            },
-            {
-              "kind": "text",
-              "text": "):\n"
-            },
-            {
-              "kind": "code",
-              "text": "ut_b = k * m * m"
-            },
-            {
-              "kind": "text",
-              "text": " and "
-            },
-            {
-              "kind": "code",
-              "text": "reconstruction = n * k * k"
-            },
-            {
-              "kind": "text",
-              "text": ".\nWhen "
-            },
-            {
-              "kind": "code",
-              "text": "b_ndim == 2"
-            },
-            {
-              "kind": "text",
-              "text": " (2D RHS), both are standard 2D\u00d72D matmuls:\n"
-            },
-            {
-              "kind": "code",
-              "text": "ut_b = matmul_cost(k, m, c)"
-            },
-            {
-              "kind": "text",
-              "text": " and "
-            },
-            {
-              "kind": "code",
-              "text": "reconstruction = matmul_cost(n, k, c)"
+              "text": "reconstruction = matmul_cost(n, k, b_cols)"
             },
             {
               "kind": "text",

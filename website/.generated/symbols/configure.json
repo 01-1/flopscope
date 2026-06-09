@@ -35,6 +35,114 @@
                     },
                     {
                       "kind": "code",
+                      "text": "False"
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", suppress\n"
+                    },
+                    {
+                      "display_text": "RemoteCallbackWarning",
+                      "explicit_title": false,
+                      "external_url": "",
+                      "href": "",
+                      "kind": "role_reference",
+                      "original_target": "flopscope.errors.RemoteCallbackWarning",
+                      "role": "class",
+                      "suppress_link": false,
+                      "target": "errors.RemoteCallbackWarning",
+                      "unresolved": true
+                    },
+                    {
+                      "kind": "text",
+                      "text": " warnings emitted when a\ncallback-taking op ("
+                    },
+                    {
+                      "external_url": "",
+                      "href": "/docs/api/numpy/apply-along-axis/",
+                      "kind": "link",
+                      "target": "apply_along_axis",
+                      "text": "apply_along_axis"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " etc.) is called in-process.\nDefault "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "True"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "data_type": "bool",
+              "inline": [
+                {
+                  "kind": "text",
+                  "text": "If "
+                },
+                {
+                  "kind": "code",
+                  "text": "False"
+                },
+                {
+                  "kind": "text",
+                  "text": ", suppress\n"
+                },
+                {
+                  "display_text": "RemoteCallbackWarning",
+                  "explicit_title": false,
+                  "external_url": "",
+                  "href": "",
+                  "kind": "role_reference",
+                  "original_target": "flopscope.errors.RemoteCallbackWarning",
+                  "role": "class",
+                  "suppress_link": false,
+                  "target": "errors.RemoteCallbackWarning",
+                  "unresolved": true
+                },
+                {
+                  "kind": "text",
+                  "text": " warnings emitted when a\ncallback-taking op ("
+                },
+                {
+                  "external_url": "",
+                  "href": "/docs/api/numpy/apply-along-axis/",
+                  "kind": "link",
+                  "target": "apply_along_axis",
+                  "text": "apply_along_axis"
+                },
+                {
+                  "kind": "text",
+                  "text": " etc.) is called in-process.\nDefault "
+                },
+                {
+                  "kind": "code",
+                  "text": "True"
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ],
+              "name": "callback_warnings",
+              "type": "field_list"
+            },
+            {
+              "body_blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "If "
+                    },
+                    {
+                      "kind": "code",
                       "text": "True"
                     },
                     {
@@ -500,7 +608,7 @@
   "related_guides": [],
   "signature": "flops.configure(**kwargs: 'object') -> 'None'",
   "slug": "configure",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_config.py#L31",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_config.py#L32",
   "status_note": "",
   "summary": "Update flopscope global settings.",
   "upstream_source_url": ""

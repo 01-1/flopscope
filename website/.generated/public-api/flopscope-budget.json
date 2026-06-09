@@ -80,44 +80,6 @@
                   "inline": [
                     {
                       "kind": "text",
-                      "text": "Multiplier applied to every charged FLOP cost. Default "
-                    },
-                    {
-                      "kind": "code",
-                      "text": "1.0"
-                    },
-                    {
-                      "kind": "text",
-                      "text": "."
-                    }
-                  ],
-                  "type": "paragraph"
-                }
-              ],
-              "data_type": "float, optional",
-              "inline": [
-                {
-                  "kind": "text",
-                  "text": "Multiplier applied to every charged FLOP cost. Default "
-                },
-                {
-                  "kind": "code",
-                  "text": "1.0"
-                },
-                {
-                  "kind": "text",
-                  "text": "."
-                }
-              ],
-              "name": "flop_multiplier",
-              "type": "field_list"
-            },
-            {
-              "body_blocks": [
-                {
-                  "inline": [
-                    {
-                      "kind": "text",
                       "text": "If "
                     },
                     {
@@ -282,7 +244,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.budget",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_budget.py#L776",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_budget.py#L897",
   "href": "/docs/api/flopscope/budget/",
   "import_path": "flopscope.budget",
   "is_operation_cost_leaf": false,
@@ -302,13 +264,6 @@
       ],
       "name": "flop_budget",
       "type": "int"
-    },
-    {
-      "body": [
-        "Multiplier applied to every charged FLOP cost. Default ``1.0``."
-      ],
-      "name": "flop_multiplier",
-      "type": "float, optional"
     },
     {
       "body": [
@@ -344,7 +299,7 @@
   ],
   "schema_version": 1,
   "see_also": [],
-  "signature": "flopscope.budget(flop_budget: 'int', flop_multiplier: 'float' = 1.0, quiet: 'bool' = False, namespace: 'str | None' = None, wall_time_limit_s: 'float | None' = None) -> 'BudgetContext'",
+  "signature": "flopscope.budget(flop_budget: 'int', quiet: 'bool' = False, namespace: 'str | None' = None, wall_time_limit_s: 'float | None' = None) -> 'BudgetContext'",
   "slug": "flopscope-budget",
   "summary": "Create a ``BudgetContext`` usable as a context manager or decorator.",
   "upstream_source_url": "",

@@ -248,9 +248,9 @@
             {
               "description": "",
               "description_inline": [],
-              "external_url": "https://numpy.org/doc/stable/reference/generated/numpy.load.html",
-              "href": "",
-              "label": "load",
+              "external_url": "",
+              "href": "/docs/api/numpy/load/",
+              "label": "flops.load",
               "original_target": "load",
               "role": "",
               "target": "load",
@@ -259,9 +259,9 @@
             {
               "description": "",
               "description_inline": [],
-              "external_url": "https://numpy.org/doc/stable/reference/generated/numpy.save.html",
-              "href": "",
-              "label": "save",
+              "external_url": "",
+              "href": "/docs/api/numpy/save/",
+              "label": "flops.save",
               "original_target": "save",
               "role": "",
               "target": "save",
@@ -333,7 +333,10 @@
               "text": " format\nusing "
             },
             {
-              "kind": "code",
+              "external_url": "",
+              "href": "/docs/api/numpy/save/",
+              "kind": "link",
+              "target": "save",
               "text": "save"
             },
             {
@@ -341,7 +344,10 @@
               "text": " and "
             },
             {
-              "kind": "code",
+              "external_url": "",
+              "href": "/docs/api/numpy/load/",
+              "kind": "link",
+              "target": "load",
               "text": "load"
             },
             {
@@ -524,7 +530,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.numpy.fromfile",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1772",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1757",
   "href": "/docs/api/numpy/fromfile/",
   "import_path": "flopscope.numpy.fromfile",
   "is_operation_cost_leaf": true,
@@ -605,9 +611,9 @@
     {
       "description": "",
       "description_inline": [],
-      "external_url": "https://numpy.org/doc/stable/reference/generated/numpy.load.html",
-      "href": "",
-      "label": "load",
+      "external_url": "",
+      "href": "/docs/api/numpy/load/",
+      "label": "flops.load",
       "original_target": "load",
       "role": "",
       "target": "load",
@@ -616,9 +622,9 @@
     {
       "description": "",
       "description_inline": [],
-      "external_url": "https://numpy.org/doc/stable/reference/generated/numpy.save.html",
-      "href": "",
-      "label": "save",
+      "external_url": "",
+      "href": "/docs/api/numpy/save/",
+      "label": "flops.save",
       "original_target": "save",
       "role": "",
       "target": "save",
