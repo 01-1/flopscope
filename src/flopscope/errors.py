@@ -141,6 +141,12 @@ class UnsupportedReturnType(FlopscopeError):
     """
 
 
+class UnauthorizedControlError(FlopscopeError):
+    """Raised when a session-lifecycle op (budget_open/budget_close) is sent
+    without the trusted control token. Session lifecycle is grader-controlled;
+    participant code cannot open, close, or reset a budget."""
+
+
 class FlopscopeWarning(UserWarning):
     """Warning issued when flopscope detects potential numerical issues."""
 
