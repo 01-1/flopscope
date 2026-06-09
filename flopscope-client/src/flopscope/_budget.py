@@ -267,9 +267,7 @@ class BudgetContext:
         self._wall_start_ns = time.perf_counter_ns()
         self._dispatch_baseline_ns = total_dispatch_ns()
         with dispatch_span():
-            response = conn.send_recv(
-                encode_budget_open(self._flop_budget)
-            )
+            response = conn.send_recv(encode_budget_open(self._flop_budget))
             self._update_budget(response)
         self._is_open = True
         _active_context = self
@@ -439,9 +437,7 @@ def _get_global_default():
         # unreferenced, but the invariant is "every send_recv lives in a span".
         conn = get_connection()
         with dispatch_span():
-            response = conn.send_recv(
-                encode_budget_open(_global_default._flop_budget)
-            )
+            response = conn.send_recv(encode_budget_open(_global_default._flop_budget))
             _global_default._update_budget(response)
         _global_default._is_open = True
         _active_context = _global_default

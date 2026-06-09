@@ -2786,7 +2786,9 @@ def build_structured_doc(
         example = derive_example_from_upstream(parsed.examples[0].code)
 
     try:
-        signature = _sanitize_signature(f"{flopscope_ref(name, module)}{inspect.signature(flopscope_obj)}")
+        signature = _sanitize_signature(
+            f"{flopscope_ref(name, module)}{inspect.signature(flopscope_obj)}"
+        )
     except (TypeError, ValueError):
         signature = f"{flopscope_ref(name, module)}(...)"
 

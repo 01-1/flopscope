@@ -3,6 +3,7 @@
 A latent bug overwrote ufunc wrapper __signature__ with numpy's opaque ufunc
 signature; this guards against recurrence (it silently degraded the API docs).
 """
+
 import inspect
 
 import flopscope.numpy as fnp

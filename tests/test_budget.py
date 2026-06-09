@@ -26,7 +26,6 @@ def test_budget_context_deduct():
         assert rec.cumulative == 300
 
 
-
 def test_budget_exhausted():
     with pytest.raises(BudgetExhaustedError) as exc_info:
         with BudgetContext(flop_budget=100) as budget:
@@ -1147,6 +1146,7 @@ def test_namespace_scope_exit_exception_still_charges_overhead(monkeypatch):
 def test_budget_context_has_no_multiplier():
     """BudgetContext no longer accepts flop_multiplier — it was a vestigial exploit vector."""
     import flopscope as flops
+
     with pytest.raises(TypeError):
         flops.BudgetContext(flop_budget=1000, flop_multiplier=0.0)
 
@@ -1155,6 +1155,7 @@ def test_cost_is_weight_only():
     """Cost is determined solely by flop_cost * weight; no external scalar can zero it."""
     import flopscope as flops
     import flopscope.numpy as fnp
+
     with flops.BudgetContext(flop_budget=10**9, quiet=True) as b:
         a = fnp.array([1.0] * 1000)
         fnp.add(a, a)

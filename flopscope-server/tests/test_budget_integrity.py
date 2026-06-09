@@ -6,7 +6,6 @@ import struct
 
 import msgpack
 import pytest
-
 from flopscope_server._server import FlopscopeServer
 
 pytestmark = pytest.mark.security
@@ -29,6 +28,7 @@ def _reset_budget_context():
     """
     yield
     from flopscope._budget import get_active_budget
+
     ctx = get_active_budget()
     if ctx is not None:
         try:
@@ -126,7 +126,9 @@ def _add_cost(srv):
 
 def _flops_used(srv):
     """Query flops_used from budget_status."""
-    r = _resp(srv._process_request(msgpack.packb({"op": "budget_status"}, use_bin_type=True)))
+    r = _resp(
+        srv._process_request(msgpack.packb({"op": "budget_status"}, use_bin_type=True))
+    )
     assert r["status"] == "ok", f"budget_status failed: {r}"
     return r["result"]["flops_used"]
 
@@ -221,15 +223,31 @@ def test_close_requires_token():
 
 def test_token_fd_delivery():
     """--token-fd writes a token the parent can read; control then requires it."""
-    import os, subprocess, sys, time, msgpack, zmq, secrets as _sec
+    import os
+    import secrets as _sec
+    import subprocess
+    import sys
+    import time
+
+    import msgpack
+    import zmq
 
     r, w = os.pipe()
     # IPC Unix-socket paths must be <104 chars; use /tmp with a short unique name.
     sock_path = f"/tmp/fts-{_sec.token_hex(6)}.sock"
     sock_url = f"ipc://{sock_path}"
     proc = subprocess.Popen(
-        [sys.executable, "-m", "flopscope_server", "--url", sock_url,
-         "--timeout", "30", "--token-fd", str(w)],
+        [
+            sys.executable,
+            "-m",
+            "flopscope_server",
+            "--url",
+            sock_url,
+            "--timeout",
+            "30",
+            "--token-fd",
+            str(w),
+        ],
         pass_fds=(w,),
     )
     os.close(w)
@@ -242,22 +260,49 @@ def test_token_fd_delivery():
                 break
             time.sleep(0.05)
         ctx = zmq.Context.instance()
-        s = ctx.socket(zmq.REQ); s.setsockopt(zmq.RCVTIMEO, 5000); s.connect(sock_url)
+        s = ctx.socket(zmq.REQ)
+        s.setsockopt(zmq.RCVTIMEO, 5000)
+        s.connect(sock_url)
         import flopscope
-        s.send(msgpack.packb({"op": "hello", "kwargs":
-            {"client_version": flopscope.__version__.split("+", 1)[0]}}, use_bin_type=True))
+
+        s.send(
+            msgpack.packb(
+                {
+                    "op": "hello",
+                    "kwargs": {
+                        "client_version": flopscope.__version__.split("+", 1)[0]
+                    },
+                },
+                use_bin_type=True,
+            )
+        )
         s.recv()
         # open WITHOUT token → rejected
-        s.send(msgpack.packb({"op": "budget_open", "kwargs": {"flop_budget": 10**9}},
-                             use_bin_type=True))
-        assert msgpack.unpackb(s.recv(), raw=False)["error_type"] == "UnauthorizedControlError"
+        s.send(
+            msgpack.packb(
+                {"op": "budget_open", "kwargs": {"flop_budget": 10**9}},
+                use_bin_type=True,
+            )
+        )
+        assert (
+            msgpack.unpackb(s.recv(), raw=False)["error_type"]
+            == "UnauthorizedControlError"
+        )
         # open WITH token → ok
-        s.send(msgpack.packb({"op": "budget_open",
-            "kwargs": {"flop_budget": 10**9, "control_token": token}}, use_bin_type=True))
+        s.send(
+            msgpack.packb(
+                {
+                    "op": "budget_open",
+                    "kwargs": {"flop_budget": 10**9, "control_token": token},
+                },
+                use_bin_type=True,
+            )
+        )
         assert msgpack.unpackb(s.recv(), raw=False)["status"] == "ok"
         s.close()
     finally:
-        proc.terminate(); proc.wait(timeout=5)
+        proc.terminate()
+        proc.wait(timeout=5)
         try:
             os.unlink(sock_path)
         except FileNotFoundError:
@@ -273,12 +318,21 @@ def test_token_server_rejects_client_budget_open(tmp_path):
     subprocess. The client subprocess exits with code 0 if UnauthorizedControlError
     is raised (expected), or code 1 otherwise, letting this test assert the outcome.
     """
-    import os, subprocess, sys, time, secrets as _sec
+    import os
+    import secrets as _sec
+    import subprocess
+    import sys
+    import time
 
     # Path to the client venv's Python interpreter.
     client_python = os.path.join(
         os.path.dirname(__file__),  # flopscope-server/tests/
-        "..", "..", "flopscope-client", ".venv", "bin", "python",
+        "..",
+        "..",
+        "flopscope-client",
+        ".venv",
+        "bin",
+        "python",
     )
     client_python = os.path.normpath(client_python)
     if not os.path.exists(client_python):
@@ -288,8 +342,17 @@ def test_token_server_rejects_client_budget_open(tmp_path):
     sock_path = f"/tmp/ftg-{_sec.token_hex(6)}.sock"
     sock_url = f"ipc://{sock_path}"
     proc = subprocess.Popen(
-        [sys.executable, "-m", "flopscope_server", "--url", sock_url,
-         "--timeout", "30", "--token-fd", str(w)],
+        [
+            sys.executable,
+            "-m",
+            "flopscope_server",
+            "--url",
+            sock_url,
+            "--timeout",
+            "30",
+            "--token-fd",
+            str(w),
+        ],
         pass_fds=(w,),
     )
     os.close(w)
@@ -325,7 +388,9 @@ except Exception as e:
 """
         result = subprocess.run(
             [client_python, "-c", client_script],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         assert result.returncode == 0, (
             f"Client subprocess did not raise UnauthorizedControlError.\n"

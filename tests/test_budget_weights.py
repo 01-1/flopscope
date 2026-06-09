@@ -47,7 +47,6 @@ def test_deduct_weight_default_is_one():
         assert budget.flops_used == 100
 
 
-
 def test_deduct_exhaustion_accounts_for_weight(tmp_path):
     load_weights(_write_weights(tmp_path, {"exp": 10.0}))
     with pytest.raises(BudgetExhaustedError):
