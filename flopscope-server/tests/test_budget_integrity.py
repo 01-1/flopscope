@@ -262,3 +262,82 @@ def test_token_fd_delivery():
             os.unlink(sock_path)
         except FileNotFoundError:
             pass
+
+
+def test_token_server_rejects_client_budget_open(tmp_path):
+    """A token-gated server rejects a client BudgetContext open (no token known to client).
+
+    The server venv has only the in-process flopscope; the client library lives
+    in flopscope-client/.venv. This test spawns the server subprocess (token-gated),
+    then invokes the *client* library via its own venv interpreter in a second
+    subprocess. The client subprocess exits with code 0 if UnauthorizedControlError
+    is raised (expected), or code 1 otherwise, letting this test assert the outcome.
+    """
+    import os, subprocess, sys, time, secrets as _sec
+
+    # Path to the client venv's Python interpreter.
+    client_python = os.path.join(
+        os.path.dirname(__file__),  # flopscope-server/tests/
+        "..", "..", "flopscope-client", ".venv", "bin", "python",
+    )
+    client_python = os.path.normpath(client_python)
+    if not os.path.exists(client_python):
+        pytest.skip(f"client venv python not found at {client_python}")
+
+    r, w = os.pipe()
+    sock_path = f"/tmp/ftg-{_sec.token_hex(6)}.sock"
+    sock_url = f"ipc://{sock_path}"
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "flopscope_server", "--url", sock_url,
+         "--timeout", "30", "--token-fd", str(w)],
+        pass_fds=(w,),
+    )
+    os.close(w)
+    # Drain the token — the client must NOT use it; we just discard it.
+    _ = os.read(r, 4096)
+    os.close(r)
+    try:
+        # Wait for the socket file to appear.
+        for _ in range(100):
+            if os.path.exists(sock_path):
+                break
+            time.sleep(0.05)
+        assert os.path.exists(sock_path), "server socket did not appear in time"
+
+        # Client script: enter BudgetContext (no token) → expect UnauthorizedControlError.
+        client_script = f"""
+import sys, os
+os.environ["FLOPSCOPE_SERVER_URL"] = {sock_url!r}
+import flopscope as flops
+from flopscope import _connection
+_connection.reset_connection()
+try:
+    with flops.BudgetContext(flop_budget=10**9):
+        pass
+    print("NO_ERROR", flush=True)
+    sys.exit(1)
+except flops.UnauthorizedControlError:
+    print("GOT_UNAUTHORIZED", flush=True)
+    sys.exit(0)
+except Exception as e:
+    print(f"UNEXPECTED_ERROR: {{type(e).__name__}}: {{e}}", flush=True)
+    sys.exit(2)
+"""
+        result = subprocess.run(
+            [client_python, "-c", client_script],
+            capture_output=True, text=True, timeout=15,
+        )
+        assert result.returncode == 0, (
+            f"Client subprocess did not raise UnauthorizedControlError.\n"
+            f"stdout: {result.stdout!r}\nstderr: {result.stderr!r}"
+        )
+        assert "GOT_UNAUTHORIZED" in result.stdout, (
+            f"Expected GOT_UNAUTHORIZED in output; got: {result.stdout!r}"
+        )
+    finally:
+        proc.terminate()
+        proc.wait(timeout=5)
+        try:
+            os.unlink(sock_path)
+        except FileNotFoundError:
+            pass

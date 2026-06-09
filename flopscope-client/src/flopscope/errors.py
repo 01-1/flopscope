@@ -58,6 +58,9 @@ class UnsupportedReturnType(FlopscopeError):
 class UnauthorizedControlError(FlopscopeError):
     """Raised when a session-lifecycle op (budget_open/budget_close) is sent without the trusted control token. Session lifecycle is grader-controlled; participant code cannot open, close, or reset a budget."""
 
+    def __init__(self, message: str = "") -> None:
+        super().__init__(message)
+
 
 class RemoteCallbackError(FlopscopeError):
     """Raised when a callback-taking op (e.g. apply_along_axis) is invoked on the client/server backend, which cannot execute Python callbacks remotely."""

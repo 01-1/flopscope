@@ -109,9 +109,6 @@ class BudgetContext:
     ----------
     flop_budget:
         Maximum FLOPs allowed within this context.
-    flop_multiplier:
-        Scaling factor applied to each operation's raw FLOP count before
-        it is charged against the budget.  Defaults to ``1.0``.
     quiet:
         If ``True``, suppress informational output.  Defaults to ``False``.
     namespace:
@@ -127,12 +124,10 @@ class BudgetContext:
     def __init__(
         self,
         flop_budget: int,
-        flop_multiplier: float = 1.0,
         quiet: bool = False,
         namespace: str | None = None,
     ) -> None:
         self._flop_budget = flop_budget
-        self._flop_multiplier = flop_multiplier
         self._quiet = quiet
         self._namespace = namespace
         self._flops_used: int = 0
@@ -166,11 +161,6 @@ class BudgetContext:
     def flops_remaining(self) -> int:
         """FLOPs remaining in the budget (``budget - used``)."""
         return self._flop_budget - self._flops_used
-
-    @property
-    def flop_multiplier(self) -> float:
-        """FLOP scaling multiplier."""
-        return self._flop_multiplier
 
     @property
     def quiet(self) -> bool:
@@ -278,7 +268,7 @@ class BudgetContext:
         self._dispatch_baseline_ns = total_dispatch_ns()
         with dispatch_span():
             response = conn.send_recv(
-                encode_budget_open(self._flop_budget, self._flop_multiplier)
+                encode_budget_open(self._flop_budget)
             )
             self._update_budget(response)
         self._is_open = True
@@ -323,8 +313,7 @@ class BudgetContext:
     def __repr__(self) -> str:  # pragma: no cover
         return (
             f"BudgetContext(flop_budget={self._flop_budget}, "
-            f"flops_used={self._flops_used}, "
-            f"flop_multiplier={self._flop_multiplier})"
+            f"flops_used={self._flops_used})"
         )
 
 
@@ -407,11 +396,10 @@ class BudgetAccumulator:
 _accumulator = BudgetAccumulator()
 
 
-def budget(flop_budget, flop_multiplier=1.0, quiet=False, namespace=None):
+def budget(flop_budget, quiet=False, namespace=None):
     """Create a BudgetContext usable as both a context manager and decorator."""
     return BudgetContext(
         flop_budget=flop_budget,
-        flop_multiplier=flop_multiplier,
         quiet=quiet,
         namespace=namespace,
     )
@@ -452,9 +440,7 @@ def _get_global_default():
         conn = get_connection()
         with dispatch_span():
             response = conn.send_recv(
-                encode_budget_open(
-                    _global_default._flop_budget, _global_default._flop_multiplier
-                )
+                encode_budget_open(_global_default._flop_budget)
             )
             _global_default._update_budget(response)
         _global_default._is_open = True

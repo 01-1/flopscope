@@ -94,6 +94,7 @@ def _generate_errors() -> str:
         "RemoteSerializationError",
         "SymmetryError",
         "TimeExhaustedError",
+        "UnauthorizedControlError",
         "UnsupportedFunctionError",
         "UnsupportedReturnType",
     }

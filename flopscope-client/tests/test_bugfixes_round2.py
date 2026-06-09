@@ -25,45 +25,12 @@ def _make_mock_conn(response):
 
 
 # =========================================================================
-# Fix 1: flop_multiplier sent to server
+# Fix 1: flop_multiplier — removed; encode_budget_open no longer sends it
 # =========================================================================
-
-
-class TestFix1FlopMultiplierSent:
-    """flop_multiplier is included in the budget_open message."""
-
-    def test_encode_budget_open_includes_multiplier(self):
-        from flopscope._protocol import encode_budget_open
-
-        raw = encode_budget_open(1000, flop_multiplier=2.5)
-        decoded = msgpack.unpackb(raw, raw=False)
-        assert decoded["kwargs"]["flop_multiplier"] == 2.5
-
-    def test_encode_budget_open_default_multiplier(self):
-        from flopscope._protocol import encode_budget_open
-
-        raw = encode_budget_open(1000)
-        decoded = msgpack.unpackb(raw, raw=False)
-        assert decoded["kwargs"]["flop_multiplier"] == 1.0
-
-    def test_enter_sends_flop_multiplier(self):
-        import flopscope._budget as bmod
-        from flopscope._budget import BudgetContext
-
-        mock_conn = _make_mock_conn({"status": "ok", "flops_used": 0})
-        old = bmod._active_context
-        bmod._active_context = None
-        try:
-            with patch("flopscope._budget.get_connection", return_value=mock_conn):
-                ctx = BudgetContext(flop_budget=500, flop_multiplier=3.0)
-                ctx.__enter__()
-                sent_bytes = mock_conn.send_recv.call_args[0][0]
-                decoded = msgpack.unpackb(sent_bytes, raw=False)
-                assert decoded["kwargs"]["flop_multiplier"] == 3.0
-                ctx.__exit__(None, None, None)
-        finally:
-            bmod._active_context = old
-
+# The TestFix1FlopMultiplierSent class was deleted because flop_multiplier
+# has been removed from BudgetContext and encode_budget_open entirely.
+# The server-side token gate is the security boundary; the client simply
+# sends flop_budget only.
 
 # =========================================================================
 # Fix 2: .T property on RemoteArray
