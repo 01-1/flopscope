@@ -1430,8 +1430,55 @@ def mean(
 
 mean.__signature__ = _inspect.signature(_np.mean)  # pyright: ignore[reportFunctionMemberAccess]
 
-std = _counted_reduction(_np.std, "std")
-var = _counted_reduction(_np.var, "var")
+
+def _variance_family_cost(a, axis, symmetry, *, with_sqrt: bool) -> int:
+    """Honest FMA=2 cost: 2 pointwise passes (center, square) + 2 reductions
+    (mean-sum, var-sum) + per-output divides (+ sqrt for std) = 4*numel (+M)."""
+    from flopscope._accumulation._reduction import (
+        _normalize_axis,
+        _num_output_orbits,
+        compute_reduction_accumulation_cost,
+    )
+
+    axes_summed = _normalize_axis(axis, a.ndim)
+    m = _num_output_orbits(tuple(a.shape), axes_summed, symmetry)
+    reduce_cost = compute_reduction_accumulation_cost(
+        input_shape=tuple(a.shape), axes_summed=axes_summed, symmetry=symmetry,
+        op_factor=2, extra_ops=2 * m,
+    ).total
+    cost = 2 * pointwise_cost(tuple(a.shape), symmetry) + reduce_cost
+    return cost + m if with_sqrt else cost
+
+
+def _counted_variance(np_func, op_name: str, *, with_sqrt: bool):
+    @_counted_wrapper
+    def wrapper(a: ArrayLike, axis: int | None = None, dtype=None,
+               out: FlopscopeArray | None = None, ddof: int = 0,
+               keepdims: bool = False, **kwargs: Any):
+        budget = require_budget()
+        if not isinstance(a, _np.ndarray):
+            a = _np.asarray(a)
+        symmetry = _symmetry_of(a)
+        keepdims = bool(keepdims)
+        cost = _variance_family_cost(a, axis, symmetry, with_sqrt=with_sqrt)
+        new_symmetry = (reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
+                        if symmetry is not None else None)
+        _prepare_symmetric_out(out, new_symmetry)
+        out_for_np = None if isinstance(out, SymmetricTensor) else out
+        with budget.deduct(op_name, flop_cost=cost, subscripts=None, shapes=(a.shape,)):
+            result = _call_with_optional_out(
+                np_func, a, axis=axis, out=out_for_np, ddof=ddof,
+                keepdims=keepdims, dtype=dtype, supports_out=True, **kwargs)
+        if out is not None:
+            return _wrap_result(result, out=out, symmetry=new_symmetry)
+        return _wrap_result(result, symmetry=new_symmetry)
+
+    _apply_numpy_signature(wrapper, np_func)
+    return wrapper
+
+
+std = _counted_variance(_np.std, "std", with_sqrt=True)
+var = _counted_variance(_np.var, "var", with_sqrt=False)
 argmax = _counted_reduction(_np.argmax, "argmax")
 argmin = _counted_reduction(_np.argmin, "argmin")
 cumsum = _counted_reduction(_np.cumsum, "cumsum")
@@ -1596,9 +1643,9 @@ nanmin = _counted_reduction(_np.nanmin, "nanmin")
 nanpercentile = _counted_reduction(_np.nanpercentile, "nanpercentile")
 nanprod = _counted_reduction(_np.nanprod, "nanprod")
 nanquantile = _counted_reduction(_np.nanquantile, "nanquantile")
-nanstd = _counted_reduction(_np.nanstd, "nanstd")
+nanstd = _counted_variance(_np.nanstd, "nanstd", with_sqrt=True)
 nansum = _counted_reduction(_np.nansum, "nansum")
-nanvar = _counted_reduction(_np.nanvar, "nanvar")
+nanvar = _counted_variance(_np.nanvar, "nanvar", with_sqrt=False)
 
 
 @_counted_wrapper

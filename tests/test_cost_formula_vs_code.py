@@ -266,14 +266,10 @@ _REDUCTION_NUMEL = [
     "nanprod",
     "nansum",
     "nanmedian",
-    # std/var also cost numel(input) per sheet
-    # (mean is excluded: it charges +1 divide for the scalar output orbit)
+    # mean is excluded: it charges +1 divide for the scalar output orbit
+    # std/var/nanstd/nanvar are excluded: 4-pass formula; see test_variance_family_cost
     "average",
     "nanmean",
-    "std",
-    "var",
-    "nanstd",
-    "nanvar",
 ]
 
 
@@ -285,6 +281,19 @@ def test_reduction_numel(name, we):
     fn = getattr(we, name)
     cost = _cost_of(fn, a)
     assert cost == 99, f"{name}: expected orbit-mapping cost=99, got {cost}"
+
+
+def test_variance_family_cost(we):
+    # 4-pass honest cost for full reduction of (10,10) dense (N=100, M=1 scalar):
+    # 2*pointwise(100) + reduce(op_factor=2, extra_ops=2*1) + 1 div
+    # pointwise = 100; reduce: orbit-mapping 99 + 2 extra = 101 → *2 op_factor? No:
+    # compute_reduction_accumulation_cost with op_factor=2, extra_ops=2: total = 2*99 + 2 = 200
+    # var = 2*100 + 200 = 400, std = 400 + 1 = 401
+    a = numpy.random.rand(10, 10)
+    assert _cost_of(we.var, a) == 400, f"var: expected 400, got {_cost_of(we.var, a)}"
+    assert _cost_of(we.std, a) == 401, f"std: expected 401, got {_cost_of(we.std, a)}"
+    assert _cost_of(we.nanvar, a) == 400, f"nanvar: expected 400, got {_cost_of(we.nanvar, a)}"
+    assert _cost_of(we.nanstd, a) == 401, f"nanstd: expected 401, got {_cost_of(we.nanstd, a)}"
 
 
 def test_mean_charges_sum_plus_one_divide(we):

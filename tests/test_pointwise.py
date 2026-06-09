@@ -106,9 +106,10 @@ def test_std_cost():
     x = numpy.ones((10, 20))
     with BudgetContext(flop_budget=10**6) as budget:
         std(x, axis=0)
-        # Updated for orbit-mapping cost model (PR #91 Task 7).
-        # Reduces 10->1 for each of 20 cols: 20 * (10-1) = 180 additions.
-        assert budget.flops_used == 180
+        # Updated for 4-pass honest cost model (var/std fix):
+        # 2*pointwise(200) + 2*reduce(200->20) + 2*m(divides) + m(sqrts)
+        # = 400 + 400 + 40 + 20 = 820 (with weight=1.0)
+        assert budget.flops_used == 820
 
 
 def test_argmax_result():

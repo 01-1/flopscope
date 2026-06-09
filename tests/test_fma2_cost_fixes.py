@@ -47,3 +47,16 @@ def test_average_weighted_doubles_unweighted():
     unweighted = cost(lambda: fnp.average(W, axis=1))
     weighted = cost(lambda: fnp.average(W, axis=1, weights=w))
     assert weighted == unweighted + W.size      # +1 multiply pass for a*w
+
+
+def test_var_is_four_passes_and_shape_stable():
+    v = fnp.asarray(np.random.rand(1_000_000))
+    assert cost(lambda: fnp.var(v)) == 4_000_000           # 4N, full reduction
+    assert cost(lambda: fnp.std(v)) == 4_000_001           # 4N + 1 sqrt
+    a = fnp.asarray(np.random.rand(500_000, 2))
+    assert cost(lambda: fnp.var(a, axis=1)) == 4_000_000   # shape-stable, not 2(N-M)
+
+
+def test_nanvar_matches_var_cost():
+    v = fnp.asarray(np.random.rand(1_000_000))
+    assert cost(lambda: fnp.nanvar(v)) == cost(lambda: fnp.var(v))
