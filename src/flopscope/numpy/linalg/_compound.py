@@ -49,7 +49,12 @@ def multi_dot_cost(shapes: Sequence[Sequence[int]]) -> int:
     n = len(shapes)
     if n < 2:
         return 0
-    dims = [s[0] for s in shapes] + [shapes[-1][-1]]
+    promoted = list(shapes)
+    if promoted and len(promoted[0]) == 1:
+        promoted[0] = (1, promoted[0][0])          # leading vector -> row
+    if len(promoted) > 1 and len(promoted[-1]) == 1:
+        promoted[-1] = (promoted[-1][0], 1)        # trailing vector -> col
+    dims = [s[0] for s in promoted] + [promoted[-1][-1]]
     if n == 2:
         return 2 * dims[0] * dims[1] * dims[2]
     cost_table = [[0] * n for _ in range(n)]

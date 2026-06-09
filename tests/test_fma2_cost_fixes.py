@@ -24,3 +24,12 @@ def test_tensordot_matches_einsum_partial_contraction():
     td = cost(lambda: fnp.tensordot(A, B, axes=([1, 2], [0, 1])))
     es = cost(lambda: fnp.einsum("abc,bcf->af", A, B))
     assert td == es and td > A.size * B.size // 12  # not the old multiply-only count
+
+
+def test_multi_dot_promotes_1d_operands():
+    v = fnp.asarray(np.random.rand(64))
+    M = fnp.asarray(np.random.rand(64, 64))
+    w = fnp.asarray(np.random.rand(64))
+    # v·M·w is a matvec chain: honest ~ 2*64*64 + 2*64, not 2*64^3.
+    c = cost(lambda: fnp.linalg.multi_dot([v, M, w]))
+    assert c < 2 * 64 * 64 * 64 // 10  # nowhere near the 1-D-as-k overcount
