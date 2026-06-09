@@ -49,6 +49,27 @@ from flopscope.errors import (
 )
 
 # ---------------------------------------------------------------------------
+# Signature helpers
+# ---------------------------------------------------------------------------
+
+
+def _apply_numpy_signature(wrapper, np_func) -> None:
+    """Copy np_func's signature onto wrapper, EXCEPT for ufuncs.
+
+    On current numpy, ``inspect.signature(<ufunc>)`` returns the opaque
+    ``(*args, **kwargs)``, which would clobber the wrapper's rich typed
+    signature that the API-docs generator emits. Keep the wrapper's own
+    signature for ufuncs; adopt numpy's for everything else.
+    """
+    if isinstance(np_func, _np.ufunc):
+        return
+    try:
+        wrapper.__signature__ = _inspect.signature(np_func)  # pyright: ignore[reportFunctionMemberAccess]
+    except (ValueError, TypeError):
+        pass
+
+
+# ---------------------------------------------------------------------------
 # Factory helpers
 # ---------------------------------------------------------------------------
 
@@ -364,10 +385,7 @@ def _counted_unary(np_func, op_name: str):
     wrapper.__name__ = op_name
     wrapper.__qualname__ = op_name
     attach_docstring(wrapper, np_func, "counted_unary", "numel(output) FLOPs")
-    try:
-        wrapper.__signature__ = _inspect.signature(np_func)  # pyright: ignore[reportFunctionMemberAccess]
-    except (ValueError, TypeError):
-        pass
+    _apply_numpy_signature(wrapper, np_func)
     return wrapper
 
 
@@ -406,10 +424,7 @@ def _counted_unary_multi(np_func, op_name: str):
     wrapper.__name__ = op_name
     wrapper.__qualname__ = op_name
     attach_docstring(wrapper, np_func, "counted_unary", "numel(input) FLOPs")
-    try:
-        wrapper.__signature__ = _inspect.signature(np_func)  # pyright: ignore[reportFunctionMemberAccess]
-    except (ValueError, TypeError):
-        pass
+    _apply_numpy_signature(wrapper, np_func)
     return wrapper
 
 
@@ -483,10 +498,7 @@ def _counted_binary(np_func, op_name: str):
     wrapper.__name__ = op_name
     wrapper.__qualname__ = op_name
     attach_docstring(wrapper, np_func, "counted_binary", "numel(output) FLOPs")
-    try:
-        wrapper.__signature__ = _inspect.signature(np_func)  # pyright: ignore[reportFunctionMemberAccess]
-    except (ValueError, TypeError):
-        pass
+    _apply_numpy_signature(wrapper, np_func)
     return wrapper
 
 
@@ -569,10 +581,7 @@ def _counted_binary_multi(np_func, op_name: str):
     wrapper.__name__ = op_name
     wrapper.__qualname__ = op_name
     attach_docstring(wrapper, np_func, "counted_binary", "numel(output) FLOPs")
-    try:
-        wrapper.__signature__ = _inspect.signature(np_func)  # pyright: ignore[reportFunctionMemberAccess]
-    except (ValueError, TypeError):
-        pass
+    _apply_numpy_signature(wrapper, np_func)
     return wrapper
 
 
@@ -968,10 +977,7 @@ def _counted_reduction(
     if extra_output:
         cost_desc += " + numel(output)"
     attach_docstring(wrapper, np_func, "counted_reduction", cost_desc)
-    try:
-        wrapper.__signature__ = _inspect.signature(np_func)  # pyright: ignore[reportFunctionMemberAccess]
-    except (ValueError, TypeError):
-        pass
+    _apply_numpy_signature(wrapper, np_func)
     return wrapper
 
 

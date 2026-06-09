@@ -49,6 +49,17 @@ WEIGHTS_PATH = ROOT / "src" / "flopscope" / "data" / "weights.json"
 WEIGHTS_CSV_PATH = ROOT / "src" / "flopscope" / "data" / "weights.csv"
 
 # ---------------------------------------------------------------------------
+# Signature helpers
+# ---------------------------------------------------------------------------
+
+
+def _sanitize_signature(sig: str) -> str:
+    """Strip volatile object-repr addresses (e.g. numpy sentinel defaults) so
+    generated signatures are deterministic across runs."""
+    return re.sub(r" at 0x[0-9a-fA-F]+", "", sig)
+
+
+# ---------------------------------------------------------------------------
 # Registry loading
 # ---------------------------------------------------------------------------
 
@@ -2775,7 +2786,7 @@ def build_structured_doc(
         example = derive_example_from_upstream(parsed.examples[0].code)
 
     try:
-        signature = f"{flopscope_ref(name, module)}{inspect.signature(flopscope_obj)}"
+        signature = _sanitize_signature(f"{flopscope_ref(name, module)}{inspect.signature(flopscope_obj)}")
     except (TypeError, ValueError):
         signature = f"{flopscope_ref(name, module)}(...)"
 
@@ -2871,7 +2882,7 @@ def _public_symbol_summary(raw_doc: str, parsed: ParsedDoc) -> str:
 
 def _symbol_signature(import_path: str, obj: object) -> str:
     try:
-        return f"{import_path}{inspect.signature(obj)}"
+        return _sanitize_signature(f"{import_path}{inspect.signature(obj)}")
     except (TypeError, ValueError):
         return import_path
 

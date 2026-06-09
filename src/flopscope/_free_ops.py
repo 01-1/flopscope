@@ -2519,6 +2519,8 @@ _this_module = _sys.modules[__name__]
 
 def _set_sig(func_name, np_func):
     """Set __signature__ of a module-level function to match numpy."""
+    if isinstance(np_func, _np.ufunc):
+        return
     fn = globals().get(func_name)
     if fn is not None and callable(np_func):
         try:
