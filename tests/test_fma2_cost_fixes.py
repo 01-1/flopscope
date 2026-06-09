@@ -39,3 +39,11 @@ def test_polymul_equals_convolve():
     a = fnp.asarray(np.random.rand(500))
     b = fnp.asarray(np.random.rand(400))
     assert cost(lambda: fnp.polymul(a, b)) == cost(lambda: fnp.convolve(a, b))
+
+
+def test_average_weighted_doubles_unweighted():
+    W = fnp.asarray(np.random.rand(1000, 1000))
+    w = fnp.asarray(np.random.rand(1000) + 0.5)
+    unweighted = cost(lambda: fnp.average(W, axis=1))
+    weighted = cost(lambda: fnp.average(W, axis=1, weights=w))
+    assert weighted == unweighted + W.size      # +1 multiply pass for a*w

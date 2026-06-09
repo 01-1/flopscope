@@ -1445,7 +1445,29 @@ all = _counted_reduction(_np.all, "all")
 amax = _counted_reduction(_np.amax, "amax")
 amin = _counted_reduction(_np.amin, "amin")
 any = _counted_reduction(_np.any, "any")
-average = _counted_reduction(_np.average, "average")
+@_counted_wrapper
+def average(a: ArrayLike, axis: int | None = None, weights=None, returned: bool = False,
+            *, keepdims: bool = False, **kwargs: Any):
+    """Counted np.average. Cost = reduction_cost(input) (+ numel for the a*w
+    multiply when weights are supplied)."""
+    budget = require_budget()
+    if not isinstance(a, _np.ndarray):
+        a = _np.asarray(a)
+    symmetry = _symmetry_of(a)
+    cost = reduction_cost(a.shape, axis, symmetry=symmetry)
+    if weights is not None:
+        cost += pointwise_cost(tuple(a.shape), symmetry)   # the a*w pass
+    new_symmetry = (reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
+                    if symmetry is not None else None)
+    a_raw = _to_base_ndarray(a)
+    weights_raw = _to_base_ndarray(weights) if isinstance(weights, _np.ndarray) else weights
+    with budget.deduct("average", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
+        result = _np.average(a_raw, axis=axis, weights=weights_raw, returned=returned,
+                             keepdims=keepdims, **kwargs)
+    return _wrap_result(result, symmetry=new_symmetry)
+
+
+_apply_numpy_signature(average, _np.average)
 _count_nonzero_counted = _counted_reduction(_np.count_nonzero, "count_nonzero")
 
 
