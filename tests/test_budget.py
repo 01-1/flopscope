@@ -11,7 +11,6 @@ def test_budget_context_basic():
         assert budget.flop_budget == 1000
         assert budget.flops_used == 0
         assert budget.flops_remaining == 1000
-        assert budget.flop_multiplier == 1.0
         assert budget.op_log == []
 
 
@@ -25,12 +24,6 @@ def test_budget_context_deduct():
         assert rec.op_name == "test_op"
         assert rec.flop_cost == 300
         assert rec.cumulative == 300
-
-
-def test_budget_context_deduct_with_multiplier():
-    with BudgetContext(flop_budget=1000, flop_multiplier=2.0) as budget:
-        budget.deduct("test_op", flop_cost=100, subscripts=None, shapes=())
-        assert budget.flops_used == 200
 
 
 def test_budget_exhausted():
@@ -1148,3 +1141,25 @@ def test_namespace_scope_exit_exception_still_charges_overhead(monkeypatch):
         ctx._namespace_stack.pop()
     assert raised["flag"]
     assert ctx.flopscope_overhead_time_s > overhead_before
+
+
+def test_budget_context_has_no_multiplier():
+    """BudgetContext no longer accepts flop_multiplier — it was a vestigial exploit vector."""
+    import flopscope as flops
+
+    with pytest.raises(TypeError):
+        flops.BudgetContext(
+            flop_budget=1000,
+            flop_multiplier=0.0,  # pyright: ignore[reportCallIssue]
+        )
+
+
+def test_cost_is_weight_only():
+    """Cost is determined solely by flop_cost * weight; no external scalar can zero it."""
+    import flopscope as flops
+    import flopscope.numpy as fnp
+
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as b:
+        a = fnp.array([1.0] * 1000)
+        fnp.add(a, a)
+    assert b.flops_used >= 1000  # no 0-scaling possible

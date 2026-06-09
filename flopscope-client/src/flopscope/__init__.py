@@ -60,6 +60,7 @@ from flopscope.errors import (  # noqa: E402
     SymmetryError,
     SymmetryLossWarning,
     TimeExhaustedError,
+    UnauthorizedControlError,
     UnsupportedFunctionError,
     UnsupportedReturnType,
 )

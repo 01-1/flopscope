@@ -47,13 +47,6 @@ def test_deduct_weight_default_is_one():
         assert budget.flops_used == 100
 
 
-def test_deduct_weight_stacks_with_flop_multiplier(tmp_path):
-    load_weights(_write_weights(tmp_path, {"exp": 10.0}))
-    with BudgetContext(flop_budget=1_000_000, flop_multiplier=2.0) as budget:
-        budget.deduct("exp", flop_cost=100, subscripts=None, shapes=((100,),))
-        assert budget.flops_used == 2000
-
-
 def test_deduct_exhaustion_accounts_for_weight(tmp_path):
     load_weights(_write_weights(tmp_path, {"exp": 10.0}))
     with pytest.raises(BudgetExhaustedError):

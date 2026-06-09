@@ -1763,6 +1763,12 @@
     "kind": "op",
     "slug": "linspace"
   },
+  "numpy/load": {
+    "canonical_name": "load",
+    "href": "/docs/api/numpy/load/",
+    "kind": "op",
+    "slug": "load"
+  },
   "numpy/log": {
     "canonical_name": "log",
     "href": "/docs/api/numpy/log/",
@@ -3196,6 +3202,24 @@
     "href": "/docs/api/numpy/row-stack/",
     "kind": "op",
     "slug": "row_stack"
+  },
+  "numpy/save": {
+    "canonical_name": "save",
+    "href": "/docs/api/numpy/save/",
+    "kind": "op",
+    "slug": "save"
+  },
+  "numpy/savez": {
+    "canonical_name": "savez",
+    "href": "/docs/api/numpy/savez/",
+    "kind": "op",
+    "slug": "savez"
+  },
+  "numpy/savez-compressed": {
+    "canonical_name": "savez_compressed",
+    "href": "/docs/api/numpy/savez-compressed/",
+    "kind": "op",
+    "slug": "savez_compressed"
   },
   "numpy/searchsorted": {
     "canonical_name": "searchsorted",

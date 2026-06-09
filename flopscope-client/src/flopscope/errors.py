@@ -55,6 +55,13 @@ class UnsupportedReturnType(FlopscopeError):
         super().__init__(message)
 
 
+class UnauthorizedControlError(FlopscopeError):
+    """Raised when a session-lifecycle op (budget_open/budget_close) is sent without the trusted control token. Session lifecycle is grader-controlled; participant code cannot open, close, or reset a budget."""
+
+    def __init__(self, message: str = "") -> None:
+        super().__init__(message)
+
+
 class RemoteCallbackError(FlopscopeError):
     """Raised when a callback-taking op (e.g. apply_along_axis) is invoked on the client/server backend, which cannot execute Python callbacks remotely."""
 
@@ -105,6 +112,7 @@ _FLOPSCOPE_ERRORS: frozenset[str] = frozenset(
         "SymmetryError",
         "UnsupportedFunctionError",
         "UnsupportedReturnType",
+        "UnauthorizedControlError",
         "RemoteCallbackError",
         "RemoteSerializationError",
     }
@@ -117,6 +125,7 @@ _ERROR_MAP: dict[str, type[Exception]] = {
     "SymmetryError": SymmetryError,
     "UnsupportedFunctionError": UnsupportedFunctionError,
     "UnsupportedReturnType": UnsupportedReturnType,
+    "UnauthorizedControlError": UnauthorizedControlError,
     "RemoteCallbackError": RemoteCallbackError,
     "RemoteSerializationError": RemoteSerializationError,
     "FlopscopeServerError": FlopscopeServerError,

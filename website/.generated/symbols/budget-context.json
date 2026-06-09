@@ -53,28 +53,6 @@
                   "inline": [
                     {
                       "kind": "text",
-                      "text": "Multiplier applied to all FLOP costs. Default 1."
-                    }
-                  ],
-                  "type": "paragraph"
-                }
-              ],
-              "data_type": "float, optional",
-              "inline": [
-                {
-                  "kind": "text",
-                  "text": "Multiplier applied to all FLOP costs. Default 1."
-                }
-              ],
-              "name": "flop_multiplier",
-              "type": "field_list"
-            },
-            {
-              "body_blocks": [
-                {
-                  "inline": [
-                    {
-                      "kind": "text",
                       "text": "When "
                     },
                     {
@@ -259,9 +237,9 @@
       "title": "How Flopscope works"
     }
   ],
-  "signature": "flops.BudgetContext(flop_budget: 'int', flop_multiplier: 'float' = 1.0, quiet: 'bool' = False, namespace: 'str | None' = None, wall_time_limit_s: 'float | None' = None)",
+  "signature": "flops.BudgetContext(flop_budget: 'int', quiet: 'bool' = False, namespace: 'str | None' = None, wall_time_limit_s: 'float | None' = None)",
   "slug": "budget-context",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_budget.py#L389",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_budget.py#L489",
   "status_note": "",
   "summary": "Context manager for FLOP budget enforcement.",
   "upstream_source_url": ""

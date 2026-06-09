@@ -88,18 +88,6 @@ class TestBudgetContextAttributes:
         ctx = BudgetContext(flop_budget=1000)
         assert ctx.flop_budget == 1000
 
-    def test_flop_multiplier_default(self):
-        from flopscope._budget import BudgetContext
-
-        ctx = BudgetContext(flop_budget=500)
-        assert ctx.flop_multiplier == 1.0
-
-    def test_flop_multiplier_custom(self):
-        from flopscope._budget import BudgetContext
-
-        ctx = BudgetContext(flop_budget=500, flop_multiplier=2.5)
-        assert ctx.flop_multiplier == 2.5
-
     def test_flops_used_starts_zero(self):
         from flopscope._budget import BudgetContext
 
@@ -123,6 +111,12 @@ class TestBudgetContextAttributes:
 
         ctx = BudgetContext(flop_budget=100, quiet=True)
         assert ctx.quiet is True
+
+    def test_client_budget_context_has_no_multiplier(self):
+        import flopscope as flops
+
+        with pytest.raises(TypeError):
+            flops.BudgetContext(flop_budget=1000, flop_multiplier=0.0)
 
 
 # ---------------------------------------------------------------------------

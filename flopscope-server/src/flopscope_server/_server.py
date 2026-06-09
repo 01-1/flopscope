@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 import sys
 from time import monotonic, perf_counter_ns
 
@@ -36,12 +37,12 @@ class FlopscopeServer:
         self,
         url: str = "ipc:///tmp/flopscope.sock",
         session_timeout_s: float = 60.0,
+        control_token: str | None = None,
     ) -> None:
         self._url = url
         self._session_timeout_s = session_timeout_s
+        self._control_token = control_token
         self._running = False
-
-        # Session state (at most one session at a time)
         self._session: Session | None = None
         self._handler: RequestHandler | None = None
         self._last_activity: float = 0.0
@@ -108,11 +109,16 @@ class FlopscopeServer:
         if op == "hello":
             return self._handle_hello(msg)
 
-        # --- Session lifecycle ops ---
-        if op == "budget_open":
-            return self._handle_budget_open(msg, t0, t1)
-
-        if op == "budget_close":
+        # --- Session lifecycle ops (privileged: require the control token) ---
+        if op in ("budget_open", "budget_close"):
+            if not self._control_token_ok(msg):
+                return encode_error_response(
+                    "UnauthorizedControlError",
+                    "session lifecycle is grader-controlled; participant code "
+                    "cannot open, close, or reset a budget",
+                )
+            if op == "budget_open":
+                return self._handle_budget_open(msg, t0, t1)
             return self._handle_budget_close(t0, t1)
 
         # --- Require active session for everything else ---
@@ -186,6 +192,35 @@ class FlopscopeServer:
         return response_bytes
 
     # ------------------------------------------------------------------
+    # Token gate
+    # ------------------------------------------------------------------
+
+    def _control_token_ok(self, msg: dict) -> bool:
+        """True if the request carries the configured control token.
+
+        When no token is configured (``control_token is None`` — local/dev or
+        the server's own test suite), control is unrestricted. Production always
+        configures one via ``--token-fd``.
+        """
+        if self._control_token is None:
+            return True
+        token = msg.get("control_token")
+        if token is None:
+            kwargs = msg.get("kwargs") or {}
+            token = kwargs.get("control_token")
+        # _normalize_arg only ASCII-decodes byte strings of length ≤ 32; a
+        # 64-char token_hex(32) exceeds that threshold and stays as bytes even
+        # after _normalize_msg.  Decode it here so compare_digest gets two strs.
+        if isinstance(token, bytes):
+            try:
+                token = token.decode("utf-8")
+            except UnicodeDecodeError:
+                return False
+        if not isinstance(token, str):
+            return False
+        return secrets.compare_digest(token, self._control_token)
+
+    # ------------------------------------------------------------------
     # Budget lifecycle handlers
     # ------------------------------------------------------------------
 
@@ -197,19 +232,14 @@ class FlopscopeServer:
                 "session already open -- send budget_close first",
             )
 
-        # Support both top-level and kwargs-based flop_budget
+        # flop_budget may be top-level or nested in kwargs. There is no
+        # multiplier: the server never scales op costs by a client-supplied
+        # factor (that was the budget-bypass vector). Cost = flop_cost × weight.
         flop_budget = msg.get("flop_budget")
-        flop_multiplier = msg.get("flop_multiplier")
         if flop_budget is None:
             kwargs = msg.get("kwargs") or {}
             flop_budget = kwargs.get("flop_budget", 1_000_000)
-            if flop_multiplier is None:
-                flop_multiplier = kwargs.get("flop_multiplier", 1.0)
-        if flop_multiplier is None:
-            flop_multiplier = 1.0
-        self._session = Session(
-            flop_budget=flop_budget, flop_multiplier=flop_multiplier
-        )
+        self._session = Session(flop_budget=flop_budget)
         self._handler = RequestHandler(self._session)
         self._last_activity = monotonic()
 

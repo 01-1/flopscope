@@ -1825,7 +1825,7 @@
     "raw_blocks": [
       {
         "kind": "system_message",
-        "raw_text": "<string>:10: (ERROR/3) Malformed table.\n\n+------------------------------------+---------------+-------------------+\n| x                                  |``isscalar(x)``|``flops.ndim(x) == 0``|\n+====================================+===============+===================+\n| PEP 3141 numeric objects           | ``True``      | ``True``          |\n| (including builtins)               |               |                   |\n+------------------------------------+---------------+-------------------+\n| builtin string and buffer objects  | ``True``      | ``True``          |\n+------------------------------------+---------------+-------------------+\n| other builtin objects, like        | ``False``     | ``True``          |\n| `pathlib.Path`, `Exception`,       |               |                   |\n| the result of `re.compile`         |               |                   |\n+------------------------------------+---------------+-------------------+\n| third-party objects like           | ``False``     | ``True``          |\n| `matplotlib.figure.Figure`         |               |                   |\n+------------------------------------+---------------+-------------------+\n| zero-dimensional numpy arrays      | ``False``     | ``True``          |\n+------------------------------------+---------------+-------------------+\n| other numpy arrays                 | ``False``     | ``False``         |\n+------------------------------------+---------------+-------------------+\n| `list`, `tuple`, and other         | ``False``     | ``False``         |\n| sequence objects                   |               |                   |\n+------------------------------------+---------------+-------------------+"
+        "raw_text": "<string>:11: (ERROR/3) Malformed table.\nRight border not aligned or missing.\n\n+------------------------------------+---------------+-------------------+\n| x                                  |``isscalar(x)``|``flops.ndim(x) == 0``|\n+====================================+===============+===================+\n| PEP 3141 numeric objects           | ``True``      | ``True``          |\n| (including builtins)               |               |                   |\n+------------------------------------+---------------+-------------------+\n| builtin string and buffer objects  | ``True``      | ``True``          |\n+------------------------------------+---------------+-------------------+\n| other builtin objects, like        | ``False``     | ``True``          |\n| `pathlib.Path`, `Exception`,       |               |                   |\n| the result of `re.compile`         |               |                   |\n+------------------------------------+---------------+-------------------+\n| third-party objects like           | ``False``     | ``True``          |\n| `matplotlib.figure.Figure`         |               |                   |\n+------------------------------------+---------------+-------------------+\n| zero-dimensional numpy arrays      | ``False``     | ``True``          |\n+------------------------------------+---------------+-------------------+\n| other numpy arrays                 | ``False``     | ``False``         |\n+------------------------------------+---------------+-------------------+\n| `list`, `tuple`, and other         | ``False``     | ``False``         |\n| sequence objects                   |               |                   |\n+------------------------------------+---------------+-------------------+"
       }
     ],
     "unresolved_references": [],
@@ -2250,6 +2250,25 @@
     "has_issues": false,
     "raw_blocks": [],
     "unresolved_references": [],
+    "unsupported_directives": []
+  },
+  "load": {
+    "has_issues": true,
+    "raw_blocks": [],
+    "unresolved_references": [
+      {
+        "display_text": "lib.format.open_memmap",
+        "original_target": "lib.format.open_memmap",
+        "role": "see_also",
+        "target": "lib.format.open_memmap"
+      },
+      {
+        "display_text": "ast.literal_eval()",
+        "original_target": "ast.literal_eval()",
+        "role": "py:func",
+        "target": "ast.literal_eval()"
+      }
+    ],
     "unsupported_directives": []
   },
   "log": {
@@ -5280,6 +5299,45 @@
     "has_issues": false,
     "raw_blocks": [],
     "unresolved_references": [],
+    "unsupported_directives": []
+  },
+  "save": {
+    "has_issues": true,
+    "raw_blocks": [],
+    "unresolved_references": [
+      {
+        "display_text": "flops.lib.format",
+        "original_target": "flops.lib.format",
+        "role": "py:mod",
+        "target": "flops.lib.format"
+      }
+    ],
+    "unsupported_directives": []
+  },
+  "savez": {
+    "has_issues": true,
+    "raw_blocks": [],
+    "unresolved_references": [
+      {
+        "display_text": "flops.lib.format",
+        "original_target": "flops.lib.format",
+        "role": "py:mod",
+        "target": "flops.lib.format"
+      }
+    ],
+    "unsupported_directives": []
+  },
+  "savez_compressed": {
+    "has_issues": true,
+    "raw_blocks": [],
+    "unresolved_references": [
+      {
+        "display_text": "flops.lib.format",
+        "original_target": "flops.lib.format",
+        "role": "py:mod",
+        "target": "flops.lib.format"
+      }
+    ],
     "unsupported_directives": []
   },
   "searchsorted": {

@@ -486,7 +486,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.row_stack",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2273",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2255",
   "href": "/docs/api/numpy/row-stack/",
   "import_path": "flopscope.numpy.row_stack",
   "is_operation_cost_leaf": true,
@@ -495,8 +495,8 @@
   "module": "numpy",
   "name": "row_stack",
   "next": {
-    "href": "/docs/api/numpy/searchsorted/",
-    "label": "fnp.searchsorted"
+    "href": "/docs/api/numpy/save/",
+    "label": "fnp.save"
   },
   "notes": "Stack arrays vertically (alias for vstack).",
   "notes_sections": [],

@@ -677,7 +677,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.numpy.bitwise_invert",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L343",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L364",
   "href": "/docs/api/numpy/bitwise-invert/",
   "import_path": "flopscope.numpy.bitwise_invert",
   "is_operation_cost_leaf": true,

@@ -155,7 +155,7 @@
   "related_guides": [],
   "signature": "flops.einsum_cache_info() -> dict",
   "slug": "einsum-cache-info",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/__init__.py#L112",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/__init__.py#L117",
   "status_note": "",
   "summary": "Return cache statistics for the einsum path + accumulation caches.",
   "upstream_source_url": ""

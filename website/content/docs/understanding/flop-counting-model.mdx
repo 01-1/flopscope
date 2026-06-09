@@ -168,12 +168,11 @@ operation passes its `op_name` to `deduct()`, which looks up the weight
 and multiplies it into the cost:
 
 ```python
-adjusted_cost = analytical_cost × flop_multiplier × weight(op_name)
+adjusted_cost = analytical_cost × weight(op_name)
 ```
 
-This means weights compose with `flop_multiplier` and with symmetry
-reductions -- symmetry reduces the element count, the weight scales the
-per-element cost, and both apply independently.
+Symmetry reductions and weights apply independently -- symmetry reduces
+the element count, the weight scales the per-element cost.
 
 ### Overriding or disabling packaged weights
 
@@ -222,23 +221,6 @@ Weights can be determined in two ways:
 
 The `benchmarks/` package in this repository automates both methods. See
 [Calibrate Weights](/docs/development/calibration/).
-
-## FLOP multiplier
-
-The `flop_multiplier` parameter in `BudgetContext` scales all costs:
-
-```python
-import flopscope as flops
-
-with flops.BudgetContext(flop_budget=10**6, flop_multiplier=2.0) as budget:
-    # Every operation costs 2× its normal FLOP count
-    ...
-```
-
-This is useful for experimentation or adjusting the difficulty of a budget
-constraint. Note that `flop_multiplier` and per-operation weights are
-independent — `flop_multiplier` scales *all* operations uniformly, while
-weights scale each operation individually.
 
 ## Namespaces
 

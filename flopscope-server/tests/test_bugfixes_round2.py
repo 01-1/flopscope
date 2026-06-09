@@ -27,31 +27,8 @@ def handler(session):
 
 
 # =========================================================================
-# Fix 1: Session accepts flop_multiplier
+# Fix 2: flop_multiplier server support removed (tests live in test_budget_integrity.py)
 # =========================================================================
-
-
-class TestFix1ServerSideMultiplier:
-    def test_session_accepts_flop_multiplier(self):
-        s = Session(flop_budget=1000, flop_multiplier=2.0)
-        assert s.budget_context.flop_multiplier == 2.0
-        s.close()
-
-    def test_session_default_multiplier(self):
-        s = Session(flop_budget=1000)
-        assert s.budget_context.flop_multiplier == 1.0
-        s.close()
-
-    def test_flop_multiplier_affects_deductions(self):
-        s = Session(flop_budget=100_000, flop_multiplier=2.0)
-        h = RequestHandler(s)
-        handle = s.store_array(np.ones((10,)))
-        h.handle({"op": "exp", "args": [handle], "kwargs": {}})
-        # With multiplier 2.0, costs should be doubled
-        status = s.budget_status()
-        assert status["flops_used"] > 0
-        s.close()
-
 
 # =========================================================================
 # Fix 3: __getitem__ server handling

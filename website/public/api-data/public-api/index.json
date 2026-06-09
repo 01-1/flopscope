@@ -4166,6 +4166,18 @@
     },
     {
       "callable": true,
+      "display_name": "flopscope.numpy.load",
+      "href": "/docs/api/numpy/load/",
+      "import_path": "flopscope.numpy.load",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "numpy",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-load",
+      "summary": "Load arrays or pickled objects from ``.npy``, ``.npz`` or pickled files."
+    },
+    {
+      "callable": true,
       "display_name": "flopscope.numpy.log",
       "href": "/docs/api/numpy/log/",
       "import_path": "flopscope.numpy.log",
@@ -6430,7 +6442,7 @@
       "module": "numpy.random",
       "namespace": "numpy",
       "slug": "flopscope-numpy-random-default-rng",
-      "summary": "default_rng(seed=None) Construct a new Generator with the default BitGenerator (PCG64)."
+      "summary": "Construct a new Generator with the default BitGenerator (PCG64)."
     },
     {
       "callable": true,
@@ -7211,6 +7223,42 @@
       "namespace": "numpy",
       "slug": "flopscope-numpy-row-stack",
       "summary": "Stack arrays in sequence vertically (row wise)."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.save",
+      "href": "/docs/api/numpy/save/",
+      "import_path": "flopscope.numpy.save",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "numpy",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-save",
+      "summary": "Save an array to a binary file in NumPy ``.npy`` format."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.savez",
+      "href": "/docs/api/numpy/savez/",
+      "import_path": "flopscope.numpy.savez",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "numpy",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-savez",
+      "summary": "Save several arrays into a single file in uncompressed ``.npz`` format."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.savez_compressed",
+      "href": "/docs/api/numpy/savez-compressed/",
+      "import_path": "flopscope.numpy.savez_compressed",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "numpy",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-savez-compressed",
+      "summary": "Save several arrays into a single file in compressed ``.npz`` format."
     },
     {
       "callable": true,
@@ -11392,6 +11440,18 @@
     },
     {
       "callable": true,
+      "display_name": "flopscope.numpy.load",
+      "href": "/docs/api/numpy/load/",
+      "import_path": "flopscope.numpy.load",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "numpy",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-load",
+      "summary": "Load arrays or pickled objects from ``.npy``, ``.npz`` or pickled files."
+    },
+    {
+      "callable": true,
       "display_name": "flopscope.numpy.log",
       "href": "/docs/api/numpy/log/",
       "import_path": "flopscope.numpy.log",
@@ -13560,7 +13620,7 @@
       "module": "numpy.random",
       "namespace": "numpy",
       "slug": "flopscope-numpy-random-default-rng",
-      "summary": "default_rng(seed=None) Construct a new Generator with the default BitGenerator (PCG64)."
+      "summary": "Construct a new Generator with the default BitGenerator (PCG64)."
     },
     {
       "callable": true,
@@ -14341,6 +14401,42 @@
       "namespace": "numpy",
       "slug": "flopscope-numpy-row-stack",
       "summary": "Stack arrays in sequence vertically (row wise)."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.save",
+      "href": "/docs/api/numpy/save/",
+      "import_path": "flopscope.numpy.save",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "numpy",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-save",
+      "summary": "Save an array to a binary file in NumPy ``.npy`` format."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.savez",
+      "href": "/docs/api/numpy/savez/",
+      "import_path": "flopscope.numpy.savez",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "numpy",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-savez",
+      "summary": "Save several arrays into a single file in uncompressed ``.npz`` format."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.savez_compressed",
+      "href": "/docs/api/numpy/savez-compressed/",
+      "import_path": "flopscope.numpy.savez_compressed",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "numpy",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-savez-compressed",
+      "summary": "Save several arrays into a single file in compressed ``.npz`` format."
     },
     {
       "callable": true,
@@ -15436,5 +15532,5 @@
     }
   ],
   "schema_version": 1,
-  "total": 705
+  "total": 709
 }

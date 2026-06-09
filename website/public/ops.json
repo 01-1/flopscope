@@ -4581,6 +4581,27 @@
     {
       "area": "core",
       "blocked": false,
+      "canonical_path": "numpy/load",
+      "category": "free",
+      "cost_formula": "0",
+      "cost_formula_latex": "$0$",
+      "detail_href": "/docs/api/numpy/load/",
+      "detail_json_href": "/api-data/ops/load.json",
+      "display_type": "free",
+      "flopscope_ref": "fnp.load",
+      "free": true,
+      "module": "numpy",
+      "name": "load",
+      "notes": "Load arrays from .npy/.npz files (pickle-free). Cost: 0 FLOPs.",
+      "numpy_ref": "np.load",
+      "slug": "load",
+      "status": "supported",
+      "summary": "Load arrays or pickled objects from ``.npy``, ``.npz`` or pickled files.",
+      "weight": 0.0
+    },
+    {
+      "area": "core",
+      "blocked": false,
       "canonical_path": "numpy/log",
       "category": "counted_unary",
       "cost_formula": "numel(output)",
@@ -8313,7 +8334,7 @@
       "numpy_ref": "np.random.default_rng",
       "slug": "random-default_rng",
       "status": "supported",
-      "summary": "default_rng(seed=None) Construct a new Generator with the default BitGenerator (PCG64).",
+      "summary": "Construct a new Generator with the default BitGenerator (PCG64).",
       "weight": 0.0
     },
     {
@@ -9595,6 +9616,69 @@
       "slug": "row_stack",
       "status": "supported",
       "summary": "Stack arrays in sequence vertically (row wise).",
+      "weight": 0.0
+    },
+    {
+      "area": "core",
+      "blocked": false,
+      "canonical_path": "numpy/save",
+      "category": "free",
+      "cost_formula": "0",
+      "cost_formula_latex": "$0$",
+      "detail_href": "/docs/api/numpy/save/",
+      "detail_json_href": "/api-data/ops/save.json",
+      "display_type": "free",
+      "flopscope_ref": "fnp.save",
+      "free": true,
+      "module": "numpy",
+      "name": "save",
+      "notes": "Save array to .npy file (pickle-free). Cost: 0 FLOPs.",
+      "numpy_ref": "np.save",
+      "slug": "save",
+      "status": "supported",
+      "summary": "Save an array to a binary file in NumPy ``.npy`` format.",
+      "weight": 0.0
+    },
+    {
+      "area": "core",
+      "blocked": false,
+      "canonical_path": "numpy/savez",
+      "category": "free",
+      "cost_formula": "0",
+      "cost_formula_latex": "$0$",
+      "detail_href": "/docs/api/numpy/savez/",
+      "detail_json_href": "/api-data/ops/savez.json",
+      "display_type": "free",
+      "flopscope_ref": "fnp.savez",
+      "free": true,
+      "module": "numpy",
+      "name": "savez",
+      "notes": "Save multiple arrays to .npz (pickle-free). Cost: 0 FLOPs.",
+      "numpy_ref": "np.savez",
+      "slug": "savez",
+      "status": "supported",
+      "summary": "Save several arrays into a single file in uncompressed ``.npz`` format.",
+      "weight": 0.0
+    },
+    {
+      "area": "core",
+      "blocked": false,
+      "canonical_path": "numpy/savez-compressed",
+      "category": "free",
+      "cost_formula": "0",
+      "cost_formula_latex": "$0$",
+      "detail_href": "/docs/api/numpy/savez-compressed/",
+      "detail_json_href": "/api-data/ops/savez_compressed.json",
+      "display_type": "free",
+      "flopscope_ref": "fnp.savez_compressed",
+      "free": true,
+      "module": "numpy",
+      "name": "savez_compressed",
+      "notes": "Save multiple arrays to compressed .npz (pickle-free). Cost: 0 FLOPs.",
+      "numpy_ref": "np.savez_compressed",
+      "slug": "savez_compressed",
+      "status": "supported",
+      "summary": "Save several arrays into a single file in compressed ``.npz`` format.",
       "weight": 0.0
     },
     {
@@ -11446,5 +11530,5 @@
       "weight": 0.0
     }
   ],
-  "total": 545
+  "total": 549
 }
