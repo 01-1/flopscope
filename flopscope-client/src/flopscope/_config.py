@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 _SETTINGS: dict[str, object] = {
+    "callback_warnings": True,
     "check_nan_inf": False,
     "dimino_budget": 50_000,
     "einsum_path_cache_size": 4096,
@@ -37,6 +38,11 @@ def configure(**kwargs: object) -> None:
 
     Parameters
     ----------
+    callback_warnings : bool
+        If ``False``, suppress
+        :class:`~flopscope.errors.RemoteCallbackWarning` warnings emitted when a
+        callback-taking op (``apply_along_axis`` etc.) is called in-process.
+        Default ``True``.
     check_nan_inf : bool
         If ``True``, scan every counted op's output for NaN/Inf values and
         emit a :class:`~flopscope.errors.FlopscopeWarning` if any are found.
@@ -87,6 +93,19 @@ def configure(**kwargs: object) -> None:
         if validator is not None:
             validator(value)  # type: ignore[call-arg]
         _SETTINGS[key] = value
+
+    if kwargs:
+        import warnings
+
+        from flopscope.errors import ConfigureNoOpWarning
+
+        warnings.warn(
+            "flops.configure() configures the in-process flopscope backend only; "
+            "it is a no-op on flopscope-client and the evaluation servers, so "
+            "these settings will not affect a graded submission.",
+            ConfigureNoOpWarning,
+            stacklevel=2,
+        )
 
     if "einsum_path_cache_size" in kwargs:
         # The lightweight client ships this module verbatim (see

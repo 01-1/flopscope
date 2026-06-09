@@ -62,6 +62,13 @@ class RemoteCallbackError(FlopscopeError):
         super().__init__(message)
 
 
+class RemoteSerializationError(FlopscopeError):
+    """Raised when an argument to a remote op cannot be serialized for the client/server backend (e.g. a generator, lambda, or custom object)."""
+
+    def __init__(self, message: str = "") -> None:
+        super().__init__(message)
+
+
 class FlopscopeWarning(UserWarning):
     """Warning issued when flopscope detects potential numerical issues."""
 
@@ -72,6 +79,14 @@ class SymmetryLossWarning(FlopscopeWarning):
 
 class CostFallbackWarning(FlopscopeWarning):
     """Warning issued when flopscope skips its symmetry-aware cost adjustment (e.g. ``ufunc.outer`` / ``tensordot`` on a symmetry group whose degree exceeds the per-call Burnside-enumeration threshold). The op runs correctly with the dense cost charged instead. Suppress with ``flops.configure(symmetry_warnings=False)``."""
+
+
+class RemoteCallbackWarning(FlopscopeWarning):
+    """Warning issued when a callback-taking op (e.g. apply_along_axis) is called in-process; it raises RemoteCallbackError on the remote (client/server) backend. Suppress with ``flops.configure(callback_warnings=False)``."""
+
+
+class ConfigureNoOpWarning(FlopscopeWarning):
+    """Warning issued when flops.configure() is called. configure affects the in-process flopscope backend only; it is a no-op on flopscope-client and the evaluation servers, so its settings do not carry into a graded submission."""
 
 
 class FlopscopeServerError(FlopscopeError):
@@ -91,6 +106,7 @@ _FLOPSCOPE_ERRORS: frozenset[str] = frozenset(
         "UnsupportedFunctionError",
         "UnsupportedReturnType",
         "RemoteCallbackError",
+        "RemoteSerializationError",
     }
 )
 
@@ -102,6 +118,7 @@ _ERROR_MAP: dict[str, type[Exception]] = {
     "UnsupportedFunctionError": UnsupportedFunctionError,
     "UnsupportedReturnType": UnsupportedReturnType,
     "RemoteCallbackError": RemoteCallbackError,
+    "RemoteSerializationError": RemoteSerializationError,
     "FlopscopeServerError": FlopscopeServerError,
     "ValueError": ValueError,
     "TypeError": TypeError,

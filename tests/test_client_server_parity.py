@@ -324,3 +324,18 @@ class TestApiSurfaceParity:
             assert name in defined, (
                 f"client {relative} does not define {name} (core/client API drift)"
             )
+
+
+# ---------------------------------------------------------------------------
+# Op-set / local_callback drift guard
+# ---------------------------------------------------------------------------
+
+
+def test_op_set_and_callback_parity():
+    core_reg = _load_core("_registry.py", "core_registry").REGISTRY
+    client_rd = _load_client("_registry_data.py", "client_registry_data")
+    assert set(core_reg) == set(client_rd.FUNCTION_CATEGORIES)
+    core_callbacks = frozenset(
+        n for n, e in core_reg.items() if e.get("local_callback")
+    )
+    assert core_callbacks == frozenset(client_rd.LOCAL_CALLBACK_OPS)

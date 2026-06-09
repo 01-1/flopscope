@@ -151,6 +151,19 @@ print(f"This matmul will cost {cost:,} FLOPs")  # 33,554,432
 
 **Watch out for hidden costs.** Operations like `fnp.array()` and `fnp.concatenate()` are *not* free -- they charge `numel(output)` FLOPs, and `fnp.where()` charges `numel(condition)`. Check the cost of any operation you are unsure about.
 
+## Local vs. remote backends
+
+You develop against the in-process `flopscope`, but AIcrowd runs your code on
+the remote (client/server) backend. Five callback-taking ops —
+`apply_along_axis`, `apply_over_axes`, `fromfunction`, `fromiter`, `piecewise`
+— work in-process but raise `RemoteCallbackError` remotely, because a Python
+callback can't be sent over the wire. Calling them in-process now emits a
+`RemoteCallbackWarning`; enumerate the set with
+`flopscope.remote_unsupported_ops()`. Precompute these results or avoid the ops
+in submitted code. Likewise, passing a non-serializable argument (a generator,
+lambda, or custom object) to any op raises `RemoteSerializationError` remotely —
+pass materialized arrays or built-ins instead.
+
 ## When things go wrong
 
 If you hit `BudgetExhaustedError`, see [Budget Planning & Debugging](/docs/guides/budget-planning) for a systematic approach to diagnosing overruns and reducing costs.

@@ -19,6 +19,7 @@ from flopscope._docstrings import attach_docstring
 from flopscope._flops import _ceil_log2
 from flopscope._ndarray import FlopscopeArray, _to_base_ndarray, _to_base_ndarray_tree
 from flopscope._validation import require_budget
+from flopscope.errors import _warn_remote_callback
 
 # ---------------------------------------------------------------------------
 # Reductions disguised as free
@@ -368,6 +369,7 @@ def apply_along_axis(
     **kwargs: Any,
 ) -> FlopscopeArray:
     """Counted version of np.apply_along_axis. Cost: numel(output)."""
+    _warn_remote_callback("apply_along_axis")
     budget = require_budget()
     if not isinstance(arr, _np.ndarray):
         arr = _np.asarray(arr)
@@ -403,6 +405,7 @@ def apply_over_axes(
     axes: int | Sequence[int],
 ) -> FlopscopeArray:
     """Counted version of np.apply_over_axes. Cost: numel(output)."""
+    _warn_remote_callback("apply_over_axes")
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
@@ -434,6 +437,7 @@ def piecewise(
     **kw: Any,
 ) -> FlopscopeArray:
     """Counted version of np.piecewise. Cost: numel(input)."""
+    _warn_remote_callback("piecewise")
     budget = require_budget()
     if not isinstance(x, _np.ndarray):
         x = _np.asarray(x)

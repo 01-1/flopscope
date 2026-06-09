@@ -56,7 +56,12 @@ from flopscope.errors import (  # noqa: E402
     FlopscopeWarning,
     NoBudgetContextError,
     RemoteCallbackError,
+    RemoteSerializationError,
     SymmetryError,
+    SymmetryLossWarning,
+    TimeExhaustedError,
+    UnsupportedFunctionError,
+    UnsupportedReturnType,
 )
 
 # Alias: ``fnp.ndarray`` refers to the RemoteArray class.
@@ -126,6 +131,37 @@ complex128: str = "complex128"
 # ---------------------------------------------------------------------------
 
 
+_MSGPACK_OK = (type(None), bool, int, float, str, bytes)
+
+
+def _describe_unserializable(args: Any, kwargs: Any) -> str:
+    """Return a short descriptor of the first value msgpack cannot encode,
+    e.g. ``"of type 'generator'"``; ``""`` if none can be pinpointed."""
+
+    def walk(value: Any):
+        if isinstance(value, _MSGPACK_OK):
+            return None
+        if isinstance(value, (list, tuple)):
+            for item in value:
+                bad = walk(item)
+                if bad is not None:
+                    return bad
+            return None
+        if isinstance(value, dict):
+            for item in value.values():
+                bad = walk(item)
+                if bad is not None:
+                    return bad
+            return None
+        return type(value).__name__
+
+    for value in list(args) + list(kwargs.values()):
+        bad = walk(value)
+        if bad is not None:
+            return f"of type {bad!r}"
+    return ""
+
+
 def _make_proxy(op_name: str):
     """Create a proxy function that dispatches *op_name* to the server."""
 
@@ -145,7 +181,13 @@ def _make_proxy(op_name: str):
                     f"in the in-process flopscope backend, or precompute the "
                     f"result."
                 ) from exc
-            raise
+            bad = _describe_unserializable(encoded_args, encoded_kwargs)
+            detail = f" {bad}" if bad else ""
+            raise RemoteSerializationError(
+                f"{op_name}() received an argument{detail} that cannot be sent "
+                f"to the remote (client/server) backend. Pass a materialized "
+                f"array or built-in (list / number / str) instead."
+            ) from exc
         resp = get_connection().send_recv(request)
         return _result_from_response(resp)
 

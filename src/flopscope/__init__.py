@@ -166,6 +166,22 @@ def clear_cache() -> None:
     reduction_clear_cache()
 
 
+def remote_unsupported_ops() -> frozenset[str]:
+    """Op names that run a Python callback in-process and therefore CANNOT run
+    on the remote (client/server) backend used for AIcrowd submissions —
+    calling them there raises
+    :class:`~flopscope.errors.RemoteCallbackError`.
+
+    Sourced from the operation registry (single source of truth), so it stays
+    correct as ops are added. Equal to the client's ``LOCAL_CALLBACK_OPS``.
+    """
+    from flopscope._registry import REGISTRY
+
+    return frozenset(
+        name for name, entry in REGISTRY.items() if entry.get("local_callback")
+    )
+
+
 def tier2_reduction_cost(a, axis=None, *, dense_per_output_cost=None):
     """Cost for selection-style reductions (median, percentile, quantile).
 
@@ -257,6 +273,7 @@ __all__ = [
     "reduction_accumulation_cost",
     "reduction_cache_info",
     "reduction_clear_cache",
+    "remote_unsupported_ops",
     "stats",
     "symmetrize",
     "tier2_reduction_cost",

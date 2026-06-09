@@ -90,11 +90,12 @@ def _generate_errors() -> str:
     _CUSTOM_INIT_CLASSES = {
         "BudgetExhaustedError",
         "NoBudgetContextError",
+        "RemoteCallbackError",
+        "RemoteSerializationError",
         "SymmetryError",
         "TimeExhaustedError",
         "UnsupportedFunctionError",
         "UnsupportedReturnType",
-        "RemoteCallbackError",
     }
 
     # Classes whose default message must be non-empty (match core's guidance).
@@ -151,6 +152,15 @@ def _generate_errors() -> str:
             ),
         ),
         (
+            "RemoteSerializationError",
+            "FlopscopeError",
+            (
+                "Raised when an argument to a remote op cannot be serialized "
+                "for the client/server backend (e.g. a generator, lambda, or "
+                "custom object)."
+            ),
+        ),
+        (
             "FlopscopeWarning",
             "UserWarning",
             "Warning issued when flopscope detects potential numerical issues.",
@@ -170,6 +180,26 @@ def _generate_errors() -> str:
                 "Burnside-enumeration threshold). The op runs correctly "
                 "with the dense cost charged instead. Suppress with "
                 "``flops.configure(symmetry_warnings=False)``."
+            ),
+        ),
+        (
+            "RemoteCallbackWarning",
+            "FlopscopeWarning",
+            (
+                "Warning issued when a callback-taking op (e.g. apply_along_axis) "
+                "is called in-process; it raises RemoteCallbackError on the "
+                "remote (client/server) backend. Suppress with "
+                "``flops.configure(callback_warnings=False)``."
+            ),
+        ),
+        (
+            "ConfigureNoOpWarning",
+            "FlopscopeWarning",
+            (
+                "Warning issued when flops.configure() is called. configure "
+                "affects the in-process flopscope backend only; it is a no-op on "
+                "flopscope-client and the evaluation servers, so its settings do "
+                "not carry into a graded submission."
             ),
         ),
         # client-only
