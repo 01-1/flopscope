@@ -391,8 +391,8 @@ def test_outer_mn(we):
 
 
 def test_tensordot_contracted(we):
-    # tensordot uses the old dense formula: a.size*b.size/contracted = 5*4*4*3/4 = 60
-    # (tensordot has its own cost model, separate from the accumulation-based einsum model)
+    # tensordot partial-contraction now routes through einsum (FMA=2).
+    # (5,4)·(4,3) axes=([1],[0]) -> "ab,bc->ac"; einsum cost = 5*3*(2*4-1) = 105
     assert (
         _cost_of(
             we.tensordot,
@@ -400,7 +400,7 @@ def test_tensordot_contracted(we):
             numpy.random.rand(4, 3),
             axes=([1], [0]),
         )
-        == 60
+        == 105
     )
 
 

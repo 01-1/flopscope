@@ -1959,6 +1959,28 @@ def _surviving_symmetry_after_contraction(group, surviving_axes):
     return restrict_group_to_axes(group, axes=wanted)
 
 
+def _tensordot_einsum_subscripts(a_ndim, b_ndim, a_axes, b_axes):
+    """Build einsum subscripts equivalent to a tensordot contraction.
+
+    Returns None if operand rank exceeds the 52-letter budget (caller falls
+    back to the dense estimate then).
+    """
+    import string
+
+    if a_ndim + b_ndim > 52:
+        return None
+    letters = string.ascii_letters
+    a_labels = list(letters[:a_ndim])
+    b_labels = list(letters[a_ndim : a_ndim + b_ndim])
+    a_ax = [ax % a_ndim for ax in a_axes]
+    b_ax = [ax % b_ndim for ax in b_axes]
+    for ai, bi in zip(a_ax, b_ax):
+        b_labels[bi] = a_labels[ai]  # tie contracted pairs
+    out = [a_labels[i] for i in range(a_ndim) if i not in a_ax]
+    out += [b_labels[i] for i in range(b_ndim) if i not in b_ax]
+    return f"{''.join(a_labels)},{''.join(b_labels)}->{''.join(out)}"
+
+
 @_counted_wrapper
 def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
     """Counted version of ``np.tensordot``.
@@ -2019,9 +2041,11 @@ def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
     output_shape = tuple(a.shape[i] for i in a_surviving) + tuple(
         b.shape[j] for j in b_surviving
     )
-    # output_size * contracted = (a.size / contracted) * (b.size / contracted) * contracted
-    # = a.size * b.size / contracted
-    dense = _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+    # Route cost through einsum when possible (FMA=2 correct); fall back to
+    # the old multiply-only dense formula only for rank >52 operands.
+    _subs = _tensordot_einsum_subscripts(
+        a.ndim, b.ndim, a_contract_axes, b_contract_axes
+    )
     # Compose output symmetry from each input's surviving symmetry, with
     # b's axes lifted past a's surviving count so they refer to their
     # final slots in the combined output. Bail on the composition when
@@ -2041,7 +2065,16 @@ def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
             oversized_order = -1
         _warn_oversized_once("tensordot", oversized_order)
         out_sym = None
-        cost = dense
+        if _subs is not None:
+            from flopscope._einsum import _resolve_cost_and_output_symmetry
+
+            _info = _resolve_cost_and_output_symmetry(_subs, a, b)
+            cost = _info.accumulation.total
+            canonical_subs = _subs
+        else:
+            dense = _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+            cost = _symmetry_adjusted_cost(dense, output_shape, out_sym)
+            canonical_subs = None
     else:
         a_sym_kept = _surviving_symmetry_after_contraction(a_sym, a_surviving)
         b_sym_kept = _surviving_symmetry_after_contraction(b_sym, b_surviving)
@@ -2062,9 +2095,18 @@ def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
             else None
         )
         out_sym = direct_product_groups(a_sym_remapped, b_sym_remapped)
-        cost = _symmetry_adjusted_cost(dense, output_shape, out_sym)
+        if _subs is not None:
+            from flopscope._einsum import _resolve_cost_and_output_symmetry
+
+            _info = _resolve_cost_and_output_symmetry(_subs, a, b)
+            cost = _info.accumulation.total
+            canonical_subs = _subs
+        else:
+            dense = _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+            cost = _symmetry_adjusted_cost(dense, output_shape, out_sym)
+            canonical_subs = None
     with budget.deduct(
-        "tensordot", flop_cost=cost, subscripts=None, shapes=(a.shape, b.shape)
+        "tensordot", flop_cost=cost, subscripts=canonical_subs, shapes=(a.shape, b.shape)
     ):
         result = _call_numpy(
             _np.tensordot, _to_base_ndarray(a), _to_base_ndarray(b), axes=axes

@@ -15,3 +15,12 @@ def cost(fn, *args, **kwargs) -> int:
     with f.BudgetContext(flop_budget=10**18, quiet=True) as b:
         fn(*args, **kwargs)
         return b.flops_used
+
+
+def test_tensordot_matches_einsum_partial_contraction():
+    # (5,4,3)·(4,3,6) contracting axes ([1,2],[0,1]) -> (5,6); same as the einsum.
+    A = fnp.asarray(np.random.rand(5, 4, 3))
+    B = fnp.asarray(np.random.rand(4, 3, 6))
+    td = cost(lambda: fnp.tensordot(A, B, axes=([1, 2], [0, 1])))
+    es = cost(lambda: fnp.einsum("abc,bcf->af", A, B))
+    assert td == es and td > A.size * B.size // 12  # not the old multiply-only count
