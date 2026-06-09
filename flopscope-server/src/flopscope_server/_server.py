@@ -197,19 +197,14 @@ class FlopscopeServer:
                 "session already open -- send budget_close first",
             )
 
-        # Support both top-level and kwargs-based flop_budget
+        # flop_budget may be top-level or nested in kwargs. There is no
+        # multiplier: the server never scales op costs by a client-supplied
+        # factor (that was the budget-bypass vector). Cost = flop_cost × weight.
         flop_budget = msg.get("flop_budget")
-        flop_multiplier = msg.get("flop_multiplier")
         if flop_budget is None:
             kwargs = msg.get("kwargs") or {}
             flop_budget = kwargs.get("flop_budget", 1_000_000)
-            if flop_multiplier is None:
-                flop_multiplier = kwargs.get("flop_multiplier", 1.0)
-        if flop_multiplier is None:
-            flop_multiplier = 1.0
-        self._session = Session(
-            flop_budget=flop_budget, flop_multiplier=flop_multiplier
-        )
+        self._session = Session(flop_budget=flop_budget)
         self._handler = RequestHandler(self._session)
         self._last_activity = monotonic()
 

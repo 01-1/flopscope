@@ -44,7 +44,7 @@ def _server_with_token():
 
 
 def _open_budget(srv, **extra):
-    """Send budget_open with optional extra kwargs (e.g. flop_multiplier, control_token)."""
+    """Send budget_open with optional extra kwargs (e.g. control_token)."""
     msg = {"op": "budget_open", "flop_budget": 10**9}
     msg.update(extra)
     return _resp(srv._process_request(msgpack.packb(msg, use_bin_type=True)))
@@ -113,11 +113,9 @@ def _flops_used(srv):
 
 
 def test_multiplier_zero_is_ignored():
-    """Sending flop_multiplier=0.0 in budget_open must NOT zero the FLOP bill.
+    """The server must ignore any client-supplied flop_multiplier; cost is flop_cost × per-op weight only.
 
-    Currently RED: the server passes flop_multiplier to Session/BudgetContext which
-    scales every op cost to 0, so flops_used stays 0 despite real compute.
-    Goes GREEN when Task 2 removes multiplier support from the server.
+    A client sending flop_multiplier=0.0 must still be billed the real FLOPs.
 
     This test constructs the server with NO control_token so it does not hit
     the TypeError from the (not-yet-added) control_token kwarg.
