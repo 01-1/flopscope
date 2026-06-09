@@ -493,8 +493,6 @@ class BudgetContext:
     ----------
     flop_budget : int
         Maximum number of FLOPs allowed. Must be > 0.
-    flop_multiplier : float, optional
-        Multiplier applied to all FLOP costs. Default 1.
     quiet : bool, optional
         When ``True``, suppress the startup banner printed on context entry.
     namespace : str | None, optional
@@ -522,7 +520,6 @@ class BudgetContext:
     def __init__(
         self,
         flop_budget: int,
-        flop_multiplier: float = 1.0,
         quiet: bool = False,
         namespace: str | None = None,
         wall_time_limit_s: float | None = None,
@@ -535,7 +532,6 @@ class BudgetContext:
         if flop_budget <= 0:
             raise ValueError(f"flop_budget must be > 0, got {flop_budget}")
         self._flop_budget = flop_budget
-        self._flop_multiplier = flop_multiplier
         self._flops_used = 0
         self._op_log: list[OpRecord] = []
         self._quiet = quiet
@@ -569,10 +565,6 @@ class BudgetContext:
     @property
     def flops_remaining(self) -> int:
         return self._flop_budget - self._flops_used
-
-    @property
-    def flop_multiplier(self) -> float:
-        return self._flop_multiplier
 
     @property
     def op_log(self) -> list[OpRecord]:
@@ -678,7 +670,7 @@ class BudgetContext:
         from flopscope._weights import get_weight
 
         weight = get_weight(op_name)
-        adjusted_cost = int(flop_cost * self._flop_multiplier * weight)
+        adjusted_cost = int(flop_cost * weight)
         if adjusted_cost > self.flops_remaining:
             raise BudgetExhaustedError(
                 op_name, flop_cost=adjusted_cost, flops_remaining=self.flops_remaining
@@ -904,7 +896,6 @@ class BudgetContext:
 
 def budget(
     flop_budget: int,
-    flop_multiplier: float = 1.0,
     quiet: bool = False,
     namespace: str | None = None,
     wall_time_limit_s: float | None = None,
@@ -918,8 +909,6 @@ def budget(
     ----------
     flop_budget : int
         Maximum number of FLOPs allowed inside the context.
-    flop_multiplier : float, optional
-        Multiplier applied to every charged FLOP cost. Default ``1.0``.
     quiet : bool, optional
         If ``True``, suppress the startup banner on context entry.
     namespace : str or None, optional
@@ -941,7 +930,6 @@ def budget(
     """
     return BudgetContext(
         flop_budget=flop_budget,
-        flop_multiplier=flop_multiplier,
         quiet=quiet,
         namespace=namespace,
         wall_time_limit_s=wall_time_limit_s,
