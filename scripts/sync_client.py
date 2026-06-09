@@ -172,6 +172,16 @@ def _generate_errors() -> str:
                 "``flops.configure(symmetry_warnings=False)``."
             ),
         ),
+        (
+            "RemoteCallbackWarning",
+            "FlopscopeWarning",
+            (
+                "Warning issued when a callback-taking op (e.g. apply_along_axis) "
+                "is called in-process; it raises RemoteCallbackError on the "
+                "remote (client/server) backend. Suppress with "
+                "``flops.configure(callback_warnings=False)``."
+            ),
+        ),
         # client-only
         (
             "FlopscopeServerError",

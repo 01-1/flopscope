@@ -37,6 +37,7 @@ from flopscope._validation import require_budget
 from flopscope.errors import (
     SymmetryError,
     UnsupportedFunctionError,
+    _warn_remote_callback,
     _warn_symmetry_loss,
 )
 
@@ -1770,6 +1771,7 @@ attach_docstring(fromfile, _np.fromfile, "free", "0 FLOPs")
 @_counted_wrapper
 def fromfunction(*args, **kwargs):
     """Construct array by executing function over each coordinate. Cost: numel(output)."""
+    _warn_remote_callback("fromfunction")
     budget = require_budget()
     result = _call_user_code(budget, _np.fromfunction, *args, **kwargs)
     cost = result.size if hasattr(result, "size") else 1
@@ -1784,6 +1786,7 @@ attach_docstring(fromfunction, _np.fromfunction, "free", "0 FLOPs")
 @_counted_wrapper
 def fromiter(*args, **kwargs):
     """Create array from iterable object. Cost: numel(output)."""
+    _warn_remote_callback("fromiter")
     budget = require_budget()
     result = _call_user_code(budget, _np.fromiter, *args, **kwargs)
     cost = result.size if hasattr(result, "size") else 1
