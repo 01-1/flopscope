@@ -1965,11 +1965,11 @@ def _tensordot_einsum_subscripts(a_ndim, b_ndim, a_axes, b_axes):
     Returns None if operand rank exceeds the 52-letter budget (caller falls
     back to the dense estimate then).
     """
-    import string
+    import string as _string
 
     if a_ndim + b_ndim > 52:
         return None
-    letters = string.ascii_letters
+    letters = _string.ascii_letters
     a_labels = list(letters[:a_ndim])
     b_labels = list(letters[a_ndim : a_ndim + b_ndim])
     a_ax = [ax % a_ndim for ax in a_axes]
