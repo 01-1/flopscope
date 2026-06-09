@@ -15,6 +15,29 @@ TOKEN = "test-control-token"
 
 
 # ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _reset_budget_context():
+    """Ensure any lingering BudgetContext from a previous test is exited.
+
+    Tests that open a session but don't close it leave an active BudgetContext
+    in process state. This fixture tears that down after each test so subsequent
+    tests can open their own sessions without hitting "Cannot nest BudgetContexts".
+    """
+    yield
+    from flopscope._budget import get_active_budget
+    ctx = get_active_budget()
+    if ctx is not None:
+        try:
+            ctx.__exit__(None, None, None)
+        except Exception:
+            pass
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -30,10 +53,11 @@ def _server_no_token():
 
 
 def _server_with_token():
-    """Server configured with a control token (post-fix production posture).
+    """Server configured with a control token (production posture).
 
-    NOTE: FlopscopeServer.__init__ does NOT yet accept control_token — tests
-    that call this will fail with TypeError until Task 4 adds the parameter.
+    The server requires the control token for budget_open/budget_close; a
+    request without it is rejected with UnauthorizedControlError and mutates
+    no state.
     """
     return FlopscopeServer(url="inproc://test-integrity-token", control_token=TOKEN)
 
@@ -137,10 +161,10 @@ def test_multiplier_zero_is_ignored():
 def test_control_requires_token():
     """budget_open without the control token must be rejected with UnauthorizedControlError.
 
-    Currently RED: FlopscopeServer.__init__ has no control_token kwarg (TypeError).
-    Goes GREEN when Task 4 adds the parameter and token-gates budget_open.
+    The server requires the control token for budget_open; a request without
+    it is rejected with UnauthorizedControlError and no session is created.
     """
-    srv = _server_with_token()  # TypeError until Task 4
+    srv = _server_with_token()
 
     # Send budget_open WITHOUT a control_token — must be rejected
     bad = _resp(
@@ -168,10 +192,11 @@ def test_control_requires_token():
 def test_close_requires_token():
     """budget_close without the token must be rejected; session must remain open.
 
-    Currently RED: FlopscopeServer.__init__ has no control_token kwarg (TypeError).
-    Goes GREEN when Task 4 adds the parameter and token-gates budget_close.
+    The server requires the control token for budget_close; a request without
+    it is rejected with UnauthorizedControlError and the session remains open,
+    continuing to accumulate costs normally.
     """
-    srv = _server_with_token()  # TypeError until Task 4
+    srv = _server_with_token()
 
     # Open a legitimate session WITH the token
     r = _open_budget(srv, control_token=TOKEN)
@@ -192,3 +217,48 @@ def test_close_requires_token():
     assert used >= 1000, (
         f"session should be intact after rejected close; got flops_used={used}"
     )
+
+
+def test_token_fd_delivery():
+    """--token-fd writes a token the parent can read; control then requires it."""
+    import os, subprocess, sys, time, msgpack, zmq, secrets as _sec
+
+    r, w = os.pipe()
+    # IPC Unix-socket paths must be <104 chars; use /tmp with a short unique name.
+    sock_path = f"/tmp/fts-{_sec.token_hex(6)}.sock"
+    sock_url = f"ipc://{sock_path}"
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "flopscope_server", "--url", sock_url,
+         "--timeout", "30", "--token-fd", str(w)],
+        pass_fds=(w,),
+    )
+    os.close(w)
+    token = os.read(r, 4096).decode().strip()
+    os.close(r)
+    try:
+        assert len(token) == 64  # token_hex(32)
+        for _ in range(100):
+            if os.path.exists(sock_path):
+                break
+            time.sleep(0.05)
+        ctx = zmq.Context.instance()
+        s = ctx.socket(zmq.REQ); s.setsockopt(zmq.RCVTIMEO, 5000); s.connect(sock_url)
+        import flopscope
+        s.send(msgpack.packb({"op": "hello", "kwargs":
+            {"client_version": flopscope.__version__.split("+", 1)[0]}}, use_bin_type=True))
+        s.recv()
+        # open WITHOUT token → rejected
+        s.send(msgpack.packb({"op": "budget_open", "kwargs": {"flop_budget": 10**9}},
+                             use_bin_type=True))
+        assert msgpack.unpackb(s.recv(), raw=False)["error_type"] == "UnauthorizedControlError"
+        # open WITH token → ok
+        s.send(msgpack.packb({"op": "budget_open",
+            "kwargs": {"flop_budget": 10**9, "control_token": token}}, use_bin_type=True))
+        assert msgpack.unpackb(s.recv(), raw=False)["status"] == "ok"
+        s.close()
+    finally:
+        proc.terminate(); proc.wait(timeout=5)
+        try:
+            os.unlink(sock_path)
+        except FileNotFoundError:
+            pass
