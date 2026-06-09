@@ -32,3 +32,6 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "security: budget/auth security regression tests",
+]
