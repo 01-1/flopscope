@@ -186,44 +186,14 @@ class _DeferredOpTimer:
             raise RuntimeError(
                 f"deduct_after({self._op_name!r}): set_cost() was never called"
             )
-        from flopscope._weights import get_weight
-
-        weight = get_weight(self._op_name)
-        adjusted_cost = int(self._cost * self._budget._flop_multiplier * weight)
-        if adjusted_cost > self._budget.flops_remaining:
-            raise BudgetExhaustedError(
-                self._op_name,
-                flop_cost=adjusted_cost,
-                flops_remaining=self._budget.flops_remaining,
-            )
-        self._budget._flops_used += adjusted_cost
-        now = time.perf_counter()
-        offset = (
-            now - self._budget._start_time
-            if self._budget._start_time is not None
-            else None
+        self._budget._charge_op(
+            self._op_name,
+            self._cost,
+            self._subscripts,
+            self._shapes,
+            backend_duration_s=self._backend_duration_s,
+            overhead_duration_s=in_block_overhead,
         )
-        self._budget._op_log.append(
-            OpRecord(
-                op_name=self._op_name,
-                subscripts=self._subscripts,
-                shapes=self._shapes,
-                flop_cost=adjusted_cost,
-                cumulative=self._budget._flops_used,
-                namespace=self._budget.namespace,
-                flopscope_context_start_offset_s=offset,
-                flopscope_backend_duration_s=self._backend_duration_s,
-                flopscope_overhead_duration_s=in_block_overhead,
-            )
-        )
-        if self._budget._deadline is not None and now > self._budget._deadline:
-            from flopscope.errors import TimeExhaustedError
-
-            raise TimeExhaustedError(
-                self._op_name,
-                elapsed_s=now - self._budget._start_time,  # type: ignore[operator]
-                limit_s=self._budget._wall_time_limit_s,  # type: ignore[arg-type]
-            )
         return False
 
 
@@ -688,58 +658,69 @@ class BudgetContext:
             return 0.0
         return max(residual, 0.0)
 
+    def _charge_op(
+        self,
+        op_name: str,
+        flop_cost: int,
+        subscripts: str | None,
+        shapes: tuple,
+        *,
+        backend_duration_s: float | None = None,
+        overhead_duration_s: float | None = None,
+    ) -> None:
+        """Weight -> budget-check -> charge -> append OpRecord -> post-op deadline check.
+
+        Shared by deduct() (durations filled in later by _OpTimer.__exit__, so left
+        None here) and _DeferredOpTimer.__exit__ (durations already known). Raises
+        BudgetExhaustedError before charging on overshoot; raises TimeExhaustedError
+        after the record is appended if the deadline has passed.
+        """
+        from flopscope._weights import get_weight
+
+        weight = get_weight(op_name)
+        adjusted_cost = int(flop_cost * self._flop_multiplier * weight)
+        if adjusted_cost > self.flops_remaining:
+            raise BudgetExhaustedError(
+                op_name, flop_cost=adjusted_cost, flops_remaining=self.flops_remaining
+            )
+        self._flops_used += adjusted_cost
+        now = time.perf_counter()
+        offset = now - self._start_time if self._start_time is not None else None
+        self._op_log.append(
+            OpRecord(
+                op_name=op_name,
+                subscripts=subscripts,
+                shapes=shapes,
+                flop_cost=adjusted_cost,
+                cumulative=self._flops_used,
+                namespace=self.namespace,
+                flopscope_context_start_offset_s=offset,
+                flopscope_backend_duration_s=backend_duration_s,
+                flopscope_overhead_duration_s=overhead_duration_s,
+            )
+        )
+        if self._deadline is not None and now > self._deadline:
+            from flopscope.errors import TimeExhaustedError
+
+            raise TimeExhaustedError(
+                op_name,
+                elapsed_s=now - self._start_time,  # type: ignore[operator]
+                limit_s=self._wall_time_limit_s,  # type: ignore[arg-type]
+            )
+
     def deduct(
         self, op_name: str, *, flop_cost: int, subscripts: str | None, shapes: tuple
     ) -> _OpTimer:
         """Deduct FLOPs from the budget and return a timer context manager."""
         fs_t0 = time.perf_counter()
-        appended = False
+        n0 = len(self._op_log)
         try:
-            from flopscope._weights import get_weight
-
-            weight = get_weight(op_name)
-            adjusted_cost = int(flop_cost * self._flop_multiplier * weight)
-            if adjusted_cost > self.flops_remaining:
-                raise BudgetExhaustedError(
-                    op_name,
-                    flop_cost=adjusted_cost,
-                    flops_remaining=self.flops_remaining,
-                )
-            self._flops_used += adjusted_cost
-
-            now = time.perf_counter()
-            context_start_offset_s = (
-                now - self._start_time if self._start_time is not None else None
-            )
-
-            self._op_log.append(
-                OpRecord(
-                    op_name=op_name,
-                    subscripts=subscripts,
-                    shapes=shapes,
-                    flop_cost=adjusted_cost,
-                    cumulative=self._flops_used,
-                    namespace=self.namespace,
-                    flopscope_context_start_offset_s=context_start_offset_s,
-                )
-            )
-            appended = True
-
-            if self._deadline is not None and now > self._deadline:
-                from flopscope.errors import TimeExhaustedError
-
-                raise TimeExhaustedError(
-                    op_name,
-                    elapsed_s=now - self._start_time,  # type: ignore[operator]
-                    limit_s=self._wall_time_limit_s,  # type: ignore[arg-type]
-                )
-
-            op_index = len(self._op_log) - 1
-            return _OpTimer(self, op_index=op_index)
+            self._charge_op(op_name, flop_cost, subscripts, shapes)
+            return _OpTimer(self, op_index=len(self._op_log) - 1)
         finally:
             deduct_body_time = time.perf_counter() - fs_t0
             self._total_flopscope_overhead_time += deduct_body_time
-            if appended:
+            if len(self._op_log) > n0:
                 op = self._op_log[-1]
                 self._op_log[-1] = op._replace(
                     flopscope_overhead_duration_s=(
