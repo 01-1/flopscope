@@ -58,6 +58,10 @@ from flopscope.errors import (  # noqa: E402
     RemoteCallbackError,
     RemoteSerializationError,
     SymmetryError,
+    SymmetryLossWarning,
+    TimeExhaustedError,
+    UnsupportedFunctionError,
+    UnsupportedReturnType,
 )
 
 # Alias: ``fnp.ndarray`` refers to the RemoteArray class.
