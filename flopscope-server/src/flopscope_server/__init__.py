@@ -1,3 +1,3 @@
 """Flopscope backend server — executes numpy operations on behalf of remote clients."""
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"

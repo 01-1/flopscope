@@ -18,7 +18,7 @@ import builtins
 import struct
 from typing import Any
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 # ---------------------------------------------------------------------------
 # Errors

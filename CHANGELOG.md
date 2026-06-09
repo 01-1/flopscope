@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.7.0 (2026-06-09)
+
+### Feat
+
+- **warn**: warn that flops.configure() is a no-op on flopscope-client / eval servers
+- **client**: re-export participant-facing error classes at top level
+- **client**: raise RemoteSerializationError for non-serializable args
+- **warn**: warn in-process when callback ops are used (RemoteCallbackWarning)
+- **api**: add remote_unsupported_ops() to enumerate callback ops
+- **client**: raise RemoteCallbackError for callback ops instead of opaque msgpack error
+- **client**: add local_callback flag and RemoteCallbackError codegen
+- **budget**: add deduct_after deferred-cost timer (records backend, charges at exit)
+- **budget**: add _call_user_code carve-out so user-code time bills to residual
+- **io**: pickle-free savez/load + flops.Module (#116)
+
+### Fix
+
+- **budget**: re-sort unique compat shim inside its deduct block
+- **budget**: route bmat/concat/dstack data-movement through deduct_after
+- **budget**: record data-movement numpy time as backend via deduct_after
+- **budget**: satisfy pyright for _DeferredOpTimer timer-union and test budget narrowing
+- **budget**: bill callback wall time to residual for callback ops
+- **client**: rehabilitate test suite + ship flopscope.numpy (#118)
+
+### Refactor
+
+- **budget**: extract _charge_op shared by deduct and deduct_after
+
 ## v0.6.0 (2026-06-08)
 
 ### BREAKING CHANGE
