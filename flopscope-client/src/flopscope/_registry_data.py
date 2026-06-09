@@ -607,3 +607,14 @@ FUNCTION_CATEGORIES: dict[str, str] = {
     "zeros": "free",
     "zeros_like": "free",
 }
+
+
+LOCAL_CALLBACK_OPS: frozenset[str] = frozenset(
+    {
+        "apply_along_axis",
+        "apply_over_axes",
+        "fromfunction",
+        "fromiter",
+        "piecewise",
+    }
+)

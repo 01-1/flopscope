@@ -7,6 +7,13 @@ title: Changelog
 
 ### Fixed
 
+- **Timing buckets now attribute correctly.** User-callback ops
+  (`apply_along_axis`, `apply_over_axes`, `piecewise`, `fromfunction`,
+  `fromiter`) bill their callback wall time to `residual_wall_time_s`, and
+  data-movement ops (`tile`, `take`, `pad`, `resize`, …) bill their numpy time
+  to `flopscope_backend_time_s` — both were previously absorbed into
+  `flopscope_overhead_time_s`. The `wall = backend + overhead + residual`
+  identity is unchanged.
 - **`fnp.random.default_rng()` and `fnp.random.RandomState()` now properly count
   FLOPs.** Sampler methods on the returned objects (e.g. `rng.standard_normal()`,
   `rs.randn()`) deduct FLOPs from the active budget and return `FlopscopeArray`

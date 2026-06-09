@@ -35,6 +35,11 @@ def _generate_registry_data() -> str:
         cat = REGISTRY[name]["category"]
         lines.append(f"    {name!r}: {cat!r},\n")
     lines.append("}\n")
+    lines.append("\n\nLOCAL_CALLBACK_OPS: frozenset[str] = frozenset(\n    {\n")
+    for name in sorted(REGISTRY.keys()):
+        if REGISTRY[name].get("local_callback"):
+            lines.append(f"        {name!r},\n")
+    lines.append("    }\n)\n")
     return "".join(lines)
 
 
@@ -89,6 +94,7 @@ def _generate_errors() -> str:
         "TimeExhaustedError",
         "UnsupportedFunctionError",
         "UnsupportedReturnType",
+        "RemoteCallbackError",
     }
 
     # Classes whose default message must be non-empty (match core's guidance).
@@ -133,6 +139,15 @@ def _generate_errors() -> str:
             (
                 "Raised when an op's result cannot be serialized across the "
                 "client/server boundary."
+            ),
+        ),
+        (
+            "RemoteCallbackError",
+            "FlopscopeError",
+            (
+                "Raised when a callback-taking op (e.g. apply_along_axis) is "
+                "invoked on the client/server backend, which cannot execute "
+                "Python callbacks remotely."
             ),
         ),
         (

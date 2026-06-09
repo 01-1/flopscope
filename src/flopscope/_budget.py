@@ -84,7 +84,7 @@ class _OpTimer:
         self._op_index = op_index
         self._block_t0: float | None = None
         self._backend_duration_s: float = 0.0
-        self._prev_timer: _OpTimer | None = None
+        self._prev_timer: _OpTimer | _DeferredOpTimer | None = None
 
     def __enter__(self) -> _OpTimer:
         self._block_t0 = time.perf_counter()
@@ -126,6 +126,77 @@ class _OpTimer:
         return False
 
 
+class _DeferredOpTimer:
+    """Timer for ops whose FLOP cost is only known after the numpy call runs.
+
+    Used as ``with budget.deduct_after(name, ...) as op: result =
+    _call_numpy(...); op.set_cost(...)``. Times the block like ``_OpTimer`` (so
+    the numpy call is recorded as backend), then on exit performs the
+    cost-dependent work ``deduct()`` normally does up front: weight -> budget
+    check -> charge -> append the ``OpRecord``. Charging at exit matches the
+    existing run-then-charge behavior of these ops (they already ran numpy
+    before the budget check), so a single-op overshoot still raises
+    ``BudgetExhaustedError`` without recording the op.
+    """
+
+    __slots__ = (
+        "_budget",
+        "_op_name",
+        "_subscripts",
+        "_shapes",
+        "_cost",
+        "_block_t0",
+        "_backend_duration_s",
+        "_prev_timer",
+    )
+
+    def __init__(
+        self, budget: BudgetContext, op_name: str, subscripts: str | None, shapes: tuple
+    ):
+        self._budget = budget
+        self._op_name = op_name
+        self._subscripts = subscripts
+        self._shapes = shapes
+        self._cost: int | None = None
+        self._block_t0: float | None = None
+        self._backend_duration_s: float = 0.0
+        self._prev_timer: _OpTimer | _DeferredOpTimer | None = None
+
+    def set_cost(self, flop_cost: int) -> None:
+        self._cost = flop_cost
+
+    def __enter__(self) -> _DeferredOpTimer:
+        self._block_t0 = time.perf_counter()
+        self._prev_timer = self._budget._current_op_timer
+        self._budget._current_op_timer = self
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> Literal[False]:
+        block_duration = time.perf_counter() - self._block_t0  # type: ignore[operator]
+        in_block_overhead = max(block_duration - self._backend_duration_s, 0.0)
+        # Pop first so a nested _call_numpy after this block attributes to the
+        # restored (outer) timer, not this exited one.
+        self._budget._current_op_timer = self._prev_timer
+        # Attribute the measured time regardless of how we exit.
+        self._budget._total_flopscope_backend_time += self._backend_duration_s
+        self._budget._total_flopscope_overhead_time += in_block_overhead
+        if exc_type is not None:
+            return False  # propagate; nothing charged or recorded
+        if self._cost is None:
+            raise RuntimeError(
+                f"deduct_after({self._op_name!r}): set_cost() was never called"
+            )
+        self._budget._charge_op(
+            self._op_name,
+            self._cost,
+            self._subscripts,
+            self._shapes,
+            backend_duration_s=self._backend_duration_s,
+            overhead_duration_s=in_block_overhead,
+        )
+        return False
+
+
 def _call_numpy(fn: Any, *args: Any, **kwargs: Any) -> Any:
     """Invoke a numpy callable, attributing only its wall time to backend time.
 
@@ -151,6 +222,31 @@ def _call_numpy(fn: Any, *args: Any, **kwargs: Any) -> Any:
             budget._current_op_timer._backend_duration_s += d
 
 
+def _call_user_code(budget: BudgetContext, fn: Any, *args: Any, **kwargs: Any) -> Any:
+    """Run user-supplied code (a callback or iterable) and attribute its
+    *non-nested* wall time to residual rather than flopscope overhead.
+
+    Snapshots backend+overhead, runs ``fn``, and adds ``wall − nested`` to
+    ``budget._total_user_code_time`` (where ``nested`` is any backend/overhead
+    accrued by flopscope ops the callback itself ran). ``_counted_wrapper``
+    subtracts this delta from its overhead remainder, so the time lands in
+    ``residual_wall_time_s`` (= wall − backend − overhead).
+    Unlike ``_call_numpy``, the caller passes ``budget`` explicitly (it is
+    always in scope inside ``_counted_wrapper``).
+    """
+    b0 = budget._total_flopscope_backend_time
+    o0 = budget._total_flopscope_overhead_time
+    t0 = time.perf_counter()
+    try:
+        return fn(*args, **kwargs)
+    finally:
+        wall = time.perf_counter() - t0
+        nested = (budget._total_flopscope_backend_time - b0) + (
+            budget._total_flopscope_overhead_time - o0
+        )
+        budget._total_user_code_time += max(wall - nested, 0.0)
+
+
 def _counted_wrapper(fn):
     """Decorator that brackets a flopscope wrapper and bills its non-numpy,
     non-nested-overhead time to flopscope_overhead_time_s.
@@ -170,6 +266,7 @@ def _counted_wrapper(fn):
         fs_t0 = time.perf_counter()
         backend_baseline = budget._total_flopscope_backend_time
         overhead_baseline = budget._total_flopscope_overhead_time
+        usercode_baseline = budget._total_user_code_time
         ops_before = len(budget._op_log)
         try:
             return fn(*args, **kwargs)
@@ -177,7 +274,10 @@ def _counted_wrapper(fn):
             wall = time.perf_counter() - fs_t0
             backend_delta = budget._total_flopscope_backend_time - backend_baseline
             overhead_delta = budget._total_flopscope_overhead_time - overhead_baseline
-            wrapper_own_overhead = max(wall - backend_delta - overhead_delta, 0.0)
+            usercode_delta = budget._total_user_code_time - usercode_baseline
+            wrapper_own_overhead = max(
+                wall - backend_delta - overhead_delta - usercode_delta, 0.0
+            )
             budget._total_flopscope_overhead_time += wrapper_own_overhead
             ops_added = list(range(ops_before, len(budget._op_log)))
             if ops_added and wrapper_own_overhead > 0:
@@ -448,8 +548,9 @@ class BudgetContext:
         self._wall_time_s: float | None = None
         self._total_flopscope_backend_time: float = 0.0
         self._total_flopscope_overhead_time: float = 0.0
+        self._total_user_code_time: float = 0.0
         self._pre_enter_overhead: float = 0.0
-        self._current_op_timer: _OpTimer | None = None
+        self._current_op_timer: _OpTimer | _DeferredOpTimer | None = None
         self._recorded_flops_used = 0
         self._recorded_op_count = 0
         self._recorded_flopscope_backend_time = 0.0
@@ -515,6 +616,11 @@ class BudgetContext:
 
     @property
     def flopscope_backend_time_s(self) -> float:
+        """Wall-clock seconds of the counted NumPy/BLAS/LAPACK backend calls.
+
+        Includes the numpy call of data-movement ops (e.g. ``tile``, ``take``,
+        ``pad``, ``resize``), which run inside ``deduct_after``.
+        """
         return self._total_flopscope_backend_time
 
     @property
@@ -537,7 +643,9 @@ class BudgetContext:
 
         This is the measured wall-clock remainder outside the backend calls and
         flopscope's own dispatch/accounting work: user Python between ops,
-        time.sleep, GC pauses, and un-instrumented NumPy.
+        time.sleep, GC pauses, and un-instrumented NumPy. User-callback ops
+        (``apply_along_axis``, ``apply_over_axes``, ``piecewise``,
+        ``fromfunction``, ``fromiter``) attribute their callback wall time here.
         """
         if self._wall_time_s is None:
             return None
@@ -550,58 +658,69 @@ class BudgetContext:
             return 0.0
         return max(residual, 0.0)
 
+    def _charge_op(
+        self,
+        op_name: str,
+        flop_cost: int,
+        subscripts: str | None,
+        shapes: tuple,
+        *,
+        backend_duration_s: float | None = None,
+        overhead_duration_s: float | None = None,
+    ) -> None:
+        """Weight -> budget-check -> charge -> append OpRecord -> post-op deadline check.
+
+        Shared by deduct() (durations filled in later by _OpTimer.__exit__, so left
+        None here) and _DeferredOpTimer.__exit__ (durations already known). Raises
+        BudgetExhaustedError before charging on overshoot; raises TimeExhaustedError
+        after the record is appended if the deadline has passed.
+        """
+        from flopscope._weights import get_weight
+
+        weight = get_weight(op_name)
+        adjusted_cost = int(flop_cost * self._flop_multiplier * weight)
+        if adjusted_cost > self.flops_remaining:
+            raise BudgetExhaustedError(
+                op_name, flop_cost=adjusted_cost, flops_remaining=self.flops_remaining
+            )
+        self._flops_used += adjusted_cost
+        now = time.perf_counter()
+        offset = now - self._start_time if self._start_time is not None else None
+        self._op_log.append(
+            OpRecord(
+                op_name=op_name,
+                subscripts=subscripts,
+                shapes=shapes,
+                flop_cost=adjusted_cost,
+                cumulative=self._flops_used,
+                namespace=self.namespace,
+                flopscope_context_start_offset_s=offset,
+                flopscope_backend_duration_s=backend_duration_s,
+                flopscope_overhead_duration_s=overhead_duration_s,
+            )
+        )
+        if self._deadline is not None and now > self._deadline:
+            from flopscope.errors import TimeExhaustedError
+
+            raise TimeExhaustedError(
+                op_name,
+                elapsed_s=now - self._start_time,  # type: ignore[operator]
+                limit_s=self._wall_time_limit_s,  # type: ignore[arg-type]
+            )
+
     def deduct(
         self, op_name: str, *, flop_cost: int, subscripts: str | None, shapes: tuple
     ) -> _OpTimer:
         """Deduct FLOPs from the budget and return a timer context manager."""
         fs_t0 = time.perf_counter()
-        appended = False
+        n0 = len(self._op_log)
         try:
-            from flopscope._weights import get_weight
-
-            weight = get_weight(op_name)
-            adjusted_cost = int(flop_cost * self._flop_multiplier * weight)
-            if adjusted_cost > self.flops_remaining:
-                raise BudgetExhaustedError(
-                    op_name,
-                    flop_cost=adjusted_cost,
-                    flops_remaining=self.flops_remaining,
-                )
-            self._flops_used += adjusted_cost
-
-            now = time.perf_counter()
-            context_start_offset_s = (
-                now - self._start_time if self._start_time is not None else None
-            )
-
-            self._op_log.append(
-                OpRecord(
-                    op_name=op_name,
-                    subscripts=subscripts,
-                    shapes=shapes,
-                    flop_cost=adjusted_cost,
-                    cumulative=self._flops_used,
-                    namespace=self.namespace,
-                    flopscope_context_start_offset_s=context_start_offset_s,
-                )
-            )
-            appended = True
-
-            if self._deadline is not None and now > self._deadline:
-                from flopscope.errors import TimeExhaustedError
-
-                raise TimeExhaustedError(
-                    op_name,
-                    elapsed_s=now - self._start_time,  # type: ignore[operator]
-                    limit_s=self._wall_time_limit_s,  # type: ignore[arg-type]
-                )
-
-            op_index = len(self._op_log) - 1
-            return _OpTimer(self, op_index=op_index)
+            self._charge_op(op_name, flop_cost, subscripts, shapes)
+            return _OpTimer(self, op_index=len(self._op_log) - 1)
         finally:
             deduct_body_time = time.perf_counter() - fs_t0
             self._total_flopscope_overhead_time += deduct_body_time
-            if appended:
+            if len(self._op_log) > n0:
                 op = self._op_log[-1]
                 self._op_log[-1] = op._replace(
                     flopscope_overhead_duration_s=(
@@ -609,6 +728,16 @@ class BudgetContext:
                     )
                     + deduct_body_time
                 )
+
+    def deduct_after(
+        self, op_name: str, *, subscripts: str | None, shapes: tuple
+    ) -> _DeferredOpTimer:
+        """Like :meth:`deduct`, but the FLOP cost is supplied via ``op.set_cost``
+        inside the block and charged at block exit. Use for ops whose cost
+        depends on the result; the numpy call runs inside the timer (via
+        ``_call_numpy``) and is recorded as backend time.
+        """
+        return _DeferredOpTimer(self, op_name, subscripts, shapes)
 
     def summary_dict(self, by_namespace: bool = False) -> dict:
         """Return structured summary data for this budget context.

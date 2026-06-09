@@ -16,7 +16,7 @@ import numpy as _np
 from numpy.typing import ArrayLike, DTypeLike
 
 from flopscope import _symmetry_transport as _st
-from flopscope._budget import _call_numpy, _counted_wrapper
+from flopscope._budget import _call_numpy, _call_user_code, _counted_wrapper
 from flopscope._docstrings import attach_docstring
 from flopscope._ndarray import (
     FlopscopeArray,
@@ -221,12 +221,9 @@ attach_docstring(diag, _np.diag, "free", "0 FLOPs")
 def arange(*args: Any, **kwargs: Any) -> FlopscopeArray:
     """Return evenly spaced values. Cost: numel(output)."""
     budget = require_budget()
-    # cost depends on result; duration is post-hoc
-    # arange output size depends on start/stop/step parsing which is non-trivial
-    result = _np.arange(*args, **kwargs)
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("arange", flop_cost=cost, subscripts=None, shapes=()):
-        pass
+    with budget.deduct_after("arange", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.arange, *args, **kwargs)
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result
 
 
@@ -795,17 +792,16 @@ def tile(A: ArrayLike, reps: int | Sequence[int]) -> FlopscopeArray:
     """Construct array by repeating. Cost: numel(output)."""
     budget = require_budget()
     a_arr = _np.asarray(A)
-    result = _np.tile(a_arr, reps)
-    cost = max(result.size, 1)
     in_group = A.symmetry if isinstance(A, SymmetricTensor) else None
+    with budget.deduct_after("tile", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.tile, a_arr, reps)
+        _op.set_cost(max(result.size, 1))
     out_group = _st.transport_tile(
         in_group,
         input_shape=a_arr.shape,
         output_shape=result.shape,
         reps=reps,
     )
-    with budget.deduct("tile", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # cost deducted; result already computed
     if in_group is not None and out_group is None:
         _warn_symmetry_loss(
             lost_dims=[
@@ -834,12 +830,9 @@ def repeat(
     a_arr = _np.asarray(a)
     in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
     out_group = _st.transport_repeat(in_group, input_shape=a_arr.shape, axis=axis)
-    result = _np.repeat(a_arr, repeats, axis=axis)  # type: ignore[arg-type]
-    cost = max(result.size, 1)
-    with budget.deduct(
-        "repeat", flop_cost=cost, subscripts=None, shapes=(a_arr.shape,)
-    ):
-        pass  # cost deducted; result already computed
+    with budget.deduct_after("repeat", subscripts=None, shapes=(a_arr.shape,)) as _op:
+        result = _call_numpy(_np.repeat, a_arr, repeats, axis=axis)  # type: ignore[arg-type]
+        _op.set_cost(max(result.size, 1))
     if in_group is not None and out_group is None:
         _warn_symmetry_loss(
             lost_dims=[
@@ -919,12 +912,9 @@ def pad(array: ArrayLike, pad_width: Any, **kwargs: Any) -> FlopscopeArray:
     """Pad an array. Cost: numel(output)."""
     budget = require_budget()
     _warn_if_symmetric(array, "pad")
-    # cost depends on result; duration is post-hoc
-    # pad_width parsing is complex (scalar, per-axis, per-side) — not worth replicating
-    result = _np.pad(_to_base_ndarray(array), pad_width, **kwargs)
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("pad", flop_cost=cost, subscripts=None, shapes=()):
-        pass
+    with budget.deduct_after("pad", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.pad, _to_base_ndarray(array), pad_width, **kwargs)
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
@@ -1180,18 +1170,17 @@ attach_docstring(array_split, _np.array_split, "free", "0 FLOPs")
 def asarray_chkfinite(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
     """Convert to array checking for NaN/Inf. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.asarray_chkfinite(_to_base_ndarray(a), *args, **kwargs)
-    cost = (
-        result.size
-        if hasattr(result, "size")
-        else len(result)
-        if hasattr(result, "__len__")
-        else 1
-    )
-    with budget.deduct(
-        "asarray_chkfinite", flop_cost=cost, subscripts=None, shapes=(result.shape,)
-    ):
-        pass  # numpy call already executed above
+    with budget.deduct_after("asarray_chkfinite", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.asarray_chkfinite, _to_base_ndarray(a), *args, **kwargs
+        )
+        _op.set_cost(
+            result.size
+            if hasattr(result, "size")
+            else len(result)
+            if hasattr(result, "__len__")
+            else 1
+        )
     return result  # type: ignore[return-value]
 
 
@@ -1334,10 +1323,11 @@ def block(*args, **kwargs):
 
     for a in args:
         _walk_warn(a)
-    result = _np.block(*[_to_base_ndarray_tree(a) for a in args], **kwargs)
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("block", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("block", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.block, *[_to_base_ndarray_tree(a) for a in args], **kwargs
+        )
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result
 
 
@@ -1355,10 +1345,9 @@ def bmat(*args, **kwargs):
             stripped_args.append(_to_base_ndarray_tree(arg))
         else:
             stripped_args.append(arg)
-    result = _np.bmat(*stripped_args, **kwargs)
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("bmat", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("bmat", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.bmat, *stripped_args, **kwargs)
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result
 
 
@@ -1423,10 +1412,9 @@ def choose(*args, **kwargs):
             stripped_args.append(_to_base_ndarray_tree(arg))
         else:
             stripped_args.append(arg)
-    result = _np.choose(*stripped_args, **kwargs)
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("choose", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("choose", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.choose, *stripped_args, **kwargs)
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result
 
 
@@ -1479,23 +1467,21 @@ def compress(
     """Return selected slices along an axis. Cost: numel(output)."""
     budget = require_budget()
     _warn_if_symmetric(a, "compress")
-    result = _np.compress(
-        _to_base_ndarray(condition),  # type: ignore[arg-type]
-        _to_base_ndarray(a),
-        *args,
-        **kwargs,
-    )
-    cost = (
-        result.size
-        if hasattr(result, "size")
-        else len(result)
-        if hasattr(result, "__len__")
-        else 1
-    )
-    with budget.deduct(
-        "compress", flop_cost=cost, subscripts=None, shapes=(result.shape,)
-    ):
-        pass  # numpy call already executed above
+    with budget.deduct_after("compress", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.compress,
+            _to_base_ndarray(condition),  # type: ignore[arg-type]
+            _to_base_ndarray(a),
+            *args,
+            **kwargs,
+        )
+        _op.set_cost(
+            result.size
+            if hasattr(result, "size")
+            else len(result)
+            if hasattr(result, "__len__")
+            else 1
+        )
     return result
 
 
@@ -1510,10 +1496,11 @@ def concat(
 ) -> FlopscopeArray:
     """Join arrays along an axis. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.concat(_to_base_ndarray_tree(arrays), axis=axis, **kwargs)  # type: ignore[arg-type, call-overload]
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("concat", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("concat", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.concat, _to_base_ndarray_tree(arrays), axis=axis, **kwargs
+        )  # type: ignore[arg-type, call-overload]
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
@@ -1555,10 +1542,11 @@ def delete(
     budget = require_budget()
     _warn_if_symmetric(arr, "delete")
     arr_np = _np.asarray(arr)
-    result = _np.delete(_to_base_ndarray(arr), obj, axis=axis, **kwargs)
-    cost = max(arr_np.size - result.size, 0)  # num deleted
-    with budget.deduct("delete", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("delete", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.delete, _to_base_ndarray(arr), obj, axis=axis, **kwargs
+        )
+        _op.set_cost(max(arr_np.size - result.size, 0))
     return result  # type: ignore[return-value]
 
 
@@ -1586,12 +1574,9 @@ def diagflat(v: ArrayLike, k: int = 0) -> FlopscopeArray:
     """Create diagonal array from flattened input. Cost: numel(output)."""
     budget = require_budget()
     v_arr = _np.asarray(v)
-    result = _np.diagflat(_to_base_ndarray(v), k=k)
-    cost = result.size  # output is (n+|k|)×(n+|k|) matrix
-    with budget.deduct(
-        "diagflat", flop_cost=cost, subscripts=None, shapes=(v_arr.shape,)
-    ):
-        pass  # numpy call already executed above
+    with budget.deduct_after("diagflat", subscripts=None, shapes=(v_arr.shape,)) as _op:
+        result = _call_numpy(_np.diagflat, _to_base_ndarray(v), k=k)
+        _op.set_cost(result.size)
     symmetry = _infer_structural_constructor_symmetry(
         kind="diagflat", k=k, v_ndim=v_arr.ndim
     )
@@ -1638,10 +1623,9 @@ def dstack(tup: Sequence[ArrayLike]) -> FlopscopeArray:
     budget = require_budget()
     for a in tup:
         _warn_if_symmetric(a, "dstack")
-    result = _np.dstack(_to_base_ndarray_tree(tup))  # type: ignore[arg-type]
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("dstack", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("dstack", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.dstack, _to_base_ndarray_tree(tup))  # type: ignore[arg-type]
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
@@ -1787,7 +1771,7 @@ attach_docstring(fromfile, _np.fromfile, "free", "0 FLOPs")
 def fromfunction(*args, **kwargs):
     """Construct array by executing function over each coordinate. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.fromfunction(*args, **kwargs)
+    result = _call_user_code(budget, _np.fromfunction, *args, **kwargs)
     cost = result.size if hasattr(result, "size") else 1
     with budget.deduct("fromfunction", flop_cost=cost, subscripts=None, shapes=()):
         pass  # numpy call already executed above
@@ -1801,7 +1785,7 @@ attach_docstring(fromfunction, _np.fromfunction, "free", "0 FLOPs")
 def fromiter(*args, **kwargs):
     """Create array from iterable object. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.fromiter(*args, **kwargs)
+    result = _call_user_code(budget, _np.fromiter, *args, **kwargs)
     cost = result.size if hasattr(result, "size") else 1
     with budget.deduct("fromiter", flop_cost=cost, subscripts=None, shapes=()):
         pass  # numpy call already executed above
@@ -1843,10 +1827,9 @@ attach_docstring(fromstring, _np.fromstring, "free", "0 FLOPs")
 def indices(*args: Any, **kwargs: Any) -> FlopscopeArray:
     """Return array representing indices of a grid. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.indices(*args, **kwargs)
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("indices", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("indices", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.indices, *args, **kwargs)
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result
 
 
@@ -2043,18 +2026,15 @@ attach_docstring(nonzero, _np.nonzero, "free", "0 FLOPs")
 def packbits(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
     """Pack binary-valued array into bits. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.packbits(_to_base_ndarray(a), *args, **kwargs)  # type: ignore[arg-type, call-overload]
-    cost = (
-        result.size
-        if hasattr(result, "size")
-        else len(result)
-        if hasattr(result, "__len__")
-        else 1
-    )
-    with budget.deduct(
-        "packbits", flop_cost=cost, subscripts=None, shapes=(result.shape,)
-    ):
-        pass  # numpy call already executed above
+    with budget.deduct_after("packbits", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.packbits, _to_base_ndarray(a), *args, **kwargs)  # type: ignore[arg-type, call-overload]
+        _op.set_cost(
+            result.size
+            if hasattr(result, "size")
+            else len(result)
+            if hasattr(result, "__len__")
+            else 1
+        )
     return result  # type: ignore[return-value]
 
 
@@ -2228,10 +2208,9 @@ def resize(*args, **kwargs):
     """Return new array with given shape. Cost: numel(output)."""
     budget = require_budget()
     stripped_args = _to_base_ndarray_tree(args)
-    result = _np.resize(*stripped_args, **kwargs)
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("resize", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("resize", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.resize, *stripped_args, **kwargs)
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result
 
 
@@ -2336,16 +2315,16 @@ def take(
 ) -> FlopscopeArray:
     """Take elements from array along axis. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.take(
-        _to_base_ndarray(a),
-        _to_base_ndarray(indices),  # type: ignore[arg-type]
-        axis=axis,
-        out=_to_base_ndarray(out) if out is not None else None,  # type: ignore[arg-type]
-        mode=mode,  # type: ignore[arg-type]
-    )
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("take", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("take", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.take,
+            _to_base_ndarray(a),
+            _to_base_ndarray(indices),  # type: ignore[arg-type]
+            axis=axis,
+            out=_to_base_ndarray(out) if out is not None else None,  # type: ignore[arg-type]
+            mode=mode,  # type: ignore[arg-type]
+        )
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
@@ -2360,14 +2339,14 @@ def take_along_axis(
 ) -> FlopscopeArray:
     """Take values from input array along axis using indices. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.take_along_axis(
-        _to_base_ndarray(arr),  # type: ignore[arg-type]
-        _to_base_ndarray(indices),  # type: ignore[arg-type]
-        axis=axis,
-    )
-    cost = result.size if hasattr(result, "size") else 1
-    with budget.deduct("take_along_axis", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("take_along_axis", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.take_along_axis,
+            _to_base_ndarray(arr),  # type: ignore[arg-type]
+            _to_base_ndarray(indices),  # type: ignore[arg-type]
+            axis=axis,
+        )
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
@@ -2403,11 +2382,12 @@ def trim_zeros(filt: ArrayLike, trim: str = "fb", **kwargs: Any) -> FlopscopeArr
     """Trim leading and/or trailing zeros from 1-D array. Cost: num elements trimmed."""
     budget = require_budget()
     filt_arr = _np.asarray(filt)
-    result = _np.trim_zeros(_to_base_ndarray(filt), trim=trim, **kwargs)  # type: ignore[arg-type]
-    result_arr = _np.asarray(result)
-    cost = max(filt_arr.size - result_arr.size, 0)  # num trimmed
-    with budget.deduct("trim_zeros", flop_cost=cost, subscripts=None, shapes=()):
-        pass  # numpy call already executed above
+    with budget.deduct_after("trim_zeros", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.trim_zeros, _to_base_ndarray(filt), trim=trim, **kwargs
+        )  # type: ignore[arg-type]
+        result_arr = _np.asarray(result)
+        _op.set_cost(max(filt_arr.size - result_arr.size, 0))  # num trimmed
     return result
 
 
@@ -2442,18 +2422,15 @@ attach_docstring(typename, _np.typename, "free", "0 FLOPs")
 def unpackbits(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
     """Unpack elements of uint8 array into binary-valued bit array. Cost: numel(output)."""
     budget = require_budget()
-    result = _np.unpackbits(_to_base_ndarray(a), *args, **kwargs)  # type: ignore[arg-type]
-    cost = (
-        result.size
-        if hasattr(result, "size")
-        else len(result)
-        if hasattr(result, "__len__")
-        else 1
-    )
-    with budget.deduct(
-        "unpackbits", flop_cost=cost, subscripts=None, shapes=(result.shape,)
-    ):
-        pass  # numpy call already executed above
+    with budget.deduct_after("unpackbits", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(_np.unpackbits, _to_base_ndarray(a), *args, **kwargs)  # type: ignore[arg-type]
+        _op.set_cost(
+            result.size
+            if hasattr(result, "size")
+            else len(result)
+            if hasattr(result, "__len__")
+            else 1
+        )
     return result  # type: ignore[return-value]
 
 

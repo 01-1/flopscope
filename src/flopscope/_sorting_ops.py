@@ -310,23 +310,26 @@ def unique(ar: ArrayLike, **kwargs: Any) -> FlopscopeArray | tuple[FlopscopeArra
     budget = require_budget()
     ar_arr = _np.asarray(ar)
     cost = _unique_cost(ar_arr)
-    with budget.deduct(
-        "unique", flop_cost=cost, subscripts=None, shapes=(ar_arr.shape,)
-    ):
-        result = _call_numpy(_np.unique, ar_arr, **kwargs)
-
-    # Shim: restore sort guarantee for string / complex dtypes on numpy 2.3+.
-    # Only active for the default signature (no auxiliary arrays requested).
+    # The compat re-sort below only applies to the default signature (no
+    # auxiliary-return kwargs); decide before opening the deduct block.
     _returns_tuple = any(
         kwargs.get(k, False)
         for k in ("return_index", "return_inverse", "return_counts")
     )
-    if (
-        _NUMPY_GE_2_3
-        and not _returns_tuple
-        and ar_arr.dtype.kind in _UNSORTED_IN_NP_2_3
+    with budget.deduct(
+        "unique", flop_cost=cost, subscripts=None, shapes=(ar_arr.shape,)
     ):
-        result = _np.sort(_to_base_ndarray(result))
+        result = _call_numpy(_np.unique, ar_arr, **kwargs)
+        # Shim: restore the sort guarantee for string / complex dtypes on numpy
+        # 2.3+. Done inside this deduct (via _call_numpy) so the re-sort's wall
+        # time bills to the unique op's backend — without charging extra FLOPs
+        # or recording a second op.
+        if (
+            _NUMPY_GE_2_3
+            and not _returns_tuple
+            and ar_arr.dtype.kind in _UNSORTED_IN_NP_2_3
+        ):
+            result = _call_numpy(_np.sort, _to_base_ndarray(result))
     return result  # type: ignore[return-value]
 
 

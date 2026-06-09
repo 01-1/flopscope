@@ -55,6 +55,13 @@ class UnsupportedReturnType(FlopscopeError):
         super().__init__(message)
 
 
+class RemoteCallbackError(FlopscopeError):
+    """Raised when a callback-taking op (e.g. apply_along_axis) is invoked on the client/server backend, which cannot execute Python callbacks remotely."""
+
+    def __init__(self, message: str = "") -> None:
+        super().__init__(message)
+
+
 class FlopscopeWarning(UserWarning):
     """Warning issued when flopscope detects potential numerical issues."""
 
@@ -83,6 +90,7 @@ _FLOPSCOPE_ERRORS: frozenset[str] = frozenset(
         "SymmetryError",
         "UnsupportedFunctionError",
         "UnsupportedReturnType",
+        "RemoteCallbackError",
     }
 )
 
@@ -93,6 +101,7 @@ _ERROR_MAP: dict[str, type[Exception]] = {
     "SymmetryError": SymmetryError,
     "UnsupportedFunctionError": UnsupportedFunctionError,
     "UnsupportedReturnType": UnsupportedReturnType,
+    "RemoteCallbackError": RemoteCallbackError,
     "FlopscopeServerError": FlopscopeServerError,
     "ValueError": ValueError,
     "TypeError": TypeError,
