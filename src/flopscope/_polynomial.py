@@ -199,7 +199,9 @@ def polymul(a1: ArrayLike, a2: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(polymul, _np.polymul, "counted_custom", "n1 * n2 FLOPs")
+attach_docstring(
+    polymul, _np.polymul, "counted_custom", "2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2)"
+)
 
 
 @_counted_wrapper
