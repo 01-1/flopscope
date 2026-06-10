@@ -77,13 +77,13 @@ def _analytical_cost(op_name: str) -> int:
     """
     short = op_name.split(".")[-1]
     costs: dict[str, int] = {
-        "cond": 512 * 512 * 512,  # m*n*min(m,n) via SVD
+        "cond": 4 * 512**3 + 1,  # values-only SVD(512,512)+1 = 2*512*512^2+2*512^3+1
         "cross": 6 * 1_000_000,  # 6*n
         "matmul": 2 * 512 * 512 * 512
         - 512 * 512,  # 2*M*N*K - M*N (FMA=2); = 268,173,312
         "matrix_norm": 2 * 512 * 512,  # 2*numel (Frobenius)
         "matrix_power": 3 * 64**3,  # 3 matmuls for n=5
-        "matrix_rank": 512 * 512 * 512,  # m*n*min(m,n) via SVD
+        "matrix_rank": 4 * 512**3 + 512,  # values-only SVD(512,512)+512
         "multi_dot": 128 * 64 * 128
         + 128
         * 128

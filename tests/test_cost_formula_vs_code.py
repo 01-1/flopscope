@@ -472,10 +472,12 @@ class TestLinalgDecompositions:
         assert _cost_of(getattr(we.linalg, name), S) == 512
 
     def test_svd_mnk(self, we):
-        assert _cost_of(we.linalg.svd, numpy.random.rand(10, 5)) == 250
+        # with_vectors=True: 6*10*25+20*125=1500+2500=4000
+        assert _cost_of(we.linalg.svd, numpy.random.rand(10, 5)) == 4000
 
     def test_svdvals_mnk(self, we):
-        assert _cost_of(we.linalg.svdvals, numpy.random.rand(10, 5)) == 250
+        # values-only: 2*10*25+2*125=500+250=750
+        assert _cost_of(we.linalg.svdvals, numpy.random.rand(10, 5)) == 750
 
 
 class TestLinalgSolvers:
@@ -490,18 +492,19 @@ class TestLinalgSolvers:
 
     def test_lstsq_mnk(self, we):
         # lstsq_cost(10,5,b_cols=1,b_ndim=1):
-        #   k=5, svd=10*5*5=250
+        #   k=5, svd=svd_cost(10,5,with_vectors=True)=4000
         #   ut_b=matmul_cost(5,10,1)=2*5*10*1-5*1=95
         #   divide=5*1=5
         #   reconstruction=matmul_cost(5,5,1)=2*5*5*1-5*1=45
-        #   total=250+95+5+45=395
+        #   total=4000+95+5+45=4145
         assert (
             _cost_of(we.linalg.lstsq, numpy.random.rand(10, 5), numpy.random.rand(10))
-            == 395
+            == 4145
         )
 
     def test_pinv_mnk(self, we):
-        assert _cost_of(we.linalg.pinv, numpy.random.rand(10, 5)) == 730
+        # pinv_cost(10,5): svd(with_vecs)=4000+threshold=5+diag_scale=25+matmul(5,5,10)=450
+        assert _cost_of(we.linalg.pinv, numpy.random.rand(10, 5)) == 4480
 
     def test_tensorsolve_n3(self, we):
         assert (
@@ -525,10 +528,12 @@ class TestLinalgProperties:
         assert _cost_of(we.linalg.slogdet, numpy.random.rand(8, 8)) == 512
 
     def test_cond_mnk(self, we):
-        assert _cost_of(we.linalg.cond, numpy.random.rand(8, 8)) == 512
+        # cond_cost(8,8): values-only SVD(8,8)=2*8*64+2*512=1024+1024=2048, +1=2049
+        assert _cost_of(we.linalg.cond, numpy.random.rand(8, 8)) == 2049
 
     def test_matrix_rank_mnk(self, we):
-        assert _cost_of(we.linalg.matrix_rank, numpy.random.rand(10, 5)) == 250
+        # matrix_rank_cost(10,5): svd_vals(10,5)+min(10,5)=750+5=755
+        assert _cost_of(we.linalg.matrix_rank, numpy.random.rand(10, 5)) == 755
 
     def test_trace(self, we):
         assert _cost_of(we.trace, numpy.random.rand(8, 8)) == 8

@@ -175,30 +175,22 @@ pointwise_cost = analytical_pointwise_cost
 reduction_cost = analytical_reduction_cost
 
 
-def svd_cost(m: int, n: int, k: int | None = None) -> int:
-    """FLOP cost of a (truncated) SVD.
+def svd_cost(m: int, n: int, k: int | None = None, *, with_vectors: bool = False) -> int:
+    """FLOP cost of an SVD (FMA=2, leading order).
 
-    Parameters
-    ----------
-    m : int
-        Number of rows.
-    n : int
-        Number of columns.
-    k : int or None, optional
-        Number of singular values/vectors to compute. Defaults to min(m, n).
+    values only      : 2*a*b^2 + 2*b^3   (a = max(m,n), b = min(m,n))
+    with thin U, V   : 6*a*b^2 + 20*b^3  (Golub & Van Loan 4e §8.6; numpy
+                       dispatches LAPACK ``gesdd`` — constant is PROVISIONAL
+                       pending the audit's driver-count + scaling evidence)
 
-    Returns
-    -------
-    int
-        Estimated FLOP count: m * n * k.
-
-    Notes
-    -----
-    Based on Golub-Reinsch bidiagonalization.
+    ``k`` is accepted for API compatibility but does not reduce the cost:
+    LAPACK computes the full decomposition regardless of how many singular
+    values the caller keeps.
     """
-    if k is None:
-        k = min(m, n)
-    return m * n * k
+    a, b = max(m, n), min(m, n)
+    if with_vectors:
+        return max(6 * a * b * b + 20 * b**3, 1)
+    return max(2 * a * b * b + 2 * b**3, 1)
 
 
 def matmul_cost(m: int, k: int, n: int) -> int:

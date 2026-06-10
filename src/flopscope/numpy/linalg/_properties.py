@@ -188,8 +188,8 @@ def norm_cost(shape: tuple, ord=None) -> int:
     Cost depends on the ``ord`` parameter and input dimensionality.
 
     - Elementwise norms (Frobenius, L1, Linf, etc.): ``2 * numel`` (FMA=2, weight=1 baked in).
-    - SVD-based norms (2-norm, nuclear norm): ``4 * m * n * min(m, n)``
-      (weight=4 baked in, consistent with linalg.svd weight=4).
+    - SVD-based norms (2-norm, nuclear norm): values-only SVD cost
+      ``2*a*b^2 + 2*b^3`` where a=max(m,n), b=min(m,n).
     """
     numel = 1
     for d in shape:
@@ -205,9 +205,13 @@ def norm_cost(shape: tuple, ord=None) -> int:
         elif ord in (1, -1, _np.inf, -_np.inf):
             return 2 * numel  # FMA=2
         elif ord == 2 or ord == -2:
-            return 4 * m * n * min(m, n)  # SVD-based, weight=4 baked in
+            from flopscope._flops import svd_cost
+
+            return svd_cost(m, n, with_vectors=False)
         elif ord == "nuc":
-            return 4 * m * n * min(m, n)  # SVD-based, weight=4 baked in
+            from flopscope._flops import svd_cost
+
+            return svd_cost(m, n, with_vectors=False)
         return 2 * numel  # FMA=2
 
 
@@ -346,8 +350,8 @@ def matrix_norm_cost(shape: tuple, ord=None) -> int:
     Notes
     -----
     - Elementwise norms (Frobenius, L1, Linf): ``2 * numel`` (FMA=2, weight=1 baked in).
-    - SVD-based norms (2-norm, nuclear): ``4 * m * n * min(m, n)``
-      (weight=4 baked in, consistent with linalg.svd weight=4).
+    - SVD-based norms (2-norm, nuclear): values-only SVD cost
+      ``2*a*b^2 + 2*b^3`` where a=max(m,n), b=min(m,n).
     """
     m, n = shape[-2], shape[-1]
     numel = m * n
@@ -356,9 +360,13 @@ def matrix_norm_cost(shape: tuple, ord=None) -> int:
     elif ord in (1, -1, _np.inf, -_np.inf):
         return 2 * numel  # FMA=2
     elif ord == 2 or ord == -2:
-        return 4 * m * n * min(m, n)  # SVD-based, weight=4 baked in
+        from flopscope._flops import svd_cost
+
+        return svd_cost(m, n, with_vectors=False)
     elif ord == "nuc":
-        return 4 * m * n * min(m, n)  # SVD-based, weight=4 baked in
+        from flopscope._flops import svd_cost
+
+        return svd_cost(m, n, with_vectors=False)
     return 2 * numel  # FMA=2
 
 
@@ -391,32 +399,16 @@ attach_docstring(
 def cond_cost(m: int, n: int, p=None) -> int:
     """FLOP cost of condition number.
 
-    Parameters
-    ----------
-    m : int
-        Number of rows.
-    n : int
-        Number of columns.
-    p : {None, 2, -2, 1, -1, inf, -inf}, optional
-        Norm type. ``None`` and ``2``/``-2`` use SVD; ``1``/``-1``/``inf``/``-inf``
-        use LU factorization, which is cheaper.
-
-    Returns
-    -------
-    int
-        Estimated FLOP count.
-
-    Notes
-    -----
-    For ``p=None``, ``p=2``, or ``p=-2``, computed via SVD (cost m*n*min(m,n)).
-    For ``p=1``, ``p=-1``, ``p=inf``, or ``p=-inf``, computed via LU factorization
-    (cost ~min(m,n)^3 + m*n for norm).
+    p in {None, 2, -2}: values-only SVD + 1 divide.
+    other p (square only): norm(A)*norm(inv(A)) -> inv (2n^3) + two
+    elementwise norm passes (2n^2 each) + 1 multiply.
     """
+    from flopscope._flops import svd_cost
+
     if p is None or p == 2 or p == -2:
-        return max(m * n * min(m, n), 1)
-    # LU-based: factorization cost + norm computation
+        return max(svd_cost(m, n, with_vectors=False) + 1, 1)
     k = min(m, n)
-    return max(k**3 + m * n, 1)
+    return max(2 * k**3 + 4 * m * n + 1, 1)
 
 
 @_counted_wrapper
@@ -464,30 +456,15 @@ attach_docstring(
     cond,
     _np.linalg.cond,
     "linalg",
-    r"$m \cdot n \cdot \min(m,n)$ FLOPs (SVD) or $\min(m,n)^3 + mn$ (LU) depending on p",
+    r"values-only SVD + 1 (p in {None,2,-2}) or 2n^3 + 4n^2 + 1 (inv-based)",
 )
 
 
 def matrix_rank_cost(m: int, n: int) -> int:
-    """FLOP cost of matrix rank.
+    """FLOP cost of matrix rank: values-only SVD + min(m, n) threshold compares."""
+    from flopscope._flops import svd_cost
 
-    Parameters
-    ----------
-    m : int
-        Number of rows.
-    n : int
-        Number of columns.
-
-    Returns
-    -------
-    int
-        Estimated FLOP count: m * n * min(m, n).
-
-    Notes
-    -----
-    Computed via SVD.
-    """
-    return max(m * n * min(m, n), 1)
+    return max(svd_cost(m, n, with_vectors=False) + min(m, n), 1)
 
 
 @_counted_wrapper
@@ -529,5 +506,5 @@ attach_docstring(
     matrix_rank,
     _np.linalg.matrix_rank,
     "linalg",
-    r"$m \cdot n \cdot \min(m,n)$ FLOPs (SVD)",
+    r"values-only SVD + min(m,n)",
 )

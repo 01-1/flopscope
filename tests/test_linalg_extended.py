@@ -85,14 +85,16 @@ def test_norm_cost_2d_fro():
 
 
 def test_norm_cost_2d_nuc():
-    # SVD-based: 4x baked in for weight=4 consistency
+    # SVD-based: values-only SVD cost; a=max(4,5)=5, b=min(4,5)=4
+    # 2*5*16+2*64=160+128=288
     m, n = 4, 5
-    assert norm_cost((m, n), ord="nuc") == 4 * m * n * min(m, n)
+    assert norm_cost((m, n), ord="nuc") == 288
 
 
 def test_norm_cost_2d_minus2():
+    # SVD-based: values-only SVD cost; a=max(4,5)=5, b=min(4,5)=4 -> 288
     m, n = 4, 5
-    assert norm_cost((m, n), ord=-2) == 4 * m * n * min(m, n)
+    assert norm_cost((m, n), ord=-2) == 288
 
 
 def test_norm_cost_2d_1():
@@ -133,19 +135,22 @@ def test_matrix_norm_cost_fro():
 
 
 def test_matrix_norm_cost_nuc():
-    # SVD-based: 4x baked in for weight=4 consistency
+    # SVD-based: values-only SVD cost; a=max(3,4)=4, b=min(3,4)=3
+    # 2*4*9+2*27=72+54=126
     m, n = 3, 4
-    assert matrix_norm_cost((m, n), ord="nuc") == 4 * m * n * min(m, n)
+    assert matrix_norm_cost((m, n), ord="nuc") == 126
 
 
 def test_matrix_norm_cost_2():
+    # SVD-based: values-only SVD cost; 126
     m, n = 3, 4
-    assert matrix_norm_cost((m, n), ord=2) == 4 * m * n * min(m, n)
+    assert matrix_norm_cost((m, n), ord=2) == 126
 
 
 def test_matrix_norm_cost_minus2():
+    # SVD-based: values-only SVD cost; 126
     m, n = 3, 4
-    assert matrix_norm_cost((m, n), ord=-2) == 4 * m * n * min(m, n)
+    assert matrix_norm_cost((m, n), ord=-2) == 126
 
 
 def test_matrix_norm_cost_1():
@@ -300,8 +305,9 @@ def test_eigvalsh_cost():
 
 
 def test_svdvals_cost():
+    # values-only SVD: a=max(4,3)=4, b=min(4,3)=3 -> 2*4*9+2*27=72+54=126
     m, n = 4, 3
-    assert svdvals_cost(m, n) == m * n * min(m, n)
+    assert svdvals_cost(m, n) == 126
 
 
 # ---------------------------------------------------------------------------

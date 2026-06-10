@@ -161,4 +161,6 @@ class TestSvdvals:
             from flopscope.numpy.linalg import svdvals
 
             svdvals(A)
-            assert budget.flops_used == m * n * min(m, n)
+            # values-only SVD: a=max(6,4)=6, b=min(6,4)=4
+            # 2*6*16 + 2*64 = 192 + 128 = 320
+            assert budget.flops_used == 320

@@ -83,7 +83,11 @@ def svd(
         )
     effective_k = k if k is not None else min(m, n)
     batch = _batch_size(a.shape)
-    cost = svd_cost(m, n, effective_k) * batch if not _has_zero_dim(a.shape) else 0
+    cost = (
+        svd_cost(m, n, effective_k, with_vectors=compute_uv) * batch
+        if not _has_zero_dim(a.shape)
+        else 0
+    )
     with budget.deduct(
         "linalg.svd", flop_cost=cost, subscripts=None, shapes=(a.shape,)
     ):

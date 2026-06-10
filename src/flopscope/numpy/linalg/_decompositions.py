@@ -300,29 +300,14 @@ attach_docstring(eigvalsh, _np.linalg.eigvalsh, "linalg", r"$n^3$ FLOPs")
 
 
 def svdvals_cost(m: int, n: int, k: int | None = None) -> int:
-    """FLOP cost of computing singular values.
+    """FLOP cost of computing singular values (values-only SVD).
 
-    Parameters
-    ----------
-    m : int
-        Number of rows.
-    n : int
-        Number of columns.
-    k : int or None, optional
-        Number of singular values to compute. Defaults to min(m, n).
-
-    Returns
-    -------
-    int
-        Estimated FLOP count: m * n * k.
-
-    Notes
-    -----
-    Source: Golub-Reinsch bidiagonalization. Same cost model as SVD.
+    Delegates to :func:`flopscope._flops.svd_cost` with ``with_vectors=False``:
+    2*a*b^2 + 2*b^3, a = max(m, n), b = min(m, n). ``k`` does not reduce cost.
     """
-    if k is None:
-        k = min(m, n)
-    return max(m * n * k, 1)
+    from flopscope._flops import svd_cost
+
+    return svd_cost(m, n, k, with_vectors=False)
 
 
 @_counted_wrapper
@@ -350,4 +335,4 @@ def svdvals(x: ArrayLike, /, *, k: int | None = None) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(svdvals, _np.linalg.svdvals, "linalg", r"$m \cdot n \cdot k$ FLOPs")
+attach_docstring(svdvals, _np.linalg.svdvals, "linalg", r"$2ab^2 + 2b^3$ FLOPs (values-only SVD; a=max(m,n), b=min(m,n))")

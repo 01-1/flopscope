@@ -181,12 +181,15 @@ def lstsq_cost(m: int, n: int, b_cols: int = 1, b_ndim: int = 1) -> int:
 
     Issue #69 (was previously just ``svd_cost`` ignoring the
     back-substitution).
+
+    The SVD term uses with_vectors=True (the reconstruction needs U/V); the
+    4.0 linalg weight is gone, so this composed value is exactly what is charged.
     """
     from flopscope._flops import matmul_cost, svd_cost
 
     k = min(m, n)
     c = b_cols
-    svd = svd_cost(m, n)
+    svd = svd_cost(m, n, with_vectors=True)
     # matmul 2D×1D is now exact (== matmul_cost), so both b_ndim branches use it.
     if b_ndim == 1:
         ut_b = matmul_cost(k, m, 1)
@@ -277,11 +280,14 @@ def pinv_cost(m: int, n: int) -> int:
 
     Total: ``svd(m,n) + threshold(min(m,n)) + diag_scale(n*min(m,n))
     + matmul(n, min(m,n), m)``.
+
+    The SVD term uses with_vectors=True (the reconstruction needs U/V); the
+    4.0 linalg weight is gone, so this composed value is exactly what is charged.
     """
     from flopscope._flops import matmul_cost, svd_cost
 
     k = min(m, n)
-    svd = svd_cost(m, n)
+    svd = svd_cost(m, n, with_vectors=True)
     threshold = k
     diag_scale = n * k
     reconstruction = matmul_cost(n, k, m)

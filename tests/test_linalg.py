@@ -22,7 +22,8 @@ def test_svd_full_cost():
     A = numpy.random.randn(10, 5)
     with BudgetContext(flop_budget=10**6) as budget:
         svd(A)
-        assert budget.flops_used == 10 * 5 * 5
+        # with_vectors=True: 6*10*25+20*125=1500+2500=4000
+        assert budget.flops_used == 4000
 
 
 def test_svd_truncated_result():
@@ -41,7 +42,8 @@ def test_svd_truncated_cost():
     A = numpy.random.randn(10, 5)
     with BudgetContext(flop_budget=10**6) as budget:
         svd(A, k=3)
-        assert budget.flops_used == 10 * 5 * 3
+        # k does not reduce SVD cost; with_vectors=True: 6*10*25+20*125=4000
+        assert budget.flops_used == 4000
 
 
 def test_svd_not_2d():
