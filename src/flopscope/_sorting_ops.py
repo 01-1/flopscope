@@ -66,7 +66,9 @@ def sort(
         ax = axis % a.ndim
         cost = _sort_cost_nd(a, ax)
     with budget.deduct("sort", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
-        result = _call_numpy(_np.sort, _to_base_ndarray(a), axis=axis, **kwargs)
+        result = _call_numpy(
+            _np.sort, _to_base_ndarray(a), axis=axis, kind=kind, order=order, **kwargs
+        )
     return result  # type: ignore[return-value]
 
 
