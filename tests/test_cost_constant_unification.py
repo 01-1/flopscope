@@ -189,3 +189,16 @@ def test_generator_and_randomstate_mvn_match_module_path():
         r.multivariate_normal(np.zeros(d), np.eye(d), size=N)
     assert cost(gen) == expected
     assert cost(rs) == expected
+
+
+def test_mvn_tuple_size_parity_across_paths():
+    d = 20
+    expected = d**3 // 3 + 2 * 20 * d * d + 16 * 20 * d   # N = 4*5 = 20
+    mean, cov = np.zeros(d), np.eye(d)
+    assert cost(lambda: fnp.random.multivariate_normal(mean, cov, size=(4, 5))) == expected
+    def gen():
+        fnp.random.default_rng(0).multivariate_normal(mean, cov, size=(4, 5))
+    def rs():
+        fnp.random.RandomState(0).multivariate_normal(mean, cov, size=(4, 5))
+    assert cost(gen) == expected
+    assert cost(rs) == expected
