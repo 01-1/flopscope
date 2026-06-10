@@ -456,10 +456,12 @@ class TestLinalgDecompositions:
     def test_cholesky_n3(self, we):
         S = numpy.eye(8) + numpy.random.rand(8, 8)
         S = S @ S.T
-        assert _cost_of(we.linalg.cholesky, S) == 512
+        # cholesky_cost(8) = 8^3//3 = 170
+        assert _cost_of(we.linalg.cholesky, S) == 170
 
     def test_qr_mnk(self, we):
-        assert _cost_of(we.linalg.qr, numpy.random.rand(10, 5)) == 250
+        # qr_cost(10,5,mode="reduced"): k=5, factor=2*10*5*5-2*5^3//3=500-83=417, 2*factor=834
+        assert _cost_of(we.linalg.qr, numpy.random.rand(10, 5)) == 834
 
     @pytest.mark.parametrize("name", ["eig", "eigvals"])
     def test_eig_n3(self, name, we):
@@ -526,10 +528,12 @@ class TestLinalgSolvers:
 
 class TestLinalgProperties:
     def test_det_n3(self, we):
-        assert _cost_of(we.linalg.det, numpy.random.rand(8, 8)) == 512
+        # det_cost(8) = 2*8^3//3 + 8 = 341 + 8 = 349
+        assert _cost_of(we.linalg.det, numpy.random.rand(8, 8)) == 349
 
     def test_slogdet_n3(self, we):
-        assert _cost_of(we.linalg.slogdet, numpy.random.rand(8, 8)) == 512
+        # slogdet_cost(8) = 2*8^3//3 + 8 = 341 + 8 = 349
+        assert _cost_of(we.linalg.slogdet, numpy.random.rand(8, 8)) == 349
 
     def test_cond_mnk(self, we):
         # cond_cost(8,8): values-only SVD(8,8)=2*8*64+2*512=1024+1024=2048, +1=2049

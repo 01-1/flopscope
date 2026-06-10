@@ -98,3 +98,35 @@ def test_tensorsolve_tensorinv_reduce_to_solve_inv():
     ai = fnp.asarray(np.random.rand(4, 6, 4, 6))
     # n = prod(leading 2) = 24: 2*24^3 = 27648
     assert cost(lambda: fnp.linalg.tensorinv(ai)) == 27_648
+
+
+# ---------------- Task 3: cholesky / qr / det ----------------
+
+def test_cholesky_third_cubed():
+    A = fnp.asarray(np.random.rand(100, 100))
+    SPD = fnp.asarray(np.asarray(A) @ np.asarray(A).T + 100 * np.eye(100))
+    assert cost(lambda: fnp.linalg.cholesky(SPD)) == 100**3 // 3
+
+
+def test_qr_mode_aware():
+    A = fnp.asarray(np.random.rand(200, 50))
+    factor = 2 * 200 * 50 * 50 - 2 * 50**3 // 3          # 916,667 (Householder)
+    assert cost(lambda: fnp.linalg.qr(A, mode="r")) == factor
+    assert cost(lambda: fnp.linalg.qr(A)) == 2 * factor   # reduced: + form Q
+    S = fnp.asarray(np.random.rand(100, 100))
+    fs = 2 * 100**3 - 2 * 100**3 // 3                     # 1,333,334
+    assert cost(lambda: fnp.linalg.qr(S)) == 2 * fs
+
+
+def test_det_slogdet_lu_based():
+    A = fnp.asarray(np.random.rand(100, 100) + 100 * np.eye(100))
+    expected = 2 * 100**3 // 3 + 100
+    assert cost(lambda: fnp.linalg.det(A)) == expected
+    assert cost(lambda: fnp.linalg.slogdet(A)) == expected
+
+
+def test_direct_family_packaged_weights_are_unity():
+    load_weights()
+    A = fnp.asarray(np.random.rand(100, 100))
+    SPD = fnp.asarray(np.asarray(A) @ np.asarray(A).T + 100 * np.eye(100))
+    assert cost(lambda: fnp.linalg.cholesky(SPD)) == 100**3 // 3

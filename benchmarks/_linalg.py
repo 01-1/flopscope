@@ -27,8 +27,8 @@ LINALG_OPS: list[str] = [
 _SPD_OPS = {"linalg.cholesky", "linalg.eigh", "linalg.eigvalsh"}
 
 _FORMULA_STRINGS: dict[str, str] = {
-    "linalg.cholesky": "n^3",
-    "linalg.qr": "m*n*min(m,n)",
+    "linalg.cholesky": "n^3/3",
+    "linalg.qr": "2*(2mnk - 2k^3/3), k=min(m,n) (reduced/complete)",
     "linalg.eig": "n^3",
     "linalg.eigh": "n^3",
     "linalg.eigvals": "n^3",
@@ -39,8 +39,8 @@ _FORMULA_STRINGS: dict[str, str] = {
     "linalg.inv": "2n^3",
     "linalg.lstsq": "m*n*min(m,n)",
     "linalg.pinv": "m*n*min(m,n)",
-    "linalg.det": "n^3",
-    "linalg.slogdet": "n^3",
+    "linalg.det": "2n^3/3 + n",
+    "linalg.slogdet": "2n^3/3 + n",
 }
 
 
@@ -61,9 +61,12 @@ def _analytical_cost(op_name: str, n: int) -> int:
     """
     m = n  # square matrices
     short = op_name.split(".")[-1]
+    # qr: mode="reduced" (default); k=min(m,n)=n for square
+    k = min(m, n)
+    qr_factor = 2 * m * n * k - 2 * k**3 // 3
     costs: dict[str, int] = {
-        "cholesky": n**3,
-        "qr": m * n * min(m, n),
+        "cholesky": n**3 // 3,
+        "qr": 2 * qr_factor,
         "eig": n**3,
         "eigh": n**3,
         "eigvals": n**3,
@@ -74,8 +77,8 @@ def _analytical_cost(op_name: str, n: int) -> int:
         "inv": 2 * n**3,
         "lstsq": m * n * min(m, n),
         "pinv": m * n * min(m, n),
-        "det": n**3,
-        "slogdet": n**3,
+        "det": 2 * n**3 // 3 + n,
+        "slogdet": 2 * n**3 // 3 + n,
     }
     return costs[short]
 

@@ -61,7 +61,8 @@ class TestDetSymmetric:
         S = as_symmetric(A, symmetry=SymmetryGroup.symmetric(axes=(0, 1)))
         with BudgetContext(flop_budget=10**8, quiet=True) as budget:
             la.det(S)
-            assert budget.flops_used == n**3  # simplified cubic cost
+            # det_cost(10) = 2*10^3//3 + 10 = 666 + 10 = 676
+            assert budget.flops_used == 2 * n**3 // 3 + n
 
 
 class TestInvSymmetric:

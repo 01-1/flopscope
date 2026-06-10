@@ -38,7 +38,7 @@ class TestDet:
             from flopscope.numpy.linalg import det
 
             det(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 2 * n**3 // 3 + n
 
 
 class TestSlogdet:
@@ -59,7 +59,7 @@ class TestSlogdet:
             from flopscope.numpy.linalg import slogdet
 
             slogdet(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 2 * n**3 // 3 + n
 
 
 class TestNorm:

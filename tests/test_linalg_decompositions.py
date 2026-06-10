@@ -23,7 +23,7 @@ class TestCholesky:
             from flopscope.numpy.linalg import cholesky
 
             cholesky(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == n**3 // 3
 
     def test_op_log(self):
         A = numpy.eye(3) * 10
@@ -59,7 +59,10 @@ class TestQR:
             from flopscope.numpy.linalg import qr
 
             qr(A)
-            expected = m * n * min(m, n)
+            # mode="reduced" (default): 2 * (2*m*n*k - 2*k^3//3), k=min(m,n)=4
+            k = min(m, n)
+            factor = 2 * m * n * k - 2 * k**3 // 3
+            expected = 2 * factor
             assert budget.flops_used == expected
 
     def test_op_log(self):

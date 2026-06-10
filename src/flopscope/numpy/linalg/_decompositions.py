@@ -29,13 +29,13 @@ def cholesky_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: $n^3/3$.
 
     Notes
     -----
-    Simplified cubic cost model for Cholesky decomposition.
+    n^3/3 FLOPs (G&VL 4e Alg 4.2.1; LAPACK dpotrf).
     """
-    return max(n**3, 1)
+    return max(n**3 // 3, 1)
 
 
 @_counted_wrapper
@@ -57,29 +57,22 @@ def cholesky(a: ArrayLike, /, *, upper: bool = False) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(cholesky, _np.linalg.cholesky, "linalg", r"$n^3$ FLOPs")
+attach_docstring(cholesky, _np.linalg.cholesky, "linalg", r"$n^3/3$ FLOPs")
 
 
-def qr_cost(m: int, n: int) -> int:
-    r"""FLOP cost of QR decomposition.
+def qr_cost(m: int, n: int, mode: str = "reduced") -> int:
+    """FLOP cost of QR decomposition (Householder, FMA=2).
 
-    Parameters
-    ----------
-    m : int
-        Number of rows.
-    n : int
-        Number of columns.
-
-    Returns
-    -------
-    int
-        Estimated FLOP count: $m \cdot n \cdot \min(m, n)$.
-
-    Notes
-    -----
-    Simplified cubic cost model for QR decomposition.
+    Factorization (dgeqrf): 2*m*n*k - 2*k^3/3, k = min(m, n)
+    (G&VL 4e §5.2). Modes "reduced"/"complete" additionally form Q
+    explicitly (dorgqr), modeled as the same count again. Modes
+    "r"/"raw" bill the factorization only.
     """
-    return max(m * n * min(m, n), 1)
+    k = min(m, n)
+    factor = 2 * m * n * k - 2 * k**3 // 3
+    if mode in ("reduced", "complete"):
+        return max(2 * factor, 1)
+    return max(factor, 1)
 
 
 @_counted_wrapper
@@ -103,7 +96,7 @@ def qr(
         a = _np.asarray(a)
     m, n = a.shape[-2], a.shape[-1]
     batch = _batch_size(a.shape)
-    cost = qr_cost(m, n) * batch if not _has_zero_dim(a.shape) else 0
+    cost = qr_cost(m, n, mode=mode) * batch if not _has_zero_dim(a.shape) else 0
     with budget.deduct("linalg.qr", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
         result = _call_numpy(_np.linalg.qr, _to_base_ndarray(a), mode=mode)  # type: ignore[reportCallIssue]
     if mode in ("reduced", "complete"):
@@ -124,7 +117,7 @@ def qr(
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(qr, _np.linalg.qr, "linalg", r"$m \cdot n \cdot \min(m,n)$ FLOPs")
+attach_docstring(qr, _np.linalg.qr, "linalg", r"$2(2mnk - \frac{2}{3}k^3)$ FLOPs (reduced/complete; form Q) or $2mnk - \frac{2}{3}k^3$ (r/raw), k=min(m,n)")
 
 
 def eig_cost(n: int) -> int:

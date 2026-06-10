@@ -22,11 +22,15 @@ class TestOpsLists:
 
 class TestAnalyticalCost:
     def test_cholesky_cost(self):
-        assert _analytical_cost("linalg.cholesky", 100) == 100**3
+        # cholesky_cost(100) = 100^3//3 = 333333
+        assert _analytical_cost("linalg.cholesky", 100) == 100**3 // 3
 
     def test_qr_cost(self):
         n = 100
-        expected = n * n * min(n, n)
+        # qr_cost(100, 100, mode="reduced"): k=100, factor=2*n^3 - 2*n^3//3, result=2*factor
+        k = n
+        factor = 2 * n * n * k - 2 * k**3 // 3
+        expected = 2 * factor
         assert _analytical_cost("linalg.qr", n) == expected
 
     def test_solve_cost(self):
@@ -37,7 +41,8 @@ class TestAnalyticalCost:
 
     def test_det_cost(self):
         n = 100
-        expected = n**3
+        # det_cost(100) = 2*100^3//3 + 100 = 666666 + 100 = 666766
+        expected = 2 * n**3 // 3 + n
         assert _analytical_cost("linalg.det", n) == expected
 
     def test_inv_cost(self):

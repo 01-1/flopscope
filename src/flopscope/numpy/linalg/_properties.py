@@ -78,13 +78,13 @@ def det_cost(n: int, symmetric: bool = False) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: $2n^3/3 + n$.
 
     Notes
     -----
-    Simplified cubic cost model for determinant computation.
+    2n^3/3 + n FLOPs (LU + product of diagonal).
     """
-    return max(n**3, 1)
+    return max(2 * n**3 // 3 + n, 1)
 
 
 @_counted_wrapper
@@ -109,7 +109,7 @@ def det(a: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(det, _np.linalg.det, "linalg", r"$n^3$ FLOPs")
+attach_docstring(det, _np.linalg.det, "linalg", r"$\frac{2}{3}n^3 + n$ FLOPs (LU + diagonal product)")
 
 
 def slogdet_cost(n: int, symmetric: bool = False) -> int:
@@ -125,13 +125,13 @@ def slogdet_cost(n: int, symmetric: bool = False) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: $2n^3/3 + n$.
 
     Notes
     -----
-    Simplified cubic cost model for sign and log-determinant computation.
+    2n^3/3 + n FLOPs (LU + product of diagonal).
     """
-    return max(n**3, 1)
+    return max(2 * n**3 // 3 + n, 1)
 
 
 @_counted_wrapper
@@ -165,7 +165,7 @@ def slogdet(a: ArrayLike) -> SlogdetResult:
     return result
 
 
-attach_docstring(slogdet, _np.linalg.slogdet, "linalg", r"$n^3$ FLOPs")
+attach_docstring(slogdet, _np.linalg.slogdet, "linalg", r"$\frac{2}{3}n^3 + n$ FLOPs (LU + diagonal product)")
 
 
 def norm_cost(shape: tuple, ord=None) -> int:

@@ -937,7 +937,11 @@ class TestLinalgDecompositionsExtended:
         a = numpy.random.rand(5, 3)
         with BudgetContext(flop_budget=10**9) as budget:
             qr(a)
-        assert budget.flops_used == 5 * 3 * 3  # m * n * min(m, n)
+        # qr_cost(5, 3, mode="reduced"): k=3, factor=2*5*3*3-2*3^3//3=90-18=72, 2*factor=144
+        m, n = 5, 3
+        k = min(m, n)
+        factor = 2 * m * n * k - 2 * k**3 // 3
+        assert budget.flops_used == 2 * factor
 
 
 # ============================================================================

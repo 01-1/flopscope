@@ -50,12 +50,12 @@ def test_trace_cost_min1():
 
 def test_det_cost_symmetric():
     n = 4
-    assert det_cost(n, symmetric=True) == max(n**3, 1)
+    assert det_cost(n, symmetric=True) == max(2 * n**3 // 3 + n, 1)
 
 
 def test_slogdet_cost_symmetric():
     n = 4
-    assert slogdet_cost(n, symmetric=True) == max(n**3, 1)
+    assert slogdet_cost(n, symmetric=True) == max(2 * n**3 // 3 + n, 1)
 
 
 def test_norm_cost_1d_ord_none():
@@ -277,13 +277,16 @@ def test_matrix_norm_various_ords(ord_val):
 
 def test_cholesky_cost():
     assert cholesky_cost(1) == 1
-    assert cholesky_cost(3) == max(27, 1)
+    assert cholesky_cost(3) == max(3**3 // 3, 1)  # 9
 
 
 def test_qr_cost_wide_matrix():
     m, n = 3, 5
-    cost = qr_cost(m, n)
-    assert cost == max(m * n * min(m, n), 1)
+    # mode="reduced" (default): 2*(2*m*n*k - 2*k^3//3), k=min(m,n)=3
+    k = min(m, n)
+    factor = 2 * m * n * k - 2 * k**3 // 3
+    result = qr_cost(m, n)
+    assert result == max(2 * factor, 1)
 
 
 def test_eig_cost():
