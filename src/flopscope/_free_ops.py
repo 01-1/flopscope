@@ -238,11 +238,17 @@ def linspace(
     num: int = 50,
     **kwargs: Any,
 ) -> FlopscopeArray:
-    """Return evenly spaced numbers. Cost: numel(output)."""
+    """Return evenly spaced numbers. Cost: 2*numel(output) (1 mul + 1 add per element)."""
     budget = require_budget()
-    cost = max(int(num), 1)
-    with budget.deduct("linspace", flop_cost=cost, subscripts=None, shapes=()):
-        result = _call_numpy(_np.linspace, start, stop, num=num, **kwargs)  # type: ignore[arg-type, call-overload]
+    with budget.deduct_after("linspace", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(  # type: ignore[arg-type, call-overload]
+            _np.linspace,
+            _to_base_ndarray(start) if hasattr(start, "__array__") else start,
+            _to_base_ndarray(stop) if hasattr(stop, "__array__") else stop,
+            num=num,
+            **kwargs,
+        )
+        _op.set_cost(2 * (result.size if hasattr(result, "size") else 1))
     return result
 
 
