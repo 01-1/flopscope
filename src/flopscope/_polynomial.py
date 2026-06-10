@@ -65,7 +65,11 @@ def polyfit_cost(m: int, deg: int) -> int:
 
 
 def poly_cost(n: int) -> int:
-    """Cost for poly (1-D build-from-roots): 2*n^2 FLOPs (iterated convolve)."""
+    """Cost for poly (1-D build-from-roots): 2*n^2 FLOPs.
+
+    Clean FMA=2 upper bound on the iterated `convolve(p, [1, -r_i])` loop, whose
+    exact cost is ~(3*n^2)/2; 2*n^2 over-approximates it (the safe direction).
+    """
     return max(2 * n * n, 1)
 
 

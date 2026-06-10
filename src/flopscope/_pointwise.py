@@ -2579,5 +2579,7 @@ def interp(x: ArrayLike, xp: ArrayLike, fp: ArrayLike, **kwargs: Any) -> Flopsco
     return result  # type: ignore[return-value]  # wrapped at fnp.interp import time
 
 
-attach_docstring(interp, _np.interp, "counted_custom", "n * ceil(log2(xp)) FLOPs")
+attach_docstring(
+    interp, _np.interp, "counted_custom", "3*n + n*ceil(log2(xp)) FLOPs (arithmetic + search)"
+)
 interp.__signature__ = _inspect.signature(_np.interp)  # pyright: ignore[reportFunctionMemberAccess]
