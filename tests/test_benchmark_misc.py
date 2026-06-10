@@ -159,10 +159,10 @@ class TestAnalyticalCost:
         assert _analytical_cost("trapezoid", n=5000) == 5000
 
     def test_logspace_linear(self):
-        assert _analytical_cost("logspace", n=5000) == 5000
+        assert _analytical_cost("logspace", n=5000) == 16 * 5000
 
     def test_geomspace_linear(self):
-        assert _analytical_cost("geomspace", n=5000) == 5000
+        assert _analytical_cost("geomspace", n=5000) == 16 * 5000
 
     def test_vander_n_deg_minus_1(self):
         assert _analytical_cost("vander", n=100, degree=10) == 100 * 9

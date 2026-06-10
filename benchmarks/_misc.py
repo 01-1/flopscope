@@ -161,7 +161,7 @@ def _analytical_cost(op: str, **kwargs: int) -> int:
         return n
 
     if op in ("logspace", "geomspace"):
-        return n
+        return 16 * n  # result.size × 16 (transcendental weight)
 
     if op == "vander":
         degree = kwargs.get("degree", 100)

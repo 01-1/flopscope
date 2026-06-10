@@ -9,6 +9,7 @@ import numpy as np
 
 import flopscope as f
 import flopscope.numpy as fnp
+from flopscope._weights import load_weights
 
 
 def cost(fn, *args, **kwargs) -> int:
@@ -72,3 +73,12 @@ def test_linspace_costs_broadcast_output():
     start = fnp.asarray(np.zeros(100))
     stop = fnp.asarray(np.ones(100))
     assert cost(lambda: fnp.linspace(start, stop, 50)) == 2 * 50 * 100  # broadcast B=100
+
+
+def test_geomspace_logspace_cost_broadcast_output_times_transcendental():
+    load_weights()  # conftest resets weights; reload packaged weights for this test
+    assert cost(lambda: fnp.geomspace(1.0, 1000.0, 50)) == 16 * 50
+    assert cost(lambda: fnp.logspace(0.0, 3.0, 50)) == 16 * 50
+    start = fnp.asarray(np.ones(100))
+    stop = fnp.asarray(np.full(100, 1000.0))
+    assert cost(lambda: fnp.geomspace(start, stop, 50)) == 16 * 50 * 100  # broadcast B=100
