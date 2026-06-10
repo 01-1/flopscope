@@ -70,10 +70,12 @@ class TestAnalyticalCost:
         assert _analytical_cost("linalg.tensordot") == 64**5
 
     def test_tensorinv_cost(self):
-        assert _analytical_cost("linalg.tensorinv") == 64**3
+        # tensorinv_cost at n=64: 2*64^3 = 524288
+        assert _analytical_cost("linalg.tensorinv") == 2 * 64**3
 
     def test_tensorsolve_cost(self):
-        assert _analytical_cost("linalg.tensorsolve") == 64**3
+        # tensorsolve_cost at n=64: 2*64^3//3 + 2*64^2 = 174762 + 8192 = 182954
+        assert _analytical_cost("linalg.tensorsolve") == 2 * 64**3 // 3 + 2 * 64**2
 
     def test_trace_cost(self):
         assert _analytical_cost("linalg.trace") == 10_000

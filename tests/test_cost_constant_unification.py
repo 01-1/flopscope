@@ -72,3 +72,29 @@ def test_svd_family_packaged_weights_are_unity():
     load_weights()  # packaged table; linalg weights must now be 1.0
     A = fnp.asarray(np.random.rand(200, 20))
     assert cost(lambda: fnp.linalg.svdvals(A)) == 176_000
+
+
+# ---------------- Task 2: direct solvers ----------------
+
+def test_solve_is_lu_plus_triangular_and_nrhs_aware():
+    A = fnp.asarray(np.random.rand(100, 100) + 100 * np.eye(100))
+    b1 = fnp.asarray(np.random.rand(100))
+    b8 = fnp.asarray(np.random.rand(100, 8))
+    third = 2 * 100**3 // 3                      # 666666
+    assert cost(lambda: fnp.linalg.solve(A, b1)) == third + 2 * 100**2 * 1
+    assert cost(lambda: fnp.linalg.solve(A, b8)) == third + 2 * 100**2 * 8
+
+
+def test_inv_constants():
+    A = fnp.asarray(np.random.rand(100, 100) + 100 * np.eye(100))
+    assert cost(lambda: fnp.linalg.inv(A)) == 2 * 100**3
+
+
+def test_tensorsolve_tensorinv_reduce_to_solve_inv():
+    a = fnp.asarray(np.random.rand(8, 3, 24))
+    b = fnp.asarray(np.random.rand(8, 3))
+    # n = prod(trailing) = 24: 2*24^3//3 + 2*24^2 = 9216 + 1152
+    assert cost(lambda: fnp.linalg.tensorsolve(a, b)) == 9216 + 1152
+    ai = fnp.asarray(np.random.rand(4, 6, 4, 6))
+    # n = prod(leading 2) = 24: 2*24^3 = 27648
+    assert cost(lambda: fnp.linalg.tensorinv(ai)) == 27_648

@@ -31,7 +31,8 @@ class TestAnalyticalCost:
 
     def test_solve_cost(self):
         n = 100
-        expected = n**3
+        # solve_cost(n, nrhs=1): 2*n^3//3 + 2*n^2 = 666666 + 20000 = 686666
+        expected = 2 * n**3 // 3 + 2 * n * n
         assert _analytical_cost("linalg.solve", n) == expected
 
     def test_det_cost(self):
@@ -41,7 +42,8 @@ class TestAnalyticalCost:
 
     def test_inv_cost(self):
         n = 100
-        assert _analytical_cost("linalg.inv", n) == n**3
+        # inv_cost(n): 2*n^3 = 2000000
+        assert _analytical_cost("linalg.inv", n) == 2 * n**3
 
 
 class TestFormulaStrings:

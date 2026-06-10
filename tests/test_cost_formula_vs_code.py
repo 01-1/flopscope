@@ -482,13 +482,15 @@ class TestLinalgDecompositions:
 
 class TestLinalgSolvers:
     def test_solve_n3(self, we):
+        # solve_cost(8, nrhs=1): 2*8^3//3 + 2*8^2*1 = 341 + 128 = 469
         assert (
             _cost_of(we.linalg.solve, numpy.random.rand(8, 8), numpy.random.rand(8))
-            == 512
+            == 469
         )
 
     def test_inv_n3(self, we):
-        assert _cost_of(we.linalg.inv, numpy.random.rand(8, 8)) == 512
+        # inv_cost(8): 2*8^3 = 1024
+        assert _cost_of(we.linalg.inv, numpy.random.rand(8, 8)) == 1024
 
     def test_lstsq_mnk(self, we):
         # lstsq_cost(10,5,b_cols=1,b_ndim=1):
@@ -507,17 +509,19 @@ class TestLinalgSolvers:
         assert _cost_of(we.linalg.pinv, numpy.random.rand(10, 5)) == 4480
 
     def test_tensorsolve_n3(self, we):
+        # tensorsolve_cost((2,2,2,2)): n=prod(trailing 2)=4; 2*4^3//3 + 2*4^2 = 42 + 32 = 74
         assert (
             _cost_of(
                 we.linalg.tensorsolve,
                 numpy.eye(4).reshape(2, 2, 2, 2),
                 numpy.random.rand(2, 2),
             )
-            == 64
+            == 74
         )
 
     def test_tensorinv_n3(self, we):
-        assert _cost_of(we.linalg.tensorinv, numpy.eye(4).reshape(2, 2, 2, 2)) == 64
+        # tensorinv_cost((2,2,2,2)): n=prod(leading 2)=4; 2*4^3 = 128
+        assert _cost_of(we.linalg.tensorinv, numpy.eye(4).reshape(2, 2, 2, 2)) == 128
 
 
 class TestLinalgProperties:

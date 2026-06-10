@@ -23,7 +23,8 @@ class TestSolve:
             from flopscope.numpy.linalg import solve
 
             solve(A, b)
-            assert budget.flops_used == n**3
+            # solve_cost(5, nrhs=1): 2*5^3//3 + 2*5^2*1 = 83 + 50 = 133
+            assert budget.flops_used == 133
 
     def test_op_log(self):
         A = numpy.eye(3)
@@ -58,7 +59,8 @@ class TestInv:
             from flopscope.numpy.linalg import inv
 
             inv(A)
-            assert budget.flops_used == n**3
+            # inv_cost(5): 2*5^3 = 250
+            assert budget.flops_used == 250
 
 
 class TestLstsq:
