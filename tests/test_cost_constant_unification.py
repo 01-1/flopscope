@@ -175,3 +175,17 @@ def test_multivariate_normal_packaged_weight_is_unity():
     d = 30
     expected = d**3 // 3 + 2 * d * d + 16 * d
     assert cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d))) == expected
+
+
+def test_generator_and_randomstate_mvn_match_module_path():
+    d, N = 50, 100
+    expected = d**3 // 3 + 2 * N * d * d + 16 * N * d
+    # default_rng construction costs 0 FLOPs, so build inside cost() is fine.
+    def gen():
+        rng = fnp.random.default_rng(42)
+        rng.multivariate_normal(np.zeros(d), np.eye(d), size=N)
+    def rs():
+        r = fnp.random.RandomState(42)
+        r.multivariate_normal(np.zeros(d), np.eye(d), size=N)
+    assert cost(gen) == expected
+    assert cost(rs) == expected

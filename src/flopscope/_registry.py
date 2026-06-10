@@ -2362,8 +2362,8 @@ REGISTRY: dict[str, dict] = {
     "random.Generator.multivariate_normal": {
         "category": "counted_random_method",
         "module": "numpy.random",
-        "cost_formula": "numel(output)",
-        "notes": "Multivariate normal; cost = numel(output).",
+        "cost_formula": "multivariate_normal",
+        "notes": "Composite cost: d^3//3 (Cholesky factorization) + 2*N*d^2 (affine transform) + 16*N*d (N*d standard-normal draws at transcendental tier); weight 1.0.",
     },
     "random.Generator.negative_binomial": {
         "category": "counted_random_method",
@@ -2622,8 +2622,8 @@ REGISTRY: dict[str, dict] = {
     "random.RandomState.multivariate_normal": {
         "category": "counted_random_method",
         "module": "numpy.random",
-        "cost_formula": "numel(output)",
-        "notes": "Legacy multivariate normal; cost = numel(output).",
+        "cost_formula": "multivariate_normal",
+        "notes": "Composite cost: d^3//3 (Cholesky factorization) + 2*N*d^2 (affine transform) + 16*N*d (N*d standard-normal draws at transcendental tier); weight 1.0.",
     },
     "random.RandomState.negative_binomial": {
         "category": "counted_random_method",

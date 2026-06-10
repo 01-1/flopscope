@@ -105,6 +105,23 @@ def _choice_cost(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> 
     return _sort_cost_formula(args, kwargs, result)
 
 
+def multivariate_normal_flops(N: int, d: int) -> int:
+    """Composite mvn cost: covariance factorization (d^3/3, Cholesky-class)
+    + affine transform (2*N*d^2) + N*d standard-normal draws at the
+    transcendental rate (16/draw). Tier folded into flop_cost; weight 1.0."""
+    return _builtins.max(d**3 // 3 + 2 * N * d * d + 16 * N * d, 1)
+
+
+def _multivariate_normal_cost(
+    args: tuple[Any, ...], kwargs: dict[str, Any], result: Any
+) -> int:
+    # result has shape (..., d); d from the trailing axis, N = leading numel.
+    shape = getattr(result, "shape", ())
+    d = int(shape[-1]) if shape else 1
+    n = int(result.size // d) if d else 1
+    return multivariate_normal_flops(n, d)
+
+
 COST_FORMULAS: dict[str, Callable[[tuple[Any, ...], dict[str, Any], Any], int]] = {
     "numel(output)": _numel_output,
     "numel(input)": _numel_input,
@@ -112,4 +129,5 @@ COST_FORMULAS: dict[str, Callable[[tuple[Any, ...], dict[str, Any], Any], int]] 
     "length": _length,
     "sort_cost(n)": _sort_cost_formula,
     "choice_cost": _choice_cost,
+    "multivariate_normal": _multivariate_normal_cost,
 }

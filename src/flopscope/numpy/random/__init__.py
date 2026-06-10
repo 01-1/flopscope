@@ -362,7 +362,9 @@ def multivariate_normal_cost(N: int, d: int) -> int:
     draws at the transcendental rate (16/draw, matching random.normal's tier).
     Composite op => tier factors folded into flop_cost; weight stays 1.0.
     """
-    return _builtins.max(d**3 // 3 + 2 * N * d * d + 16 * N * d, 1)
+    from flopscope.numpy.random._cost_formulas import multivariate_normal_flops
+
+    return multivariate_normal_flops(N, d)
 
 
 @_counted_wrapper
