@@ -940,17 +940,17 @@ REGISTRY: dict[str, dict] = {
     "linalg.svd": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Singular value decomposition; cost ~ O(min(m,n)*m*n).",
+        "notes": "Singular value decomposition. Cost: $6ab^2+20b^3$ (with U/V) or $2ab^2+2b^3$ (values-only); a=max(m,n), b=min(m,n) (provisional).",
     },
     "linalg.cholesky": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Cholesky decomposition. Cost: $n^3$.",
+        "notes": "Cholesky decomposition. Cost: $n^3/3$.",
     },
     "linalg.cond": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Condition number. Cost: m*n*min(m,n) (via SVD).",
+        "notes": "Condition number. Cost: values-only SVD + 1 (p in {None,2,-2}) or $2n^3 + 4n^2 + 1$ (inv-based).",
     },
     "linalg.cross": {
         "category": "counted_custom",
@@ -960,7 +960,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.det": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Determinant. Cost: $n^3$.",
+        "notes": "Determinant. Cost: $\\frac{2}{3}n^3 + n$.",
     },
     "linalg.diagonal": {
         "category": "free",
@@ -970,32 +970,32 @@ REGISTRY: dict[str, dict] = {
     "linalg.eig": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Eigendecomposition. Cost: $n^3$.",
+        "notes": "Eigendecomposition. Cost: ~$25n^3$ (provisional).",
     },
     "linalg.eigh": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Symmetric eigendecomposition. Cost: $n^3$.",
+        "notes": "Symmetric eigendecomposition. Cost: ~$9n^3$ (provisional).",
     },
     "linalg.eigvals": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Eigenvalues only. Cost: $n^3$.",
+        "notes": "Eigenvalues only. Cost: ~$10n^3$ (provisional).",
     },
     "linalg.eigvalsh": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Symmetric eigenvalues. Cost: $n^3$.",
+        "notes": "Symmetric eigenvalues. Cost: ~$\\frac{4}{3}n^3$ (provisional).",
     },
     "linalg.inv": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Matrix inverse. Cost: $n^3$ (LU + solve).",
+        "notes": "Matrix inverse. Cost: $2n^3$, or $n^3/3 + n^3$ for symmetric.",
     },
     "linalg.lstsq": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Least squares. Cost: m*n*min(m,n) (LAPACK gelsd/SVD).",
+        "notes": "Least squares. Cost: SVD(with U/V) + back-substitution matmuls (see lstsq_cost).",
     },
     "linalg.matmul": {
         "category": "counted_custom",
@@ -1005,7 +1005,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.matrix_norm": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius, m*n*min(m,n) for ord=2.",
+        "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius/L1/Linf, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)).",
     },
     "linalg.matrix_power": {
         "category": "counted_custom",
@@ -1015,7 +1015,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.matrix_rank": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Matrix rank. Cost: m*n*min(m,n) (via SVD).",
+        "notes": "Matrix rank. Cost: values-only SVD + min(m,n).",
     },
     "linalg.matrix_transpose": {
         "category": "free",
@@ -1030,7 +1030,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.norm": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Norm. Cost depends on ord: numel for L1/inf, 2*numel for Frobenius, m*n*min(m,n) for ord=2.",
+        "notes": "Norm. Cost depends on ord: 2*numel for L1/inf/Frobenius, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)).",
     },
     "linalg.outer": {
         "category": "counted_custom",
@@ -1040,27 +1040,27 @@ REGISTRY: dict[str, dict] = {
     "linalg.pinv": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Pseudoinverse. Cost: m*n*min(m,n) (via SVD).",
+        "notes": "Pseudoinverse. Cost: SVD(with U/V) + min(m,n) + n*min(m,n) + matmul (see pinv_cost).",
     },
     "linalg.qr": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "QR decomposition. Cost: $m \\cdot n \\cdot \\min(m,n)$.",
+        "notes": "QR decomposition. Cost: $2(2mnk - \\frac{2}{3}k^3)$ (reduced/complete) or $2mnk - \\frac{2}{3}k^3$ (r/raw), k=min(m,n).",
     },
     "linalg.slogdet": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Sign + log determinant. Cost: $n^3$.",
+        "notes": "Sign + log determinant. Cost: $\\frac{2}{3}n^3 + n$.",
     },
     "linalg.solve": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Solve Ax=b. Cost: $n^3$.",
+        "notes": "Solve Ax=b. Cost: $\\frac{2}{3}n^3 + 2n^2 \\cdot nrhs$.",
     },
     "linalg.svdvals": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Singular values only. Cost: m*n*min(m,n) (Golub-Reinsch).",
+        "notes": "Singular values only. Cost: $2ab^2+2b^3$ (values-only SVD; a=max(m,n), b=min(m,n)).",
     },
     "linalg.tensordot": {
         "category": "counted_custom",
@@ -1070,12 +1070,12 @@ REGISTRY: dict[str, dict] = {
     "linalg.tensorinv": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Tensor inverse. Cost: $n^3$ after reshape (delegates to inv).",
+        "notes": "Tensor inverse. Cost: $2n^3$ after reshape, n=prod(leading dims) (delegates to inv).",
     },
     "linalg.tensorsolve": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Tensor solve. Cost: $n^3$ after reshape (delegates to solve).",
+        "notes": "Tensor solve. Cost: $\\frac{2}{3}n^3 + 2n^2$ after reshape, n=prod(trailing dims) (delegates to solve).",
     },
     "linalg.trace": {
         "category": "counted_custom",
@@ -2943,7 +2943,7 @@ REGISTRY: dict[str, dict] = {
     "roots": {
         "category": "counted_custom",
         "module": "flopscope._polynomial",
-        "notes": "Return roots of polynomial with given coefficients. Cost: $n^3$ (companion matrix eig, simplified).",
+        "notes": "Return roots of polynomial with given coefficients. Cost: ~$10n^3$ (companion-matrix eigvals, provisional).",
     },
     "polyadd": {
         "category": "counted_custom",

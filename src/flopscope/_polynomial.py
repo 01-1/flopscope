@@ -266,7 +266,7 @@ def poly(seq_of_zeros: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(poly, _np.poly, "counted_custom", "2*n^2 FLOPs (1-D) or 2*n^2 + n^3 FLOPs (2-D, includes eigvals)")
+attach_docstring(poly, _np.poly, "counted_custom", "2*n^2 FLOPs (1-D) or 2*n^2 + ~10n^3 FLOPs (2-D, includes eigvals)")
 
 
 @_counted_wrapper

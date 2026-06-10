@@ -230,6 +230,8 @@ def eigvals_cost(n: int) -> int:
     ~10n^3, values only (dgeev without vectors; G&VL 4e §7.5).
     PROVISIONAL pending the audit's driver-count and runtime-scaling evidence.
     """
+    # Note: costs MORE than eigh_cost (9n^3) — nonsymmetric Hessenberg+QR without vectors
+    # vs symmetric tridiagonalization with vectors (G&VL §7.5 vs §8.3).
     return max(10 * n**3, 1)
 
 
