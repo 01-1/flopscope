@@ -62,7 +62,7 @@ _FORMULA_STRINGS: dict[str, str] = {
     "correlate": "2*n*k - n - k",
     "corrcoef": "f^2 * s",
     "cov": "f^2 * s",
-    "cross": "15 * n",
+    "cross": "9 * n",
     "histogram": "n * ceil(log2(bins))",
     "histogram2d": "n * 2 * ceil(log2(bins))",
     "histogramdd": "n * ndim * ceil(log2(bins))",
@@ -121,8 +121,8 @@ def _analytical_cost(op: str, **kwargs: int) -> int:
         return f * f * s
 
     if op == "cross":
-        # 5 ops per output element; benchmark shape (n, 3) → a.size = n*3 → 15*n
-        return 15 * n
+        # 3 ops per output element (6 mul + 3 sub); benchmark shape (n, 3) → a.size = n*3 → 9*n
+        return 9 * n
 
     # --- Binning/histogram ---
     if op == "histogram":

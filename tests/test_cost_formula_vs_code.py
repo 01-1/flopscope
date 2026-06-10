@@ -418,8 +418,8 @@ def test_kron_numel_output(we):
 
 
 def test_cross_6n(we):
-    # cross charges a.shape[0] * 3 * 5 (5 ops/output element, issue #69)
-    assert _cost_of(we.cross, numpy.random.rand(5, 3), numpy.random.rand(5, 3)) == 75
+    # cross charges a.shape[0] * 3 * 3 (3 ops/output element, 6 mul + 3 sub)
+    assert _cost_of(we.cross, numpy.random.rand(5, 3), numpy.random.rand(5, 3)) == 45
 
 
 def test_einsum_mnk(we):
@@ -584,10 +584,10 @@ class TestLinalgDelegates:
         )
 
     def test_cross(self, we):
-        # linalg.cross charges out_size * 5 (5 ops/output element, issue #69)
+        # linalg.cross charges out_size * 3 (3 ops/output element, 6 mul + 3 sub)
         assert (
             _cost_of(we.linalg.cross, numpy.random.rand(5, 3), numpy.random.rand(5, 3))
-            == 75
+            == 45
         )
 
     def test_matrix_power(self, we):
@@ -977,8 +977,8 @@ def test_convolve_cost_pinned(we):
 def test_cross_cost_pinned(we):
     a = we.asarray(numpy.zeros((100, 3)))
     b = we.asarray(numpy.zeros((100, 3)))
-    # 5 ops per output element; output.size = 100*3 = 300, formula: a.shape[0]*3*5 = 1500
-    assert _cost_of(we.cross, a, b) == 1500
+    # 3 ops per output element; output.size = 100*3 = 300, formula: a.shape[0]*3*3 = 900
+    assert _cost_of(we.cross, a, b) == 900
 
 
 def test_matrix_power_cost_pinned(we):

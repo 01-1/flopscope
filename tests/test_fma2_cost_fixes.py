@@ -98,3 +98,8 @@ def test_interp_adds_search_term():
     xp = fnp.asarray(np.linspace(0, 10, 16)); fp = fnp.asarray(np.random.rand(16))
     # honest = 3*n (arithmetic) + n*ceil(log2(M)); M=16 -> log2=4
     assert cost(lambda: fnp.interp(x, xp, fp)) == 3 * 1000 + 1000 * 4
+
+
+def test_cross_is_three_per_output():
+    a = fnp.asarray(np.random.rand(1000, 3)); b = fnp.asarray(np.random.rand(1000, 3))
+    assert cost(lambda: fnp.cross(a, b)) == 3 * a.size

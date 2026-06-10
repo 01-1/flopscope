@@ -111,8 +111,8 @@ class TestAnalyticalCost:
     def test_cov_matmul_dominated(self):
         assert _analytical_cost("cov", f=100, s=200) == 100 * 100 * 200
 
-    def test_cross_15n(self):
-        assert _analytical_cost("cross", n=1000) == 15000
+    def test_cross_9n(self):
+        assert _analytical_cost("cross", n=1000) == 9000
 
     # --- Binning/histogram ---
 

@@ -2259,7 +2259,7 @@ def cross(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     # outside the budget block).
     stripped_a = _to_base_ndarray(a)
     stripped_b = _to_base_ndarray(b)
-    cost_provisional = _builtins.max(a.size * 5, 1)
+    cost_provisional = _builtins.max(a.size * 3, 1)
     with budget.deduct(
         "cross",
         flop_cost=cost_provisional,
@@ -2270,7 +2270,7 @@ def cross(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(cross, _np.cross, "counted_custom", "5 * output.size FLOPs")
+attach_docstring(cross, _np.cross, "counted_custom", "3 * output.size FLOPs (6 mul + 3 sub)")
 cross.__signature__ = _inspect.signature(_np.cross)  # pyright: ignore[reportFunctionMemberAccess]
 
 
