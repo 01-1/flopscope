@@ -1142,7 +1142,7 @@ class TestAdditionalCustomOps:
         y = numpy.array([1.0, 2.0, 3.0, 4.0])
         with BudgetContext(flop_budget=10**6) as budget:
             result = trapezoid(y)
-        assert budget.flops_used == 4
+        assert budget.flops_used == 4 * 4  # 4 * numel (FMA=2)
 
     def test_trapezoid_with_x(self):
         y = numpy.array([1.0, 2.0, 3.0])
@@ -1184,7 +1184,7 @@ class TestTrapz:
             warnings.simplefilter("ignore", DeprecationWarning)
             with BudgetContext(flop_budget=10**6) as budget:
                 result = trapz(y)
-            assert budget.flops_used == 3
+            assert budget.flops_used == 4 * 3  # 4 * numel (FMA=2)
 
     def test_trapz_from_list(self):
         from flopscope._pointwise import trapz

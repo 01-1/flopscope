@@ -224,7 +224,7 @@ def test_trapezoid():
     y = numpy.array([0.0, 1.0, 2.0, 3.0])
     with BudgetContext(flop_budget=10**6) as budget:
         result = ops.trapezoid(y)
-        assert budget.flops_used == y.size
+        assert budget.flops_used == 4 * y.size
     assert numpy.isclose(result, 4.5)
 
 

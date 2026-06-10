@@ -2509,7 +2509,7 @@ def trapezoid(
     if not isinstance(y, _np.ndarray):
         y = _np.asarray(y)
     with budget.deduct(
-        "trapezoid", flop_cost=y.size, subscripts=None, shapes=(y.shape,)
+        "trapezoid", flop_cost=4 * y.size, subscripts=None, shapes=(y.shape,)
     ):
         result = _call_numpy(
             _np.trapezoid,
@@ -2521,7 +2521,7 @@ def trapezoid(
     return result  # type: ignore[return-value]  # wrapped at fnp.trapezoid import time
 
 
-attach_docstring(trapezoid, _np.trapezoid, "counted_custom", "numel(input) FLOPs")
+attach_docstring(trapezoid, _np.trapezoid, "counted_custom", "4 * numel(input) FLOPs (FMA=2)")
 
 
 if hasattr(_np, "trapz"):
@@ -2535,7 +2535,7 @@ if hasattr(_np, "trapz"):
         if not isinstance(y, _np.ndarray):
             y = _np.asarray(y)
         with budget.deduct(
-            "trapz", flop_cost=y.size, subscripts=None, shapes=(y.shape,)
+            "trapz", flop_cost=4 * y.size, subscripts=None, shapes=(y.shape,)
         ):
             result = _call_numpy(
                 _np.trapz,
@@ -2546,7 +2546,7 @@ if hasattr(_np, "trapz"):
             )
         return result  # type: ignore[return-value]  # wrapped at fnp.trapz import time
 
-    attach_docstring(trapz, _np.trapz, "counted_custom", "numel(input) FLOPs")
+    attach_docstring(trapz, _np.trapz, "counted_custom", "4 * numel(input) FLOPs (FMA=2)")
 
 else:
 

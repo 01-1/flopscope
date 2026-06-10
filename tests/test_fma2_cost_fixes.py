@@ -60,3 +60,8 @@ def test_var_is_four_passes_and_shape_stable():
 def test_nanvar_matches_var_cost():
     v = fnp.asarray(np.random.rand(1_000_000))
     assert cost(lambda: fnp.nanvar(v)) == cost(lambda: fnp.var(v))
+
+
+def test_trapezoid_is_four_per_element():
+    y = fnp.asarray(np.random.rand(1_000_000))
+    assert cost(lambda: fnp.trapezoid(y)) == 4 * y.size
