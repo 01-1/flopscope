@@ -202,3 +202,29 @@ def test_mvn_tuple_size_parity_across_paths():
         fnp.random.RandomState(0).multivariate_normal(mean, cov, size=(4, 5))
     assert cost(gen) == expected
     assert cost(rs) == expected
+
+
+# ---------------- norm-family batch dims ----------------
+
+def test_norm_family_bills_batch_dims():
+    X = fnp.asarray(np.random.rand(100, 10, 10))
+    x2 = fnp.asarray(np.random.rand(10, 10))
+    v100 = fnp.asarray(np.random.rand(100, 10))
+    v10 = fnp.asarray(np.random.rand(10))
+    # batched charge == batch_size * single-slice charge
+    assert cost(lambda: fnp.linalg.norm(X, "fro", axis=(-2, -1))) == 100 * cost(lambda: fnp.linalg.norm(x2, "fro"))
+    assert cost(lambda: fnp.linalg.norm(X, 2, axis=(-2, -1))) == 100 * cost(lambda: fnp.linalg.norm(x2, 2))
+    assert cost(lambda: fnp.linalg.vector_norm(v100, axis=-1)) == 100 * cost(lambda: fnp.linalg.vector_norm(v10))
+    assert cost(lambda: fnp.linalg.matrix_norm(X)) == 100 * cost(lambda: fnp.linalg.matrix_norm(x2))
+    assert cost(lambda: fnp.linalg.matrix_norm(X, ord=2)) == 100 * cost(lambda: fnp.linalg.matrix_norm(x2, ord=2))
+
+
+def test_norm_family_unbatched_unchanged():
+    x2 = fnp.asarray(np.random.rand(10, 10))
+    v = fnp.asarray(np.random.rand(10))
+    assert cost(lambda: fnp.linalg.norm(x2, "fro")) == 200          # 2*numel
+    assert cost(lambda: fnp.linalg.norm(x2, 2)) == 4000             # values-SVD 10x10
+    assert cost(lambda: fnp.linalg.vector_norm(v)) == 20            # 2*n
+    assert cost(lambda: fnp.linalg.norm(v)) == 20                   # 1-D path
+    X = fnp.asarray(np.random.rand(100, 10, 10))
+    assert cost(lambda: fnp.linalg.norm(X)) == 2 * X.size           # axis=None flattens: unchanged

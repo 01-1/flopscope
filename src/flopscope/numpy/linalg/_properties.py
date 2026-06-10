@@ -218,7 +218,13 @@ def norm(
     axis: int | tuple[int, ...] | None = None,
     keepdims: bool = False,
 ) -> FlopscopeArray:
-    """Matrix or vector norm with FLOP counting."""
+    """Matrix or vector norm with FLOP counting.
+
+    Cost = norm_cost(effective_shape, ord) × batch groups.
+    When axis=None the whole array is one group (batch groups == 1).
+    When axis selects a subset of dimensions, every combination of the
+    remaining (non-reduced) dimensions is a separate group.
+    """
     budget = require_budget()
     inputs_were_whest = isinstance(x, FlopscopeArray)
     if not isinstance(x, _np.ndarray):
@@ -239,7 +245,11 @@ def norm(
             effective_shape = (x.shape[norm_axis],) if ndim > 0 else ()
         else:
             effective_shape = tuple(x.shape[ax] for ax in axis)
-        cost = norm_cost(effective_shape, ord=ord)
+        group_numel = 1
+        for dim in effective_shape:
+            group_numel *= dim
+        n_groups = (x.size // group_numel) if group_numel else 0
+        cost = norm_cost(effective_shape, ord=ord) * max(n_groups, 0)
     except (IndexError, ValueError):
         # Let numpy raise the proper error with the right type/message
         return _np.linalg.norm(  # type: ignore[reportReturnType]
@@ -257,7 +267,7 @@ def norm(
 
 
 attach_docstring(
-    norm, _np.linalg.norm, "linalg", "depends on ord parameter -- see docstring"
+    norm, _np.linalg.norm, "linalg", "depends on ord parameter -- see docstring; × batch groups"
 )
 
 
@@ -295,7 +305,13 @@ def vector_norm(
     axis: int | tuple[int, ...] | None = None,
     keepdims: bool = False,
 ) -> FlopscopeArray:
-    """Vector norm with FLOP counting."""
+    """Vector norm with FLOP counting.
+
+    Cost = vector_norm_cost(effective_shape, ord) × batch groups.
+    When axis=None the whole array is one group (batch groups == 1).
+    When axis selects a subset of dimensions, every combination of the
+    remaining (non-reduced) dimensions is a separate group.
+    """
     budget = require_budget()
     inputs_were_whest = isinstance(x, FlopscopeArray)
     if not isinstance(x, _np.ndarray):
@@ -307,7 +323,11 @@ def vector_norm(
             effective_shape = tuple(x.shape[ax] for ax in axis)
     else:
         effective_shape = x.shape
-    cost = vector_norm_cost(effective_shape, ord=ord)
+    group_numel = 1
+    for dim in effective_shape:
+        group_numel *= dim
+    n_groups = (x.size // group_numel) if group_numel else 0
+    cost = vector_norm_cost(effective_shape, ord=ord) * max(n_groups, 0)
     with budget.deduct(
         "linalg.vector_norm", flop_cost=cost, subscripts=None, shapes=(x.shape,)
     ):
@@ -324,7 +344,7 @@ def vector_norm(
 
 
 attach_docstring(
-    vector_norm, _np.linalg.vector_norm, "linalg", "depends on ord parameter"
+    vector_norm, _np.linalg.vector_norm, "linalg", "depends on ord parameter; × batch groups"
 )
 
 
@@ -366,12 +386,21 @@ def matrix_norm_cost(shape: tuple, ord=None) -> int:
 def matrix_norm(
     x: ArrayLike, ord: Any = "fro", keepdims: bool = False
 ) -> FlopscopeArray:
-    """Matrix norm with FLOP counting."""
+    """Matrix norm with FLOP counting.
+
+    Cost = matrix_norm_cost(x.shape[-2:], ord) × batch groups.
+    Batch groups = product of all dimensions except the last two.
+    Zero-dim inputs cost 0 FLOPs.
+    """
     budget = require_budget()
     inputs_were_whest = isinstance(x, FlopscopeArray)
     if not isinstance(x, _np.ndarray):
         x = _np.asarray(x)
-    cost = matrix_norm_cost(x.shape, ord=ord)
+    cost = (
+        matrix_norm_cost(x.shape, ord=ord) * _batch_size(x.shape)
+        if not _has_zero_dim(x.shape)
+        else 0
+    )
     with budget.deduct(
         "linalg.matrix_norm", flop_cost=cost, subscripts=None, shapes=(x.shape,)
     ):
@@ -384,7 +413,7 @@ def matrix_norm(
 
 
 attach_docstring(
-    matrix_norm, _np.linalg.matrix_norm, "linalg", "depends on ord parameter"
+    matrix_norm, _np.linalg.matrix_norm, "linalg", "depends on ord parameter; × batch groups"
 )
 
 

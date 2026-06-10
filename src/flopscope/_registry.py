@@ -1005,7 +1005,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.matrix_norm": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius/L1/Linf, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)).",
+        "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius/L1/Linf, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)); × batch groups (product of dims except last two).",
     },
     "linalg.matrix_power": {
         "category": "counted_custom",
@@ -1030,7 +1030,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.norm": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Norm. Cost depends on ord: 2*numel for L1/inf/Frobenius, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)).",
+        "notes": "Norm. Cost depends on ord: 2*numel for L1/inf/Frobenius, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)); × batch groups (non-reduced dims); axis=None → 1 group.",
     },
     "linalg.outer": {
         "category": "counted_custom",
@@ -1090,7 +1090,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.vector_norm": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Vector norm. Cost: numel (or 2*numel for general p-norm).",
+        "notes": "Vector norm. Cost: 2*numel(effective_shape) × batch groups (non-reduced dims); axis=None → 1 group.",
     },
     # ------------------------------------------------------------------
     # fft — counted_custom (14 transforms) + free (4 utility ops)
