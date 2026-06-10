@@ -355,7 +355,7 @@ def tensorsolve_cost(a_shape: tuple, ind: int | None = None) -> int:
     n = 1
     for d in a_shape[ind:]:
         n *= d
-    return max(2 * n**3 // 3 + 2 * n * n, 1)
+    return solve_cost(n, nrhs=1)
 
 
 @_counted_wrapper
@@ -411,7 +411,7 @@ def tensorinv_cost(a_shape: tuple, ind: int = 2) -> int:
     n = 1
     for d in a_shape[:ind]:
         n *= d
-    return max(2 * n**3, 1)
+    return inv_cost(n)
 
 
 @_counted_wrapper
