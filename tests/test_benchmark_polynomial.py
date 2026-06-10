@@ -31,7 +31,8 @@ class TestAnalyticalCost:
         assert _analytical_cost("polyfit", 1000, 5) == 2 * 1000 * 6**2
 
     def test_roots(self):
-        assert _analytical_cost("roots", 100, 10) == 10**3
+        # roots delegates to eigvals_cost(degree) = 10*degree^3 (PROVISIONAL)
+        assert _analytical_cost("roots", 100, 10) == 10 * 10**3
 
     def test_polymul(self):
         # FMA=2 convolution formula: 2*(degree+1)^2 - 2*(degree+1) = 2*121 - 22 = 220

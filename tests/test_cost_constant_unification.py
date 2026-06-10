@@ -130,3 +130,26 @@ def test_direct_family_packaged_weights_are_unity():
     A = fnp.asarray(np.random.rand(100, 100))
     SPD = fnp.asarray(np.asarray(A) @ np.asarray(A).T + 100 * np.eye(100))
     assert cost(lambda: fnp.linalg.cholesky(SPD)) == 100**3 // 3
+
+
+# ---------------- Task 4: eigen family (PROVISIONAL constants) ----------------
+
+def test_eigen_family_constants():
+    n = 100
+    G = fnp.asarray(np.random.rand(n, n))
+    S = fnp.asarray(np.random.rand(n, n)); S = fnp.asarray(np.asarray(S) + np.asarray(S).T)
+    assert cost(lambda: fnp.linalg.eig(G)) == 25 * n**3
+    assert cost(lambda: fnp.linalg.eigvals(G)) == 10 * n**3
+    assert cost(lambda: fnp.linalg.eigh(S)) == 9 * n**3
+    assert cost(lambda: fnp.linalg.eigvalsh(S)) == 4 * n**3 // 3
+
+
+def test_roots_composes_eigvals():
+    p = fnp.asarray(np.random.rand(101))      # degree 100 -> 100 roots
+    assert cost(lambda: fnp.roots(p)) == 10 * 100**3
+
+
+def test_poly_2d_inherits_new_eigvals_constant():
+    M = fnp.asarray(np.random.rand(50, 50))
+    # poly 2-D = 2*n^2 + eigvals_cost(n) = 5000 + 10*125000
+    assert cost(lambda: fnp.poly(M)) == 2 * 50 * 50 + 10 * 50**3

@@ -74,8 +74,12 @@ def poly_cost(n: int) -> int:
 
 
 def roots_cost(n: int) -> int:
-    """Cost for roots: $n^3$ FLOPs (companion matrix eigendecomposition, simplified)."""
-    return max(n**3, 1)
+    """Cost for roots: companion-matrix eigenvalues — delegates to
+    eigvals_cost(n) (~10n^3, PROVISIONAL; building the companion matrix
+    itself is free)."""
+    from flopscope.numpy.linalg import eigvals_cost
+
+    return eigvals_cost(n)
 
 
 # ---------------------------------------------------------------------------
@@ -278,7 +282,7 @@ def roots(p: ArrayLike) -> FlopscopeArray:
 
 
 attach_docstring(
-    roots, _np.roots, "counted_custom", "n^3 FLOPs (companion matrix eig, simplified)"
+    roots, _np.roots, "counted_custom", "~10n^3 FLOPs (companion-matrix eigvals, provisional)"
 )
 
 import sys as _sys  # noqa: E402

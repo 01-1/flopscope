@@ -465,13 +465,17 @@ class TestLinalgDecompositions:
 
     @pytest.mark.parametrize("name", ["eig", "eigvals"])
     def test_eig_n3(self, name, we):
-        assert _cost_of(getattr(we.linalg, name), numpy.random.rand(8, 8)) == 512
+        # eig: 25*n^3=25*512=12800; eigvals: 10*n^3=10*512=5120 (n=8, PROVISIONAL)
+        expected = {"eig": 25 * 8**3, "eigvals": 10 * 8**3}
+        assert _cost_of(getattr(we.linalg, name), numpy.random.rand(8, 8)) == expected[name]
 
     @pytest.mark.parametrize("name", ["eigh", "eigvalsh"])
     def test_eigh_n3(self, name, we):
         S = numpy.eye(8) + numpy.random.rand(8, 8)
         S = S @ S.T
-        assert _cost_of(getattr(we.linalg, name), S) == 512
+        # eigh: 9*n^3=9*512=4608; eigvalsh: 4*n^3//3=4*512//3=682 (n=8, PROVISIONAL)
+        expected = {"eigh": 9 * 8**3, "eigvalsh": 4 * 8**3 // 3}
+        assert _cost_of(getattr(we.linalg, name), S) == expected[name]
 
     def test_svd_mnk(self, we):
         # with_vectors=True: 6*10*25+20*125=1500+2500=4000
@@ -653,7 +657,8 @@ class TestPolynomial:
         assert _cost_of(we.poly, numpy.ones(5)) == 50  # 2 * 5^2 = 50
 
     def test_roots(self, we):
-        assert _cost_of(we.roots, numpy.array([1.0, 2.0, 3.0, 4.0, 5.0])) == 64
+        # degree=4 (len=5 -> n=4); eigvals_cost(4)=10*64=640 (PROVISIONAL)
+        assert _cost_of(we.roots, numpy.array([1.0, 2.0, 3.0, 4.0, 5.0])) == 10 * 4**3
 
 
 # ---------------------------------------------------------------------------

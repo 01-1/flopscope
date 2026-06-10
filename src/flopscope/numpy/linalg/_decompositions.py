@@ -131,13 +131,15 @@ def eig_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: ~25n^3.
 
     Notes
     -----
-    Simplified cubic cost model for eigendecomposition.
+    Hessenberg reduction + Francis QR with eigenvector backtransform
+    (G&VL 4e §7.5; LAPACK dgeev).
+    PROVISIONAL pending the audit's driver-count and runtime-scaling evidence.
     """
-    return max(n**3, 1)
+    return max(25 * n**3, 1)
 
 
 @_counted_wrapper
@@ -161,7 +163,7 @@ def eig(a: ArrayLike) -> tuple[FlopscopeArray, FlopscopeArray]:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eig, _np.linalg.eig, "linalg", r"$n^3$ FLOPs")
+attach_docstring(eig, _np.linalg.eig, "linalg", r"$\sim 25 n^3$ FLOPs (provisional)")
 
 
 def eigh_cost(n: int) -> int:
@@ -175,13 +177,15 @@ def eigh_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: ~9n^3.
 
     Notes
     -----
-    Simplified cubic cost model for symmetric eigendecomposition.
+    Tridiagonalization + symmetric QR with vectors
+    (G&VL 4e §8.3; LAPACK dsyevd).
+    PROVISIONAL pending the audit's driver-count and runtime-scaling evidence.
     """
-    return max(n**3, 1)
+    return max(9 * n**3, 1)
 
 
 @_counted_wrapper
@@ -205,7 +209,7 @@ def eigh(a: ArrayLike, UPLO: str = "L") -> tuple[FlopscopeArray, FlopscopeArray]
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigh, _np.linalg.eigh, "linalg", r"$n^3$ FLOPs")
+attach_docstring(eigh, _np.linalg.eigh, "linalg", r"$\sim 9 n^3$ FLOPs (provisional)")
 
 
 def eigvals_cost(n: int) -> int:
@@ -219,13 +223,14 @@ def eigvals_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: ~10n^3.
 
     Notes
     -----
-    Simplified cubic cost model for eigenvalue computation.
+    ~10n^3, values only (dgeev without vectors; G&VL 4e §7.5).
+    PROVISIONAL pending the audit's driver-count and runtime-scaling evidence.
     """
-    return max(n**3, 1)
+    return max(10 * n**3, 1)
 
 
 @_counted_wrapper
@@ -247,7 +252,7 @@ def eigvals(a: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigvals, _np.linalg.eigvals, "linalg", r"$n^3$ FLOPs")
+attach_docstring(eigvals, _np.linalg.eigvals, "linalg", r"$\sim 10 n^3$ FLOPs (provisional)")
 
 
 def eigvalsh_cost(n: int) -> int:
@@ -261,13 +266,14 @@ def eigvalsh_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: 4n^3/3.
 
     Notes
     -----
-    Simplified cubic cost model for symmetric eigenvalue computation.
+    4n^3/3: tridiagonalization, values only (G&VL 4e §8.3).
+    PROVISIONAL pending the audit's driver-count and runtime-scaling evidence.
     """
-    return max(n**3, 1)
+    return max(4 * n**3 // 3, 1)
 
 
 @_counted_wrapper
@@ -289,7 +295,7 @@ def eigvalsh(a: ArrayLike, UPLO: str = "L") -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigvalsh, _np.linalg.eigvalsh, "linalg", r"$n^3$ FLOPs")
+attach_docstring(eigvalsh, _np.linalg.eigvalsh, "linalg", r"$\frac{4}{3} n^3$ FLOPs (provisional)")
 
 
 def svdvals_cost(m: int, n: int, k: int | None = None) -> int:

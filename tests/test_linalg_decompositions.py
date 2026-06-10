@@ -91,7 +91,7 @@ class TestEig:
             from flopscope.numpy.linalg import eig
 
             eig(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 25 * n**3
 
 
 class TestEigh:
@@ -112,7 +112,7 @@ class TestEigh:
             from flopscope.numpy.linalg import eigh
 
             eigh(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 9 * n**3
 
 
 class TestEigvals:
@@ -132,7 +132,7 @@ class TestEigvals:
             from flopscope.numpy.linalg import eigvals
 
             eigvals(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 10 * n**3
 
 
 class TestEigvalsh:
@@ -144,7 +144,7 @@ class TestEigvalsh:
             from flopscope.numpy.linalg import eigvalsh
 
             eigvalsh(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 4 * n**3 // 3
 
 
 class TestSvdvals:

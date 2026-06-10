@@ -281,11 +281,11 @@ def test_roots_result():
 
 
 def test_roots_cost():
-    # 4 coeffs -> n = len(p)-1 = 3 -> cost = 3^3 = 27 (simplified)
+    # 4 coeffs -> n = len(p)-1 = 3 -> eigvals_cost(3) = 10*3^3 = 270 (PROVISIONAL)
     p = numpy.array([1.0, -6.0, 11.0, -6.0])
     with BudgetContext(flop_budget=10**6) as budget:
         roots(p)
-        assert budget.flops_used == 27
+        assert budget.flops_used == 10 * 3**3
 
 
 def test_roots_no_budget():

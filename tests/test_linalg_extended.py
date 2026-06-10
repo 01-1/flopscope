@@ -291,20 +291,20 @@ def test_qr_cost_wide_matrix():
 
 def test_eig_cost():
     assert eig_cost(0) == 1
-    assert eig_cost(4) == 64
+    assert eig_cost(4) == 25 * 64
 
 
 def test_eigh_cost():
     assert eigh_cost(0) == 1
-    assert eigh_cost(3) == max(27, 1)
+    assert eigh_cost(3) == max(9 * 27, 1)
 
 
 def test_eigvals_cost():
-    assert eigvals_cost(4) == 64
+    assert eigvals_cost(4) == 10 * 64
 
 
 def test_eigvalsh_cost():
-    assert eigvalsh_cost(4) == max(64, 1)
+    assert eigvalsh_cost(4) == max(4 * 64 // 3, 1)
 
 
 def test_svdvals_cost():
