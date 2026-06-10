@@ -319,7 +319,7 @@
     "random.lognormal": 16.0,
     "random.logseries": 16.0,
     "random.multinomial": 16.0,
-    "random.multivariate_normal": 16.0,
+    "random.multivariate_normal": 1.0,
     "random.negative_binomial": 16.0,
     "random.noncentral_chisquare": 16.0,
     "random.noncentral_f": 16.0,

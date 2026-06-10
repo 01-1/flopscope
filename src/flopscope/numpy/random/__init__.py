@@ -354,9 +354,51 @@ f = _counted_sampler(_npr.f, "random.f")
 beta = _counted_sampler(_npr.beta, "random.beta")
 gamma = _counted_sampler(_npr.gamma, "random.gamma")
 multinomial = _counted_sampler(_npr.multinomial, "random.multinomial")
-multivariate_normal = _counted_sampler(
-    _npr.multivariate_normal, "random.multivariate_normal"
-)
+
+
+def multivariate_normal_cost(N: int, d: int) -> int:
+    """FLOP cost of N draws from a d-dim Gaussian: covariance factorization
+    (d^3/3, Cholesky-class) + affine transform (2*N*d^2) + N*d standard-normal
+    draws at the transcendental rate (16/draw, matching random.normal's tier).
+    Composite op => tier factors folded into flop_cost; weight stays 1.0.
+    """
+    return _builtins.max(d**3 // 3 + 2 * N * d * d + 16 * N * d, 1)
+
+
+@_counted_wrapper
+def multivariate_normal(mean, cov, size=None, check_valid="warn", tol=1e-8):
+    """Counted version of ``numpy.random.multivariate_normal``.
+
+    Cost: d^3//3 + 2*N*d^2 + 16*N*d at weight 1.0, where d = len(mean) and
+    N = size (or 1 when size is None). Composite op: the transcendental-tier
+    factor for the N*d standard-normal draws is folded into flop_cost.
+    """
+    budget = require_budget()
+    mean_arr = _np.asarray(mean)
+    d = int(mean_arr.shape[-1]) if mean_arr.ndim else 1
+    N = _output_size(size=size) if size is not None else 1
+    flop_cost = multivariate_normal_cost(N, d)
+    result = _npr.multivariate_normal(
+        mean, cov, size=size, check_valid=check_valid, tol=tol
+    )
+    with budget.deduct(
+        "random.multivariate_normal",
+        flop_cost=flop_cost,
+        subscripts=None,
+        shapes=((N, d),),
+    ):
+        pass  # numpy already executed (module convention for samplers)
+    return result
+
+
+try:
+    multivariate_normal.__signature__ = _inspect.signature(  # pyright: ignore[reportFunctionMemberAccess]
+        _npr.multivariate_normal
+    )
+except (ValueError, TypeError):
+    pass
+
+
 dirichlet = _counted_sampler(_npr.dirichlet, "random.dirichlet")
 randint = _counted_sampler(_npr.randint, "random.randint")
 

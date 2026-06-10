@@ -2084,7 +2084,7 @@ REGISTRY: dict[str, dict] = {
     "random.multivariate_normal": {
         "category": "counted_custom",
         "module": "numpy.random",
-        "notes": "Sampling; cost = numel(output).",
+        "notes": "Composite cost: d^3//3 (Cholesky factorization) + 2*N*d^2 (affine transform) + 16*N*d (N*d standard-normal draws at transcendental tier); weight 1.0.",
     },
     "random.negative_binomial": {
         "category": "counted_custom",

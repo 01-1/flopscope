@@ -65,9 +65,15 @@ class TestCoverage:
 
     def test_every_counted_random_method_has_resolvable_weight(self):
         load_weights()
+        # multivariate_normal is a composite op: tier factors folded into
+        # flop_cost, so weight is intentionally 1.0 (not a mis-alias).
+        _composite_ops = {"multivariate_normal"}
         unresolved = []
         for name, entry in REGISTRY.items():
             if entry.get("category") != "counted_random_method":
+                continue
+            short = name.rsplit(".", 1)[-1]
+            if short in _composite_ops:
                 continue
             w = get_weight(name)
             # Distribution-class samplers (transcendental) should resolve to ~16

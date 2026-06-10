@@ -153,3 +153,25 @@ def test_poly_2d_inherits_new_eigvals_constant():
     M = fnp.asarray(np.random.rand(50, 50))
     # poly 2-D = 2*n^2 + eigvals_cost(n) = 5000 + 10*125000
     assert cost(lambda: fnp.poly(M)) == 2 * 50 * 50 + 10 * 50**3
+
+
+# ---------------- Task 5: multivariate_normal ----------------
+
+def test_multivariate_normal_bills_decomposition_and_transform():
+    d, N = 50, 100
+    mean, cov = np.zeros(d), np.eye(d)
+    expected = d**3 // 3 + 2 * N * d * d + 16 * N * d   # 41666+500000+80000
+    assert cost(lambda: fnp.random.multivariate_normal(mean, cov, size=N)) == expected
+
+
+def test_multivariate_normal_default_size_is_one_sample():
+    d = 30
+    expected = d**3 // 3 + 2 * d * d + 16 * d
+    assert cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d))) == expected
+
+
+def test_multivariate_normal_packaged_weight_is_unity():
+    load_weights()
+    d = 30
+    expected = d**3 // 3 + 2 * d * d + 16 * d
+    assert cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d))) == expected
