@@ -75,9 +75,30 @@ def _load_packaged_weights() -> dict[str, float] | None:
         return None
 
 
+# NumPy 2.x ufunc aliases → canonical name. Each alias is the same ufunc object
+# as its canonical twin (np.acos is np.arccos) and must bill the same weight,
+# never the 1.0 default (a bit-identical 16x substitution exploit otherwise).
+_UFUNC_ALIAS_RENAMES: dict[str, str] = {
+    "acos": "arccos",
+    "acosh": "arccosh",
+    "asin": "arcsin",
+    "asinh": "arcsinh",
+    "atan": "arctan",
+    "atanh": "arctanh",
+    "atan2": "arctan2",
+    "pow": "power",
+    "divmod": "floor_divide",
+}
+
+
 def get_weight(op_name: str) -> float:
     """Return the FLOP weight multiplier for an operation."""
-    return _ACTIVE_WEIGHTS.get(op_name, 1.0)
+    if op_name in _ACTIVE_WEIGHTS:
+        return _ACTIVE_WEIGHTS[op_name]
+    canonical = _UFUNC_ALIAS_RENAMES.get(op_name)
+    if canonical is not None and canonical in _ACTIVE_WEIGHTS:
+        return _ACTIVE_WEIGHTS[canonical]
+    return 1.0
 
 
 def load_weights(path: str | None = None, *, use_packaged_default: bool = True) -> None:
