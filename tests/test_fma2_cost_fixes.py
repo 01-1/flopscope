@@ -82,3 +82,12 @@ def test_geomspace_logspace_cost_broadcast_output_times_transcendental():
     start = fnp.asarray(np.ones(100))
     stop = fnp.asarray(np.full(100, 1000.0))
     assert cost(lambda: fnp.geomspace(start, stop, 50)) == 16 * 50 * 100  # broadcast B=100
+
+
+def test_polydiv_scales_with_quotient_length():
+    u = fnp.asarray(np.random.rand(800)); v = fnp.asarray(np.random.rand(50))
+    expected = 1 + (800 - 50 + 1) * (2 * 50 + 1)
+    assert cost(lambda: fnp.polydiv(u, v)) == expected
+    # short-quotient case: n1=55, n2=50 → Q=6, cost=607 < 55*50=2750 (old formula)
+    u2 = fnp.asarray(np.random.rand(55)); v2 = fnp.asarray(np.random.rand(50))
+    assert cost(lambda: fnp.polydiv(u2, v2)) < 55 * 50

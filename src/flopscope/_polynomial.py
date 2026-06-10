@@ -53,8 +53,10 @@ def polymul_cost(n1: int, n2: int) -> int:
 
 
 def polydiv_cost(n1: int, n2: int) -> int:
-    """Cost for polydiv: n1 * n2 FLOPs."""
-    return max(n1 * n2, 1)
+    """Cost for polydiv: 1 + Q*(2*n2 + 1), Q = max(n1-n2+1, 0) (work scales with
+    quotient length: per step 1 scale-divide + n2 mul + n2 sub)."""
+    q = max(n1 - n2 + 1, 0)
+    return max(1 + q * (2 * n2 + 1), 1)
 
 
 def polyfit_cost(m: int, deg: int) -> int:
@@ -212,7 +214,7 @@ def polydiv(u: ArrayLike, v: ArrayLike) -> tuple[FlopscopeArray, FlopscopeArray]
     return result  # type: ignore[return-value]
 
 
-attach_docstring(polydiv, _np.polydiv, "counted_custom", "n1 * n2 FLOPs")
+attach_docstring(polydiv, _np.polydiv, "counted_custom", "1 + Q*(2*n2+1) FLOPs, Q = max(n1-n2+1, 0)")
 
 
 @_counted_wrapper

@@ -24,7 +24,7 @@ _FORMULA_STRINGS: dict[str, str] = {
     "polyfit": "2 * n * (degree+1)^2",
     "roots": "degree^3",
     "polymul": "2*(degree+1)^2 - 2*(degree+1) (FMA=2)",
-    "polydiv": "(degree+1)^2",
+    "polydiv": "1 + Q*(2*n2+1), Q=max(n1-n2+1,0) (quotient length)",
     "polyadd": "degree + 1",
     "polysub": "degree + 1",
     "polyder": "degree + 1",
@@ -51,7 +51,9 @@ def _analytical_cost(op: str, n: int, degree: int) -> int:
         n = degree + 1
         return max(2 * n * n - n - n, 1)
     elif op == "polydiv":
-        return (degree + 1) ** 2
+        n = degree + 1
+        q = max(n - n + 1, 0)  # equal-length benchmark: n1=n2=degree+1, Q=1
+        return max(1 + q * (2 * n + 1), 1)
     elif op in ("polyadd", "polysub"):
         return degree + 1
     elif op in ("polyder", "polyint"):

@@ -199,12 +199,12 @@ def test_polydiv_result():
 
 
 def test_polydiv_cost():
-    # len 3 * len 2 -> cost = 6
+    # len 3, len 2 -> Q=max(3-2+1,0)=2, cost=1+2*(2*2+1)=11
     u = numpy.array([1.0, 2.0, 3.0])
     v = numpy.array([1.0, 1.0])
     with BudgetContext(flop_budget=10**6) as budget:
         polydiv(u, v)
-        assert budget.flops_used == 6
+        assert budget.flops_used == 11
 
 
 def test_polydiv_no_budget():

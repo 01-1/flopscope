@@ -630,7 +630,7 @@ class TestPolynomial:
         assert _cost_of(we.polymul, numpy.ones(5), numpy.ones(3)) == 22
 
     def test_polydiv(self, we):
-        assert _cost_of(we.polydiv, numpy.ones(5), numpy.ones(3)) == 15
+        assert _cost_of(we.polydiv, numpy.ones(5), numpy.ones(3)) == 22
 
     def test_polyfit(self, we):
         x = numpy.random.rand(20)

@@ -38,7 +38,8 @@ class TestAnalyticalCost:
         assert _analytical_cost("polymul", 100, 10) == 2 * 11**2 - 2 * 11
 
     def test_polydiv(self):
-        assert _analytical_cost("polydiv", 100, 10) == 11**2
+        # n1=n2=degree+1=11, Q=max(11-11+1,0)=1, cost=1+1*(2*11+1)=24
+        assert _analytical_cost("polydiv", 100, 10) == 24
 
     def test_polyadd(self):
         assert _analytical_cost("polyadd", 100, 10) == 11
