@@ -2565,7 +2565,7 @@ def interp(x: ArrayLike, xp: ArrayLike, fp: ArrayLike, **kwargs: Any) -> Flopsco
     xp_arr = _np.asarray(xp)
     n = _builtins.max(x.size, 1)
     xp_len = _builtins.max(xp_arr.size, 1)
-    cost = _builtins.max(n * _ceil_log2(xp_len), 1)
+    cost = _builtins.max(3 * n + n * _ceil_log2(xp_len), 1)
     with budget.deduct(
         "interp", flop_cost=cost, subscripts=None, shapes=(x.shape, xp_arr.shape)
     ):

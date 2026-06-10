@@ -146,7 +146,7 @@ class TestAnalyticalCost:
 
     def test_interp_nlog2xp(self):
         n, xp = 1000, 100
-        expected = n * math.ceil(math.log2(xp))
+        expected = 3 * n + n * math.ceil(math.log2(xp))
         assert _analytical_cost("interp", n=n, xp=xp) == expected
 
     # --- Linear/generation ---

@@ -91,3 +91,10 @@ def test_polydiv_scales_with_quotient_length():
     # short-quotient case: n1=55, n2=50 → Q=6, cost=607 < 55*50=2750 (old formula)
     u2 = fnp.asarray(np.random.rand(55)); v2 = fnp.asarray(np.random.rand(50))
     assert cost(lambda: fnp.polydiv(u2, v2)) < 55 * 50
+
+
+def test_interp_adds_search_term():
+    x = fnp.asarray(np.linspace(0, 10, 1000))
+    xp = fnp.asarray(np.linspace(0, 10, 16)); fp = fnp.asarray(np.random.rand(16))
+    # honest = 3*n (arithmetic) + n*ceil(log2(M)); M=16 -> log2=4
+    assert cost(lambda: fnp.interp(x, xp, fp)) == 3 * 1000 + 1000 * 4

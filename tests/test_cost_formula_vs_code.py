@@ -750,7 +750,7 @@ class TestStatistics:
         assert _cost_of(we.cov, numpy.random.rand(3, 10)) == 180
 
     def test_interp_n_log_xp(self, we):
-        # 10 * ceil(log2(32)) = 50
+        # 3*10 + 10*ceil(log2(32)) = 30 + 10*5 = 80
         assert (
             _cost_of(
                 we.interp,
@@ -758,7 +758,7 @@ class TestStatistics:
                 numpy.arange(32, dtype=float),
                 numpy.random.rand(32),
             )
-            == 50
+            == 80
         )
 
 

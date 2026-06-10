@@ -69,7 +69,7 @@ _FORMULA_STRINGS: dict[str, str] = {
     "histogram_bin_edges": "n",
     "digitize": "n * ceil(log2(bins))",
     "bincount": "n",
-    "interp": "n * ceil(log2(xp))",
+    "interp": "3*n + n * ceil(log2(xp))",
     "trace": "min(m, n)",
     "trapezoid": "n",
     "logspace": "n",
@@ -151,7 +151,7 @@ def _analytical_cost(op: str, **kwargs: int) -> int:
     # --- Interpolation ---
     if op == "interp":
         xp = kwargs.get("xp", 10000)
-        return n * math.ceil(math.log2(xp))
+        return 3 * n + n * math.ceil(math.log2(xp))
 
     # --- Linear/generation ---
     if op == "trace":
