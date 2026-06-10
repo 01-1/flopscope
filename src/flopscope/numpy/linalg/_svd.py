@@ -43,7 +43,10 @@ def svd(
 
     FLOP Cost
     ---------
-    m * n * k FLOPs per matrix, where k defaults to min(m, n).
+    values only (compute_uv=False): 2*a*b^2 + 2*b^3 per matrix
+    with U/V (compute_uv=True):     6*a*b^2 + 20*b^3 per matrix
+    where a = max(m, n), b = min(m, n). ``k`` does not reduce the cost
+    (LAPACK computes the full decomposition regardless).
 
     Parameters
     ----------

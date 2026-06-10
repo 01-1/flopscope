@@ -325,7 +325,7 @@ def pinv(
 
 
 attach_docstring(
-    pinv, _np.linalg.pinv, "linalg", r"$m \cdot n \cdot \min(m,n)$ FLOPs (SVD-based)"
+    pinv, _np.linalg.pinv, "linalg", r"SVD(with U/V) + min(m,n) + n*min(m,n) + matmul(n, min(m,n), m) FLOPs (see pinv_cost)"
 )
 
 

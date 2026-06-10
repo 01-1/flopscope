@@ -204,11 +204,7 @@ def norm_cost(shape: tuple, ord=None) -> int:
             return 2 * numel  # FMA=2
         elif ord in (1, -1, _np.inf, -_np.inf):
             return 2 * numel  # FMA=2
-        elif ord == 2 or ord == -2:
-            from flopscope._flops import svd_cost
-
-            return svd_cost(m, n, with_vectors=False)
-        elif ord == "nuc":
+        elif ord in (2, -2, "nuc"):
             from flopscope._flops import svd_cost
 
             return svd_cost(m, n, with_vectors=False)
@@ -359,11 +355,7 @@ def matrix_norm_cost(shape: tuple, ord=None) -> int:
         return 2 * numel  # FMA=2
     elif ord in (1, -1, _np.inf, -_np.inf):
         return 2 * numel  # FMA=2
-    elif ord == 2 or ord == -2:
-        from flopscope._flops import svd_cost
-
-        return svd_cost(m, n, with_vectors=False)
-    elif ord == "nuc":
+    elif ord in (2, -2, "nuc"):
         from flopscope._flops import svd_cost
 
         return svd_cost(m, n, with_vectors=False)
