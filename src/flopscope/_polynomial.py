@@ -65,8 +65,8 @@ def polyfit_cost(m: int, deg: int) -> int:
 
 
 def poly_cost(n: int) -> int:
-    """Cost for poly: $n^2$ FLOPs."""
-    return max(n * n, 1)
+    """Cost for poly (1-D build-from-roots): 2*n^2 FLOPs (iterated convolve)."""
+    return max(2 * n * n, 1)
 
 
 def roots_cost(n: int) -> int:
@@ -245,16 +245,18 @@ def poly(seq_of_zeros: ArrayLike) -> FlopscopeArray:
     seq = _np.asarray(seq_of_zeros)
     # If 2D (square matrix), n = shape[0]; if 1D, n = len(seq)
     if seq.ndim == 2:
+        from flopscope.numpy.linalg import eigvals_cost
         n = seq.shape[0]
+        cost = poly_cost(n) + eigvals_cost(n)
     else:
         n = len(seq)
-    cost = poly_cost(n)
+        cost = poly_cost(n)
     with budget.deduct("poly", flop_cost=cost, subscripts=None, shapes=(seq.shape,)):
-        result = _call_numpy(_np.poly, seq_of_zeros)
+        result = _call_numpy(_np.poly, _to_base_ndarray(seq))
     return result  # type: ignore[return-value]
 
 
-attach_docstring(poly, _np.poly, "counted_custom", "n^2 FLOPs")
+attach_docstring(poly, _np.poly, "counted_custom", "2*n^2 FLOPs (1-D) or 2*n^2 + n^3 FLOPs (2-D, includes eigvals)")
 
 
 @_counted_wrapper

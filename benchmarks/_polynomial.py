@@ -29,7 +29,7 @@ _FORMULA_STRINGS: dict[str, str] = {
     "polysub": "degree + 1",
     "polyder": "degree + 1",
     "polyint": "degree + 1",
-    "poly": "degree^2",
+    "poly": "2*degree^2",
 }
 
 
@@ -59,7 +59,7 @@ def _analytical_cost(op: str, n: int, degree: int) -> int:
     elif op in ("polyder", "polyint"):
         return degree + 1  # runtime charges len(c) = degree + 1
     elif op == "poly":
-        return degree**2
+        return 2 * degree**2
     else:
         raise ValueError(f"Unknown polynomial op: {op!r}")
 

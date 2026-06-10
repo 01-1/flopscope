@@ -109,3 +109,13 @@ def test_vander_column_count():
     x = fnp.asarray(np.random.rand(1000))
     assert cost(lambda: fnp.vander(x, 5)) == 1000 * (5 - 2)   # x^0,x^1 free; x^2..x^4 multiply
     assert cost(lambda: fnp.vander(x, 2)) == 1                # only x^0,x^1 -> ~0 honest work
+
+
+def test_poly_runs_on_flopscope_array_and_bills_1d():
+    r = fnp.asarray(np.random.rand(100))
+    assert cost(lambda: fnp.poly(r)) == 2 * 100 * 100        # 2*n^2 (1-D build-from-roots)
+
+
+def test_poly_2d_includes_eigvals():
+    M = fnp.asarray(np.random.rand(50, 50))
+    assert cost(lambda: fnp.poly(M)) >= 50 ** 3              # eigvals (n^3) + n^2 conv loop

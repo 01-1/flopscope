@@ -637,7 +637,7 @@ class TestPolynomial:
         assert _cost_of(we.polyfit, x, numpy.random.rand(20), 2) == 360
 
     def test_poly(self, we):
-        assert _cost_of(we.poly, numpy.ones(5)) == 25
+        assert _cost_of(we.poly, numpy.ones(5)) == 50  # 2 * 5^2 = 50
 
     def test_roots(self, we):
         assert _cost_of(we.roots, numpy.array([1.0, 2.0, 3.0, 4.0, 5.0])) == 64

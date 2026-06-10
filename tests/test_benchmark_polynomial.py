@@ -54,7 +54,7 @@ class TestAnalyticalCost:
         assert _analytical_cost("polyint", 100, 10) == 11  # degree + 1 = len(c)
 
     def test_poly(self):
-        assert _analytical_cost("poly", 100, 10) == 100
+        assert _analytical_cost("poly", 100, 10) == 200  # 2 * degree^2 = 2 * 100
 
     def test_unknown_op_raises(self):
         with pytest.raises(ValueError, match="Unknown polynomial op"):

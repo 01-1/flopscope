@@ -254,11 +254,11 @@ def test_poly_result():
 
 
 def test_poly_cost():
-    # 4 roots -> cost = 4^2 = 16
+    # 4 roots -> cost = 2 * 4^2 = 32 (FMA=2 iterated-convolve upper bound)
     zeros = numpy.array([1.0, 2.0, 3.0, 4.0])
     with BudgetContext(flop_budget=10**6) as budget:
         poly(zeros)
-        assert budget.flops_used == 16
+        assert budget.flops_used == 32
 
 
 def test_poly_no_budget():
