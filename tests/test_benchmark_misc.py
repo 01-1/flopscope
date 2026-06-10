@@ -164,12 +164,12 @@ class TestAnalyticalCost:
     def test_geomspace_linear(self):
         assert _analytical_cost("geomspace", n=5000) == 16 * 5000
 
-    def test_vander_n_deg_minus_1(self):
-        assert _analytical_cost("vander", n=100, degree=10) == 100 * 9
+    def test_vander_n_deg_minus_2(self):
+        assert _analytical_cost("vander", n=100, degree=10) == 100 * 8
 
     def test_vander_default_degree(self):
         # Default degree=100
-        assert _analytical_cost("vander", n=100) == 100 * 99
+        assert _analytical_cost("vander", n=100) == 100 * 98
 
     # --- Default n ---
 

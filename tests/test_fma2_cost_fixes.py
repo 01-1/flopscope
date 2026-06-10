@@ -103,3 +103,9 @@ def test_interp_adds_search_term():
 def test_cross_is_three_per_output():
     a = fnp.asarray(np.random.rand(1000, 3)); b = fnp.asarray(np.random.rand(1000, 3))
     assert cost(lambda: fnp.cross(a, b)) == 3 * a.size
+
+
+def test_vander_column_count():
+    x = fnp.asarray(np.random.rand(1000))
+    assert cost(lambda: fnp.vander(x, 5)) == 1000 * (5 - 2)   # x^0,x^1 free; x^2..x^4 multiply
+    assert cost(lambda: fnp.vander(x, 2)) == 1                # only x^0,x^1 -> ~0 honest work

@@ -357,21 +357,21 @@ class TestVander:
         numpy.testing.assert_array_equal(result, numpy.vander(x, N=4))
 
     def test_cost_explicit_N(self):
-        # x=[1,2,3,4,5], N=4 → cost=5*(4-1)=15
+        # x=[1,2,3,4,5], N=4 → cost=5*(4-2)=10 (x^0,x^1 free; x^2,x^3 multiply)
         x = numpy.array([1.0, 2.0, 3.0, 4.0, 5.0])
         with BudgetContext(flop_budget=10**6) as budget:
             vander(x, N=4)
-        assert budget.flops_used == 15
+        assert budget.flops_used == 10
 
     def test_cost_default_N(self):
-        # x=[1,2,3,4], N=None→4 → cost=4*(4-1)=12
+        # x=[1,2,3,4], N=None→4 → cost=4*(4-2)=8
         x = numpy.array([1.0, 2.0, 3.0, 4.0])
         with BudgetContext(flop_budget=10**6) as budget:
             vander(x)
-        assert budget.flops_used == 12
+        assert budget.flops_used == 8
 
     def test_cost_N_is_one(self):
-        # N=1 → cost = len(x) * (1-1) = 0 → floor to 1
+        # N=1 → cost = len(x) * (1-2) = -3 → floor to 1
         x = numpy.array([1.0, 2.0, 3.0])
         with BudgetContext(flop_budget=10**6) as budget:
             vander(x, N=1)

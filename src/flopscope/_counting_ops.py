@@ -358,13 +358,13 @@ def vander(
     n = _builtins.len(x)
     if N is None:
         N = n
-    cost = _builtins.max(n * (N - 1), 1)
+    cost = _builtins.max(n * (N - 2), 1)
     with budget.deduct("vander", flop_cost=cost, subscripts=None, shapes=(x.shape,)):
         result = _call_numpy(_np.vander, x, N=N, **kwargs)
     return result  # type: ignore[return-value]
 
 
-attach_docstring(vander, _np.vander, "counted_custom", "len(x) * (N-1) FLOPs")
+attach_docstring(vander, _np.vander, "counted_custom", "len(x) * (N-2) FLOPs")
 vander.__signature__ = _inspect.signature(_np.vander)  # pyright: ignore[reportFunctionMemberAccess]
 
 # ---------------------------------------------------------------------------

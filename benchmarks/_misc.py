@@ -74,7 +74,7 @@ _FORMULA_STRINGS: dict[str, str] = {
     "trapezoid": "n",
     "logspace": "n",
     "geomspace": "n",
-    "vander": "n * (degree - 1)",
+    "vander": "n * (degree - 2)",
 }
 
 
@@ -165,7 +165,7 @@ def _analytical_cost(op: str, **kwargs: int) -> int:
 
     if op == "vander":
         degree = kwargs.get("degree", 100)
-        return n * (degree - 1)
+        return n * (degree - 2)
 
     # Fallback
     return n
