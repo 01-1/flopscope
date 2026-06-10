@@ -1509,8 +1509,8 @@ def average(a: ArrayLike, axis: int | None = None, weights=None, returned: bool 
     a_raw = _to_base_ndarray(a)
     weights_raw = _to_base_ndarray(weights) if isinstance(weights, _np.ndarray) else weights
     with budget.deduct("average", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
-        result = _np.average(a_raw, axis=axis, weights=weights_raw, returned=returned,
-                             keepdims=keepdims, **kwargs)
+        result = _call_numpy(_np.average, a_raw, axis=axis, weights=weights_raw,
+                             returned=returned, keepdims=keepdims, **kwargs)
     return _wrap_result(result, symmetry=new_symmetry)
 
 
@@ -2135,10 +2135,13 @@ def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
         _warn_oversized_once("tensordot", oversized_order)
         out_sym = None
         if _subs is not None:
-            from flopscope._einsum import _resolve_cost_and_output_symmetry
+            # Oversized symmetry: route cost through the shape-only einsum
+            # formula (FMA=2) WITHOUT _resolve_cost_and_output_symmetry, which
+            # would re-trigger the dimino enumeration this branch exists to
+            # avoid (and raise _DiminoBudgetExceeded).
+            from flopscope._flops import einsum_cost
 
-            _info = _resolve_cost_and_output_symmetry(_subs, a, b)
-            cost = _info.accumulation.total
+            cost = einsum_cost(_subs, [tuple(a.shape), tuple(b.shape)])
             canonical_subs = _subs
         else:
             dense = _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1

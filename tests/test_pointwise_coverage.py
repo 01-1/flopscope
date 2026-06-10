@@ -892,21 +892,19 @@ class TestCustomOps:
         with BudgetContext(flop_budget=10**6) as budget:
             result = tensordot(a, b, axes=([1], [0]))
         assert result.shape == (3, 5)
-        # contracted = 4, result.size = 15, cost = 60
-        assert budget.flops_used == 60
+        # (3,4)·(4,5)->(3,5): 15 outputs, each 2*4-1 ops (FMA=2) = 105
+        assert budget.flops_used == 105
 
     def test_tensordot_no_symmetry_unchanged(self):
-        """Without any input symmetry, the cost equals the dense
-        formula (a.size * b.size / contracted) — no behaviour change
-        from the pre-symmetry-adjustment code."""
+        """Without any input symmetry, the cost is the dense FMA=2
+        contraction count (no symmetry discount)."""
         n = 6
         a = numpy.ones((n, n))
         b = numpy.ones((n, n))
         with BudgetContext(flop_budget=10**8) as budget:
             tensordot(a, b, axes=1)
-        # output shape (n, n) = 36 elements, contracted = n = 6,
-        # dense = 6*6*6 = 216
-        assert budget.flops_used == n * n * n
+        # output (n, n) = n^2 elements, contracted = n; FMA=2 = n^2*(2n-1)
+        assert budget.flops_used == 2 * n * n * n - n * n
 
     def test_tensordot_surviving_symmetry_lowers_cost(self):
         """A 4D × 4D contraction that preserves S₂ symmetry on each
