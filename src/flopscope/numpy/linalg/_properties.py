@@ -50,7 +50,7 @@ def trace(x: ArrayLike, /, *, offset: int = 0, dtype: Any = None) -> FlopscopeAr
     elif offset < 0:
         n = min(n, x.shape[-2] + offset)
     n = max(n, 0)
-    cost = trace_cost(n)
+    cost = trace_cost(n) * _batch_size(x.shape) if not _has_zero_dim(x.shape) else 0
     with budget.deduct(
         "linalg.trace", flop_cost=cost, subscripts=None, shapes=(x.shape,)
     ):
@@ -62,7 +62,7 @@ def trace(x: ArrayLike, /, *, offset: int = 0, dtype: Any = None) -> FlopscopeAr
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(trace, _np.linalg.trace, "linalg", r"$n$ FLOPs")
+attach_docstring(trace, _np.linalg.trace, "linalg", r"$\min(m,n)$ FLOPs × batch")
 
 
 def det_cost(n: int, symmetric: bool = False) -> int:
@@ -127,13 +127,13 @@ def slogdet_cost(n: int, symmetric: bool = False) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $2n^3/3 + n$.
+        Estimated FLOP count: $2n^3/3 + 18n$.
 
     Notes
     -----
-    2n^3/3 + n FLOPs (LU + product of diagonal).
+    2n^3/3 + 18n FLOPs (LU + sum of log|diag|: abs + 16/elem log + reduce).
     """
-    return max(2 * n**3 // 3 + n, 1)
+    return max(2 * n**3 // 3 + 18 * n, 1)
 
 
 @_counted_wrapper
@@ -171,7 +171,7 @@ attach_docstring(
     slogdet,
     _np.linalg.slogdet,
     "linalg",
-    r"$\frac{2}{3}n^3 + n$ FLOPs (LU + diagonal product)",
+    r"$\frac{2}{3}n^3 + 18n$ FLOPs (LU + sum of log|diag|)",
 )
 
 

@@ -68,8 +68,9 @@ def test_polyval_cost_doubled():
 
 def test_multi_dot_cost_doubled():
     """multi_dot([A,B,C]) for (M,K)x(K,N)x(N,P) with M=4,K=3,N=2,P=5:
-    optimal order pairs (A@B) first → 4*3*2 = 24, then (AB)@C → 4*2*5 = 40.
-    Under FMA=1: 24 + 40 = 64. Under FMA=2: 2*(64) = 128.
+    optimal order pairs (A@B) first: matmul_cost(4,3,2)=40, then (AB)@C:
+    matmul_cost(4,2,5)=60. Total = 100 (delegates to matmul_cost, matching
+    fnp.matmul and matrix_power_cost — issue #69 precedent).
     """
     import numpy as np
 
@@ -80,7 +81,7 @@ def test_multi_dot_cost_doubled():
     C = np.zeros((2, 5))
     with flops.BudgetContext(flop_budget=10**12, quiet=True) as bc:
         _ = fnp.linalg.multi_dot([A, B, C])
-    assert bc.flops_used == 128, f"multi_dot charged {bc.flops_used}, expected 128"
+    assert bc.flops_used == 100, f"multi_dot charged {bc.flops_used}, expected 100"
 
 
 def test_norm_cost_doubled():

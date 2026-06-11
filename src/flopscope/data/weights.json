@@ -11258,6 +11258,14 @@
     "unravel_index": 0.0,
     "vsplit": 0.0,
     "zeros": 0.0,
-    "zeros_like": 0.0
+    "zeros_like": 0.0,
+    "fromstring": 1.0,
+    "fromfile": 1.0,
+    "fromregex": 1.0,
+    "base_repr": 1.0,
+    "binary_repr": 1.0,
+    "isnat": 1.0,
+    "geterr": 0.0,
+    "seterr": 0.0
   }
 }

@@ -729,6 +729,12 @@ DEFERRED: dict[str, str] = {
     "sort_complex": "pinned in OP_EXPECTATIONS",
     "linalg.trace": "pinned in OP_EXPECTATIONS",
     "trace": "pinned in OP_EXPECTATIONS",
+    # ---- newly re-registered from blacklist (audit-2 fix): no billing change --
+    "base_repr": "counted_custom; cost = len(output string); re-registered from blacklist",
+    "binary_repr": "counted_custom; cost = len(output string); re-registered from blacklist",
+    "fromfile": "counted_custom; cost = numel(output); re-registered from blacklist",
+    "fromregex": "counted_custom; cost = numel(output); re-registered from blacklist",
+    "fromstring": "counted_custom; cost = numel(output); re-registered from blacklist",
 }
 
 

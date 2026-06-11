@@ -350,9 +350,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "Element-wise approximate equality test. Cost: 6*numel(output).",
     },
     "isnat": {
-        "category": "blacklisted",
+        "category": "counted_unary",
         "module": "numpy",
-        "notes": "Blacklisted per reviewer — datetime ops not in scope.",
+        "notes": "Element-wise test for NaT. Cost: numel(input). Un-blacklisted: comparison tier, benchmarked in SPECIAL_OPS.",
     },
     "isneginf": {
         "category": "counted_unary",
@@ -1025,7 +1025,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.multi_dot": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Chain matmul. Cost: sum of optimal chain matmul costs (CLRS §15.2).",
+        "notes": "Chain matmul. Cost: sum of optimal chain matmul_cost steps (CLRS §15.2); each step = 2mkn - mn.",
     },
     "linalg.norm": {
         "category": "counted_custom",
@@ -1050,7 +1050,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.slogdet": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Sign + log determinant. Cost: $\\frac{2}{3}n^3 + n$.",
+        "notes": "Sign + log determinant. Cost: $\\frac{2}{3}n^3 + 18n$ (LU + sum of log|diag|).",
     },
     "linalg.solve": {
         "category": "counted_custom",
@@ -1080,7 +1080,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.trace": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Matrix trace. Cost: n (sum of diagonal elements).",
+        "notes": "Matrix trace. Cost: min(m,n) × batch (diagonal sum per matrix).",
     },
     "linalg.vecdot": {
         "category": "counted_custom",
@@ -1683,17 +1683,17 @@ REGISTRY: dict[str, dict] = {
         "notes": "Interpret buffer as 1-D array. Cost: numel(output).",
     },
     "fromstring": {
-        "category": "blacklisted",
+        "category": "counted_custom",
         "module": "numpy",
         "notes": "Create 1-D array from string data. Cost: numel(output).",
     },
     "fromfile": {
-        "category": "blacklisted",
+        "category": "counted_custom",
         "module": "numpy",
         "notes": "Construct array from binary/text file. Cost: numel(output).",
     },
     "fromregex": {
-        "category": "blacklisted",
+        "category": "counted_custom",
         "module": "numpy",
         "notes": "Construct array from text file using regex. Cost: numel(output).",
     },
@@ -1974,14 +1974,14 @@ REGISTRY: dict[str, dict] = {
         "notes": "Return minimum data type character that can satisfy all given types.",
     },
     "base_repr": {
-        "category": "blacklisted",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return string representation of number in given base. Cost: numel(input).",
+        "notes": "Return string representation of number in given base. Cost: len(output string).",
     },
     "binary_repr": {
-        "category": "blacklisted",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return binary string representation of the input number. Cost: numel(input).",
+        "notes": "Return binary string representation of the input number. Cost: len(output string).",
     },
     # ------------------------------------------------------------------
     # random — passthrough, category=free
@@ -2009,7 +2009,7 @@ REGISTRY: dict[str, dict] = {
     "random.choice": {
         "category": "counted_custom",
         "module": "numpy.random",
-        "notes": "Sampling; cost = numel(output) if replace, n*ceil(log2(n)) if not.",
+        "notes": "Sampling; cost = numel(output) if replace; n (Fisher-Yates, matches permutation) if replace=False and p is None; n*ceil(log2(n)) conservative floor if replace=False with p.",
     },
     "random.default_rng": {
         "category": "free",
@@ -2273,7 +2273,7 @@ REGISTRY: dict[str, dict] = {
         "category": "counted_random_method",
         "module": "numpy.random",
         "cost_formula": "choice_cost",
-        "notes": "numel(output) if replace else sort_cost(n).",
+        "notes": "numel(output) if replace; n (Fisher-Yates/Floyd <= O(n)) if replace=False and p is None; sort_cost(n) conservative floor if replace=False with p.",
     },
     "random.Generator.dirichlet": {
         "category": "counted_random_method",
@@ -2545,7 +2545,7 @@ REGISTRY: dict[str, dict] = {
         "category": "counted_random_method",
         "module": "numpy.random",
         "cost_formula": "choice_cost",
-        "notes": "Legacy choice sampler; numel(output) if replace else sort_cost(n).",
+        "notes": "Legacy choice sampler; numel(output) if replace; n (Fisher-Yates, matches permutation) if replace=False and p is None; sort_cost(n) conservative floor if replace=False with p.",
     },
     "random.RandomState.dirichlet": {
         "category": "counted_random_method",
@@ -3074,14 +3074,14 @@ REGISTRY: dict[str, dict] = {
         "notes": "Set size of buffer used in ufuncs. Not supported.",
     },
     "geterr": {
-        "category": "blacklisted",
+        "category": "free",
         "module": "numpy",
-        "notes": "Get current way of handling floating-point errors. Not supported.",
+        "notes": "FP-error-state get/set; pure numpy state management. 0 FLOPs.",
     },
     "seterr": {
-        "category": "blacklisted",
+        "category": "free",
         "module": "numpy",
-        "notes": "Set how floating-point errors are handled. Not supported.",
+        "notes": "FP-error-state get/set; pure numpy state management. 0 FLOPs.",
     },
     "geterrcall": {
         "category": "blacklisted",

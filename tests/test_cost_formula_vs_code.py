@@ -569,8 +569,9 @@ class TestLinalgProperties:
         assert _cost_of(we.linalg.det, numpy.random.rand(8, 8)) == 349
 
     def test_slogdet_n3(self, we):
-        # slogdet_cost(8) = 2*8^3//3 + 8 = 341 + 8 = 349
-        assert _cost_of(we.linalg.slogdet, numpy.random.rand(8, 8)) == 349
+        # slogdet_cost(8) = 2*8^3//3 + 18*8 = 341 + 144 = 485
+        # (LU term + n log|diag| calls: abs + 16/elem log + reduce = 18n)
+        assert _cost_of(we.linalg.slogdet, numpy.random.rand(8, 8)) == 2 * 8**3 // 3 + 18 * 8
 
     def test_cond_mnk(self, we):
         # cond_cost(8,8): values-only SVD(8,8)=2*8*64+2*512=1024+1024=2048, +1=2049

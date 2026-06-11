@@ -124,7 +124,23 @@ def _choice_cost(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> 
             draws = _builtins.max(base, 1)
             base += 3 * n + draws * _ceil_log2(n)
         return base
-    return _sort_cost_formula(args, kwargs, result)
+    # replace=False: extract pop size n
+    a = args[0] if args else kwargs.get("a")
+    if isinstance(a, (int, _np.integer)):
+        n = int(a)
+    elif isinstance(a, _np.ndarray):
+        n = int(a.shape[0]) if a.ndim > 0 else 1
+    elif hasattr(a, "__len__"):
+        n = len(a)  # pyright: ignore[reportArgumentType]  # guarded by hasattr
+    else:
+        n = 1
+    n = _builtins.max(n, 1)
+    if p is None:
+        # Fisher-Yates O(n): legacy RandomState.choice is permutation(pop)[:size];
+        # Generator uses Floyd's/tail-shuffle (<= O(n)); n is a conservative ceiling.
+        return n
+    # Data-dependent rejection loop with weights: sort_cost(n) conservative floor.
+    return _sort_cost(n)
 
 
 def multivariate_normal_flops(N: int, d: int) -> int:

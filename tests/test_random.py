@@ -86,7 +86,9 @@ class TestChoiceWithReplacement:
 class TestChoiceWithoutReplacement:
     def test_cost(self):
         n = 16
-        expected = n * _ceil_log2(n)
+        # Fisher-Yates O(n): legacy path is permutation(n)[:size], matches
+        # random.permutation billing (n FLOPs, not sort_cost n*ceil(log2(n))).
+        expected = n
         with BudgetContext(flop_budget=10**6, quiet=True) as budget:
             merandom.choice(n, size=5, replace=False)
             assert budget.flops_used == expected

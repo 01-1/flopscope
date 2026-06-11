@@ -128,9 +128,9 @@ def test_qr_mode_aware():
 
 def test_det_slogdet_lu_based():
     A = fnp.asarray(np.random.rand(100, 100) + 100 * np.eye(100))
-    expected = 2 * 100**3 // 3 + 100
-    assert cost(lambda: fnp.linalg.det(A)) == expected
-    assert cost(lambda: fnp.linalg.slogdet(A)) == expected
+    assert cost(lambda: fnp.linalg.det(A)) == 2 * 100**3 // 3 + 100
+    # slogdet adds n transcendental log calls (16/elem) + abs: 18n vs det's n
+    assert cost(lambda: fnp.linalg.slogdet(A)) == 2 * 100**3 // 3 + 18 * 100
 
 
 def test_direct_family_packaged_weights_are_unity():
@@ -1105,3 +1105,70 @@ def test_roots_strips_leading_trailing_zeros():
     assert cost(lambda: fnp.roots(np.array([0.0, 0.0, 0.0, 0.0]))) == 1
     # long tail: [1]+[0]*50 -> only one nonzero at idx=0, n=0 -> cost=1
     assert cost(lambda: fnp.roots(np.array([1.0] + [0.0] * 50))) == 1
+
+
+# ---------------- linalg.trace batch guard (audit-2 fix) ----------------
+
+
+def test_linalg_trace_single_matrix_unchanged():
+    """Single matrix: batch=1, so charge == trace_cost(n)."""
+    x = fnp.asarray(np.ones((10, 10)))
+    assert cost(lambda: fnp.linalg.trace(x)) == 10
+
+
+def test_linalg_trace_batch_multiplied():
+    """Batch stack: charged = trace_cost(n) × batch_size."""
+    x = fnp.asarray(np.ones((100, 10, 10)))
+    assert cost(lambda: fnp.linalg.trace(x)) == 100 * 10  # 1000
+
+    x2 = fnp.asarray(np.ones((2, 3, 4, 10, 10)))
+    assert cost(lambda: fnp.linalg.trace(x2)) == 2 * 3 * 4 * 10  # 240
+
+
+def test_linalg_trace_zero_dim_is_free():
+    """Zero-size matrix dim: cost = 0."""
+    x = fnp.asarray(np.ones((5, 0, 10)))
+    assert cost(lambda: fnp.linalg.trace(x)) == 0
+
+
+# ---------------- linalg.multi_dot matmul_cost parity (audit-2 fix) ----------------
+
+
+def test_multi_dot_two_matrix_matches_matmul():
+    """Two-matrix multi_dot must match fnp.matmul exactly."""
+    A = fnp.asarray(np.ones((1000, 2)))
+    B = fnp.asarray(np.ones((2, 1000)))
+    assert cost(lambda: fnp.linalg.multi_dot([A, B])) == cost(lambda: fnp.matmul(A, B))
+
+
+def test_multi_dot_three_matrix_chain():
+    """Three 10x10 matrices: optimal (A@B)@C = matmul_cost(10,10,10) * 2 = 3800."""
+    from flopscope._flops import matmul_cost
+
+    A = fnp.asarray(np.ones((10, 10)))
+    B = fnp.asarray(np.ones((10, 10)))
+    C = fnp.asarray(np.ones((10, 10)))
+    # Both parenthesizations cost the same for square matrices
+    expected = 2 * matmul_cost(10, 10, 10)  # 2 * 1900 = 3800
+    assert cost(lambda: fnp.linalg.multi_dot([A, B, C])) == expected
+
+
+# ---------------- random.choice Fisher-Yates fix (audit-2 fix) ----------------
+
+
+def test_choice_replace_false_no_p_charges_n():
+    """replace=False, p=None: charges n (Fisher-Yates), same as permutation."""
+    n = 100
+    assert cost(lambda: fnp.random.choice(n, size=10, replace=False)) == n
+    assert cost(lambda: fnp.random.choice(n, size=10, replace=False)) == cost(
+        lambda: fnp.random.permutation(n)
+    )
+
+
+def test_choice_replace_false_with_p_uses_sort_cost():
+    """replace=False, p!=None: sort_cost(n) conservative floor (rejection loop)."""
+    from flopscope._flops import sort_cost
+
+    n = 16
+    p = np.ones(n) / n
+    assert cost(lambda: fnp.random.choice(n, size=5, replace=False, p=p)) == sort_cost(n)

@@ -83,7 +83,6 @@ class TestCountedGeneratorMethods:
         assert budget.flops_used == 20
 
     def test_choice_without_replacement(self):
-        from flopscope._flops import _ceil_log2
         from flopscope.numpy.random._counted_classes import _CountedGenerator
 
         bg = np.random.default_rng(42).bit_generator
@@ -91,7 +90,9 @@ class TestCountedGeneratorMethods:
         n = 16
         with BudgetContext(flop_budget=10**6, quiet=True) as budget:
             rng.choice(n, size=5, replace=False)
-        assert budget.flops_used == n * _ceil_log2(n)
+        # Fisher-Yates O(n): Generator uses Floyd's/tail-shuffle (<= O(n));
+        # charging n is a conservative ceiling matching random.permutation.
+        assert budget.flops_used == n
 
     def test_shuffle_charges_input_size(self):
         from flopscope.numpy.random._counted_classes import _CountedGenerator
@@ -261,14 +262,15 @@ class TestCountedRandomState:
         assert isinstance(rs, np.random.RandomState)
 
     def test_choice_without_replacement_uses_sort_cost(self):
-        from flopscope._flops import _ceil_log2
         from flopscope.numpy.random._counted_classes import _CountedRandomState
 
         rs = _CountedRandomState(42)
         n = 16
         with BudgetContext(flop_budget=10**6, quiet=True) as budget:
             rs.choice(n, size=5, replace=False)
-        assert budget.flops_used == n * _ceil_log2(n)
+        # Fisher-Yates O(n): RandomState.choice is permutation(n)[:size],
+        # bit-exact with random.permutation; charged n not sort_cost(n).
+        assert budget.flops_used == n
 
     def test_shuffle_charges_input_size(self):
         from flopscope.numpy.random._counted_classes import _CountedRandomState

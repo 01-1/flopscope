@@ -762,13 +762,13 @@ class TestRandomChoice:
     """Cover lines 223-234: choice with replace=False."""
 
     def test_choice_without_replacement(self):
-        from flopscope._flops import sort_cost
         from flopscope.numpy import random as merandom
 
         n = 20
         with BudgetContext(flop_budget=10**6) as budget:
             merandom.choice(n, size=5, replace=False)
-        assert budget.flops_used == sort_cost(n)
+        # Fisher-Yates O(n): legacy path is permutation(n)[:size]; charges n.
+        assert budget.flops_used == n
 
     def test_choice_from_array(self):
         from flopscope.numpy import random as merandom

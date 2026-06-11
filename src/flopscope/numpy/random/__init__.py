@@ -486,8 +486,10 @@ def shuffle(x):
 def choice(a, size=None, replace=True, p=None):
     """Counted version of ``numpy.random.choice``.
 
-    Cost: numel(output) FLOPs if ``replace=True``;
-    sort_cost(n) = n * ceil(log2(n)) FLOPs if ``replace=False``.
+    Cost: numel(output) FLOPs if ``replace=True`` (+ CDF/binary-search term
+    if ``p`` given); ``n`` FLOPs (Fisher-Yates, matches ``random.permutation``)
+    if ``replace=False`` and ``p is None``; ``sort_cost(n)`` conservative floor
+    for the data-dependent rejection loop if ``replace=False`` with ``p``.
     """
     budget = require_budget()
     if isinstance(a, (int, _np.integer)):
@@ -507,7 +509,16 @@ def choice(a, size=None, replace=True, p=None):
         ):
             result = _call_numpy(_npr.choice, a, size=size, replace=replace, p=p)
     else:
-        cost = sort_cost(n)
+        if p is None:
+            # Legacy RandomState.choice is permutation(pop_size)[:size] —
+            # Fisher-Yates O(n), bit-exact with random.permutation.
+            # Generator.choice uses Floyd's/tail-shuffle (<= O(n)); charging n
+            # is a conservative ceiling.
+            cost = _builtins.max(n, 1)
+        else:
+            # Data-dependent rejection loop: per-iteration cumsum + normalize
+            # + searchsorted; sort_cost(n) is the documented conservative floor.
+            cost = sort_cost(n)
         with budget.deduct(
             "random.choice", flop_cost=cost, subscripts=None, shapes=((n,),)
         ):
