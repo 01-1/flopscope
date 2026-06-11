@@ -858,3 +858,120 @@ def test_dtype_predicates_are_free():
     v = fnp.asarray(np.random.rand(10_000))
     assert cost(lambda: fnp.iscomplexobj(v)) == 0
     assert cost(lambda: fnp.isrealobj(v)) == 0
+
+
+# ---------------- audit-gap fixes (2026-06-11) ----------------
+
+
+def test_trace_batch_multiply():
+    """numpy.trace must multiply single-matrix diagonal by number of batch matrices."""
+    # single matrix unchanged
+    assert cost(lambda: fnp.trace(np.ones((10, 10)))) == 10
+    # default axis1=0, axis2=1: matrix dims (100,10), n_traces=10 along dim2 -> 10*10=100
+    assert cost(lambda: fnp.trace(np.ones((100, 10, 10)))) == 100
+    # explicit axis1=1, axis2=2: matrix (10,10) in 100 batches -> 100*10=1000
+    assert cost(lambda: fnp.trace(np.ones((100, 10, 10)), axis1=1, axis2=2)) == 1000
+    # higher-rank batch: axis1=0,axis2=1 -> matrix (2,3)=min 2, n_traces=4*10*10=400 -> 800
+    assert cost(lambda: fnp.trace(np.ones((2, 3, 4, 10, 10)))) == 2 * 400
+    # zero-size matrix dim -> 0
+    assert cost(lambda: fnp.trace(np.ones((5, 0, 10)))) == 0
+    # zero along batch axes; axis1=0,axis2=1, shape (0,10,10) -> a.shape[0]=0, zero product
+    assert cost(lambda: fnp.trace(np.ones((0, 10, 10)))) == 0
+
+
+def test_allclose_6per_elem():
+    """allclose must bill 7*numel(broadcast) - 1 (6/elem tolerance core + all-reduce)."""
+    a = np.random.rand(100)
+    b = np.random.rand(100)
+    assert cost(lambda: fnp.allclose(a, b)) == 7 * 100 - 1
+    # broadcast case
+    a2 = np.random.rand(100, 1)
+    b2 = np.random.rand(1, 100)
+    assert cost(lambda: fnp.allclose(a2, b2)) == 7 * 10_000 - 1
+
+
+def test_isclose_6per_elem():
+    """isclose must bill 6*numel(output) (tolerance core: sub+2*abs+mul+add+cmp)."""
+    a = np.random.rand(100)
+    b = np.random.rand(100)
+    assert cost(lambda: fnp.isclose(a, b)) == 6 * 100
+    # broadcast
+    a2 = np.random.rand(100, 1)
+    b2 = np.random.rand(1, 100)
+    assert cost(lambda: fnp.isclose(a2, b2)) == 6 * 10_000
+
+
+def test_histogram_string_bins_charges_more_than_int():
+    """histogram with string estimator bins must charge >= int-bins equivalent + 2n."""
+    import math
+    rng = np.random.default_rng(42)
+    a = rng.standard_normal(1000)
+    # 'auto' resolves to some nbins; must charge strictly more than int-path
+    nb = len(np.histogram_bin_edges(a, 'auto')) - 1
+    int_cost = cost(lambda: fnp.histogram(a, bins=nb))
+    str_cost = cost(lambda: fnp.histogram(a, bins='auto'))
+    assert str_cost >= int_cost + 2 * 1000, (
+        f"string 'auto' cost {str_cost} not >= int cost {int_cost} + 2n=2000"
+    )
+
+
+def test_histogram_bin_edges_wrapped_bins_no_crash():
+    """histogram_bin_edges with FlopscopeArray bins must not crash."""
+    a = np.random.rand(100)
+    edges = fnp.linspace(0.0, 1.0, 11)
+    with f.BudgetContext(flop_budget=10**12, quiet=True) as b:
+        result = fnp.histogram_bin_edges(a, bins=edges)
+    plain = np.histogram_bin_edges(a, bins=np.linspace(0.0, 1.0, 11))
+    np.testing.assert_array_equal(np.asarray(result), plain)
+
+
+def test_histogram_wrapped_bins_no_crash():
+    """histogram with FlopscopeArray bins must not crash."""
+    a = np.random.rand(100)
+    edges = fnp.linspace(0.0, 1.0, 11)
+    with f.BudgetContext(flop_budget=10**12, quiet=True):
+        counts, out_edges = fnp.histogram(a, bins=edges)
+    plain_counts, plain_edges = np.histogram(a, bins=np.linspace(0.0, 1.0, 11))
+    np.testing.assert_array_equal(np.asarray(counts), plain_counts)
+
+
+def test_bartlett_4n():
+    """bartlett must bill 4*n (compare+divide+add+select per sample, FMA=2)."""
+    assert cost(lambda: fnp.bartlett(50)) == 4 * 50
+    assert cost(lambda: fnp.bartlett(1)) == 4 * 1
+
+
+def test_blackman_40n():
+    """blackman must bill 40*n (2 cosine evals @16 + 8 arith per sample)."""
+    assert cost(lambda: fnp.blackman(50)) == 40 * 50
+
+
+def test_kaiser_23n():
+    """kaiser must bill 23*n (1 Bessel I0 @16 + 7 arith per sample)."""
+    assert cost(lambda: fnp.kaiser(50, 14.0)) == 23 * 50
+    assert cost(lambda: fnp.kaiser(10, 5.0)) == 23 * 10
+
+
+def test_hfft_half_cost():
+    """fft.hfft must bill rfft_cost(n_out) not full complex cost."""
+    import math
+    # default n_out = 2*(n_in - 1) = 126 for input length 64
+    a = np.random.rand(64).astype(complex)
+    # rfft_cost(126) = 5 * (126//2) * ceil(log2(126)) = 5 * 63 * 7 = 2205
+    expected = 5 * (126 // 2) * math.ceil(math.log2(126))
+    assert cost(lambda: fnp.fft.hfft(a)) == expected
+    # explicit n=200: rfft_cost(200) = 5 * 100 * ceil(log2(200)) = 5*100*8=4000
+    expected2 = 5 * (200 // 2) * math.ceil(math.log2(200))
+    assert cost(lambda: fnp.fft.hfft(a, n=200)) == expected2
+
+
+def test_ihfft_rfft_cost():
+    """fft.ihfft must bill rfft_cost(n) not full complex cost."""
+    import math
+    a = np.random.rand(64)
+    # rfft_cost(64) = 5 * 32 * 6 = 960
+    expected = 5 * (64 // 2) * math.ceil(math.log2(64))
+    assert cost(lambda: fnp.fft.ihfft(a)) == expected
+    # batched (8, 64): 8 * 960 = 7680
+    batch = np.random.rand(8, 64)
+    assert cost(lambda: fnp.fft.ihfft(batch)) == 8 * expected

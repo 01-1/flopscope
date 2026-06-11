@@ -28,10 +28,10 @@ class TestOpsLists:
 
 class TestAnalyticalCost:
     def test_bartlett_cost(self):
-        assert _ANALYTICAL_COST["bartlett"] == 1
+        assert _ANALYTICAL_COST["bartlett"] == 4  # compare+div+add+select per sample (FMA=2)
 
     def test_blackman_cost(self):
-        assert _ANALYTICAL_COST["blackman"] == 3
+        assert _ANALYTICAL_COST["blackman"] == 40  # 2 cos evals @16 + 8 arith per sample
 
     def test_hamming_cost(self):
         assert _ANALYTICAL_COST["hamming"] == 1
@@ -40,7 +40,7 @@ class TestAnalyticalCost:
         assert _ANALYTICAL_COST["hanning"] == 1
 
     def test_kaiser_cost(self):
-        assert _ANALYTICAL_COST["kaiser"] == 3
+        assert _ANALYTICAL_COST["kaiser"] == 23  # Bessel I0 @16 + 7 arith per sample (FMA=2)
 
     def test_all_ops_have_cost(self):
         for op in WINDOW_OPS:
@@ -110,10 +110,10 @@ class TestBenchmarkWindow:
         expected = total_flops / (analytical * repeats)
         assert result["bartlett"] == pytest.approx(expected)
 
-    def test_blackman_uses_3n_denominator(self):
+    def test_blackman_uses_40n_denominator(self):
         n = 1_000
         repeats = 1
-        total_flops = 30_000
+        total_flops = 40_000
         mock_result = PerfResult(
             scalar_double=total_flops,
             packed_128_double=0,
@@ -123,14 +123,14 @@ class TestBenchmarkWindow:
         with patch("benchmarks._window.measure_flops", return_value=mock_result):
             result, _ = benchmark_window(n=n, dtype="float64", repeats=repeats)
 
-        analytical = _ANALYTICAL_COST["blackman"] * n  # 3 * n
+        analytical = _ANALYTICAL_COST["blackman"] * n  # 40 * n
         expected = total_flops / (analytical * repeats)
         assert result["blackman"] == pytest.approx(expected)
 
-    def test_kaiser_uses_3n_denominator(self):
+    def test_kaiser_uses_23n_denominator(self):
         n = 1_000
         repeats = 1
-        total_flops = 30_000
+        total_flops = 23_000
         mock_result = PerfResult(
             scalar_double=total_flops,
             packed_128_double=0,
@@ -140,7 +140,7 @@ class TestBenchmarkWindow:
         with patch("benchmarks._window.measure_flops", return_value=mock_result):
             result, _ = benchmark_window(n=n, dtype="float64", repeats=repeats)
 
-        analytical = _ANALYTICAL_COST["kaiser"] * n  # 3 * n
+        analytical = _ANALYTICAL_COST["kaiser"] * n  # 23 * n
         expected = total_flops / (analytical * repeats)
         assert result["kaiser"] == pytest.approx(expected)
 

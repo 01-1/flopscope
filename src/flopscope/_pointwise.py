@@ -1203,7 +1203,8 @@ def isclose(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray | bool:
         ((a_arr, _symmetry_of(a_arr)), (b_arr, _symmetry_of(b_arr))),
         output_shape,
     )
-    cost = pointwise_cost(output_shape, symmetry=out_symmetry)
+    # 6 FLOPs/elem: sub + 2*abs + mul + add + cmp (tolerance core; floor per documented policy)
+    cost = 6 * pointwise_cost(output_shape, symmetry=out_symmetry)
     with budget.deduct(
         "isclose", flop_cost=cost, subscripts=None, shapes=(a_arr.shape, b_arr.shape)
     ):
@@ -1215,7 +1216,7 @@ def isclose(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray | bool:
     return _wrap_result(result, symmetry=out_symmetry)  # type: ignore[return-value]
 
 
-attach_docstring(isclose, _np.isclose, "counted_unary", "numel(output) FLOPs")
+attach_docstring(isclose, _np.isclose, "counted_unary", "6*numel(output) FLOPs (tolerance core: sub+2*abs+mul+add+cmp)")
 isclose.__signature__ = _inspect.signature(_np.isclose)  # pyright: ignore[reportFunctionMemberAccess]
 
 

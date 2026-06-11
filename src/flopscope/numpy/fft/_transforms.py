@@ -132,16 +132,16 @@ def hfft_cost(n_out: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: 5 * n_out * ceil(log2(n_out)).
+        Estimated FLOP count: 5 * (n_out // 2) * ceil(log2(n_out)).
 
     Notes
     -----
-    The Hermitian FFT computes the FFT of a signal with Hermitian symmetry,
-    producing real-valued output.
+    hfft(a, n) == irfft(conj(a), n): real-output c2r transform (Van Loan 1992 §1.4).
+    Exploits conjugate symmetry, roughly halving the work vs a full complex FFT.
     """
     if n_out <= 1:
         return 0
-    return 5 * n_out * math.ceil(math.log2(n_out))
+    return 5 * (n_out // 2) * math.ceil(math.log2(n_out))
 
 
 # ---------------------------------------------------------------------------
@@ -651,7 +651,7 @@ attach_docstring(
     hfft,
     _np.fft.hfft,
     "fft",
-    "5 \u00d7 n_out \u00d7 \u2308log\u2082(n_out)\u2309 FLOPs",
+    "5 \u00d7 (n_out/2) \u00d7 \u2308log\u2082(n_out)\u2309 FLOPs",
 )
 
 
@@ -685,7 +685,7 @@ attach_docstring(
     ihfft,
     _np.fft.ihfft,
     "fft",
-    "5 \u00d7 n_out \u00d7 \u2308log\u2082(n_out)\u2309 FLOPs",
+    "5 \u00d7 (n/2) \u00d7 \u2308log\u2082(n)\u2309 FLOPs",
 )
 
 import sys as _sys  # noqa: E402

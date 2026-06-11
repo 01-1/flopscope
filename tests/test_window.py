@@ -11,11 +11,12 @@ class TestBartlett:
             assert numpy.allclose(bartlett(10), numpy.bartlett(10))
 
     def test_cost(self):
+        # Updated: compare+div+add+select per sample (FMA=2); 4 ops/point
         with BudgetContext(flop_budget=10**6) as budget:
             from flopscope.numpy import bartlett
 
             bartlett(10)
-            assert budget.flops_used == 10
+            assert budget.flops_used == 4 * 10
 
 
 class TestBlackman:
@@ -26,11 +27,12 @@ class TestBlackman:
             assert numpy.allclose(blackman(10), numpy.blackman(10))
 
     def test_cost(self):
+        # Updated: 2 cos evals @16 + 8 arith per sample; 40 ops/point
         with BudgetContext(flop_budget=10**6) as budget:
             from flopscope.numpy import blackman
 
             blackman(10)
-            assert budget.flops_used == 30
+            assert budget.flops_used == 40 * 10
 
 
 class TestHamming:
@@ -73,8 +75,9 @@ class TestKaiser:
             assert numpy.allclose(kaiser(10, 5.0), numpy.kaiser(10, 5.0))
 
     def test_cost(self):
+        # Updated: Bessel I0 @16 + 7 arith per sample; 23 ops/point
         with BudgetContext(flop_budget=10**6) as budget:
             from flopscope.numpy import kaiser
 
             kaiser(10, 5.0)
-            assert budget.flops_used == 30
+            assert budget.flops_used == 23 * 10

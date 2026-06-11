@@ -303,7 +303,8 @@ def test_isclose():
     b = numpy.array([1.0, 2.0 + 1e-10, 4.0])
     with BudgetContext(flop_budget=10**6) as budget:
         result = ops.isclose(a, b)
-        assert budget.flops_used == 3
+        # 6/elem tolerance core (sub+2*abs+mul+add+cmp); numel=3
+        assert budget.flops_used == 6 * 3
     assert list(result) == [True, True, False]  # pyright: ignore[reportArgumentType]
 
 

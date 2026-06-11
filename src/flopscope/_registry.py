@@ -347,7 +347,7 @@ REGISTRY: dict[str, dict] = {
     "isclose": {
         "category": "counted_unary",
         "module": "numpy",
-        "notes": "Element-wise approximate equality test.",
+        "notes": "Element-wise approximate equality test. Cost: 6*numel(output).",
     },
     "isnat": {
         "category": "blacklisted",
@@ -1123,7 +1123,7 @@ REGISTRY: dict[str, dict] = {
     "fft.hfft": {
         "category": "counted_custom",
         "module": "numpy.fft",
-        "notes": "FFT of Hermitian-symmetric signal. Cost: 5*n_out*ceil(log2(n_out)) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
+        "notes": "FFT of Hermitian-symmetric signal. Cost: 5*(n_out//2)*ceil(log2(n_out)) — numpy implements hfft(a,n) as irfft(conj(a),n) (c2r; Van Loan 1992 §1.4).",
     },
     "fft.ifft": {
         "category": "counted_custom",
@@ -1148,7 +1148,7 @@ REGISTRY: dict[str, dict] = {
     "fft.ihfft": {
         "category": "counted_custom",
         "module": "numpy.fft",
-        "notes": "Inverse FFT of Hermitian signal. Cost: 5*n*ceil(log2(n)) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
+        "notes": "Inverse FFT of Hermitian signal; numpy computes conj(rfft(a,n)). Cost: 5*(n//2)*ceil(log2(n)) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
     },
     "fft.irfft": {
         "category": "counted_custom",
@@ -1401,7 +1401,7 @@ REGISTRY: dict[str, dict] = {
     "trace": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Diagonal sum; cost = min(n,m).",
+        "notes": "Matrix trace. Cost: min(m,n) × batch (diagonal sum per matrix).",
     },
     "broadcast_to": {
         "category": "free",
@@ -1441,7 +1441,7 @@ REGISTRY: dict[str, dict] = {
     "allclose": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Element-wise tolerance check; cost = numel(a).",
+        "notes": "Element-wise tolerance check; cost = 7*numel(broadcast) - 1 (6/elem tolerance core + all-reduce).",
     },
     # Additional free ops
     "rot90": {
@@ -2989,12 +2989,12 @@ REGISTRY: dict[str, dict] = {
     "bartlett": {
         "category": "counted_custom",
         "module": "flopscope._window",
-        "notes": "Bartlett window. Cost: n (one linear eval per sample).",
+        "notes": "Bartlett window. Cost: 4*n (compare + divide + add + select per sample; single branch of numpy where-based evaluation).",
     },
     "blackman": {
         "category": "counted_custom",
         "module": "flopscope._window",
-        "notes": "Blackman window. Cost: 3*n (three cosine terms per sample).",
+        "notes": "Blackman window. Cost: 40*n composite (two cosine evals at transcendental rate + 8 arithmetic per sample; the 0.42 term is a constant, not a third cosine).",
     },
     "hamming": {
         "category": "counted_custom",
@@ -3009,7 +3009,7 @@ REGISTRY: dict[str, dict] = {
     "kaiser": {
         "category": "counted_custom",
         "module": "flopscope._window",
-        "notes": "Kaiser window. Cost: 3*n (Bessel function eval per sample).",
+        "notes": "Kaiser window. Cost: 23*n (per sample: 1 Bessel I0 at transcendental tier 16 + 7 arithmetic FLOPs, FMA=2).",
     },
     # blacklisted — IO
     "genfromtxt": {

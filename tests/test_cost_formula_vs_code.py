@@ -150,7 +150,7 @@ def test_unary_numel(name, we):
 
 def test_isclose_numel(we):
     a = numpy.random.rand(10, 10)
-    assert _cost_of(we.isclose, a, a) == 100
+    assert _cost_of(we.isclose, a, a) == 6 * 100  # 6/elem tolerance core
 
 
 def test_isnat_numel(we):
@@ -769,8 +769,9 @@ class TestSetOps:
 
 
 class TestWindows:
-    def test_bartlett_n(self, we):
-        assert _cost_of(we.bartlett, 20) == 20
+    def test_bartlett_4n(self, we):
+        # Updated: compare+div+add+select per sample (FMA=2); 4 ops/point
+        assert _cost_of(we.bartlett, 20) == 4 * 20
 
     def test_hamming_n(self, we):
         # Updated for FMA=2 unification (spec 2026-05-20): formula doubled n → 2*n.
@@ -780,11 +781,13 @@ class TestWindows:
         # Updated for FMA=2 unification (spec 2026-05-20): formula doubled n → 2*n.
         assert _cost_of(we.hanning, 20) == 40
 
-    def test_blackman_3n(self, we):
-        assert _cost_of(we.blackman, 20) == 60
+    def test_blackman_40n(self, we):
+        # Updated: 2 cos evals @16 + 8 arith per sample; 40 ops/point
+        assert _cost_of(we.blackman, 20) == 40 * 20
 
-    def test_kaiser_3n(self, we):
-        assert _cost_of(we.kaiser, 20, 5.0) == 60
+    def test_kaiser_23n(self, we):
+        # Updated: 1 Bessel I0 @16 + 7 arith per sample; 23 ops/point
+        assert _cost_of(we.kaiser, 20, 5.0) == 23 * 20
 
 
 # ---------------------------------------------------------------------------

@@ -193,7 +193,7 @@ OP_EXPECTATIONS: dict[str, tuple] = {
     # Formula: 5 * N * ceil(log2(N)) for complex transforms
     # rfft / rfftn / rfft2: use N//2 (real half-spectrum)
     # irfft2 / irfftn: use n_out//2 * sum_axis(ceil(log2(si)))
-    # ihfft: uses hfft_cost(n) = 5*n*ceil(log2(n)) (same as hfft)
+    # ihfft: uses rfft_cost(n) = 5*(n//2)*ceil(log2(n)) — numpy ihfft = conj(rfft(a,n))
     "fft.fft": (
         lambda: fnp.fft.fft(_x64c),
         5 * 64 * int(math.ceil(math.log2(64))),  # 1920
@@ -245,15 +245,15 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         lambda: fnp.fft.irfftn(_x444c),
         5 * (4 * 4 * 6 // 2) * (2 + 2 + int(math.ceil(math.log2(6)))),  # 1680
     ),
-    # hfft: n_out = 2*(n-1) = 126 for input len 64; 5*n_out*ceil(log2(n_out))
+    # hfft: numpy hfft(a,n) = irfft(conj(a),n); n_out=126 for input len 64; rfft_cost=5*(n//2)*ceil(log2(n))
     "fft.hfft": (
         lambda: fnp.fft.hfft(_x64r),
-        5 * 126 * int(math.ceil(math.log2(126))),  # 4410
+        5 * (126 // 2) * int(math.ceil(math.log2(126))),  # 2205
     ),
-    # ihfft uses hfft_cost(n) = 5*n*ceil(log2(n)), NOT rfft_cost
+    # ihfft: numpy ihfft = conj(rfft(a,n)); uses rfft_cost(n) = 5*(n//2)*ceil(log2(n))
     "fft.ihfft": (
         lambda: fnp.fft.ihfft(_x64r),
-        5 * 64 * int(math.ceil(math.log2(64))),  # 1920
+        5 * (64 // 2) * int(math.ceil(math.log2(64))),  # 960
     ),
     # ---- Contraction (einsum family) --------------------------------------
     "matmul": (
@@ -417,11 +417,11 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         10 * 9**3,  # 7290
     ),
     # ---- Window (flop_cost at weight=1.0) ---------------------------------
-    "bartlett": (lambda: fnp.bartlett(50), 50),  # 1 op/sample
-    "blackman": (lambda: fnp.blackman(50), 3 * 50),  # 3 cosine terms
+    "bartlett": (lambda: fnp.bartlett(50), 4 * 50),  # compare+div+add+select per sample (FMA=2)
+    "blackman": (lambda: fnp.blackman(50), 40 * 50),  # 2 cosine evals @16 + 8 arith per sample
     "hamming": (lambda: fnp.hamming(50), 2 * 50),  # 1 mul + 1 cos
     "hanning": (lambda: fnp.hanning(50), 2 * 50),
-    "kaiser": (lambda: fnp.kaiser(50, 14), 3 * 50),  # Bessel I₀ proxy
+    "kaiser": (lambda: fnp.kaiser(50, 14), 23 * 50),  # Bessel I0 @16 + 7 arith (FMA=2)
     # ---- Stats (fixed per-elem constants at weight=1.0) -------------------
     "stats.norm.pdf": (lambda: fst.norm.pdf(_v100), 27 * 100),
     "stats.norm.cdf": (lambda: fst.norm.cdf(_v100), 48 * 100),

@@ -131,4 +131,5 @@ class TestHfft:
 
             hfft(x)
             out_n = 2 * (n - 1)
-            assert budget.flops_used == 5 * out_n * math.ceil(math.log2(out_n))
+            # hfft(a,n) = irfft(conj(a),n); rfft_cost = 5*(n//2)*ceil(log2(n))
+            assert budget.flops_used == 5 * (out_n // 2) * math.ceil(math.log2(out_n))
