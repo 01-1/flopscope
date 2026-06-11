@@ -24,8 +24,10 @@ class CauchyDistribution(ContinuousDistribution):
     Notes
     -----
     ``loc`` is the location parameter and ``scale`` is the half-width at
-    half-maximum. Each public method deducts ``1 * numel(input)`` FLOPs from
-    the active budget.
+    half-maximum. pdf deducts ``6 * numel(input)`` FLOPs (pure-arithmetic
+    composite: z=(x-loc)/scale; 1/(pi*scale*(1+z^2)) = sub+div+mul+add+mul+div
+    = 6 FLOPs/elem, weight 1.0; calibrated alpha 6.0). cdf and ppf each
+    deduct ``1 * numel(input)`` FLOPs (single transcendental; weight 16.0).
     """
 
     def __init__(self):
@@ -51,7 +53,8 @@ class CauchyDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.cauchy.pdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``6 * numel(x)`` (pure-arithmetic composite:
+        z=(x-loc)/scale; 1/(pi*scale*(1+z^2)) = 6 FLOPs/elem, weight 1.0).
 
         Examples
         --------
@@ -61,7 +64,7 @@ class CauchyDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.cauchy.pdf(x), 3)
         array([0.159, 0.318, 0.159])
         """
-        return self._deduct_and_call("pdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("pdf", 6, x, loc=loc, scale=scale)
 
     def cdf(self, x, loc=0, scale=1):
         """Evaluate the cumulative distribution function.

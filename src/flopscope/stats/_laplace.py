@@ -24,8 +24,11 @@ class LaplaceDistribution(ContinuousDistribution):
     Notes
     -----
     ``loc`` is the center and ``scale`` controls the exponential decay away
-    from that center. Each public method deducts ``1 * numel(input)`` FLOPs
-    from the active budget.
+    from that center. Per-method FLOP costs (weight 1.0): pdf deducts
+    ``1 * numel(input)``, cdf deducts ``40 * numel(input)`` (composite: two
+    eager exp branches + 8 arith/cmp/select; audit-2 verified), ppf deducts
+    ``51 * numel(input)`` (composite: two eager log branches + edge selects;
+    audit-2 verified).
     """
 
     def __init__(self):
@@ -83,7 +86,8 @@ class LaplaceDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.laplace.cdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``40 * numel(x)`` (composite: two eager exp branches +
+        arithmetic/select, weight 1.0).
 
         Examples
         --------
@@ -93,7 +97,7 @@ class LaplaceDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.laplace.cdf(x), 3)
         array([0.184, 0.5  , 0.816])
         """
-        return self._deduct_and_call("cdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("cdf", 40, x, loc=loc, scale=scale)
 
     def ppf(self, q, loc=0, scale=1):
         """Evaluate the percent-point function.
@@ -115,7 +119,11 @@ class LaplaceDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.laplace.ppf(q, loc, scale)``.
-        FLOP cost: ``1 * numel(q)``.
+        FLOP cost: ``51 * numel(q)`` (composite: two eager log branches +
+        edge selects, weight 1.0). Derivation (FMA=2): 2 eager log branches
+        (2×16=32) + 19 arith/cmp/select (branch A: maximum+2 mul+add=4;
+        branch B: sub+maximum+2 mul+sub=5; where#1 cmp+select=2; where#2
+        2 cmp+and+select=4; where#3,#4 cmp+select=2 each).
 
         Examples
         --------
@@ -125,7 +133,7 @@ class LaplaceDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.laplace.ppf(q), 3)
         array([-0.693,  0.   ,  0.693])
         """
-        return self._deduct_and_call("ppf", 1, q, loc=loc, scale=scale)
+        return self._deduct_and_call("ppf", 51, q, loc=loc, scale=scale)
 
     def _compute_pdf(self, x, loc=0, scale=1):
         z = _np.abs(x - loc) / scale

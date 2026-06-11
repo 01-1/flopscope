@@ -30,10 +30,13 @@ class LognormDistribution(ContinuousDistribution):
     -----
     ``s`` is the shape parameter: the standard deviation of the underlying
     normal distribution. It is the first positional argument, ahead of
-    ``loc`` and ``scale``, matching SciPy's ``lognorm`` signature. pdf and
-    cdf deduct ``1 * numel(input)`` FLOPs (unverified; pending follow-up
-    audit). ppf deducts ``106 * numel(input)`` FLOPs (composite: ndtri +
-    exp, weight 1.0; audit-2 verified).
+    ``loc`` and ``scale``, matching SciPy's ``lognorm`` signature. pdf
+    deducts ``62 * numel(input)`` FLOPs (composite: log + exp + arithmetic,
+    weight 1.0; audit-2 verified; calibration alpha 62.30). cdf deducts
+    ``70 * numel(input)`` FLOPs (composite: log + erf rational approx +
+    arithmetic, weight 1.0; audit-2 verified; calibration alpha 69.98). ppf
+    deducts ``106 * numel(input)`` FLOPs (composite: ndtri + exp, weight
+    1.0; audit-2 verified).
     """
 
     def __init__(self):
@@ -61,7 +64,8 @@ class LognormDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.lognorm.pdf(x, s, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``62 * numel(x)`` (composite: log + exp + arithmetic,
+        weight 1.0).
 
         Examples
         --------
@@ -71,7 +75,7 @@ class LognormDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.lognorm.pdf(x, s=0.5), 3)
         array([0.61 , 0.798, 0.153])
         """
-        return self._deduct_and_call("pdf", 1, x, s, loc=loc, scale=scale)
+        return self._deduct_and_call("pdf", 62, x, s, loc=loc, scale=scale)
 
     def cdf(self, x, s, loc=0, scale=1):
         """Evaluate the cumulative distribution function.
@@ -95,7 +99,8 @@ class LognormDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.lognorm.cdf(x, s, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``70 * numel(x)`` (composite: log + erf rational approx
+        + arithmetic, weight 1.0).
 
         Examples
         --------
@@ -105,7 +110,7 @@ class LognormDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.lognorm.cdf(x, s=0.5), 3)
         array([0.083, 0.5  , 0.917])
         """
-        return self._deduct_and_call("cdf", 1, x, s, loc=loc, scale=scale)
+        return self._deduct_and_call("cdf", 70, x, s, loc=loc, scale=scale)
 
     def ppf(self, q, s, loc=0, scale=1):
         """Evaluate the percent-point function.

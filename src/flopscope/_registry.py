@@ -2835,7 +2835,7 @@ REGISTRY: dict[str, dict] = {
     "stats.uniform.cdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Uniform CDF; cost = numel(input).",
+        "notes": "Uniform CDF; cost = 4*numel(input) (composite clip kernel: sub+div+2 select, weight 1.0).",
     },
     "stats.uniform.ppf": {
         "category": "counted_custom",
@@ -2860,7 +2860,7 @@ REGISTRY: dict[str, dict] = {
     "stats.cauchy.pdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Cauchy PDF; cost = numel(input).",
+        "notes": "Cauchy PDF; cost = 6*numel(input) (pure-arithmetic composite, weight 1.0).",
     },
     "stats.cauchy.cdf": {
         "category": "counted_custom",
@@ -2895,22 +2895,22 @@ REGISTRY: dict[str, dict] = {
     "stats.laplace.cdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Laplace CDF; cost = numel(input).",
+        "notes": "Laplace CDF; composite: 40 FLOPs/elem (two eager exp branches), weight 1.0.",
     },
     "stats.laplace.ppf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Laplace PPF; cost = numel(input).",
+        "notes": "Laplace PPF; composite: 51 FLOPs/elem (two eager log branches), weight 1.0.",
     },
     "stats.lognorm.pdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Log-normal PDF; cost = numel(input).",
+        "notes": "Log-normal PDF; composite: 62 FLOPs/elem (log + exp + arithmetic), weight 1.0.",
     },
     "stats.lognorm.cdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Log-normal CDF; cost = numel(input).",
+        "notes": "Log-normal CDF; composite: 70 FLOPs/elem (log + erf), weight 1.0.",
     },
     "stats.lognorm.ppf": {
         "category": "counted_custom",

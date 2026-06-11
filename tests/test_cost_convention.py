@@ -428,6 +428,13 @@ OP_EXPECTATIONS: dict[str, tuple] = {
     "stats.norm.ppf": (lambda: fst.norm.ppf(_u100), 83 * 100),
     "stats.lognorm.ppf": (lambda: fst.lognorm.ppf(_u100, 0.5), 106 * 100),
     "stats.truncnorm.ppf": (lambda: fst.truncnorm.ppf(_u100, -2, 2), 81 * 100),
+    # audit-2 gap fixes (fix/cost-model-gaps):
+    "stats.laplace.cdf": (lambda: fst.laplace.cdf(_v100), 40 * 100),
+    "stats.laplace.ppf": (lambda: fst.laplace.ppf(_u100), 51 * 100),
+    "stats.lognorm.pdf": (lambda: fst.lognorm.pdf(_u100, 0.5), 62 * 100),
+    "stats.lognorm.cdf": (lambda: fst.lognorm.cdf(_v100, 0.5), 70 * 100),
+    "stats.uniform.cdf": (lambda: fst.uniform.cdf(_u100), 4 * 100),
+    "stats.cauchy.pdf": (lambda: fst.cauchy.pdf(_v100), 6 * 100),
     # ---- Selected reductions (not all reduction ops; family rule covers the rest) --
     # trapz: same formula as trapezoid (4*numel)
     "trapz": (lambda: fnp.trapz(_v100), 4 * 100),
@@ -612,19 +619,18 @@ DEFERRED: dict[str, str] = {
     "random.RandomState.seed": "free_random_method — state setter",
     "random.RandomState.set_state": "free_random_method — state setter",
     # ---- Stats ops ---------------------------------------------------------
-    "stats.lognorm.pdf": "gap under review: declared 16/elem; honest ~43; see cost-model.md",
-    "stats.lognorm.cdf": "gap under review: declared 16/elem; honest ~40; see cost-model.md",
-    "stats.laplace.cdf": "gap under review: declared 16/elem; honest ~40; see cost-model.md",
-    "stats.laplace.ppf": "gap under review: declared 16/elem; honest ~46; see cost-model.md",
-    "stats.uniform.cdf": "gap under review: declared 1/elem; honest ~4; see cost-model.md",
+    # gap fixes landed in fix/cost-model-gaps (audit-2 verified):
+    # stats.lognorm.pdf -> 62/elem, stats.lognorm.cdf -> 70/elem,
+    # stats.laplace.cdf -> 40/elem, stats.laplace.ppf -> 51/elem,
+    # stats.uniform.cdf -> 4/elem, stats.cauchy.pdf -> 6/elem
+    # (those entries now live in EXACT_CHARGE_TABLE above)
     "stats.uniform.pdf": "simple pass-through; numel*1",
     "stats.uniform.ppf": "simple pass-through; numel*1",
     "stats.expon.pdf": "simple; numel*1",
     "stats.expon.cdf": "simple; numel*1",
     "stats.expon.ppf": "simple; numel*1",
-    "stats.cauchy.pdf": "simple; numel*1",
-    "stats.cauchy.cdf": "simple; numel*1",
-    "stats.cauchy.ppf": "simple; numel*1",
+    "stats.cauchy.cdf": "simple; numel*1 (single arctan transcendental at weight 16.0)",
+    "stats.cauchy.ppf": "simple; numel*1 (single tan transcendental at weight 16.0)",
     "stats.logistic.pdf": "simple; numel*1",
     "stats.logistic.cdf": "simple; numel*1",
     "stats.logistic.ppf": "simple; numel*1",

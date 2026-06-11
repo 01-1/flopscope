@@ -397,6 +397,394 @@ def test_stats_ppf_composites_packaged_weight_unity():
     assert cost(lambda: fstats.lognorm.ppf(x, 0.5)) == 106 * 100
 
 
+# ---- stats gap fixes (audit-2 verified, PR fix/cost-model-gaps) ----
+
+
+def test_stats_laplace_cdf_composite():
+    """laplace.cdf: two eager exp branches + arithmetic/select = 40/elem, weight 1.0."""
+    import flopscope.stats as fstats
+
+    x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+    assert cost(lambda: fstats.laplace.cdf(x)) == 40 * 1000
+
+
+def test_stats_laplace_ppf_composite():
+    """laplace.ppf: two eager log branches + edge selects = 51/elem, weight 1.0."""
+    import flopscope.stats as fstats
+
+    q = fnp.asarray(np.random.rand(1000) * 0.98 + 0.01)
+    assert cost(lambda: fstats.laplace.ppf(q)) == 51 * 1000
+
+
+def test_stats_lognorm_pdf_composite():
+    """lognorm.pdf: log + exp + arithmetic = 62/elem (calibration 62.30), weight 1.0."""
+    import flopscope.stats as fstats
+
+    x = fnp.asarray(np.abs(np.random.rand(1000)) + 0.1)
+    assert cost(lambda: fstats.lognorm.pdf(x, 0.5)) == 62 * 1000
+
+
+def test_stats_lognorm_cdf_composite():
+    """lognorm.cdf: log + erf rational approx + arithmetic = 70/elem, weight 1.0."""
+    import flopscope.stats as fstats
+
+    x = fnp.asarray(np.abs(np.random.rand(1000)) + 0.1)
+    assert cost(lambda: fstats.lognorm.cdf(x, 0.5)) == 70 * 1000
+
+
+# ---------------------------------------------------------------------------
+# Audit gap fixes: copy/scatter/stack ops (13 ops)
+# ---------------------------------------------------------------------------
+
+
+def test_insert_bills_numel_output():
+    a = np.arange(10000.0)
+    # insert single element: output size = 10001
+    assert cost(lambda: fnp.insert(a, 0, 1.0)) == 10001
+    # scalar insert into 100x100 with axis: output = 10100
+    m = np.ones((100, 100))
+    assert cost(lambda: fnp.insert(m, 0, 7.0, axis=1)) == 10100
+    # regression: must NOT scale with values.size alone
+    assert cost(lambda: fnp.insert(np.zeros(1_000_000), 500000, 1.0)) == 1_000_001
+
+
+def test_append_bills_numel_output():
+    a = np.ones(10_000)
+    # append one element: arr.size + values.size = 10001
+    assert cost(lambda: fnp.append(a, [1.0])) == 10_001
+    # append empty: still bills arr.size (materializes copy)
+    assert cost(lambda: fnp.append(a, [])) == 10_000
+    # family parity: append == concatenate for same shape
+    v = np.ones(5_000)
+    c_append = cost(lambda: fnp.append(a, v))
+    c_concat = cost(lambda: fnp.concatenate([a, v]))
+    assert c_append == c_concat == 15_000
+
+
+def test_delete_bills_numel_output():
+    a = np.arange(10000.0)
+    # delete one element: output size = 9999
+    assert cost(lambda: fnp.delete(a, 5)) == 9999
+    # delete nothing: still bills numel(output) = 10000 (materializes copy)
+    assert cost(lambda: fnp.delete(a, [])) == 10000
+    # family parity: delete == concatenate for same shape
+    c_delete = cost(lambda: fnp.delete(a, 5))
+    c_concat = cost(lambda: fnp.concatenate([a[:5], a[6:]]))
+    assert c_delete == c_concat == 9999
+
+
+def test_copyto_bills_dst_numel():
+    dst = np.zeros(10000)
+    # scalar src: should bill dst.size = 10000
+    assert cost(lambda: fnp.copyto(dst, 3.14)) == 10000
+    # broadcast src row -> 100x100 dst
+    dst2d = np.zeros((100, 100))
+    assert cost(lambda: fnp.copyto(dst2d, np.arange(100.0))) == 10000
+    # full-shape copy unchanged
+    assert cost(lambda: fnp.copyto(dst, np.ones(10000))) == 10000
+    # broadcast where mask: ones((100,1)) -> (100,100) = 10000 writes
+    where_mask = np.ones((100, 1), dtype=bool)
+    assert cost(lambda: fnp.copyto(dst2d, np.ones((100, 100)), where=where_mask)) == 10000
+
+
+def test_hstack_bills_numel_output():
+    v = np.ones(100)
+    w = np.ones(100)
+    # 1-D hstack: output = 200
+    assert cost(lambda: fnp.hstack([v, w])) == 200
+    # parity with concatenate
+    assert cost(lambda: fnp.hstack([v, w])) == cost(lambda: fnp.concatenate([v, w]))
+    # 2-D hstack: two (3,4) -> (3,8) = 24
+    A = np.ones((3, 4))
+    assert cost(lambda: fnp.hstack([A, A])) == 24
+
+
+def test_column_stack_bills_numel_output():
+    # three 100-elem vectors -> (100, 3) = 300
+    v = np.ones(100)
+    assert cost(lambda: fnp.column_stack([v, v, v])) == 300
+    # parity with stack(axis=1)
+    assert cost(lambda: fnp.column_stack([v, v, v])) == cost(
+        lambda: fnp.stack([v, v, v], axis=1)
+    )
+    # mixed 1-D/2-D: (50,2) + (50,) -> (50,3) = 150
+    m = np.ones((50, 2))
+    w = np.ones(50)
+    assert cost(lambda: fnp.column_stack([m, w])) == 150
+
+
+def test_row_stack_bills_numel_output():
+    v = np.ones(100)
+    w = np.ones(100)
+    # row_stack == vstack: two (100,) -> (2, 100) = 200
+    assert cost(lambda: fnp.row_stack([v, w])) == 200
+    # exact parity with vstack
+    assert cost(lambda: fnp.row_stack([v, w])) == cost(lambda: fnp.vstack([v, w]))
+
+
+def test_tril_bills_numel_output():
+    m = np.ones((100, 100))
+    # weight from spec: 1.0 (materializing-copy tier per triu spec)
+    assert cost(lambda: fnp.tril(m)) == 10_000
+    # batch dims billed
+    ms = np.ones((50, 100, 100))
+    assert cost(lambda: fnp.tril(ms)) == 500_000
+
+
+def test_triu_bills_numel_output():
+    m = np.ones((100, 100))
+    assert cost(lambda: fnp.triu(m)) == 10_000
+    # batch dims billed
+    ms = np.ones((50, 100, 100))
+    assert cost(lambda: fnp.triu(ms)) == 500_000
+
+
+def test_put_bills_numel_indices():
+    a = np.zeros(10000)
+    # 7 indices, weight 4.0 -> int(7*4.0) = 28
+    assert cost(lambda: fnp.put(a, np.arange(7), np.ones(7))) == 28
+    # wrap mode: 1000 indices, weight 4.0 -> 4000
+    assert cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap")) == 4000
+    # must NOT scale with destination size
+    assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 28
+
+
+def test_put_along_axis_bills_scattered_elements():
+    # dest=(100,), 5 indices, weight 4.0 -> 20
+    dest = np.zeros(100)
+    assert cost(lambda: fnp.put_along_axis(dest, np.arange(5), np.ones(5), 0)) == 20
+    # dest=(100,10), indices=(1,5) broadcast -> 500 writes, weight 4.0 -> 2000
+    dest2d = np.zeros((100, 10))
+    assert (
+        cost(
+            lambda: fnp.put_along_axis(dest2d, np.zeros((1, 5), dtype=int), 1.0, axis=1)
+        )
+        == 2000
+    )
+    # large J > M: must charge J*4, not M
+    dest_small = np.zeros(10)
+    assert (
+        cost(
+            lambda: fnp.put_along_axis(
+                dest_small, np.zeros(1_000_000, dtype=np.int64), 1.0, 0
+            )
+        )
+        == 4_000_000
+    )
+
+
+def test_roll_bills_numel_output():
+    a = np.zeros((100, 100))
+    # single-axis roll: numel(output) * weight 1.0 = 10000
+    assert cost(lambda: fnp.roll(a, 7)) == 10_000
+    # multi-axis roll: same size output
+    assert cost(lambda: fnp.roll(a, (3, 5), axis=(0, 1))) == 10_000
+
+
+def test_meshgrid_sparse_and_copy():
+    v = np.arange(10.0)
+    # dense default: unchanged 200
+    assert cost(lambda: fnp.meshgrid(v, v)) == 200
+    # sparse=True: sum of input lengths = 20
+    assert cost(lambda: fnp.meshgrid(v, v, sparse=True)) == 20
+    # copy=False: views, floor = 1
+    assert cost(lambda: fnp.meshgrid(v, v, copy=False)) == 1
+    # sparse+copy=False: views, floor = 1
+    assert cost(lambda: fnp.meshgrid(v, v, sparse=True, copy=False)) == 1
+    # scale guard: sparse 1000x1000 = 2000, not 2,000,000
+    big = np.arange(1000.0)
+    assert cost(lambda: fnp.meshgrid(big, big, sparse=True)) == 2000
+
+
+def test_stats_uniform_cdf_composite():
+    """uniform.cdf: sub + div + 2 clip compare/selects = 4/elem, weight 1.0."""
+    import flopscope.stats as fstats
+
+    x = fnp.asarray(np.random.rand(1000))
+    assert cost(lambda: fstats.uniform.cdf(x)) == 4 * 1000
+
+
+def test_stats_cauchy_pdf_composite():
+    """cauchy.pdf: pure-arithmetic z=(x-loc)/scale; 1/(pi*scale*(1+z^2)) = 6/elem, weight 1.0."""
+    import flopscope.stats as fstats
+
+    x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+    assert cost(lambda: fstats.cauchy.pdf(x)) == 6 * 1000
+
+
+# ---------------------------------------------------------------------------
+# Audit gap fixes: clip / count_nonzero / correlate / gradient / nanmean / nanmedian
+# ---------------------------------------------------------------------------
+
+
+def test_clip_two_bounds_bills_2x_numel():
+    # clip with both bounds = 2 compare-selects/elem; numel=100 → 200
+    v = fnp.asarray(np.random.rand(100))
+    assert cost(lambda: fnp.clip(v, -1.0, 1.0)) == 200
+
+
+def test_clip_one_bound_bills_numel():
+    v = fnp.asarray(np.random.rand(100))
+    # single-bound clip: 1 compare-select/elem; 100 → 100
+    assert cost(lambda: fnp.clip(v, None, 1.0)) == 100
+    assert cost(lambda: fnp.clip(v, -1.0, None)) == 100
+
+
+def test_clip_broadcast_output_shape():
+    # broadcast: a=(1,1), bounds=(500,500) → output numel=500*500; 2 bounds → 500000
+    a = fnp.asarray(np.zeros((1, 1)))
+    lo = fnp.asarray(-np.ones((500, 500)))
+    hi = fnp.asarray(np.ones((500, 500)))
+    assert cost(lambda: fnp.clip(a, lo, hi)) == 500_000
+
+
+def test_clip_no_bound_bills_numel_floor():
+    # no-bound clip: materializing copy floor → numel
+    v = fnp.asarray(np.random.rand(100))
+    assert cost(lambda: fnp.clip(v)) == 100
+
+
+def test_clip_matches_minimum_maximum():
+    # bit-exact equivalence: clip(-1,1) == minimum(maximum(v,-1),1) == 2*numel
+    v = fnp.asarray(np.random.rand(100))
+    clip_cost = cost(lambda: fnp.clip(v, -1.0, 1.0))
+    composed_cost = cost(lambda: fnp.minimum(fnp.maximum(v, -1.0), 1.0))
+    assert clip_cost == composed_cost == 200
+
+
+def test_count_nonzero_bills_numel_axis_independent():
+    # axis-independent: always charges numel(input)
+    a = fnp.asarray(np.random.rand(2, 50))   # numel=100
+    assert cost(lambda: fnp.count_nonzero(a, axis=0)) == 100   # was 50
+    a2 = fnp.asarray(np.random.rand(1000, 2))
+    assert cost(lambda: fnp.count_nonzero(a2, axis=1)) == 2000  # was 1000
+    a3 = fnp.asarray(np.random.rand(4, 5, 6))
+    assert cost(lambda: fnp.count_nonzero(a3, axis=(0, 2))) == 120  # was 115
+
+
+def test_count_nonzero_full_reduction():
+    # dedicated wrapper: numel(input)=100 (not numel-1=99 from _counted_reduction)
+    a = fnp.asarray(np.random.rand(100))
+    assert cost(lambda: fnp.count_nonzero(a)) == 100  # was 99
+
+
+def test_correlate_valid_mode_honest():
+    # valid (numpy default): honest = (2*min-1)*(max-min+1)
+    # n=m=100: (2*100-1)*(100-100+1) = 199*1 = 199 (was 19800)
+    a = fnp.asarray(np.random.rand(100))
+    v = fnp.asarray(np.random.rand(100))
+    assert cost(lambda: fnp.correlate(a, v)) == 199
+
+
+def test_correlate_full_mode():
+    a = fnp.asarray(np.random.rand(100))
+    v = fnp.asarray(np.random.rand(100))
+    # full: 2*100*100 - 100 - 100 + 1 = 19801 (was 19800, off-by-one)
+    assert cost(lambda: fnp.correlate(a, v, mode="full")) == 19_801
+
+
+def test_correlate_same_mode():
+    a = fnp.asarray(np.random.rand(100))
+    v = fnp.asarray(np.random.rand(100))
+    # same, n=m=100: spec says 14900
+    assert cost(lambda: fnp.correlate(a, v, mode="same")) == 14_900
+
+
+def test_correlate_mode_int_and_case():
+    a = fnp.asarray(np.random.rand(100))
+    v = fnp.asarray(np.random.rand(100))
+    # mode=0 == "valid", mode=2 == "full", "V" == "valid"
+    assert cost(lambda: fnp.correlate(a, v, mode=0)) == 199
+    assert cost(lambda: fnp.correlate(a, v, mode=2)) == 19_801
+    assert cost(lambda: fnp.correlate(a, v, mode="V")) == 199
+
+
+def test_correlate_asymmetric_valid():
+    # n=10000, m=100: valid honest = (2*100-1)*(10000-100+1) = 199*9901 = 1970299
+    a = fnp.asarray(np.random.rand(10_000))
+    v = fnp.asarray(np.random.rand(100))
+    assert cost(lambda: fnp.correlate(a, v)) == 1_970_299
+
+
+def test_correlate_scalar():
+    a = fnp.asarray(np.random.rand(1))
+    v = fnp.asarray(np.random.rand(1))
+    assert cost(lambda: fnp.correlate(a, v)) == 1
+
+
+def test_gradient_spacing_surcharge_arange():
+    # np.arange(100.) passes the bit-exact uniformity test → only diff+equal+all-reduce
+    # surcharge = 3*(L-1) = 3*99 = 297; base = 196; total = 493
+    f = fnp.asarray(np.linspace(0, 1, 100) ** 2)
+    x = fnp.asarray(np.arange(100.0))
+    assert cost(lambda: fnp.gradient(f, x)) == 196 + 297
+
+
+def test_gradient_spacing_surcharge_nonuniform():
+    # non-uniform float spacing: full surcharge
+    # 1-D L=100, S=100: 3*100*98//100 + 10*98 + 3*99 + 4*100//100
+    #                  = 294 + 980 + 297 + 4 = 1575; total = 196 + 1575 = 1771
+    rng = np.random.default_rng(0)
+    f = fnp.asarray(rng.random(100))
+    x = fnp.asarray(np.sort(rng.random(100)))
+    assert cost(lambda: fnp.gradient(f, x)) == 1771
+
+
+def test_gradient_uniform_scalar_unchanged():
+    # uniform scalar spacing (no coord array): no surcharge; base unchanged
+    f = fnp.asarray(np.linspace(0, 1, 100) ** 2)
+    assert cost(lambda: fnp.gradient(f)) == 196
+    assert cost(lambda: fnp.gradient(f, 0.5)) == 196
+
+
+def test_nanmean_matches_mean():
+    # spec: flop_cost(nanmean) == flop_cost(mean) for all shapes/axes
+    a = fnp.asarray(np.random.rand(8, 5))
+    assert cost(lambda: fnp.nanmean(a)) == cost(lambda: fnp.mean(a))
+    assert cost(lambda: fnp.nanmean(a, axis=1)) == cost(lambda: fnp.mean(a, axis=1))
+    a2 = fnp.asarray(np.random.rand(1000, 2))
+    assert cost(lambda: fnp.nanmean(a2, axis=1)) == cost(lambda: fnp.mean(a2, axis=1))
+
+
+def test_nanmean_full_reduction_100():
+    # (10,10) full reduction: mean charges sum_cost(99) + 1 divide = 100
+    a = fnp.asarray(np.random.rand(10, 10))
+    assert cost(lambda: fnp.nanmean(a)) == 100  # was 99
+
+
+def test_nanmedian_matches_median():
+    # spec: flop_cost(nanmedian) == flop_cost(median) for all shapes/axes
+    a = fnp.asarray(np.random.rand(8, 5))
+    assert cost(lambda: fnp.nanmedian(a)) == cost(lambda: fnp.median(a))
+    assert cost(lambda: fnp.nanmedian(a, axis=1)) == cost(lambda: fnp.median(a, axis=1))
+    a2 = fnp.asarray(np.random.rand(1000, 2))
+    assert cost(lambda: fnp.nanmedian(a2, axis=1)) == cost(lambda: fnp.median(a2, axis=1))
+
+
+def test_nanmedian_tier2_full_reduction():
+    # (10,10) full reduction: Tier-2 = 1 orbit × 100 = 100 (was 99)
+    a = fnp.asarray(np.random.rand(10, 10))
+    assert cost(lambda: fnp.nanmedian(a)) == 100  # was 99
+
+
+def test_stats_gap_fixes_packaged_weight_unity():
+    """With packaged weights loaded, new composite constants must hold (weight=1.0)."""
+    load_weights()
+    import flopscope.stats as fstats
+
+    x100 = fnp.asarray(np.linspace(-3.0, 3.0, 100))
+    q100 = fnp.asarray(np.random.rand(100) * 0.98 + 0.01)
+    xpos100 = fnp.asarray(np.abs(np.random.rand(100)) + 0.1)
+    u100 = fnp.asarray(np.random.rand(100))
+
+    assert cost(lambda: fstats.laplace.cdf(x100)) == 40 * 100
+    assert cost(lambda: fstats.laplace.ppf(q100)) == 51 * 100
+    assert cost(lambda: fstats.lognorm.pdf(xpos100, 0.5)) == 62 * 100
+    assert cost(lambda: fstats.lognorm.cdf(xpos100, 0.5)) == 70 * 100
+    assert cost(lambda: fstats.uniform.cdf(u100)) == 4 * 100
+    assert cost(lambda: fstats.cauchy.pdf(x100)) == 6 * 100
+
+
 # ---------------- reductions & predicates (audit-2 verified) ----------------
 
 

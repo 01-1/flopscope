@@ -920,7 +920,7 @@ class TestStats:
         assert _cost_of(flopscope.stats.uniform.pdf, numpy.random.rand(100)) == 100
 
     def test_uniform_cdf(self, we):
-        assert _cost_of(flopscope.stats.uniform.cdf, numpy.random.rand(100)) == 100
+        assert _cost_of(flopscope.stats.uniform.cdf, numpy.random.rand(100)) == 4 * 100  # sub+div+2 select
 
     def test_uniform_ppf(self, we):
         assert _cost_of(flopscope.stats.uniform.ppf, numpy.random.rand(100)) == 100
@@ -929,7 +929,7 @@ class TestStats:
         assert _cost_of(flopscope.stats.expon.pdf, numpy.random.rand(100)) == 100
 
     def test_cauchy_pdf(self, we):
-        assert _cost_of(flopscope.stats.cauchy.pdf, numpy.random.rand(100)) == 100
+        assert _cost_of(flopscope.stats.cauchy.pdf, numpy.random.rand(100)) == 6 * 100  # pure-arithmetic: 6 FLOPs/elem
 
     def test_logistic_cdf(self, we):
         assert _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 100
@@ -937,7 +937,7 @@ class TestStats:
     def test_laplace_ppf(self, we):
         assert (
             _cost_of(flopscope.stats.laplace.ppf, numpy.random.rand(100) * 0.98 + 0.01)
-            == 100
+            == 51 * 100  # composite: two eager log branches + edge selects
         )
 
     def test_lognorm_pdf(self, we):
@@ -947,7 +947,7 @@ class TestStats:
                 numpy.abs(numpy.random.rand(100)) + 0.1,
                 0.5,
             )
-            == 100
+            == 62 * 100  # composite: log + exp + arithmetic
         )
 
     def test_truncnorm_cdf(self, we):

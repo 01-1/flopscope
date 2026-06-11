@@ -23,8 +23,10 @@ class UniformDistribution(ContinuousDistribution):
 
     Notes
     -----
-    ``loc`` is the lower bound and ``scale`` is the interval width. Each
-    public method deducts ``1 * numel(input)`` FLOPs from the active budget.
+    ``loc`` is the lower bound and ``scale`` is the interval width. pdf and
+    ppf deduct ``1 * numel(input)`` FLOPs. cdf deducts ``4 * numel(input)``
+    FLOPs (composite: sub + div + 2 clip compare/selects, weight 1.0;
+    calibrated alpha 4.0).
     """
 
     def __init__(self):
@@ -82,7 +84,8 @@ class UniformDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.uniform.cdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``4 * numel(x)`` (composite: sub + div + 2 clip
+        compare/selects, weight 1.0).
 
         Examples
         --------
@@ -92,7 +95,7 @@ class UniformDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.uniform.cdf(x), 3)
         array([0. , 0.5, 1. ])
         """
-        return self._deduct_and_call("cdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("cdf", 4, x, loc=loc, scale=scale)
 
     def ppf(self, q, loc=0, scale=1):
         """Evaluate the percent-point function.
