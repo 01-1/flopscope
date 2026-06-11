@@ -350,7 +350,7 @@ Stats ops are composite (weight 1.0; all per-element factors in `flop_cost`).
 | `stats.lognorm.ppf` | 106 | DERIVED composite (ndtri + exp); calibration 106.35; confirmed issue audit |
 | `stats.lognorm.pdf` | 62 | DERIVED composite: log + exp + arithmetic per element; audit-2 verified; calibration alpha 62.30 |
 | `stats.lognorm.cdf` | 70 | DERIVED composite: log + erf rational approx + arithmetic; audit-2 verified; calibration alpha 69.98 |
-| `stats.laplace.pdf` | 1 | DECLARED: 1 FLOP/elem (abs + exp; weight 1.0) |
+| `stats.laplace.pdf` | 1 | DECLARED: abs + exp per elem; transcendental tier (weight 16.0) |
 | `stats.laplace.cdf` | 40 | DERIVED composite: two eager exp branches + 8 arith/cmp/select; audit-2 verified |
 | `stats.laplace.ppf` | 51 | DERIVED composite: two eager log branches + edge selects; audit-2 verified |
 | `stats.uniform.pdf` | 1 | DECLARED: 1 FLOP/elem |
@@ -367,8 +367,8 @@ Source: `src/flopscope/stats/`.
 |---|---|---|---|
 | `bartlett` | `4n` (weight 1.0) | DERIVED: compare + divide + add + select per sample (FMA=2, 4 ops/sample) | `_window.py:bartlett_cost` |
 | `blackman` | `40n` (weight 1.0) | DERIVED composite: 2 cosine evals at transcendental rate (16/elem each) + 8 mul/div/add per sample; all folded into flop_cost | `_window.py:blackman_cost` |
-| `hamming` | `2n` (weight 1.0) | DECLARED: 1 mul + 1 add per sample (FMA=2) | `_window.py:hamming_cost` |
-| `hanning` | `2n` (weight 1.0) | DECLARED: 1 mul + 1 add per sample (FMA=2) | `_window.py:hanning_cost` |
+| `hamming` | `2n` (weight 8.0) | DECLARED: cosine eval per sample at the half-transcendental tier | `_window.py:hamming_cost` |
+| `hanning` | `2n` (weight 8.0) | DECLARED: cosine eval per sample at the half-transcendental tier | `_window.py:hanning_cost` |
 | `kaiser` | `23n` (weight 1.0) | DERIVED composite: 1 Bessel I₀ eval at transcendental tier (16/elem) + 7 scalar FLOPs per sample; folded into flop_cost | `_window.py:kaiser_cost` |
 
 Source: `src/flopscope/_window.py`.
