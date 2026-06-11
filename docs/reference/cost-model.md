@@ -64,8 +64,7 @@ The weight reflects the non-trivial branch or index computation per element.
 Operations that return a view of existing memory, or that inspect metadata
 without touching element values, are billed 0.  Examples: reshape, ravel,
 flatten, transpose, diagonal (as a view), squeeze, broadcast_to, astype (no
-copy), fftshift/ifftshift, fftfreq/rfftfreq, linalg.diagonal,
-linalg.matrix_transpose.
+copy), fftshift/ifftshift, linalg.diagonal, linalg.matrix_transpose.
 
 ### Composite ops (weight 1.0 with heterogeneous flop_cost)
 
@@ -218,7 +217,8 @@ Weight: **1.0** for all counted generators.  Source: `src/flopscope/_free_ops.py
 | `searchsorted` | `m × ⌈log₂ n⌉` (m = queries, n = sorted size) | DECLARED binary search |
 | `sort_complex` | `a.size × ⌈log₂(a.size)⌉` on flattened size | DECLARED |
 | `in1d`, `isin` | `(n + m) × ⌈log₂(n + m)⌉` (sort path); `max(sort_cost(n+m), 2nm)` when numpy's masked-loop path triggers (small integer ar2) | DECLARED algo-aware |
-| `intersect1d`, `setdiff1d`, `setxor1d`, `union1d` | `(n + m) × ⌈log₂(n + m)⌉` | DECLARED |
+| `intersect1d` | `sort_cost(n) + sort_cost(m) + sort_cost(n+m)` (default `assume_unique=False`); `sort_cost(n+m)` when `assume_unique=True` | DECLARED: numpy calls `unique()` on both inputs when `assume_unique` is falsy |
+| `setdiff1d`, `setxor1d`, `union1d` | `(n + m) × ⌈log₂(n + m)⌉` | DECLARED |
 
 All sort/select ops use **weight 1.0**; comparison = 1 FLOP convention.
 Source: `src/flopscope/_sorting_ops.py`, `src/flopscope/_flops.py` (`sort_cost`, `search_cost`).
@@ -249,7 +249,7 @@ matrices charge 0.
 | `linalg.tensorsolve` | `2n³/3 + 2n²`, `n = prod(shape[ind:])` | DERIVED: G&VL 4e §3.2 via solve | `_solvers.py:tensorsolve_cost` |
 | `linalg.cond`, `linalg.matrix_rank` | `4 × m × n × min(m,n)` (via SVD) | DERIVED | `_properties.py` |
 | `linalg.pinv`, `linalg.lstsq` | `m × n × min(m,n)` | DERIVED: LAPACK dgelsd / SVD path; G&VL 4e §5.5 | `_solvers.py` |
-| `linalg.cross` | `6 × n` (delegates to `fnp.cross`) | DERIVED | `_aliases.py` |
+| `linalg.cross` | `3 × numel(output)` (delegates to `fnp.cross`) | DERIVED | `_aliases.py` |
 | `linalg.multi_dot` | optimal chain matmul cost (CLRS §15.2); each step uses `matmul_cost(m,k,n)` = `2mkn − mn` | DERIVED | `_compound.py:multi_dot_cost` |
 | `linalg.outer`, `linalg.tensordot`, `linalg.vecdot`, `linalg.matmul`, `linalg.matrix_power` | delegates to `fnp.*` | DERIVED | `_compound.py`, `_aliases.py` |
 | `linalg.diagonal`, `linalg.matrix_transpose` | 0 (view) | DECLARED free | `_aliases.py` |
@@ -291,7 +291,9 @@ Fourier Transform_, 1992 §1.4, Cooley-Tukey radix-2):
 | `fft.rfft`, `fft.irfft`, `fft.rfft2`, `fft.irfft2`, `fft.rfftn`, `fft.irfftn` | `5 × (N/2) × ⌈log₂ N⌉` | DERIVED: real-input / real-output half-spectrum |
 | `fft.hfft` | `5 × (n_out/2) × ⌈log₂ n_out⌉` | DERIVED: hfft = irfft(conj(a)) — conjugate-symmetry halves the work (Van Loan 1992 §1.4) |
 | `fft.ihfft` | `5 × (n/2) × ⌈log₂ n⌉` | DERIVED: same `hfft_cost(n)` formula |
-| `fft.fftfreq`, `fft.rfftfreq`, `fft.fftshift`, `fft.ifftshift` | 0 | DECLARED free/metadata |
+| `fft.fftfreq` | `n` (index grid scaled by `1/(n*d)` — one divide per output element) | DECLARED: `n` divides |
+| `fft.rfftfreq` | `n//2 + 1` (real-spectrum grid has `n//2 + 1` elements) | DECLARED: `n//2 + 1` divides |
+| `fft.fftshift`, `fft.ifftshift` | 0 | DECLARED free/metadata |
 
 All counted FFT ops use **weight 1.0**.  Source: `src/flopscope/numpy/fft/_transforms.py`.
 
@@ -304,7 +306,9 @@ All counted FFT ops use **weight 1.0**.  Source: `src/flopscope/numpy/fft/_trans
 | `polyval` | `2 × deg × points` (Horner: 1 mul + 1 add per coefficient per point, FMA=2) | DERIVED | `_polynomial.py` |
 | `polyfit` | `2 × m × n × min(m,n)` (via least-squares SVD) | DERIVED | `_polynomial.py` |
 | `polyadd`, `polysub` | `min(len_a, len_b)` | DERIVED | `_polynomial.py` |
-| `polymul`, `convolve` (1-D full mode) | `2nm − n − m` (direct conv, FMA=2) | DERIVED; `convolve` always uses full-mode cost regardless of `mode=` argument | `_polynomial.py` |
+| `polymul` | `2nm − n − m` (direct conv, FMA=2) | DERIVED | `_polynomial.py` |
+| `convolve` | `full`: `2nm − n − m`; `valid`: `(2·min−1)·(max−min+1)`; `same`: exact dot-length sum per numpy C layout | DERIVED per-mode | `_pointwise.py:convolve` |
+| `poly` (1-D, build from roots) | `(3n² + n) // 2`, `n = len(roots)` (iterative convolution with length-2 kernel per root; FMA=2) | DERIVED | `_polynomial.py:poly_cost` |
 | `polyder` | `t × n − t(t+1)/2`, `t = min(m, n−1)` (order-aware; one multiply per surviving coefficient per derivative step) | DERIVED | `_polynomial.py:polyder_cost` |
 | `polyint` | `m × n + m(m−1)/2` (order-aware; m passes each dividing n+j coefficients) | DERIVED | `_polynomial.py:polyint_cost` |
 | `roots` | `10n³`, `n = stripped companion dimension` (zero-leading/trailing coefficients stripped before companion matrix is built) | DERIVED: delegates to `eigvals_cost` on trimmed degree | `_polynomial.py:roots_cost` |
@@ -321,7 +325,8 @@ Random ops are composite: the generation kernel cost and any setup cost
 
 | Op / family | flop_cost | basis | source |
 |---|---|---|---|
-| `random.rand`, `random.uniform`, `random.random`, `random.random_sample`, `random.ranf`, `random.sample` | `numel(output)` | DECLARED: 1 FLOP per uniform draw | `_cost_formulas.py` |
+| `random.rand`, `random.random`, `random.random_sample`, `random.ranf`, `random.sample` | `numel(output)` | DECLARED: 1 FLOP per uniform draw | `_cost_formulas.py` |
+| `random.uniform` | `3 × numel(output)` | DERIVED: affine map `low + (high − low) × U` = 1 sub + 1 mul + 1 add per element (FMA=2, three ops) | `_cost_formulas.py` |
 | `random.randn`, `random.standard_normal`, `random.normal` | `6 × numel(output)` | DECLARED: Box-Muller / ziggurat ≈6 ops/sample (Devroye, _Non-Uniform Random Variate Generation_, 1986, §IV.4) | `_cost_formulas.py` |
 | `random.randint`, `random.integers` | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=True, p=None) | `numel(output)` | DECLARED | `_cost_formulas.py` |
@@ -331,7 +336,7 @@ Random ops are composite: the generation kernel cost and any setup cost
 | `random.shuffle`, `random.permutation` | `numel(input)` | DECLARED: Fisher-Yates O(n) | `_cost_formulas.py` |
 | `random.exponential` | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.poisson`, `random.binomial`, `random.geometric`, `random.hypergeometric`, `random.negative_binomial`, `random.multinomial` | `numel(output)` | DECLARED | `_cost_formulas.py` |
-| `random.multivariate_normal` | `d³/3 + 2×N×d² + 16×N×d` (N=size, d=dims) | DERIVED composite: covariance factorization + affine transform + N·d transcendental draws | `_cost_formulas.py` |
+| `random.multivariate_normal` | `26d³ + 2Nd² + 16Nd` (d=dims, N=size) | DERIVED composite: SVD factorization of covariance (`svd_cost(d,d,with_vectors=True)` = `6d·d² + 20d³` = `26d³`) + affine transform (`2Nd²`) + N·d transcendental normal draws (`16Nd`) | `_cost_formulas.py` |
 | `random.beta`, `random.dirichlet`, `random.f`, `random.gamma`, `random.gumbel`, `random.laplace`, `random.logistic`, `random.lognormal`, `random.logseries`, `random.pareto`, `random.power`, `random.rayleigh`, `random.standard_cauchy`, `random.standard_exponential`, `random.standard_gamma`, `random.standard_t`, `random.triangular`, `random.vonmises`, `random.wald`, `random.weibull`, `random.zipf` | `numel(output)` (with transcendental weight or composite constant, per distribution) | DECLARED / DERIVED | `_cost_formulas.py` |
 
 Source: `src/flopscope/numpy/random/_cost_formulas.py`.
@@ -344,19 +349,29 @@ Stats ops are composite (weight 1.0; all per-element factors in `flop_cost`).
 
 | Op | flop_cost (per element) | basis |
 |---|---|---|
-| `stats.norm.ppf` | 83 | DERIVED composite: Acklam degree-5 rational + Newton step (erf + pdf + correction) + affine; measured 83.05 FP-instr/elem (empirical-weights.md); confirmed issue audit |
-| `stats.norm.pdf` | ≈27 | DERIVED: exp + affine normalization |
-| `stats.norm.cdf` | ≈48 | DERIVED: erf + affine |
-| `stats.truncnorm.ppf` | 81 | DERIVED composite (affine + rational + Newton with erf+exp); calibration 82.52; confirmed issue audit |
-| `stats.lognorm.ppf` | 106 | DERIVED composite (ndtri + exp); calibration 106.35; confirmed issue audit |
-| `stats.lognorm.pdf` | 62 | DERIVED composite: log + exp + arithmetic per element; audit-2 verified; calibration alpha 62.30 |
-| `stats.lognorm.cdf` | 70 | DERIVED composite: log + erf rational approx + arithmetic; audit-2 verified; calibration alpha 69.98 |
-| `stats.laplace.pdf` | 1 | DECLARED: abs + exp per elem; transcendental tier (weight 16.0) |
-| `stats.laplace.cdf` | 40 | DERIVED composite: two eager exp branches + 8 arith/cmp/select; audit-2 verified |
-| `stats.laplace.ppf` | 51 | DERIVED composite: two eager log branches + edge selects; audit-2 verified |
+| `stats.norm.pdf` | 27 | DERIVED: exp(17) + affine normalization(10); composite, weight 1.0 |
+| `stats.norm.cdf` | 48 | DERIVED: erf rational approx(45) + affine(3); composite, weight 1.0 |
+| `stats.norm.ppf` | 83 | DERIVED composite: Acklam degree-5 rational + Newton step (erf + pdf + correction) + affine; empirical-weights.md 83.05 FP-instr/elem |
+| `stats.expon.pdf` | 22 | DERIVED: z=(x−loc)/scale(2) + exp(−z)(17) + /scale(1) + where(2); weight 1.0 |
+| `stats.expon.cdf` | 22 | DERIVED: z(2) + exp(−z)(17) + 1−exp(1) + where(2); weight 1.0 |
+| `stats.expon.ppf` | 27 | DERIVED: loc−scale·log1p(−q)(19) + 3 where/cmp/and(8); weight 1.0 |
+| `stats.cauchy.pdf` | 6 | DERIVED pure-arithmetic: z=(x−loc)/scale; 1/(π·scale·(1+z²)) = 6 FLOPs/elem; weight 1.0 |
+| `stats.cauchy.cdf` | 20 | DERIVED: z(2) + arctan(16) + /π(1) + 0.5+(1); weight 1.0 |
+| `stats.cauchy.ppf` | 28 | DERIVED: q−0.5(1) + π·(1) + tan(16) + loc+scale·(2) + 3 where(8); weight 1.0 |
+| `stats.logistic.pdf` | 23 | DERIVED: z(2) + exp(−z)(17) + (1+ez)(1) + sq(1) + scale·(1) + div(1); weight 1.0 |
+| `stats.logistic.cdf` | 21 | DERIVED: z(2) + exp(−z)(17) + 1+ez(1) + 1/denom(1); weight 1.0 |
+| `stats.logistic.ppf` | 28 | DERIVED: 1−q(1) + q/(1−q)(1) + log(16) + loc+scale·(2) + 3 where(8); weight 1.0 |
+| `stats.laplace.pdf` | 22 | DERIVED: \|x−loc\|(3) + exp(−z)(17) + /(2·scale)(2); weight 1.0 |
+| `stats.laplace.cdf` | 40 | DERIVED composite: two eager exp branches + arithmetic/select; weight 1.0 |
+| `stats.laplace.ppf` | 51 | DERIVED composite: two eager log branches + edge selects; weight 1.0 |
+| `stats.truncnorm.pdf` | 28 | DERIVED composite: norm.pdf + cdf normalization; weight 1.0 |
+| `stats.truncnorm.cdf` | 51 | DERIVED composite: affine + norm.cdf + boundary selects; weight 1.0 |
+| `stats.truncnorm.ppf` | 81 | DERIVED composite: affine + rational + Newton with erf+exp; weight 1.0 |
+| `stats.lognorm.pdf` | 62 | DERIVED composite: log + exp + arithmetic per element; weight 1.0 |
+| `stats.lognorm.cdf` | 70 | DERIVED composite: log + erf rational approx + arithmetic; weight 1.0 |
+| `stats.lognorm.ppf` | 106 | DERIVED composite: ndtri + exp; weight 1.0 |
 | `stats.uniform.pdf` | 1 | DECLARED: 1 FLOP/elem |
-| `stats.uniform.cdf` | 4 | DERIVED composite: sub + div + 2 clip compare/selects; calibrated alpha 4.0 |
-| `stats.cauchy.pdf` | 6 | DERIVED pure-arithmetic: z=(x−loc)/scale; 1/(π·scale·(1+z²)) = 6 FLOPs/elem; weight 1.0; calibrated alpha 6.0 |
+| `stats.uniform.cdf` | 4 | DERIVED: sub + div + 2 clip compare/selects; weight 1.0 |
 
 Source: `src/flopscope/stats/`.
 
@@ -397,7 +412,8 @@ Source: `src/flopscope/_counting_ops.py`, `src/flopscope/_free_ops.py`.
 |---|---|---|
 | `unique`, `unique_all`, `unique_counts`, `unique_inverse`, `unique_values` | `n × ⌈log₂ n⌉` | DECLARED sort-based |
 | `in1d`, `isin` | `(n+m) × ⌈log₂(n+m)⌉` | DECLARED sort-based |
-| `intersect1d`, `setdiff1d`, `setxor1d`, `union1d` | `(n+m) × ⌈log₂(n+m)⌉` | DECLARED sort-based |
+| `intersect1d` | `sort_cost(n) + sort_cost(m) + sort_cost(n+m)` (default); `sort_cost(n+m)` when `assume_unique=True` | DECLARED: pre-sorts both inputs when `assume_unique` is falsy |
+| `setdiff1d`, `setxor1d`, `union1d` | `(n+m) × ⌈log₂(n+m)⌉` | DECLARED sort-based |
 | `searchsorted` | `m × ⌈log₂ n⌉` | DECLARED binary search |
 
 Comparison = 1 FLOP convention; weight 1.0.
@@ -417,6 +433,10 @@ Comparison = 1 FLOP convention; weight 1.0.
 | `isclose` | `6·numel(broadcast)` (sub + 2·abs + mul + add + cmp per element) | DECLARED | `_pointwise.py` |
 | `trace` (numpy.trace) | `min(ax1, ax2) × n_traces` where `n_traces = size / (shape[ax1] × shape[ax2])` (batch-multiplied) | DERIVED | `_counting_ops.py:trace` |
 | `correlate` | mode-aware: `full` = `2nm−n−m+1`; `valid` = `(2·min−1)·(max−min+1)`; `same` = exact dot-length sum per numpy C layout | DERIVED per-mode | `_pointwise.py:_correlate_cost` |
+| `cross` | `3 × numel(output)` (2 muls + 1 sub per output scalar; 3-vec path preserves last dim, 2-D z-only drops last dim) | DERIVED: FMA=2, 3 FLOPs per output element | `_pointwise.py:cross` |
+| `cov` | `2f²s + 2fs` (f = features, s = samples) | DERIVED: Gram term `f²` dot products of length `s` (2f²s) + centering pass `fs` elements × 2 FLOPs | `_pointwise.py:_cov_cost` |
+| `corrcoef` | `2f²s + 2fs + 2f² + f` | DERIVED: cov_cost + normalization (f² divides at weight 2.0 + f sqrts) | `_pointwise.py:_corrcoef_cost` |
+| `unwrap` | `13 × numel(input)` | DERIVED: 13 elementwise ufunc passes (diff, mod, cmp×2, bitwise, select×2, sub, abs, cmp, select, cumsum); prior value was 7 | `_unwrap.py:unwrap_cost` |
 
 ---
 
@@ -428,6 +448,16 @@ for gather-tier scatter ops).
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
+| `diag` (extract, 2-D input) | `min(m, n)` | DECLARED: copies the `min(m,n)` diagonal elements | `_free_ops.py` |
+| `diag` (construct, 1-D input) | `numel(output)` = `(n + \|k\|)²` | DECLARED: constructs diagonal matrix of that size | `_free_ops.py` |
+| `diagonal` | 0 (view) | DECLARED: `numpy.diagonal` returns a read-only view | `_free_ops.py` |
+| `argwhere` | `numel(input)` (weight 1.0) | DECLARED: == transpose(nonzero); nonzero is weight 1.0 | `_free_ops.py` |
+| `bmat` | `numel(output)` (weight 1.0) | DECLARED: block-matrix concatenation copy | `_free_ops.py` |
+| `fromiter` | `numel(output)` (weight 1.0) | DECLARED: iterates and fills output buffer | `_free_ops.py` |
+| `compress` | `len(condition) + 4 × numel(output)` (weight 1.0) | DECLARED: condition scan + gather; mirrors `extract` | `_free_ops.py` |
+| `packbits` | `numel(input)` (weight 1.0) | DECLARED: per-bit test+shift; symmetric with `unpackbits` | `_free_ops.py` |
+| `mask_indices` | `2n² + 8k` (weight 1.0, `k` = number of selected index pairs) | DECLARED: n² mask scan + 8 ops per index pair gathered | `_free_ops.py` |
+| `take_along_axis` | `numel(output)` (weight 4.0, gather tier) | DECLARED: gather-tier; identical to `take` | `_free_ops.py` |
 | `insert` | `numel(output)` | DECLARED: np.insert allocates and copies arr + values | `_free_ops.py` |
 | `append` | `numel(output)` = arr.size + values.size | DECLARED: np.append = concatenate | `_free_ops.py` |
 | `delete` | `numel(output)` | DECLARED: surviving elements copied | `_free_ops.py` |
@@ -450,10 +480,10 @@ inspect metadata without touching element values charge 0 FLOPs.
 Includes: `reshape`, `ravel`, `flatten`, `transpose`, `squeeze`,
 `expand_dims`, `broadcast_to`, `atleast_1d/2d/3d`, `asarray` (no copy),
 `asfortranarray`, `ascontiguousarray`, `astype` (no copy), `view`,
-`diagonal` (view path), `diag` (view path), `squeeze`, `moveaxis`, `swapaxes`,
+`diagonal` (view), `squeeze`, `moveaxis`, `swapaxes`,
 `ndim`, `shape`, `size`, `nbytes`, `itemsize`, `dtype`, `flags`, `base`,
 `data`, `ctypes`, `strides`, `T`, `linalg.diagonal`, `linalg.matrix_transpose`,
-`fft.fftfreq`, `fft.rfftfreq`, `fft.fftshift`, `fft.ifftshift`,
+`fft.fftshift`, `fft.ifftshift`,
 `isscalar`, `isfortran`, `ndim` attribute.
 
 Source: `src/flopscope/_free_ops.py`.

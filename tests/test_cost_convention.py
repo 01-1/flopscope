@@ -88,6 +88,18 @@ _u100 = fnp.asarray(_rng.uniform(0.01, 0.99, 100))
 _zeros100 = fnp.asarray(np.zeros(100))
 _v100_pos = fnp.asarray(np.asarray(_v100) > 0)  # bool mask, built outside BudgetContext
 
+# Copy / gather / view ops
+_sq10_2d = fnp.asarray(
+    _rng.standard_normal((10, 10))
+)  # 2-D: diag extract → min(10,10)=10
+_v5_1d = fnp.asarray(_rng.standard_normal(5))  # 1-D: diag construct → (5+0)^2=25 output
+_sq3a = fnp.asarray(_rng.standard_normal((3, 3)))
+_sq3b = fnp.asarray(_rng.standard_normal((3, 3)))
+_idx10x3 = fnp.asarray(np.random.default_rng(7).integers(0, 10, (10, 3)))
+_cond5 = fnp.asarray(np.array([True, False, True, True, False]))
+_v5_float = fnp.asarray(np.array([1.0, 2.0, 3.0, 4.0, 5.0]))
+_v8_bits = fnp.asarray(np.array([1, 0, 1, 1, 0, 0, 1, 0], dtype=np.uint8))
+
 # ---------------------------------------------------------------------------
 # COVERED_ELSEWHERE: ops with exact cost assertions in other test files.
 # These are excluded from OP_EXPECTATIONS and need not appear in DEFERRED.
@@ -485,6 +497,26 @@ OP_EXPECTATIONS: dict[str, tuple] = {
     "linalg.trace": (lambda: fnp.linalg.trace(_sq10), 10),
     "trace": (lambda: fnp.trace(_sq10), 10),
     "linalg.cross": (lambda: fnp.linalg.cross(_a3, _b3), 3 * 3),
+    # ---- Copy / gather / view ops (audit-completion pins) ------------------
+    # diag extract: 2-D (10,10) → min(10,10)=10
+    "diag": (lambda: fnp.diag(_sq10_2d), 10),
+    # diagonal: returns a view → 0 FLOPs
+    "diagonal": (lambda: fnp.diagonal(_sq10_2d), 0),
+    # take_along_axis: gather tier weight 4.0; conftest resets weights → flop_cost = numel(output) = 30
+    # (billing = weight * flop_cost = 4.0 * 30 = 120 in production; 1.0 * 30 = 30 here)
+    "take_along_axis": (lambda: fnp.take_along_axis(_sq10_2d, _idx10x3, axis=1), 30),
+    # argwhere: numel(input) at weight 1.0; _v100_pos is pre-built bool (100 elems)
+    "argwhere": (lambda: fnp.argwhere(_v100_pos), 100),
+    # bmat: numel(output) of 6×6 block matrix = 36
+    "bmat": (lambda: fnp.bmat([[_sq3a, _sq3b], [_sq3a, _sq3b]]), 36),
+    # fromiter: 10 elements
+    "fromiter": (lambda: fnp.fromiter(range(10), float), 10),
+    # compress: len(cond)=5 + 4*numel(out)=4*3=12 → 17
+    "compress": (lambda: fnp.compress(_cond5, _v5_float), 17),
+    # packbits: numel(input)=8
+    "packbits": (lambda: fnp.packbits(_v8_bits), 8),
+    # unwrap: 13 * numel(input) = 13 * 100
+    "unwrap": (lambda: fnp.unwrap(_v100), 13 * 100),
 }
 
 # ---------------------------------------------------------------------------
@@ -497,13 +529,13 @@ DEFERRED: dict[str, str] = {
     "random.randn": "random_sampler family; flop_cost=numel; weight=16.0",
     "random.normal": "random_sampler family; flop_cost=numel; weight=16.0",
     "random.standard_normal": "random_sampler family; flop_cost=numel; weight=16.0",
-    "random.uniform": "random_sampler family; flop_cost=numel; weight=1.0",
+    "random.uniform": "random_sampler affine map; flop_cost=3*numel (draw + low+(high-low)*U); weight=1.0; probed in test_family_defaults_random_sampler",
     "random.random": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.random_sample": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.ranf": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.sample": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.randint": "random_sampler family; flop_cost=numel; weight=1.0",
-    "random.random_integers": "random_sampler family; flop_cost=numel; weight=1.0",
+    "random.random_integers": "blacklisted; deprecated alias; intentionally unsupported (raises AttributeError)",
     "random.exponential": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.poisson": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.binomial": "random_sampler family; flop_cost=numel; weight=1.0",
@@ -641,36 +673,36 @@ DEFERRED: dict[str, str] = {
     "random.RandomState.seed": "free_random_method — state setter",
     "random.RandomState.set_state": "free_random_method — state setter",
     # ---- Stats ops ---------------------------------------------------------
-    # gap fixes landed in fix/cost-model-gaps (audit-2 verified):
-    # stats.lognorm.pdf -> 62/elem, stats.lognorm.cdf -> 70/elem,
-    # stats.laplace.cdf -> 40/elem, stats.laplace.ppf -> 51/elem,
-    # stats.uniform.cdf -> 4/elem, stats.cauchy.pdf -> 6/elem
-    # (those entries now live in EXACT_CHARGE_TABLE above)
-    "stats.uniform.pdf": "simple pass-through; numel*1",
-    "stats.uniform.ppf": "simple pass-through; numel*1",
-    "stats.expon.pdf": "simple; numel*1",
-    "stats.expon.cdf": "simple; numel*1",
-    "stats.expon.ppf": "simple; numel*1",
-    "stats.cauchy.cdf": "simple; numel*1 (single arctan transcendental at weight 16.0)",
-    "stats.cauchy.ppf": "simple; numel*1 (single tan transcendental at weight 16.0)",
-    "stats.logistic.pdf": "simple; numel*1",
-    "stats.logistic.cdf": "simple; numel*1",
-    "stats.logistic.ppf": "simple; numel*1",
-    "stats.laplace.pdf": "simple; numel*1",
-    "stats.truncnorm.pdf": "simple; numel*1",
-    "stats.truncnorm.cdf": "simple; numel*1",
+    # All composite kernels, weight 1.0; exact values read from _deduct_and_call() args.
+    # Pinned in OP_EXPECTATIONS: norm.pdf=27, norm.cdf=48, norm.ppf=83,
+    #   lognorm.ppf=106, lognorm.pdf=62, lognorm.cdf=70, truncnorm.ppf=81,
+    #   laplace.cdf=40, laplace.ppf=51, uniform.cdf=4, cauchy.pdf=6.
+    # DEFERRED (not probed individually; formula documented in cost-model.md):
+    "stats.uniform.pdf": "composite; 1 FLOP/elem (trivial range-check only); weight 1.0",
+    "stats.uniform.ppf": "composite; 1 FLOP/elem; weight 1.0",
+    "stats.expon.pdf": "composite; 22 FLOPs/elem (z+exp+where); weight 1.0",
+    "stats.expon.cdf": "composite; 22 FLOPs/elem (z+exp+where); weight 1.0",
+    "stats.expon.ppf": "composite; 27 FLOPs/elem (log1p+where); weight 1.0",
+    "stats.cauchy.cdf": "composite; 20 FLOPs/elem (z+arctan+arith); weight 1.0",
+    "stats.cauchy.ppf": "composite; 28 FLOPs/elem (tan+loc/scale+where); weight 1.0",
+    "stats.logistic.pdf": "composite; 23 FLOPs/elem (z+exp+arith); weight 1.0",
+    "stats.logistic.cdf": "composite; 21 FLOPs/elem (z+exp+arith); weight 1.0",
+    "stats.logistic.ppf": "composite; 28 FLOPs/elem (log+loc/scale+where); weight 1.0",
+    "stats.laplace.pdf": "composite; 22 FLOPs/elem (abs+exp+scale); weight 1.0",
+    "stats.truncnorm.pdf": "composite; 28 FLOPs/elem (norm.pdf+cdf-norm); weight 1.0",
+    "stats.truncnorm.cdf": "composite; 51 FLOPs/elem (affine+norm.cdf+selects); weight 1.0",
     # ---- counted_custom: copy / gather / scatter / structure ops ----------
     "array": "numel(input); plain copy",
     "full": "numel; scalar broadcast",
     "full_like": "numel; trivial",
-    "diag": "min(m,n) extract or n^2 construct; weight 1.0 (copy tier)",
+    "diag": "pinned in OP_EXPECTATIONS (extract path; construct path = numel(output))",
     "concatenate": "numel(output); trivial copy",
     "concat": "numel(output); numpy 2.x alias for concatenate",
     "stack": "numel(output); trivial copy",
     "vstack": "numel(output); trivial copy",
     "dstack": "numel(output); trivial copy",
     "block": "numel(output); trivial copy",
-    "bmat": "numel(output); trivial copy; weight 1.0 (matches block)",
+    "bmat": "pinned in OP_EXPECTATIONS (numel(output) weight 1.0)",
     "roll": "numel(output); materializing copy",
     "hstack": "numel(output); materializing copy",
     "column_stack": "numel(output); materializing copy (1-D to 2-D columns)",
@@ -692,19 +724,19 @@ DEFERRED: dict[str, str] = {
     "asarray_chkfinite": "numel(input); finite check",
     "nonzero": "numel(input)",
     "flatnonzero": "numel(input)",
-    "argwhere": "numel(input) at weight 1.0 (== transpose(nonzero); nonzero is 1.0)",
+    "argwhere": "pinned in OP_EXPECTATIONS (numel(input) weight 1.0)",
     "select": "numel(output) gather tier",
     "piecewise": "numel(input); local_callback",
     "apply_along_axis": "numel(output); local_callback",
     "apply_over_axes": "numel(output); local_callback",
     "fromfunction": "numel(output); local_callback",
-    "fromiter": "numel(output); local_callback; weight 1.0 (no libm)",
-    "diagonal": "view; 0 FLOPs (numpy.diagonal returns a read-only view)",
+    "fromiter": "pinned in OP_EXPECTATIONS (numel(output) weight 1.0)",
+    "diagonal": "pinned in OP_EXPECTATIONS (view; 0 FLOPs)",
     "linalg.diagonal": "delegates to fnp.diagonal; 0 FLOPs (view)",
     "take": "numel(output) gather",
-    "take_along_axis": "numel(output) at weight 4.0 (gather tier; identical to take)",
+    "take_along_axis": "pinned in OP_EXPECTATIONS (numel(output) weight 4.0 gather tier)",
     "choose": "numel(output) gather tier",
-    "compress": "len(condition) + 4*numel(output); weight 1.0 (mirrors extract)",
+    "compress": "pinned in OP_EXPECTATIONS (len(cond)+4*numel(out) weight 1.0)",
     "extract": "numel(input) gather",
     "place": "numel(input) scatter",
     "put": "numel(indices) scatter at gather tier",
@@ -719,9 +751,9 @@ DEFERRED: dict[str, str] = {
     "mask_indices": "2*n^2 + 8*k; weight 1.0 (mask scan + gather index pairs)",
     "diagflat": "len(v)",
     "fill_diagonal": "min(m,n)",
-    "packbits": "numel(input); weight 1.0 (per-bit test+shift; symmetric with unpackbits)",
+    "packbits": "pinned in OP_EXPECTATIONS (numel(input) weight 1.0)",
     "unpackbits": "8*n",
-    "unwrap": "numel(input); diff+conditional",
+    "unwrap": "pinned in OP_EXPECTATIONS (13*numel(input) weight 1.0)",
     "unstack": "numel(output); NumPy 2.1+",
     "unique_all": "n*ceil(log2(n)); unique family",
     "unique_counts": "n*ceil(log2(n)); unique family",
@@ -736,7 +768,7 @@ DEFERRED: dict[str, str] = {
     "linalg.matrix_power": "pinned in OP_EXPECTATIONS",
     "linalg.multi_dot": "COVERED_ELSEWHERE (_FMA)",
     "linalg.matmul": "pinned in OP_EXPECTATIONS",
-    "linalg.cross": "delegates to fnp.cross; COVERED_ELSEWHERE (_FMA)",
+    "linalg.cross": "pinned in OP_EXPECTATIONS (delegates to fnp.cross; 3*numel(output))",
     "in1d": "same model as isin; deprecated (removed in numpy >=2.4)",
     "correlate": "same model as convolve; COVERED_ELSEWHERE (_FMA)",
     "cov": "pinned in OP_EXPECTATIONS",
