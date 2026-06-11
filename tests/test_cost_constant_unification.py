@@ -1349,3 +1349,69 @@ def test_fftfreq_bills_grid():
 def test_random_uniform_bills_affine():
     assert cost(lambda: fnp.random.uniform(2.0, 5.0, size=1000)) == 3 * 1000
     assert cost(lambda: fnp.random.random(1000)) == 1000
+
+
+# ---------------- Task 3: diag/diagonal view-vs-copy + gather-tier consistency ----------------
+
+# Pre-built arrays (outside BudgetContext — no double-billing)
+_A100 = fnp.asarray(np.random.rand(100, 100))
+_v50 = fnp.asarray(np.arange(50.0))
+_idx100 = fnp.asarray(np.zeros((100, 1), dtype=int))
+_z100 = fnp.asarray(np.random.rand(100) > 0.5)
+_A_bmat = fnp.asarray(np.ones((2, 2)))
+_cond100 = fnp.asarray(np.ones(100, dtype=bool))  # all True → output is (100,100)
+_A100_compress = fnp.asarray(np.random.rand(100, 100))
+_bits800 = fnp.asarray(np.ones(800, dtype=np.uint8))
+
+
+def test_diag_diagonal_view_vs_copy():
+    """diagonal is a numpy view → 0 FLOPs; diag is a copy → min(m,n) or n^2."""
+    # numpy.diagonal returns a read-only VIEW → 0 FLOPs
+    assert cost(lambda: fnp.diagonal(_A100)) == 0
+    assert cost(lambda: fnp.linalg.diagonal(_A100)) == 0
+    # diag extract (2-D input): copies min(m,n) elements → min(100,100)=100 at w=1.0
+    assert cost(lambda: fnp.diag(_A100)) == 100
+    # diag construct (1-D input): materialises n^2 output → 50^2=2500 at w=1.0
+    assert cost(lambda: fnp.diag(_v50)) == 2500
+
+
+def test_gather_tier_consistency():
+    """take_along_axis weight→4.0; argwhere/bmat/fromiter weight→1.0."""
+    load_weights()
+    try:
+        # take_along_axis: numel(output)=100, weight=4.0 → 400
+        assert cost(lambda: fnp.take_along_axis(_A100, _idx100, axis=1)) == 4 * 100
+        # argwhere: numel(input)=100, weight 4→1 → 100
+        assert cost(lambda: fnp.argwhere(_z100)) == 100
+        # bmat: 2x2 blocks in 2x2 layout → 4x4=16, weight 4→1 → 16
+        assert cost(lambda: fnp.bmat([[_A_bmat, _A_bmat], [_A_bmat, _A_bmat]])) == 16
+        # fromiter: numel(result)=100, weight 16→1 → 100
+        assert cost(lambda: fnp.fromiter(range(100), dtype=float)) == 100
+    finally:
+        reset_weights()
+
+
+def test_compress_formula():
+    """compress: len(condition) + 4*numel(output); condition=100, all True → output=(100,100)."""
+    # condition all-True: all 100 rows selected → output shape (100,100), numel=10000
+    # formula: len(cond) + 4*numel(output) = 100 + 4*10000 = 40100
+    # weight after fix = 1.0; conftest resets weights → charged == flop_cost
+    cond50 = fnp.asarray(np.ones(100, dtype=bool))
+    expected = 100 + 4 * (100 * 100)
+    assert cost(lambda: fnp.compress(cond50, _A100_compress, axis=0)) == expected
+
+
+def test_packbits_formula():
+    """packbits: numel(input) bits processed; 800-element input → 800."""
+    # weight after fix = 1.0; conftest resets → charged == flop_cost = 800
+    assert cost(lambda: fnp.packbits(_bits800)) == 800
+
+
+def test_mask_indices_formula():
+    """mask_indices: 2*n^2 + 8*k; n=50, triu → k=1275 pairs."""
+    # np.triu of 50x50: upper triangle = 50*51//2 = 1275 index pairs
+    # formula: 2*50^2 + 8*1275 = 5000 + 10200 = 15200; weight=1.0 after fix
+    n = 50
+    k = n * (n + 1) // 2  # 1275
+    expected = 2 * n * n + 8 * k  # 15200
+    assert cost(lambda: fnp.mask_indices(n, np.triu)) == expected

@@ -195,7 +195,10 @@ attach_docstring(eye, _np.eye, "free", "0 FLOPs")
 def diag(v: ArrayLike, k: int = 0) -> FlopscopeArray:
     """Extract diagonal or construct diagonal array.
 
-    Cost: numel(output) when constructing (1D→2D), min(m,n) when extracting (2D→1D).
+    Cost (weight 1.0):
+    - 2-D input (extract): ``min(m, n)`` — copies the diagonal elements.
+    - 1-D input (construct): ``numel(output) = (n + |k|)^2`` — materialises the full
+      output matrix.
     """
     budget = require_budget()
     v = _np.asarray(v)
@@ -204,7 +207,7 @@ def diag(v: ArrayLike, k: int = 0) -> FlopscopeArray:
         n = v.shape[0] + abs(k)
         cost = n * n
     else:
-        # Extracting diagonal: reads min(m,n) elements
+        # Extracting diagonal: copies min(m,n) elements
         m, n = v.shape[0], v.shape[1] if v.ndim > 1 else v.shape[0]
         cost = min(m, n)
     with budget.deduct("diag", flop_cost=cost, subscripts=None, shapes=(v.shape,)):
@@ -982,19 +985,16 @@ def diagonal(
     axis1: int = 0,
     axis2: int = 1,
 ) -> FlopscopeArray:
-    """Return diagonal. Cost: numel(output)."""
+    """Return diagonal view. Cost: 0 FLOPs.
+
+    ``numpy.diagonal`` returns a read-only VIEW of the array data — no elements
+    are copied or computed.  The budget deduction is zero.
+    """
     budget = require_budget()
     _warn_if_symmetric(a, "diagonal")
     a_arr = _np.asarray(a)
-    # Diagonal length along axis1/axis2
-    m, n = a_arr.shape[axis1], a_arr.shape[axis2]
-    if offset >= 0:
-        diag_len = max(min(m, n - offset), 0)
-    else:
-        diag_len = max(min(m + offset, n), 0)
-    cost = max(diag_len, 1)
     with budget.deduct(
-        "diagonal", flop_cost=cost, subscripts=None, shapes=(a_arr.shape,)
+        "diagonal", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)
     ):
         result = _call_numpy(
             _np.diagonal, _to_base_ndarray(a), offset=offset, axis1=axis1, axis2=axis2
@@ -1187,7 +1187,10 @@ attach_docstring(
 
 @_counted_wrapper
 def argwhere(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
-    """Find indices of non-zero elements. Cost: numel(input)."""
+    """Find indices of non-zero elements. Cost: numel(input) at weight 1.0.
+
+    Equivalent to ``transpose(nonzero(a))``; weight 1.0 matches ``nonzero``.
+    """
     budget = require_budget()
     a_arr = _np.asarray(a)
     cost = a_arr.size
@@ -1388,7 +1391,11 @@ attach_docstring(block, _np.block, "free", "0 FLOPs")
 
 @_counted_wrapper
 def bmat(*args, **kwargs):
-    """Build matrix from string/nested sequence. Cost: numel(output)."""
+    """Build matrix from string/nested sequence. Cost: numel(output) at weight 1.0.
+
+    Nested-block assembly is structurally identical to ``block``; both copy elements
+    once, so weight 1.0 (matching ``block``).
+    """
     budget = require_budget()
     # First arg may be a string OR a nested sequence of arrays
     stripped_args = []
@@ -1522,9 +1529,16 @@ def compress(
     *args: Any,
     **kwargs: Any,
 ) -> FlopscopeArray:
-    """Return selected slices along an axis. Cost: numel(output)."""
+    """Return selected slices along an axis.
+
+    Cost: ``len(condition) + 4 * numel(output)`` at weight 1.0.
+    Mirrors ``extract``: scans ``len(condition)`` flags (1 FLOP each) then
+    copies each selected element at gather-tier cost (4 FLOPs each).
+    """
     budget = require_budget()
     _warn_if_symmetric(a, "compress")
+    condition_arr = _np.asarray(condition)
+    cond_len = condition_arr.size
     with budget.deduct_after("compress", subscripts=None, shapes=()) as _op:
         result = _call_numpy(
             _np.compress,
@@ -1533,13 +1547,14 @@ def compress(
             *args,
             **kwargs,
         )
-        _op.set_cost(
+        out_size = (
             result.size
             if hasattr(result, "size")
             else len(result)
             if hasattr(result, "__len__")
             else 1
         )
+        _op.set_cost(cond_len + 4 * out_size)
     return result
 
 
@@ -1844,7 +1859,11 @@ attach_docstring(fromfunction, _np.fromfunction, "free", "0 FLOPs")
 
 @_counted_wrapper
 def fromiter(*args, **kwargs):
-    """Create array from iterable object. Cost: numel(output)."""
+    """Create array from iterable object. Cost: numel(output) at weight 1.0.
+
+    Iterator materialisation with no libm calls; weight 1.0 matches other
+    materialisation ops (``array``, ``concatenate``, etc.).
+    """
     _warn_remote_callback("fromiter")
     budget = require_budget()
     result = _call_user_code(budget, _np.fromiter, *args, **kwargs)
@@ -2008,10 +2027,22 @@ attach_docstring(ix_, _np.ix_, "free", "0 FLOPs")
 
 @_counted_wrapper
 def mask_indices(*args, **kwargs):
-    """Return indices to access main or off-diagonal of array. Cost: numel(output)."""
+    """Return indices to access main or off-diagonal of array.
+
+    Cost: ``2*n^2 + 8*k`` at weight 1.0, where *n* is the matrix dimension and
+    *k* is the number of selected index pairs (= len of each returned array).
+
+    Formula breakdown:
+    - ``2*n^2``: scan of the ``n×n`` boolean mask (mask_func allocates an ones
+      matrix and applies the mask; 1 FLOP/cell × 2 for the boolean eval pass).
+    - ``8*k``: gather of 2k index values at gather-tier cost (4 FLOPs each).
+    """
     budget = require_budget()
+    # n is first positional arg; extract before calling numpy
+    n = args[0] if args else kwargs.get("n", 0)
     result = _np.mask_indices(*args, **kwargs)
-    cost = sum(a.size for a in result) if isinstance(result, tuple) else 1
+    k = result[0].size if isinstance(result, tuple) and result else 0
+    cost = 2 * int(n) * int(n) + 8 * int(k)
     with budget.deduct("mask_indices", flop_cost=cost, subscripts=None, shapes=()):
         pass  # numpy call already executed above
     return result
@@ -2094,17 +2125,17 @@ attach_docstring(nonzero, _np.nonzero, "free", "0 FLOPs")
 
 @_counted_wrapper
 def packbits(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
-    """Pack binary-valued array into bits. Cost: numel(output)."""
+    """Pack binary-valued array into bits. Cost: numel(input) at weight 1.0.
+
+    Each input bit is tested and shifted, so cost is proportional to the number
+    of input elements (symmetric with ``unpackbits`` which charges 8 × numel(output)).
+    """
     budget = require_budget()
+    a_arr = _np.asarray(a)
+    in_size = a_arr.size
     with budget.deduct_after("packbits", subscripts=None, shapes=()) as _op:
         result = _call_numpy(_np.packbits, _to_base_ndarray(a), *args, **kwargs)  # type: ignore[arg-type, call-overload]
-        _op.set_cost(
-            result.size
-            if hasattr(result, "size")
-            else len(result)
-            if hasattr(result, "__len__")
-            else 1
-        )
+        _op.set_cost(in_size)
     return result  # type: ignore[return-value]
 
 
@@ -2426,7 +2457,11 @@ def take_along_axis(
     indices: ArrayLike,
     axis: int | None,
 ) -> FlopscopeArray:
-    """Take values from input array along axis using indices. Cost: numel(output)."""
+    """Take values from input array along axis using indices.
+
+    Cost: numel(output) at weight 4.0 (gather tier; identical work to ``take``).
+    Each output element requires an index dereference into the source array.
+    """
     budget = require_budget()
     with budget.deduct_after("take_along_axis", subscripts=None, shapes=()) as _op:
         result = _call_numpy(
