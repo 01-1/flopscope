@@ -335,7 +335,7 @@ def roots(p: ArrayLike) -> FlopscopeArray:
     _p_flat = p.ravel()
     _first = next((i for i, v in enumerate(_p_flat) if v != 0), None)
     _last = next((i for i, v in enumerate(reversed(_p_flat)) if v != 0), None)
-    if _first is None:
+    if _first is None or _last is None:
         n = 0
     else:
         n = (len(_p_flat) - 1 - _last) - _first  # trimmed companion dimension

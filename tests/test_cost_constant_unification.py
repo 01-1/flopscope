@@ -987,22 +987,23 @@ def test_partition_0d_ndarray_kth_no_crash():
     """partition must not crash when kth is a 0-d ndarray (len() raises)."""
     x = np.random.rand(1000).copy()
     # plain numpy accepts 0-d ndarray as kth
-    r = fnp.partition(x, np.array(5))
+    r = fnp.partition(x, np.array(5))  # type: ignore[arg-type]  # 0-d kth crash regression
     np.testing.assert_array_equal(np.sort(r), np.sort(x))
-    assert cost(lambda: fnp.partition(x.copy(), np.array(5))) == 1000
+    assert cost(lambda: fnp.partition(x.copy(), np.array(5))) == 1000  # type: ignore[arg-type]
 
 
 def test_argpartition_0d_ndarray_kth_no_crash():
     """argpartition must not crash when kth is a 0-d ndarray (len() raises)."""
     x = np.random.rand(1000).copy()
-    r = fnp.argpartition(x, np.array(5))
+    r = fnp.argpartition(x, np.array(5))  # type: ignore[arg-type]  # 0-d kth crash regression
     assert len(r) == 1000
-    assert cost(lambda: fnp.argpartition(x.copy(), np.array(5))) == 1000
+    assert cost(lambda: fnp.argpartition(x.copy(), np.array(5))) == 1000  # type: ignore[arg-type]
 
 
 def test_partition_kth_charges_unchanged():
     """Existing kth forms still bill correctly after the np.size fix."""
     from flopscope._flops import sort_cost as _sort_cost  # noqa: F401
+
     x = np.random.rand(1000).copy()
     assert cost(lambda: fnp.partition(x.copy(), 5)) == 1000
     assert cost(lambda: fnp.partition(x.copy(), [1, 2, 3])) == 3000
@@ -1019,6 +1020,7 @@ def test_isin_loop_path_charges_2nm():
     a1 = rng.random(n).astype(float)
     a2 = rng.random(m).astype(float)
     from flopscope._flops import sort_cost as _sc
+
     expected = max(_sc(n + m), 2 * n * m)  # = 146_000_000
     assert cost(lambda: fnp.isin(a1, a2)) == expected
 
@@ -1026,6 +1028,7 @@ def test_isin_loop_path_charges_2nm():
 def test_isin_sort_path_charges_sort_cost():
     """isin where m >= threshold must charge sort_cost only (sort path)."""
     from flopscope._flops import sort_cost as _sc
+
     rng = np.random.default_rng(0)
     n, m = 100, 100  # both large, sort path (m >= 10*n**0.145 for reasonable n/m)
     a1 = rng.random(n).astype(float)
@@ -1038,6 +1041,7 @@ def test_isin_sort_path_charges_sort_cost():
 def test_isin_integer_arrays_unchanged():
     """Integer-dtype isin must still charge sort_cost only (table path)."""
     from flopscope._flops import sort_cost as _sc
+
     a1 = np.arange(1000, dtype=np.int64)
     a2 = np.arange(73, dtype=np.int64)
     expected = _sc(1000 + 73)
@@ -1047,12 +1051,13 @@ def test_isin_integer_arrays_unchanged():
 def test_unique_axis_aware():
     """unique with axis= must charge row-sort cost not flat sort."""
     from flopscope._flops import sort_cost as _sc
+
     x = np.arange(5000.0).reshape(100, 50)
-    flat_cost = _sc(5000)          # old (wrong) cost
-    row_cost = 50 * _sc(100)       # new: num_slices * sort_cost(R), R=shape[0]=100
-    col_cost = 100 * _sc(50)       # axis=1: num_slices=100, R=50
+    flat_cost = _sc(5000)  # old (wrong) cost
+    row_cost = 50 * _sc(100)  # new: num_slices * sort_cost(R), R=shape[0]=100
+    col_cost = 100 * _sc(50)  # axis=1: num_slices=100, R=50
     assert cost(lambda: fnp.unique(x, axis=0)) == row_cost
-    assert row_cost != flat_cost   # regression: must differ
+    assert row_cost != flat_cost  # regression: must differ
     assert cost(lambda: fnp.unique(x, axis=1)) == col_cost
     assert cost(lambda: fnp.unique(x, axis=-1)) == col_cost
     # flat unique unchanged
@@ -1091,12 +1096,12 @@ def test_polyint_order_m():
 def test_roots_strips_leading_trailing_zeros():
     """roots must bill based on trimmed companion degree, not raw len(p)-1."""
     # clean poly: [1,1,1,1] degree 3 -> 10*3^3=270 (unchanged)
-    assert cost(lambda: fnp.roots(np.array([1., 1., 1., 1.]))) == 270
+    assert cost(lambda: fnp.roots(np.array([1.0, 1.0, 1.0, 1.0]))) == 270
     # trailing zeros: [1,0,0,0] trimmed to span from idx=0 to idx=0 -> n=0 -> cost=1
-    assert cost(lambda: fnp.roots(np.array([1., 0., 0., 0.]))) == 1
+    assert cost(lambda: fnp.roots(np.array([1.0, 0.0, 0.0, 0.0]))) == 1
     # leading zeros: [0,0,1,1] trimmed span = idx[0]=2, idx[-1]=3 -> n=3-2=1 -> cost=10*1^3=10
-    assert cost(lambda: fnp.roots(np.array([0., 0., 1., 1.]))) == 10
+    assert cost(lambda: fnp.roots(np.array([0.0, 0.0, 1.0, 1.0]))) == 10
     # all-zero: -> n=0 -> cost=1
-    assert cost(lambda: fnp.roots(np.array([0., 0., 0., 0.]))) == 1
+    assert cost(lambda: fnp.roots(np.array([0.0, 0.0, 0.0, 0.0]))) == 1
     # long tail: [1]+[0]*50 -> only one nonzero at idx=0, n=0 -> cost=1
-    assert cost(lambda: fnp.roots(np.array([1.] + [0.] * 50))) == 1
+    assert cost(lambda: fnp.roots(np.array([1.0] + [0.0] * 50))) == 1
