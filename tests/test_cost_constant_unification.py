@@ -1336,3 +1336,16 @@ def test_stats_composite_family_packaged_weight_unity():
     assert cost(lambda: fstats.laplace.pdf(xl)) == 22 * 100
     assert cost(lambda: fstats.truncnorm.pdf(xt, -1.0, 1.0)) == 28 * 100
     assert cost(lambda: fstats.truncnorm.cdf(xt, -1.0, 1.0)) == 51 * 100
+
+
+# ---------------- Task 2: fft freq grids + random samplers ----------------
+
+
+def test_fftfreq_bills_grid():
+    assert cost(lambda: fnp.fft.fftfreq(1000)) == 1000
+    assert cost(lambda: fnp.fft.rfftfreq(1000)) == 1000 // 2 + 1
+
+
+def test_random_uniform_bills_affine():
+    assert cost(lambda: fnp.random.uniform(2.0, 5.0, size=1000)) == 3 * 1000
+    assert cost(lambda: fnp.random.random(1000)) == 1000

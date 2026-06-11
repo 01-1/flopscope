@@ -46,7 +46,7 @@ class TestUniform:
     def test_cost(self):
         with BudgetContext(flop_budget=10**6, quiet=True) as budget:
             merandom.uniform(0, 1, size=50)
-            assert budget.flops_used == 50
+            assert budget.flops_used == 3 * 50  # draw + affine (low + (high-low)*U)
 
 
 class TestRandint:

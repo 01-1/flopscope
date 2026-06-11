@@ -160,8 +160,14 @@ def _multivariate_normal_cost(
     return multivariate_normal_flops(n, d)
 
 
+def _uniform_cost(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> int:
+    """uniform draws + affine map ``low + (high-low)*U`` (mul+add) = 3*numel."""
+    return 3 * _numel_output(args, kwargs, result)
+
+
 COST_FORMULAS: dict[str, Callable[[tuple[Any, ...], dict[str, Any], Any], int]] = {
     "numel(output)": _numel_output,
+    "uniform": _uniform_cost,
     "numel(input)": _numel_input,
     "shape[axis]": _shape_axis,
     "length": _length,

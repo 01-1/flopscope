@@ -11165,7 +11165,6 @@
     "put": 4.0,
     "put_along_axis": 4.0,
     "putmask": 4.0,
-    "random.random_integers": 1.0,
     "repeat": 1.0,
     "resize": 1.0,
     "roll": 1.0,

@@ -198,6 +198,14 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         lambda: fnp.fft.fft(_x64c),
         5 * 64 * int(math.ceil(math.log2(64))),  # 1920
     ),
+    "fft.fftfreq": (
+        lambda: fnp.fft.fftfreq(64),
+        64,  # index grid scaled by 1/(n*d)
+    ),
+    "fft.rfftfreq": (
+        lambda: fnp.fft.rfftfreq(64),
+        64 // 2 + 1,
+    ),
     "fft.ifft": (
         lambda: fnp.fft.ifft(_x64c),
         5 * 64 * int(math.ceil(math.log2(64))),  # 1920
@@ -797,7 +805,6 @@ def test_family_defaults_free():
     assert _cost(lambda: fnp.empty(100)) == 0
     assert _cost(lambda: fnp.zeros_like(v)) == 0
     assert _cost(lambda: fnp.ones_like(v)) == 0
-    assert _cost(lambda: fnp.fft.fftfreq(64)) == 0
     assert _cost(lambda: fnp.fft.fftshift(v)) == 0
     assert _cost(lambda: fnp.fft.ifftshift(v)) == 0
     assert _cost(lambda: fnp.linalg.matrix_transpose(sq)) == 0
@@ -808,7 +815,9 @@ def test_family_defaults_random_sampler():
     import flopscope.numpy.random as fnpr
 
     assert _cost(lambda: fnpr.rand(100)) == 100
-    assert _cost(lambda: fnpr.uniform(0.0, 1.0, 100)) == 100
+    assert (
+        _cost(lambda: fnpr.uniform(0.0, 1.0, 100)) == 3 * 100
+    )  # affine exception (draw + low+(high-low)*U)
     assert _cost(lambda: fnpr.random(100)) == 100
     assert _cost(lambda: fnpr.randint(0, 100, 100)) == 100
     assert _cost(lambda: fnpr.exponential(1.0, 100)) == 100

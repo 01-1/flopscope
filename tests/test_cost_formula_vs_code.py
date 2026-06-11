@@ -909,7 +909,7 @@ class TestRandom:
         assert _cost_of(we.random.normal, 0, 1, 100) == 100
 
     def test_uniform_positional_size(self, we):
-        assert _cost_of(we.random.uniform, 0, 1, 100) == 100
+        assert _cost_of(we.random.uniform, 0, 1, 100) == 3 * 100
 
     def test_beta_positional_size(self, we):
         assert _cost_of(we.random.beta, 2, 5, 100) == 100
@@ -974,7 +974,9 @@ class TestStats:
 
     def test_logistic_cdf(self, we):
         # old: == 100 (cost_per_elem=1, weight=16.0); now: 21*100 (composite, weight 1.0)
-        assert _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 21 * 100
+        assert (
+            _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 21 * 100
+        )
 
     def test_laplace_ppf(self, we):
         assert (

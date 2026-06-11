@@ -10,7 +10,7 @@ class TestFftfreq:
             from flopscope.numpy.fft import fftfreq
 
             assert numpy.allclose(fftfreq(8, d=1.0), numpy.fft.fftfreq(8, d=1.0))
-            assert budget.flops_used == 0
+            assert budget.flops_used == 8  # index grid scaled by 1/(n*d)
 
 
 class TestRfftfreq:
@@ -19,7 +19,7 @@ class TestRfftfreq:
             from flopscope.numpy.fft import rfftfreq
 
             assert numpy.allclose(rfftfreq(8, d=1.0), numpy.fft.rfftfreq(8, d=1.0))
-            assert budget.flops_used == 0
+            assert budget.flops_used == 8 // 2 + 1
 
 
 class TestFftshift:

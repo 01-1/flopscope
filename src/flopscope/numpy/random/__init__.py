@@ -318,8 +318,31 @@ randn = _counted_dims_sampler(_npr.randn, "random.randn")
 # ---------------------------------------------------------------------------
 
 normal = _counted_sampler(_npr.normal, "random.normal")
-uniform = _counted_sampler(_npr.uniform, "random.uniform")
 standard_normal = _counted_sampler(_npr.standard_normal, "random.standard_normal")
+
+
+@_counted_wrapper
+def uniform(low=0.0, high=1.0, size=None):
+    """Counted version of ``numpy.random.uniform``. Cost: 3*numel(output).
+
+    Beyond the per-element draw (numel), uniform applies the affine map
+    ``low + (high - low) * U`` per element — one multiply + one add (FMA=2) —
+    so the honest cost is ``3 * numel(output)``.
+    """
+    budget = require_budget()
+    result = _npr.uniform(low, high, size)
+    n = _builtins.max(result.size, 1) if isinstance(result, _np.ndarray) else 1
+    with budget.deduct(
+        "random.uniform", flop_cost=3 * n, subscripts=None, shapes=((n,),)
+    ):
+        pass  # numpy already executed
+    return result
+
+
+try:
+    uniform.__signature__ = _inspect.signature(_npr.uniform)  # pyright: ignore[reportFunctionMemberAccess]
+except (ValueError, TypeError):
+    pass
 standard_exponential = _counted_sampler(
     _npr.standard_exponential, "random.standard_exponential"
 )
