@@ -297,7 +297,7 @@ All counted FFT ops use **weight 1.0**.  Source: `src/flopscope/numpy/fft/_trans
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
-| `polyval` | `2n` (Horner: n muls + n adds, FMA=2) | DERIVED | `_polynomial.py` |
+| `polyval` | `2 × deg × points` (Horner: 1 mul + 1 add per coefficient per point, FMA=2) | DERIVED | `_polynomial.py` |
 | `polyfit` | `2 × m × n × min(m,n)` (via least-squares SVD) | DERIVED | `_polynomial.py` |
 | `polyadd`, `polysub` | `min(len_a, len_b)` | DERIVED | `_polynomial.py` |
 | `polymul`, `convolve` (1-D full mode) | `2nm − n − m` (direct conv, FMA=2) | DERIVED; note: always charged at full-mode cost regardless of `mode=` argument (known gap) | `_polynomial.py` |
