@@ -250,7 +250,7 @@ def linspace(
         )
         samples = result[0] if isinstance(result, tuple) else result
         _op.set_cost(2 * (samples.size if hasattr(samples, "size") else 1))
-    return result  # type: ignore[reportReturnType]  # (samples, step) tuple when retstep=True
+    return result  # pyright: ignore[reportReturnType]  # (samples, step) tuple when retstep=True
 
 
 attach_docstring(linspace, _np.linspace, "counted_custom", "2*numel(output) FLOPs (start + i*step per element, FMA=2)")
@@ -1842,7 +1842,7 @@ def indices(*args: Any, **kwargs: Any) -> FlopscopeArray:
         _op.set_cost(
             sum(int(a.size) for a in result) if isinstance(result, tuple) else int(result.size)
         )
-    return result  # type: ignore[reportReturnType]  # tuple of grids when sparse=True
+    return result  # pyright: ignore[reportReturnType]  # tuple of grids when sparse=True
 
 
 attach_docstring(indices, _np.indices, "counted_custom", "numel of materialized output FLOPs (dense N*prod(dims); sparse sum(dims))")
