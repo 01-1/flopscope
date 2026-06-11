@@ -128,20 +128,23 @@ Source: `src/flopscope/_pointwise.py`.
 **Family rule**: `flop_cost = numel(input) − numel(output)` (orbit-mapping
 model; one add or compare per element consumed by the reduction).
 
-For `std` and `var` (and their nan-variants), a multiplier of 2 applies
-because numpy uses a two-pass algorithm (mean pass + deviation pass):
-`flop_cost = 2 × numel(input)`.  Weight 2.0 is folded into the formula
-rather than the weight column to keep the tier consistent.
+Ops that do more than one accumulation pass carry the extra passes in
+`flop_cost` (never in the weight column): the variance family makes four
+passes (mean-sum, centre, square, variance-sum), `ptp` makes two (max + min)
+plus the per-output subtract, and `mean`/`average` add the per-output divide.
 
 | Op | flop_cost | weight | basis |
 |---|---|---|---|
-| `sum`, `prod`, `mean`, `max`, `min`, `any`, `all`, `cumsum`, `cumprod`, `nansum`, `nanmean`, `nanmax`, `nanmin`, `nanprod`, `nancumsum`, `nancumprod`, `cumulative_sum`, `cumulative_prod`, `average` | numel(input) − numel(output) | 1.0 | DECLARED reduction skeleton |
-| `std`, `var`, `nanstd`, `nanvar` | 2 × numel(input) − numel(output) | 1.0 | DECLARED two-pass; G&VL 4e §2.5 |
+| `sum`, `prod`, `max`, `min`, `any`, `all`, `cumsum`, `cumprod`, `nansum`, `nanmax`, `nanmin`, `nanprod`, `nancumsum`, `nancumprod`, `cumulative_sum`, `cumulative_prod` | numel(input) − numel(output) | 1.0 | DECLARED reduction skeleton (one add per consumed element) |
+| `mean`, `average` (unweighted) | numel(input) | 1.0 | DERIVED: reduction (numel−M) + M divides |
+| `average(weights=)` | numel − M + 2·numel + M | 1.0 | DERIVED: a·w pass + a·w sum + w sum + M divides |
+| `std`, `var`, `nanstd`, `nanvar` | ≈ 4 × numel(input) (std: + M sqrt) | 1.0 | DERIVED four-pass: mean-sum, centre, square, var-sum (exact: 2·numel + 2·(numel−M) + 2M) |
 | `argmax`, `argmin` | numel(input) | 1.0 | DECLARED scan |
-| `median`, `nanmedian` | numel(input) | 1.0 | DECLARED (timing-calibrated; empirical ≈5.4× but tier stays 1.0) |
-| `percentile`, `nanpercentile`, `quantile`, `nanquantile` | numel(input) | 1.0 | DECLARED; partition (introselect) per output |
-| `ptp` | numel(input) | 1.0 | DECLARED |
+| `median`, `nanmedian` | axis length per output slice | 1.0 | DECLARED; partition (introselect) per output |
+| `percentile`, `nanpercentile`, `quantile`, `nanquantile` | axis length per output slice | 1.0 | DECLARED; partition (introselect) per output |
+| `ptp` | 2 × numel(input) − numel(output) | 1.0 | DERIVED: max pass + min pass + M subtracts (2·(numel−M)+M) |
 | `count_nonzero` | numel(input) − numel(output) | 1.0 | DECLARED comparison scan |
+| `nanmean` | numel(input) − numel(output) | 1.0 | factory skeleton; the missing per-output divide is a known gap (see appendix) |
 
 Source: `src/flopscope/_pointwise.py`; reduction accumulation model in
 `src/flopscope/_accumulation/`.
@@ -373,7 +376,7 @@ Source: `src/flopscope/_window.py`.
 | `histogram` (string bins, e.g. `'auto'`) | `n` (flat scan only; estimator sort not charged — known gap) | DECLARED | `_counting_ops.py` |
 | `histogram2d`, `histogramdd` | similar to `histogram`; string-bins gap same | DERIVED / DECLARED | `_counting_ops.py` |
 | `histogram_bin_edges` | `n` | DECLARED; note: crashes with FlopscopeArray `bins=` argument (known gap) | `_counting_ops.py` |
-| `trapezoid`, `trapz` | `4 × numel(y) − 5K`, `K = num output slices` (FMA=2: mul + add per point + end correction) | DERIVED: honest `(3 add/mul/div + 1 sum-reduce) × numel` ≈ `4n − 5K`; G&VL 4e §1.1 | `_free_ops.py`; fixed in this branch |
+| `trapezoid`, `trapz` | `4 × numel(y)` | DERIVED: `(d·(y₁+y₂)/2).sum()` ≈ 3 elementwise ops + sum-reduce per point, charged as a clean 4/point upper bound | `_pointwise.py`; fixed in this branch |
 
 Source: `src/flopscope/_counting_ops.py`, `src/flopscope/_free_ops.py`.
 
