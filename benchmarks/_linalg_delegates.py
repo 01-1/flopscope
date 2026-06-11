@@ -85,7 +85,9 @@ def _analytical_cost(op_name: str) -> int:
         "matrix_power": 3 * 64**3,  # 3 matmuls for n=5
         "matrix_rank": 4 * 512**3 + 512,  # values-only SVD(512,512)+512
         "multi_dot": (2 * 64 * 128 * 64 - 64 * 64)
-        + (2 * 128 * 64 * 64 - 128 * 64),  # optimal A@(B@C): matmul_cost(64,128,64)+matmul_cost(128,64,64) = 2,084,864
+        + (
+            2 * 128 * 64 * 64 - 128 * 64
+        ),  # optimal A@(B@C): matmul_cost(64,128,64)+matmul_cost(128,64,64) = 2,084,864
         "norm": 2 * 10_000_000,  # 2*numel (FMA=2, vector L2)
         "outer": 5000 * 5000,  # M*N
         "tensordot": 64

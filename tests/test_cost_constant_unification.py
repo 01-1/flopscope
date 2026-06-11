@@ -1171,4 +1171,6 @@ def test_choice_replace_false_with_p_uses_sort_cost():
 
     n = 16
     p = np.ones(n) / n
-    assert cost(lambda: fnp.random.choice(n, size=5, replace=False, p=p)) == sort_cost(n)
+    assert cost(lambda: fnp.random.choice(n, size=5, replace=False, p=p)) == sort_cost(
+        n
+    )

@@ -350,7 +350,7 @@ REGISTRY: dict[str, dict] = {
         "notes": "Element-wise approximate equality test. Cost: 6*numel(output).",
     },
     "isnat": {
-        "category": "counted_unary",
+        "category": "blacklisted",
         "module": "numpy",
         "notes": "Element-wise test for NaT. Cost: numel(input). Un-blacklisted: comparison tier, benchmarked in SPECIAL_OPS.",
     },
@@ -1683,17 +1683,17 @@ REGISTRY: dict[str, dict] = {
         "notes": "Interpret buffer as 1-D array. Cost: numel(output).",
     },
     "fromstring": {
-        "category": "counted_custom",
+        "category": "blacklisted",
         "module": "numpy",
         "notes": "Create 1-D array from string data. Cost: numel(output).",
     },
     "fromfile": {
-        "category": "counted_custom",
+        "category": "blacklisted",
         "module": "numpy",
         "notes": "Construct array from binary/text file. Cost: numel(output).",
     },
     "fromregex": {
-        "category": "counted_custom",
+        "category": "blacklisted",
         "module": "numpy",
         "notes": "Construct array from text file using regex. Cost: numel(output).",
     },
@@ -1974,12 +1974,12 @@ REGISTRY: dict[str, dict] = {
         "notes": "Return minimum data type character that can satisfy all given types.",
     },
     "base_repr": {
-        "category": "counted_custom",
+        "category": "blacklisted",
         "module": "numpy",
         "notes": "Return string representation of number in given base. Cost: len(output string).",
     },
     "binary_repr": {
-        "category": "counted_custom",
+        "category": "blacklisted",
         "module": "numpy",
         "notes": "Return binary string representation of the input number. Cost: len(output string).",
     },
@@ -3074,12 +3074,12 @@ REGISTRY: dict[str, dict] = {
         "notes": "Set size of buffer used in ufuncs. Not supported.",
     },
     "geterr": {
-        "category": "free",
+        "category": "blacklisted",
         "module": "numpy",
         "notes": "FP-error-state get/set; pure numpy state management. 0 FLOPs.",
     },
     "seterr": {
-        "category": "free",
+        "category": "blacklisted",
         "module": "numpy",
         "notes": "FP-error-state get/set; pure numpy state management. 0 FLOPs.",
     },

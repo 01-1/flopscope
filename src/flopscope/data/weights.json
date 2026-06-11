@@ -2965,7 +2965,7 @@
         "baseline_bench_code": "np.add(x, y, out=_out)",
         "baseline_perf_instructions_total": 160009598.0,
         "baseline_timing_ns_total": 195797715.0,
-        "notes": "Vector norm. Cost: 2*numel (FMA=2 — one multiply + accumulate per element).",
+        "notes": "Vector norm. Cost: 2*numel (FMA=2 \u2014 one multiply + accumulate per element).",
         "cost_impl_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/linalg/_properties.py#L238"
       },
       "allclose": {
@@ -11258,14 +11258,6 @@
     "unravel_index": 0.0,
     "vsplit": 0.0,
     "zeros": 0.0,
-    "zeros_like": 0.0,
-    "fromstring": 1.0,
-    "fromfile": 1.0,
-    "fromregex": 1.0,
-    "base_repr": 1.0,
-    "binary_repr": 1.0,
-    "isnat": 1.0,
-    "geterr": 0.0,
-    "seterr": 0.0
+    "zeros_like": 0.0
   }
 }
