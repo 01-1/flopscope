@@ -12,6 +12,7 @@ import numpy as np
 
 import flopscope as f
 import flopscope.numpy as fnp
+from flopscope._flops import svd_cost
 from flopscope._weights import load_weights, reset_weights
 
 
@@ -173,13 +174,16 @@ def test_poly_2d_inherits_new_eigvals_constant():
 def test_multivariate_normal_bills_decomposition_and_transform():
     d, N = 50, 100
     mean, cov = np.zeros(d), np.eye(d)
-    expected = d**3 // 3 + 2 * N * d * d + 16 * N * d  # 41666+500000+80000
+    # factorization = svd_cost(d,d,with_vectors=True) = 26*d^3 = 3250000
+    # transform = 2*N*d^2 = 500000; draws = 16*N*d = 80000
+    expected = svd_cost(d, d, with_vectors=True) + 2 * N * d * d + 16 * N * d
     assert cost(lambda: fnp.random.multivariate_normal(mean, cov, size=N)) == expected
 
 
 def test_multivariate_normal_default_size_is_one_sample():
     d = 30
-    expected = d**3 // 3 + 2 * d * d + 16 * d
+    # N=1 (size=None default); factorization = 26*d^3
+    expected = svd_cost(d, d, with_vectors=True) + 2 * d * d + 16 * d
     assert (
         cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d))) == expected
     )
@@ -188,7 +192,8 @@ def test_multivariate_normal_default_size_is_one_sample():
 def test_multivariate_normal_packaged_weight_is_unity():
     load_weights()
     d = 30
-    expected = d**3 // 3 + 2 * d * d + 16 * d
+    # Weight for this composite op must stay 1.0 so charged == flop_cost
+    expected = svd_cost(d, d, with_vectors=True) + 2 * d * d + 16 * d
     assert (
         cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d))) == expected
     )
@@ -196,7 +201,7 @@ def test_multivariate_normal_packaged_weight_is_unity():
 
 def test_generator_and_randomstate_mvn_match_module_path():
     d, N = 50, 100
-    expected = d**3 // 3 + 2 * N * d * d + 16 * N * d
+    expected = svd_cost(d, d, with_vectors=True) + 2 * N * d * d + 16 * N * d
 
     # default_rng construction costs 0 FLOPs, so build inside cost() is fine.
     def gen():
@@ -213,7 +218,8 @@ def test_generator_and_randomstate_mvn_match_module_path():
 
 def test_mvn_tuple_size_parity_across_paths():
     d = 20
-    expected = d**3 // 3 + 2 * 20 * d * d + 16 * 20 * d  # N = 4*5 = 20
+    # N = 4*5 = 20; factorization = 26*d^3
+    expected = svd_cost(d, d, with_vectors=True) + 2 * 20 * d * d + 16 * 20 * d
     mean, cov = np.zeros(d), np.eye(d)
     assert (
         cost(lambda: fnp.random.multivariate_normal(mean, cov, size=(4, 5))) == expected
@@ -227,6 +233,30 @@ def test_mvn_tuple_size_parity_across_paths():
 
     assert cost(gen) == expected
     assert cost(rs) == expected
+
+
+# ---------------- Task 5: intersect1d pre-sort fix ----------------
+
+
+def test_intersect1d_sorts_both_inputs():
+    from flopscope._flops import sort_cost
+
+    a = fnp.asarray(np.random.rand(1000))
+    b = fnp.asarray(np.random.rand(500))
+    assert cost(lambda: fnp.intersect1d(a, b)) == sort_cost(1000) + sort_cost(500) + sort_cost(1500)
+    assert cost(lambda: fnp.intersect1d(a, b, assume_unique=True)) == sort_cost(1500)
+
+
+# ---------------- Task 5: mvn SVD factorization ----------------
+
+
+def test_mvn_factorization_is_svd():
+    from flopscope._flops import svd_cost
+
+    d, N = 50, 100
+    fac = svd_cost(d, d, with_vectors=True)
+    expected = fac + 2 * N * d * d + 16 * N * d
+    assert cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d), size=N)) == expected
 
 
 # ---------------- norm-family batch dims ----------------

@@ -538,11 +538,24 @@ def intersect1d(
     ar2: ArrayLike,
     **kwargs: Any,
 ) -> FlopscopeArray | tuple[FlopscopeArray, ...]:
-    """Counted version of ``numpy.intersect1d``. Cost: (n+m)*ceil(log2(n+m)) FLOPs."""
+    """Counted version of ``numpy.intersect1d``.
+
+    When ``assume_unique`` is falsy (the default), numpy calls ``unique()``
+    on both inputs before the concat-sort, so the honest cost is
+    ``sort_cost(n) + sort_cost(m) + sort_cost(n+m)``.
+    When ``assume_unique=True`` only the final concat-sort is needed:
+    ``sort_cost(n+m)``.
+    """
     budget = require_budget()
     a1 = _np.asarray(ar1)
     a2 = _np.asarray(ar2)
-    cost = _set_cost(a1, a2)
+    assume_unique = bool(kwargs.get("assume_unique", False))
+    n = max(a1.size, 1)
+    m = max(a2.size, 1)
+    if assume_unique:
+        cost = sort_cost(n + m)
+    else:
+        cost = sort_cost(n) + sort_cost(m) + sort_cost(n + m)
     with budget.deduct(
         "intersect1d", flop_cost=cost, subscripts=None, shapes=(a1.shape, a2.shape)
     ):
@@ -553,7 +566,10 @@ def intersect1d(
 
 
 attach_docstring(
-    intersect1d, _np.intersect1d, "counted_custom", "(n+m)*ceil(log2(n+m)) FLOPs"
+    intersect1d,
+    _np.intersect1d,
+    "counted_custom",
+    "sort_cost(n)+sort_cost(m)+sort_cost(n+m) FLOPs (default); sort_cost(n+m) when assume_unique=True",
 )
 intersect1d.__signature__ = _inspect.signature(_np.intersect1d)  # type: ignore[attr-defined]
 

@@ -20,6 +20,7 @@ import pytest
 import flopscope as f
 import flopscope.numpy as fnp
 import flopscope.stats as fst
+from flopscope._flops import sort_cost
 from flopscope._registry import REGISTRY
 
 # ---------------------------------------------------------------------------
@@ -348,9 +349,12 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         lambda: fnp.union1d(_range100a, _range100b),
         200 * int(math.ceil(math.log2(200))),  # 1600
     ),
+    # intersect1d default (assume_unique=False): numpy unique()-sorts both
+    # inputs first, so cost = sort_cost(n) + sort_cost(m) + sort_cost(n+m).
+    # n=m=100: 700 + 700 + 1600 = 3000
     "intersect1d": (
         lambda: fnp.intersect1d(_range100a, _range100b),
-        200 * int(math.ceil(math.log2(200))),
+        sort_cost(100) + sort_cost(100) + sort_cost(200),
     ),
     "setdiff1d": (
         lambda: fnp.setdiff1d(_range100a, _range100b),
@@ -515,7 +519,7 @@ DEFERRED: dict[str, str] = {
     "random.lognormal": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.logseries": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.multinomial": "random_sampler family; flop_cost=numel; weight=1.0",
-    "random.multivariate_normal": "composite: d^3//3 + 2Nd^2 + 16Nd",
+    "random.multivariate_normal": "composite: svd_cost(d,d,with_vectors=True) + 2Nd^2 + 16Nd",
     "random.negative_binomial": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.noncentral_chisquare": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.noncentral_f": "random_sampler family; flop_cost=numel; weight=1.0",
@@ -557,7 +561,7 @@ DEFERRED: dict[str, str] = {
     "random.Generator.logseries": "Generator family; numel",
     "random.Generator.multinomial": "Generator family; numel",
     "random.Generator.multivariate_hypergeometric": "Generator family; numel",
-    "random.Generator.multivariate_normal": "composite d^3//3+2Nd^2+16Nd",
+    "random.Generator.multivariate_normal": "composite svd_cost(d,d,with_vectors=True)+2Nd^2+16Nd",
     "random.Generator.negative_binomial": "Generator family; numel",
     "random.Generator.noncentral_chisquare": "Generator family; numel",
     "random.Generator.noncentral_f": "Generator family; numel",
@@ -601,7 +605,7 @@ DEFERRED: dict[str, str] = {
     "random.RandomState.lognormal": "RandomState family; numel",
     "random.RandomState.logseries": "RandomState family; numel",
     "random.RandomState.multinomial": "RandomState family; numel",
-    "random.RandomState.multivariate_normal": "composite formula",
+    "random.RandomState.multivariate_normal": "composite svd_cost(d,d,with_vectors=True)+2Nd^2+16Nd",
     "random.RandomState.negative_binomial": "RandomState family; numel",
     "random.RandomState.noncentral_chisquare": "RandomState family; numel",
     "random.RandomState.noncentral_f": "RandomState family; numel",

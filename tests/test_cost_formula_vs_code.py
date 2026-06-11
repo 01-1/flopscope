@@ -755,7 +755,6 @@ class TestSetOps:
                 ),
             ),
             "isin",
-            "intersect1d",
             "union1d",
             "setdiff1d",
             "setxor1d",
@@ -767,6 +766,26 @@ class TestSetOps:
             getattr(we, name), numpy.random.rand(100), numpy.random.rand(50)
         )
         assert cost == 1200, f"{name}: expected 1200, got {cost}"
+
+    def test_intersect1d_cost(self, we):
+        # Default assume_unique=False: numpy unique()-sorts both inputs first.
+        # sort_cost(100) + sort_cost(50) + sort_cost(150) = 700 + 350 + 1200 = 2250
+        from flopscope._flops import sort_cost as _sc
+
+        cost = _cost_of(we.intersect1d, numpy.random.rand(100), numpy.random.rand(50))
+        assert cost == _sc(100) + _sc(50) + _sc(150)
+
+    def test_intersect1d_cost_assume_unique(self, we):
+        # assume_unique=True: only sort_cost(n+m)
+        from flopscope._flops import sort_cost as _sc
+
+        cost = _cost_of(
+            we.intersect1d,
+            numpy.random.rand(100),
+            numpy.random.rand(50),
+            assume_unique=True,
+        )
+        assert cost == _sc(150)
 
 
 # ---------------------------------------------------------------------------
