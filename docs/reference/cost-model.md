@@ -50,7 +50,8 @@ arctan2, hypot, logaddexp, logaddexp2) is calibrated into the same tier
 
 ### Half-tier transcendentals (weight 8.0)
 
-Not currently used in the active weight table; reserved for future ops.
+Ops whose per-element work is a single cosine evaluation amortized over a
+cheap window formula (`hamming`, `hanning`) are billed at weight 8.0.
 
 ### Gather tier (weight 4.0)
 
