@@ -816,7 +816,7 @@ class TestFreeOps:
         assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10)) == 10
 
     def test_arange(self, we):
-        assert _cost_of(we.arange, 20) == 20
+        assert _cost_of(we.arange, 20) == 2 * 20  # migrated: arange bills 2*numel (start + i*step, FMA=2)
 
     def test_full(self, we):
         assert _cost_of(we.full, (3, 4), 1.0) == 12

@@ -228,3 +228,21 @@ def test_norm_family_unbatched_unchanged():
     assert cost(lambda: fnp.linalg.norm(v)) == 20                   # 1-D path
     X = fnp.asarray(np.random.rand(100, 10, 10))
     assert cost(lambda: fnp.linalg.norm(X)) == 2 * X.size           # axis=None flattens: unchanged
+
+
+# ---------------- generators: retstep/arange/indices (audit-2 verified) ----------------
+
+def test_linspace_retstep_costs_full_grid():
+    assert cost(lambda: fnp.linspace(0.0, 1.0, 50, retstep=True)) == 2 * 50
+    start = fnp.asarray(np.zeros(100)); stop = fnp.asarray(np.ones(100))
+    assert cost(lambda: fnp.linspace(start, stop, 50, retstep=True)) == 2 * 50 * 100
+
+
+def test_arange_two_flops_per_element():
+    assert cost(lambda: fnp.arange(1000)) == 2 * 1000
+    assert cost(lambda: fnp.arange(0)) == 0
+
+
+def test_indices_sparse_and_dense():
+    assert cost(lambda: fnp.indices((1000, 1000), sparse=True)) == 2000
+    assert cost(lambda: fnp.indices((1000, 1000))) == 2_000_000

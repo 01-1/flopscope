@@ -220,15 +220,15 @@ attach_docstring(diag, _np.diag, "free", "0 FLOPs")
 
 @_counted_wrapper
 def arange(*args: Any, **kwargs: Any) -> FlopscopeArray:
-    """Return evenly spaced values. Cost: numel(output)."""
+    """Return evenly spaced values. Cost: 2*numel(output) FLOPs (start + i*step per element, FMA=2)."""
     budget = require_budget()
     with budget.deduct_after("arange", subscripts=None, shapes=()) as _op:
         result = _call_numpy(_np.arange, *args, **kwargs)
-        _op.set_cost(result.size if hasattr(result, "size") else 1)
+        _op.set_cost(2 * (result.size if hasattr(result, "size") else 1))
     return result
 
 
-attach_docstring(arange, _np.arange, "counted_custom", "numel(output) FLOPs")
+attach_docstring(arange, _np.arange, "counted_custom", "2*numel(output) FLOPs (start + i*step per element, FMA=2)")
 
 
 @_counted_wrapper
@@ -238,7 +238,7 @@ def linspace(
     num: int = 50,
     **kwargs: Any,
 ) -> FlopscopeArray:
-    """Return evenly spaced numbers. Cost: 2*numel(output) (1 mul + 1 add per element)."""
+    """Return evenly spaced numbers. Cost: 2*numel(output) FLOPs (start + i*step per element, FMA=2)."""
     budget = require_budget()
     with budget.deduct_after("linspace", subscripts=None, shapes=()) as _op:
         result = _call_numpy(  # type: ignore[arg-type, call-overload]
@@ -248,11 +248,12 @@ def linspace(
             num=num,
             **kwargs,
         )
-        _op.set_cost(2 * (result.size if hasattr(result, "size") else 1))
+        samples = result[0] if isinstance(result, tuple) else result
+        _op.set_cost(2 * (samples.size if hasattr(samples, "size") else 1))
     return result
 
 
-attach_docstring(linspace, _np.linspace, "counted_custom", "numel(output) FLOPs")
+attach_docstring(linspace, _np.linspace, "counted_custom", "2*numel(output) FLOPs (start + i*step per element, FMA=2)")
 
 
 def zeros_like(
@@ -1834,15 +1835,17 @@ attach_docstring(fromstring, _np.fromstring, "free", "0 FLOPs")
 
 @_counted_wrapper
 def indices(*args: Any, **kwargs: Any) -> FlopscopeArray:
-    """Return array representing indices of a grid. Cost: numel(output)."""
+    """Return array representing indices of a grid. Cost: numel of materialized output FLOPs (dense N*prod(dims); sparse sum(dims))."""
     budget = require_budget()
     with budget.deduct_after("indices", subscripts=None, shapes=()) as _op:
         result = _call_numpy(_np.indices, *args, **kwargs)
-        _op.set_cost(result.size if hasattr(result, "size") else 1)
+        _op.set_cost(
+            sum(int(a.size) for a in result) if isinstance(result, tuple) else int(result.size)
+        )
     return result
 
 
-attach_docstring(indices, _np.indices, "free", "0 FLOPs")
+attach_docstring(indices, _np.indices, "counted_custom", "numel of materialized output FLOPs (dense N*prod(dims); sparse sum(dims))")
 
 
 @_counted_wrapper

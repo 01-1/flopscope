@@ -1226,12 +1226,12 @@ REGISTRY: dict[str, dict] = {
     "arange": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return evenly spaced values in given interval. Cost: numel(output).",
+        "notes": "Return evenly spaced values in given interval. Cost: 2*numel(output).",
     },
     "linspace": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return evenly spaced numbers over interval. Cost: numel(output).",
+        "notes": "Return evenly spaced numbers over interval. Cost: 2*numel(output).",
     },
     "zeros_like": {
         "category": "free",
@@ -1790,7 +1790,7 @@ REGISTRY: dict[str, dict] = {
     "indices": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return array representing indices of a grid. Cost: numel(output).",
+        "notes": "Return array representing indices of a grid. Cost: numel of materialized output (dense N*prod(dims); sparse sum(dims)).",
     },
     "diag_indices": {
         "category": "free",
