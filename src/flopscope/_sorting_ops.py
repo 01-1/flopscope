@@ -66,7 +66,9 @@ def sort(
         ax = axis % a.ndim
         cost = _sort_cost_nd(a, ax)
     with budget.deduct("sort", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
-        result = _call_numpy(_np.sort, _to_base_ndarray(a), axis=axis, **kwargs)
+        result = _call_numpy(
+            _np.sort, _to_base_ndarray(a), axis=axis, kind=kind, order=order, **kwargs
+        )
     return result  # type: ignore[return-value]
 
 
@@ -106,7 +108,10 @@ argsort.__signature__ = _inspect.signature(_np.argsort)  # type: ignore[attr-def
 def lexsort(keys: Sequence[ArrayLike], axis: int = -1) -> FlopscopeArray:
     """Counted version of ``numpy.lexsort``.
 
-    Cost: k * sort_cost(n) where k = len(keys) and n = len(keys[0]).
+    Cost: k * num_slices * sort_cost(n) where k = len(keys),
+    n = keys[0].shape[axis], and num_slices = keys[0].size // n
+    (number of independent sort passes along axis).  For 1-D keys
+    num_slices = 1, so the cost is unchanged vs. the previous formula.
     """
     budget = require_budget()
     # keys is a sequence of arrays; convert to list for inspection
@@ -118,14 +123,20 @@ def lexsort(keys: Sequence[ArrayLike], axis: int = -1) -> FlopscopeArray:
         # numpy.lexsort uses the last key as primary; length is shape along axis
         first = _np.asarray(keys_list[0])
         n = first.shape[axis] if first.ndim > 0 else 1
-        cost = max(k * sort_cost(n), 1)
+        num_slices = (first.size // n) if (first.ndim > 0 and n > 0) else 1
+        cost = max(k * num_slices * sort_cost(n), 1)
     shapes = tuple(_np.asarray(key).shape for key in keys_list)
     with budget.deduct("lexsort", flop_cost=cost, subscripts=None, shapes=shapes):
         result = _call_numpy(_np.lexsort, _to_base_ndarray_tree(keys_list), axis=axis)
     return result
 
 
-attach_docstring(lexsort, _np.lexsort, "counted_custom", "k*n*ceil(log2(n)) FLOPs")
+attach_docstring(
+    lexsort,
+    _np.lexsort,
+    "counted_custom",
+    "k keys × num_slices × n·ceil(log2 n) FLOPs",
+)
 
 
 @_counted_wrapper

@@ -111,8 +111,8 @@ class TestAnalyticalCost:
     def test_cov_matmul_dominated(self):
         assert _analytical_cost("cov", f=100, s=200) == 100 * 100 * 200
 
-    def test_cross_15n(self):
-        assert _analytical_cost("cross", n=1000) == 15000
+    def test_cross_9n(self):
+        assert _analytical_cost("cross", n=1000) == 9000
 
     # --- Binning/histogram ---
 
@@ -146,7 +146,7 @@ class TestAnalyticalCost:
 
     def test_interp_nlog2xp(self):
         n, xp = 1000, 100
-        expected = n * math.ceil(math.log2(xp))
+        expected = 3 * n + n * math.ceil(math.log2(xp))
         assert _analytical_cost("interp", n=n, xp=xp) == expected
 
     # --- Linear/generation ---
@@ -159,17 +159,17 @@ class TestAnalyticalCost:
         assert _analytical_cost("trapezoid", n=5000) == 5000
 
     def test_logspace_linear(self):
-        assert _analytical_cost("logspace", n=5000) == 5000
+        assert _analytical_cost("logspace", n=5000) == 16 * 5000
 
     def test_geomspace_linear(self):
-        assert _analytical_cost("geomspace", n=5000) == 5000
+        assert _analytical_cost("geomspace", n=5000) == 16 * 5000
 
-    def test_vander_n_deg_minus_1(self):
-        assert _analytical_cost("vander", n=100, degree=10) == 100 * 9
+    def test_vander_n_deg_minus_2(self):
+        assert _analytical_cost("vander", n=100, degree=10) == 100 * 8
 
     def test_vander_default_degree(self):
         # Default degree=100
-        assert _analytical_cost("vander", n=100) == 100 * 99
+        assert _analytical_cost("vander", n=100) == 100 * 98
 
     # --- Default n ---
 

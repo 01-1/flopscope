@@ -1079,14 +1079,30 @@ imag = _counted_unary(_np.imag, "imag")
 imag.__signature__ = _inspect.signature(_np.imag)  # pyright: ignore[reportFunctionMemberAccess]
 invert = _counted_unary(_np.invert, "invert")
 iscomplex = _counted_unary(_np.iscomplex, "iscomplex")
-iscomplexobj = _counted_unary(_np.iscomplexobj, "iscomplexobj")
+
+
+def iscomplexobj(x: Any) -> bool:
+    """Returns True if x is a complex type or an array of complex type.
+    This is a dtype/metadata predicate (O(1)) — Cost: 0 FLOPs."""
+    return _np.iscomplexobj(_to_base_ndarray(x) if isinstance(x, _np.ndarray) else x)
+
+
+attach_docstring(iscomplexobj, _np.iscomplexobj, "free", "0 FLOPs")
 isnat = _counted_unary(_np.isnat, "isnat")
 isneginf = _counted_unary(_np.isneginf, "isneginf")
 isneginf.__signature__ = _inspect.signature(_np.isneginf)  # pyright: ignore[reportFunctionMemberAccess]
 isposinf = _counted_unary(_np.isposinf, "isposinf")
 isposinf.__signature__ = _inspect.signature(_np.isposinf)  # pyright: ignore[reportFunctionMemberAccess]
 isreal = _counted_unary(_np.isreal, "isreal")
-isrealobj = _counted_unary(_np.isrealobj, "isrealobj")
+
+
+def isrealobj(x: Any) -> bool:
+    """Returns True if x is not a complex type or an array of complex type.
+    This is a dtype/metadata predicate (O(1)) — Cost: 0 FLOPs."""
+    return _np.isrealobj(_to_base_ndarray(x) if isinstance(x, _np.ndarray) else x)
+
+
+attach_docstring(isrealobj, _np.isrealobj, "free", "0 FLOPs")
 log1p = _counted_unary(_np.log1p, "log1p")
 logical_not = _counted_unary(_np.logical_not, "logical_not")
 nan_to_num = _counted_unary(_np.nan_to_num, "nan_to_num")
@@ -1141,15 +1157,19 @@ sinh = _counted_unary(_np.sinh, "sinh")
 
 @_counted_wrapper
 def sort_complex(a: ArrayLike) -> FlopscopeArray:
-    """Counted version of np.sort_complex. Cost: n*ceil(log2(n))."""
-    import math
+    """Counted version of np.sort_complex.
+
+    Cost: n*ceil(log2(n)) per last-axis slice (n = a.shape[-1]).
+    numpy.sort_complex sorts each 1-D slice along the last axis, so the
+    total cost is num_slices * sort_cost(n).  For 1-D input this equals
+    the previous n*ceil(log2(n)) formula.
+    """
+    from flopscope._sorting_ops import _sort_cost_nd
 
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
-    n = a.size
-    log2n = math.ceil(math.log2(n)) if n > 1 else 1
-    cost = n * log2n
+    cost = 1 if a.ndim == 0 else _sort_cost_nd(a, a.ndim - 1)
     with budget.deduct(
         "sort_complex", flop_cost=cost, subscripts=None, shapes=(a.shape,)
     ):
@@ -1430,8 +1450,75 @@ def mean(
 
 mean.__signature__ = _inspect.signature(_np.mean)  # pyright: ignore[reportFunctionMemberAccess]
 
-std = _counted_reduction(_np.std, "std")
-var = _counted_reduction(_np.var, "var")
+
+def _variance_family_cost(a, axis, symmetry, *, with_sqrt: bool) -> int:
+    """Honest FMA=2 cost: 2 pointwise passes (center, square) + 2 reductions
+    (mean-sum, var-sum) + per-output divides (+ sqrt for std) = 4*numel (+M)."""
+    from flopscope._accumulation._reduction import (
+        _normalize_axis,
+        _num_output_orbits,
+        compute_reduction_accumulation_cost,
+    )
+
+    axes_summed = _normalize_axis(axis, a.ndim)
+    m = _num_output_orbits(tuple(a.shape), axes_summed, symmetry)
+    reduce_cost = compute_reduction_accumulation_cost(
+        input_shape=tuple(a.shape),
+        axes_summed=axes_summed,
+        symmetry=symmetry,
+        op_factor=2,
+        extra_ops=2 * m,
+    ).total
+    cost = 2 * pointwise_cost(tuple(a.shape), symmetry) + reduce_cost
+    return cost + m if with_sqrt else cost
+
+
+def _counted_variance(np_func, op_name: str, *, with_sqrt: bool):
+    @_counted_wrapper
+    def wrapper(
+        a: ArrayLike,
+        axis: int | None = None,
+        dtype=None,
+        out: FlopscopeArray | None = None,
+        ddof: int = 0,
+        keepdims: bool = False,
+        **kwargs: Any,
+    ) -> FlopscopeArray:
+        budget = require_budget()
+        if not isinstance(a, _np.ndarray):
+            a = _np.asarray(a)
+        symmetry = _symmetry_of(a)
+        keepdims = bool(keepdims)
+        cost = _variance_family_cost(a, axis, symmetry, with_sqrt=with_sqrt)
+        new_symmetry = (
+            reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
+            if symmetry is not None
+            else None
+        )
+        _prepare_symmetric_out(out, new_symmetry)
+        out_for_np = None if isinstance(out, SymmetricTensor) else out
+        with budget.deduct(op_name, flop_cost=cost, subscripts=None, shapes=(a.shape,)):
+            result = _call_with_optional_out(
+                np_func,
+                a,
+                axis=axis,
+                out=out_for_np,
+                ddof=ddof,
+                keepdims=keepdims,
+                dtype=dtype,
+                supports_out=True,
+                **kwargs,
+            )
+        if out is not None:
+            return _wrap_result(result, out=out, symmetry=new_symmetry)  # type: ignore[return-value]
+        return _wrap_result(result, symmetry=new_symmetry)  # type: ignore[return-value]
+
+    _apply_numpy_signature(wrapper, np_func)
+    return wrapper
+
+
+std = _counted_variance(_np.std, "std", with_sqrt=True)
+var = _counted_variance(_np.var, "var", with_sqrt=False)
 argmax = _counted_reduction(_np.argmax, "argmax")
 argmin = _counted_reduction(_np.argmin, "argmin")
 cumsum = _counted_reduction(_np.cumsum, "cumsum")
@@ -1445,7 +1532,65 @@ all = _counted_reduction(_np.all, "all")
 amax = _counted_reduction(_np.amax, "amax")
 amin = _counted_reduction(_np.amin, "amin")
 any = _counted_reduction(_np.any, "any")
-average = _counted_reduction(_np.average, "average")
+
+
+@_counted_wrapper
+def average(
+    a: ArrayLike,
+    axis: int | None = None,
+    weights=None,
+    returned: bool = False,
+    *,
+    keepdims: bool = False,
+    **kwargs: Any,
+):
+    """Counted np.average.
+
+    Cost (no weights) = reduction_cost(input) + num_output_orbits
+                      = same as np.mean (sum pass + one divide per output).
+    Cost (weights)    = reduction_cost(input)        # a*w sum pass
+                      + pointwise_cost(input)        # a*w multiply pass
+                      + reduction_cost(input, axis)  # w.sum() pass (full-shape conservative)
+                      + num_output_orbits            # per-output divides
+    """
+    from flopscope._accumulation._reduction import (
+        _normalize_axis,
+        _num_output_orbits,
+    )
+
+    budget = require_budget()
+    if not isinstance(a, _np.ndarray):
+        a = _np.asarray(a)
+    symmetry = _symmetry_of(a)
+    axes_summed = _normalize_axis(axis, a.ndim)
+    m = _num_output_orbits(tuple(a.shape), axes_summed, symmetry)
+    cost = reduction_cost(a.shape, axis, symmetry=symmetry) + m
+    if weights is not None:
+        cost += pointwise_cost(tuple(a.shape), symmetry)  # the a*w multiply pass
+        cost += reduction_cost(a.shape, axis, symmetry=symmetry)  # w.sum() conservative
+    new_symmetry = (
+        reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
+        if symmetry is not None
+        else None
+    )
+    a_raw = _to_base_ndarray(a)
+    weights_raw = (
+        _to_base_ndarray(weights) if isinstance(weights, _np.ndarray) else weights
+    )
+    with budget.deduct("average", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
+        result = _call_numpy(
+            _np.average,
+            a_raw,
+            axis=axis,
+            weights=weights_raw,
+            returned=returned,
+            keepdims=keepdims,
+            **kwargs,
+        )
+    return _wrap_result(result, symmetry=new_symmetry)
+
+
+_apply_numpy_signature(average, _np.average)
 _count_nonzero_counted = _counted_reduction(_np.count_nonzero, "count_nonzero")
 
 
@@ -1571,12 +1716,124 @@ nanmax = _counted_reduction(_np.nanmax, "nanmax")
 nanmean = _counted_reduction(_np.nanmean, "nanmean")
 nanmedian = _counted_reduction(_np.nanmedian, "nanmedian")
 nanmin = _counted_reduction(_np.nanmin, "nanmin")
-nanpercentile = _counted_reduction(_np.nanpercentile, "nanpercentile")
 nanprod = _counted_reduction(_np.nanprod, "nanprod")
-nanquantile = _counted_reduction(_np.nanquantile, "nanquantile")
-nanstd = _counted_reduction(_np.nanstd, "nanstd")
+
+
+@_counted_wrapper
+def nanpercentile(
+    a: ArrayLike,
+    q: float | ArrayLike,
+    axis: int | tuple[int, ...] | None = None,
+    out: FlopscopeArray | None = None,
+    keepdims: bool = False,
+    **kwargs: Any,
+) -> FlopscopeArray:
+    """Counted version of np.nanpercentile.
+
+    Cost = num_output_orbits × axis_dim (Tier-2 partition-based model).
+    """
+    import math as _math
+
+    budget = require_budget()
+    if not isinstance(a, _np.ndarray):
+        a = _np.asarray(a)
+    sym = _symmetry_of(a)
+
+    # Dense per-output cost for partition-based nanpercentile: axis_dim (one pass).
+    if axis is None:
+        axis_dim = _math.prod(a.shape) if a.shape else 1
+    elif isinstance(axis, int):
+        axis_dim = a.shape[axis]
+    else:
+        axis_dim = _math.prod(a.shape[ax] for ax in axis)
+
+    cost = _tier2_reduction_cost(a, axis, dense_per_output_cost=axis_dim)
+
+    out_sym = (
+        reduce_group(sym, ndim=a.ndim, axis=axis, keepdims=keepdims)
+        if sym is not None
+        else None
+    )
+    out_stripped = _to_base_ndarray(out) if out is not None else None
+    with budget.deduct(
+        "nanpercentile",
+        flop_cost=cost,
+        subscripts=None,
+        shapes=(a.shape,),
+    ):
+        result = _call_numpy(
+            _np.nanpercentile,
+            _to_base_ndarray(a),
+            q,
+            axis=axis,
+            out=out_stripped,
+            keepdims=keepdims,
+            **kwargs,
+        )
+    return _wrap_result(result, out=out, symmetry=out_sym)  # type: ignore[return-value]
+
+
+nanpercentile.__signature__ = _inspect.signature(_np.nanpercentile)  # pyright: ignore[reportFunctionMemberAccess]
+
+
+@_counted_wrapper
+def nanquantile(
+    a: ArrayLike,
+    q: float | ArrayLike,
+    axis: int | tuple[int, ...] | None = None,
+    out: FlopscopeArray | None = None,
+    keepdims: bool = False,
+    **kwargs: Any,
+) -> FlopscopeArray:
+    """Counted version of np.nanquantile.
+
+    Cost = num_output_orbits × axis_dim (Tier-2 partition-based model).
+    """
+    import math as _math
+
+    budget = require_budget()
+    if not isinstance(a, _np.ndarray):
+        a = _np.asarray(a)
+    sym = _symmetry_of(a)
+
+    # Dense per-output cost for partition-based nanquantile: axis_dim (one pass).
+    if axis is None:
+        axis_dim = _math.prod(a.shape) if a.shape else 1
+    elif isinstance(axis, int):
+        axis_dim = a.shape[axis]
+    else:
+        axis_dim = _math.prod(a.shape[ax] for ax in axis)
+
+    cost = _tier2_reduction_cost(a, axis, dense_per_output_cost=axis_dim)
+
+    out_sym = (
+        reduce_group(sym, ndim=a.ndim, axis=axis, keepdims=keepdims)
+        if sym is not None
+        else None
+    )
+    out_stripped = _to_base_ndarray(out) if out is not None else None
+    with budget.deduct(
+        "nanquantile",
+        flop_cost=cost,
+        subscripts=None,
+        shapes=(a.shape,),
+    ):
+        result = _call_numpy(
+            _np.nanquantile,
+            _to_base_ndarray(a),
+            q,
+            axis=axis,
+            out=out_stripped,
+            keepdims=keepdims,
+            **kwargs,
+        )
+    return _wrap_result(result, out=out, symmetry=out_sym)  # type: ignore[return-value]
+
+
+nanquantile.__signature__ = _inspect.signature(_np.nanquantile)  # pyright: ignore[reportFunctionMemberAccess]
+nanstd = _counted_variance(_np.nanstd, "nanstd", with_sqrt=True)
 nansum = _counted_reduction(_np.nansum, "nansum")
-nanvar = _counted_reduction(_np.nanvar, "nanvar")
+nanvar = _counted_variance(_np.nanvar, "nanvar", with_sqrt=False)
 
 
 @_counted_wrapper
@@ -1692,26 +1949,50 @@ def quantile(
 
 quantile.__signature__ = _inspect.signature(_np.quantile)  # pyright: ignore[reportFunctionMemberAccess]
 
-# ptp: numpy 2.0 removed it from ndarray but np.ptp still exists
-if hasattr(_np, "ptp"):
-    ptp = _counted_reduction(_np.ptp, "ptp")
-else:
+# ptp: numpy 2.0 removed it from ndarray but np.ptp still exists.
+# Honest cost: two full reductions (max-pass + min-pass) + M subtracts
+# = 2*(numel − M) + M = 2*numel − M
+# where M = num_output_orbits (1 for full reduction, or output numel for axis).
 
-    @_counted_wrapper
-    def ptp(a: ArrayLike, axis: int | None = None, **kwargs: Any) -> FlopscopeArray:
-        """Peak-to-peak range. Cost = numel(input) FLOPs."""
-        budget = require_budget()
-        if not isinstance(a, _np.ndarray):
-            a = _np.asarray(a)
-        cost = reduction_cost(a.shape, axis)
-        with budget.deduct("ptp", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
-            stripped = _to_base_ndarray(a)
+
+@_counted_wrapper
+def ptp(
+    a: ArrayLike, axis: int | tuple[int, ...] | None = None, **kwargs: Any
+) -> FlopscopeArray:
+    """Peak-to-peak range. Cost = 2*numel(input) − numel(output) FLOPs
+    (max pass + min pass + subtract)."""
+    from flopscope._accumulation._reduction import (
+        _normalize_axis,
+        _num_output_orbits,
+    )
+
+    budget = require_budget()
+    if not isinstance(a, _np.ndarray):
+        a = _np.asarray(a)
+    axes_summed = _normalize_axis(axis, a.ndim)
+    symmetry = a.symmetry if isinstance(a, SymmetricTensor) else None
+    m = _num_output_orbits(tuple(a.shape), axes_summed, symmetry)
+    cost = 2 * reduction_cost(a.shape, axis, symmetry=symmetry) + m
+    with budget.deduct("ptp", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
+        stripped = _to_base_ndarray(a)
+        if hasattr(_np, "ptp"):
+            result = _call_numpy(_np.ptp, stripped, axis=axis, **kwargs)
+        else:
             result = _call_numpy(_np.max, stripped, axis=axis, **kwargs) - _call_numpy(
                 _np.min, stripped, axis=axis, **kwargs
             )
-        return result  # type: ignore[return-value]  # wrapped at fnp.ptp import time
+    return result  # type: ignore[return-value]
 
-    attach_docstring(ptp, _np.max, "counted_reduction", "numel(input) FLOPs")
+
+attach_docstring(
+    ptp,
+    _np.ptp if hasattr(_np, "ptp") else _np.max,
+    "counted_reduction",
+    "2*numel(input) − numel(output) FLOPs (max pass + min pass + subtract)",
+)
+
+if hasattr(_np, "ptp"):
+    ptp.__signature__ = _inspect.signature(_np.ptp)  # pyright: ignore[reportFunctionMemberAccess]
 
 
 # ---------------------------------------------------------------------------
@@ -1959,6 +2240,28 @@ def _surviving_symmetry_after_contraction(group, surviving_axes):
     return restrict_group_to_axes(group, axes=wanted)
 
 
+def _tensordot_einsum_subscripts(a_ndim, b_ndim, a_axes, b_axes):
+    """Build einsum subscripts equivalent to a tensordot contraction.
+
+    Returns None if operand rank exceeds the 52-letter budget (caller falls
+    back to the dense estimate then).
+    """
+    import string as _string
+
+    if a_ndim + b_ndim > 52:
+        return None
+    letters = _string.ascii_letters
+    a_labels = list(letters[:a_ndim])
+    b_labels = list(letters[a_ndim : a_ndim + b_ndim])
+    a_ax = [ax % a_ndim for ax in a_axes]
+    b_ax = [ax % b_ndim for ax in b_axes]
+    for ai, bi in zip(a_ax, b_ax, strict=False):
+        b_labels[bi] = a_labels[ai]  # tie contracted pairs
+    out = [a_labels[i] for i in range(a_ndim) if i not in a_ax]
+    out += [b_labels[i] for i in range(b_ndim) if i not in b_ax]
+    return f"{''.join(a_labels)},{''.join(b_labels)}->{''.join(out)}"
+
+
 @_counted_wrapper
 def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
     """Counted version of ``np.tensordot``.
@@ -2019,9 +2322,11 @@ def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
     output_shape = tuple(a.shape[i] for i in a_surviving) + tuple(
         b.shape[j] for j in b_surviving
     )
-    # output_size * contracted = (a.size / contracted) * (b.size / contracted) * contracted
-    # = a.size * b.size / contracted
-    dense = _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+    # Route cost through einsum when possible (FMA=2 correct); fall back to
+    # the old multiply-only dense formula only for rank >52 operands.
+    _subs = _tensordot_einsum_subscripts(
+        a.ndim, b.ndim, a_contract_axes, b_contract_axes
+    )
     # Compose output symmetry from each input's surviving symmetry, with
     # b's axes lifted past a's surviving count so they refer to their
     # final slots in the combined output. Bail on the composition when
@@ -2041,7 +2346,21 @@ def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
             oversized_order = -1
         _warn_oversized_once("tensordot", oversized_order)
         out_sym = None
-        cost = dense
+        if _subs is not None:
+            # Oversized symmetry: route cost through the shape-only einsum
+            # formula (FMA=2) WITHOUT _resolve_cost_and_output_symmetry, which
+            # would re-trigger the dimino enumeration this branch exists to
+            # avoid (and raise _DiminoBudgetExceeded).
+            from flopscope._flops import einsum_cost
+
+            cost = einsum_cost(_subs, [tuple(a.shape), tuple(b.shape)])
+            canonical_subs = _subs
+        else:
+            dense = (
+                _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+            )
+            cost = _symmetry_adjusted_cost(dense, output_shape, out_sym)
+            canonical_subs = None
     else:
         a_sym_kept = _surviving_symmetry_after_contraction(a_sym, a_surviving)
         b_sym_kept = _surviving_symmetry_after_contraction(b_sym, b_surviving)
@@ -2062,9 +2381,23 @@ def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
             else None
         )
         out_sym = direct_product_groups(a_sym_remapped, b_sym_remapped)
-        cost = _symmetry_adjusted_cost(dense, output_shape, out_sym)
+        if _subs is not None:
+            from flopscope._einsum import _resolve_cost_and_output_symmetry
+
+            _info = _resolve_cost_and_output_symmetry(_subs, a, b)
+            cost = _info.accumulation.total
+            canonical_subs = _subs
+        else:
+            dense = (
+                _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+            )
+            cost = _symmetry_adjusted_cost(dense, output_shape, out_sym)
+            canonical_subs = None
     with budget.deduct(
-        "tensordot", flop_cost=cost, subscripts=None, shapes=(a.shape, b.shape)
+        "tensordot",
+        flop_cost=cost,
+        subscripts=canonical_subs,
+        shapes=(a.shape, b.shape),
     ):
         result = _call_numpy(
             _np.tensordot, _to_base_ndarray(a), _to_base_ndarray(b), axes=axes
@@ -2145,7 +2478,7 @@ def cross(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     # outside the budget block).
     stripped_a = _to_base_ndarray(a)
     stripped_b = _to_base_ndarray(b)
-    cost_provisional = _builtins.max(a.size * 5, 1)
+    cost_provisional = _builtins.max(a.size * 3, 1)
     with budget.deduct(
         "cross",
         flop_cost=cost_provisional,
@@ -2156,12 +2489,30 @@ def cross(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(cross, _np.cross, "counted_custom", "5 * output.size FLOPs")
+attach_docstring(
+    cross, _np.cross, "counted_custom", "3 * output.size FLOPs (6 mul + 3 sub)"
+)
 cross.__signature__ = _inspect.signature(_np.cross)  # pyright: ignore[reportFunctionMemberAccess]
 
 
+# Use numpy's own stable _NoValue singleton as the "not provided" sentinel for
+# diff's prepend/append.  A plain `object()` would break when _pointwise is
+# reloaded (test_numpy_version_support does this): the function's compiled
+# default would reference the OLD sentinel while the module-level name would
+# resolve to the NEW one after reload, causing a false "is not sentinel" check
+# that then passes the old sentinel object into numpy.diff as a prepend/append
+# value.  np._NoValue survives reloads because it lives in numpy's own module.
+_DIFF_NO_VALUE = _np._NoValue  # type: ignore[attr-defined]
+
+
 @_counted_wrapper
-def diff(a: ArrayLike, n: int = 1, axis: int = -1, **kwargs: Any) -> FlopscopeArray:
+def diff(
+    a: ArrayLike,
+    n: int = 1,
+    axis: int = -1,
+    prepend: Any = _DIFF_NO_VALUE,
+    append: Any = _DIFF_NO_VALUE,
+) -> FlopscopeArray:
     """Counted version of np.diff."""
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
@@ -2172,17 +2523,32 @@ def diff(a: ArrayLike, n: int = 1, axis: int = -1, **kwargs: Any) -> FlopscopeAr
     # the other axes' sizes. Issue #69.
     ax = axis if axis >= 0 else axis + a.ndim
     L = a.shape[ax]
+    # numpy concatenates prepend/append along the diff axis before differencing,
+    # so the effective axis length L grows by their contribution.
+    if prepend is not _np._NoValue:  # type: ignore[attr-defined]
+        p = _np.asanyarray(_to_base_ndarray(prepend))
+        L += 1 if p.ndim == 0 else p.shape[ax] if p.ndim > ax else 1
+    if append is not _np._NoValue:  # type: ignore[attr-defined]
+        p = _np.asanyarray(_to_base_ndarray(append))
+        L += 1 if p.ndim == 0 else p.shape[ax] if p.ndim > ax else 1
     prod_outside = int(_np.prod(a.shape[:ax]))
     prod_inside = int(_np.prod(a.shape[ax + 1 :]))
     per_iter_sum = n * L - n * (n + 1) // 2
     cost = _builtins.max(prod_outside * per_iter_sum * prod_inside, 1)
+    # Forward prepend/append to numpy only when provided; strip FlopscopeArrays
+    # so numpy's internals don't receive counted subclass instances.
+    np_kwargs: dict[str, Any] = {}
+    if prepend is not _np._NoValue:  # type: ignore[attr-defined]
+        np_kwargs["prepend"] = _to_base_ndarray(prepend)
+    if append is not _np._NoValue:  # type: ignore[attr-defined]
+        np_kwargs["append"] = _to_base_ndarray(append)
     with budget.deduct(
         "diff",
         flop_cost=cost,
         subscripts=None,
         shapes=(a.shape,),
     ):
-        result = _call_numpy(_np.diff, _to_base_ndarray(a), n=n, axis=axis, **kwargs)
+        result = _call_numpy(_np.diff, _to_base_ndarray(a), n=n, axis=axis, **np_kwargs)
     return result  # type: ignore[return-value]  # wrapped at fnp.diff import time
 
 
@@ -2395,7 +2761,7 @@ def trapezoid(
     if not isinstance(y, _np.ndarray):
         y = _np.asarray(y)
     with budget.deduct(
-        "trapezoid", flop_cost=y.size, subscripts=None, shapes=(y.shape,)
+        "trapezoid", flop_cost=4 * y.size, subscripts=None, shapes=(y.shape,)
     ):
         result = _call_numpy(
             _np.trapezoid,
@@ -2407,7 +2773,9 @@ def trapezoid(
     return result  # type: ignore[return-value]  # wrapped at fnp.trapezoid import time
 
 
-attach_docstring(trapezoid, _np.trapezoid, "counted_custom", "numel(input) FLOPs")
+attach_docstring(
+    trapezoid, _np.trapezoid, "counted_custom", "4 * numel(input) FLOPs (FMA=2)"
+)
 
 
 if hasattr(_np, "trapz"):
@@ -2421,7 +2789,7 @@ if hasattr(_np, "trapz"):
         if not isinstance(y, _np.ndarray):
             y = _np.asarray(y)
         with budget.deduct(
-            "trapz", flop_cost=y.size, subscripts=None, shapes=(y.shape,)
+            "trapz", flop_cost=4 * y.size, subscripts=None, shapes=(y.shape,)
         ):
             result = _call_numpy(
                 _np.trapz,
@@ -2432,7 +2800,9 @@ if hasattr(_np, "trapz"):
             )
         return result  # type: ignore[return-value]  # wrapped at fnp.trapz import time
 
-    attach_docstring(trapz, _np.trapz, "counted_custom", "numel(input) FLOPs")
+    attach_docstring(
+        trapz, _np.trapz, "counted_custom", "4 * numel(input) FLOPs (FMA=2)"
+    )
 
 else:
 
@@ -2451,7 +2821,7 @@ def interp(x: ArrayLike, xp: ArrayLike, fp: ArrayLike, **kwargs: Any) -> Flopsco
     xp_arr = _np.asarray(xp)
     n = _builtins.max(x.size, 1)
     xp_len = _builtins.max(xp_arr.size, 1)
-    cost = _builtins.max(n * _ceil_log2(xp_len), 1)
+    cost = _builtins.max(3 * n + n * _ceil_log2(xp_len), 1)
     with budget.deduct(
         "interp", flop_cost=cost, subscripts=None, shapes=(x.shape, xp_arr.shape)
     ):
@@ -2465,5 +2835,10 @@ def interp(x: ArrayLike, xp: ArrayLike, fp: ArrayLike, **kwargs: Any) -> Flopsco
     return result  # type: ignore[return-value]  # wrapped at fnp.interp import time
 
 
-attach_docstring(interp, _np.interp, "counted_custom", "n * ceil(log2(xp)) FLOPs")
+attach_docstring(
+    interp,
+    _np.interp,
+    "counted_custom",
+    "3*n + n*ceil(log2(xp)) FLOPs (arithmetic + search)",
+)
 interp.__signature__ = _inspect.signature(_np.interp)  # pyright: ignore[reportFunctionMemberAccess]

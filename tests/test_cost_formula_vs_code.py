@@ -121,8 +121,7 @@ _UNARY_NUMEL = [
     "isreal",
     "isneginf",
     "isposinf",
-    "iscomplexobj",
-    "isrealobj",
+    # iscomplexobj and isrealobj are dtype predicates (free, 0 FLOPs) — see test_dtype_predicates_are_free
 ]
 
 
@@ -255,7 +254,7 @@ _REDUCTION_NUMEL = [
     "max",
     "min",
     "prod",
-    "ptp",
+    # ptp is excluded: 2-pass formula (2*numel - M); see test_ptp_two_passes
     "sum",
     "nanargmax",
     "nanargmin",
@@ -266,14 +265,10 @@ _REDUCTION_NUMEL = [
     "nanprod",
     "nansum",
     "nanmedian",
-    # std/var also cost numel(input) per sheet
-    # (mean is excluded: it charges +1 divide for the scalar output orbit)
-    "average",
+    # mean is excluded: it charges +1 divide for the scalar output orbit
+    # average is excluded: now matches mean cost (reduction + M divides); see test_average_matches_mean_and_bills_weight_pipeline
+    # std/var/nanstd/nanvar are excluded: 4-pass formula; see test_variance_family_cost
     "nanmean",
-    "std",
-    "var",
-    "nanstd",
-    "nanvar",
 ]
 
 
@@ -285,6 +280,23 @@ def test_reduction_numel(name, we):
     fn = getattr(we, name)
     cost = _cost_of(fn, a)
     assert cost == 99, f"{name}: expected orbit-mapping cost=99, got {cost}"
+
+
+def test_variance_family_cost(we):
+    # 4-pass honest cost for full reduction of (10,10) dense (N=100, M=1 scalar):
+    # 2*pointwise(100) + reduce(op_factor=2, extra_ops=2*1) + 1 div
+    # pointwise = 100; reduce: orbit-mapping 99 + 2 extra = 101 → *2 op_factor? No:
+    # compute_reduction_accumulation_cost with op_factor=2, extra_ops=2: total = 2*99 + 2 = 200
+    # var = 2*100 + 200 = 400, std = 400 + 1 = 401
+    a = numpy.random.rand(10, 10)
+    assert _cost_of(we.var, a) == 400, f"var: expected 400, got {_cost_of(we.var, a)}"
+    assert _cost_of(we.std, a) == 401, f"std: expected 401, got {_cost_of(we.std, a)}"
+    assert _cost_of(we.nanvar, a) == 400, (
+        f"nanvar: expected 400, got {_cost_of(we.nanvar, a)}"
+    )
+    assert _cost_of(we.nanstd, a) == 401, (
+        f"nanstd: expected 401, got {_cost_of(we.nanstd, a)}"
+    )
 
 
 def test_mean_charges_sum_plus_one_divide(we):
@@ -316,11 +328,12 @@ def test_percentile_tier2_cost(we):
 
 @pytest.mark.parametrize("name", ["nanpercentile"])
 def test_nanpercentile_numel(name, we):
-    # nanpercentile still uses the old orbit-mapping model.
-    # Full reduction of (10,10): prod(shape) - 1 = 100 - 1 = 99 additions.
+    # nanpercentile now uses Tier-2 model (same as percentile): num_output_orbits × axis_dim.
+    # Full reduction of (10,10) dense: axis_dim = prod(shape) = 100, scalar output → 1 orbit.
+    # Cost = 1 * 100 = 100.
     a = numpy.random.rand(10, 10)
     cost = _cost_of(getattr(we, name), a, q=50)
-    assert cost == 99, f"{name}: expected orbit-mapping cost=99, got {cost}"
+    assert cost == 100, f"{name}: expected Tier-2 cost=100, got {cost}"
 
 
 def test_quantile_tier2_cost(we):
@@ -334,11 +347,12 @@ def test_quantile_tier2_cost(we):
 
 @pytest.mark.parametrize("name", ["nanquantile"])
 def test_nanquantile_numel(name, we):
-    # nanquantile still uses the old orbit-mapping model.
-    # Full reduction of (10,10): prod(shape) - 1 = 100 - 1 = 99 additions.
+    # nanquantile now uses Tier-2 model (same as quantile): num_output_orbits × axis_dim.
+    # Full reduction of (10,10) dense: axis_dim = prod(shape) = 100, scalar output → 1 orbit.
+    # Cost = 1 * 100 = 100.
     a = numpy.random.rand(10, 10)
     cost = _cost_of(getattr(we, name), a, q=0.5)
-    assert cost == 99, f"{name}: expected orbit-mapping cost=99, got {cost}"
+    assert cost == 100, f"{name}: expected Tier-2 cost=100, got {cost}"
 
 
 @pytest.mark.parametrize("name", ["cumulative_sum", "cumulative_prod"])
@@ -391,8 +405,8 @@ def test_outer_mn(we):
 
 
 def test_tensordot_contracted(we):
-    # tensordot uses the old dense formula: a.size*b.size/contracted = 5*4*4*3/4 = 60
-    # (tensordot has its own cost model, separate from the accumulation-based einsum model)
+    # tensordot partial-contraction now routes through einsum (FMA=2).
+    # (5,4)·(4,3) axes=([1],[0]) -> "ab,bc->ac"; einsum cost = 5*3*(2*4-1) = 105
     assert (
         _cost_of(
             we.tensordot,
@@ -400,7 +414,7 @@ def test_tensordot_contracted(we):
             numpy.random.rand(4, 3),
             axes=([1], [0]),
         )
-        == 60
+        == 105
     )
 
 
@@ -409,8 +423,8 @@ def test_kron_numel_output(we):
 
 
 def test_cross_6n(we):
-    # cross charges a.shape[0] * 3 * 5 (5 ops/output element, issue #69)
-    assert _cost_of(we.cross, numpy.random.rand(5, 3), numpy.random.rand(5, 3)) == 75
+    # cross charges a.shape[0] * 3 * 3 (3 ops/output element, 6 mul + 3 sub)
+    assert _cost_of(we.cross, numpy.random.rand(5, 3), numpy.random.rand(5, 3)) == 45
 
 
 def test_einsum_mnk(we):
@@ -447,79 +461,105 @@ class TestLinalgDecompositions:
     def test_cholesky_n3(self, we):
         S = numpy.eye(8) + numpy.random.rand(8, 8)
         S = S @ S.T
-        assert _cost_of(we.linalg.cholesky, S) == 512
+        # cholesky_cost(8) = 8^3//3 = 170
+        assert _cost_of(we.linalg.cholesky, S) == 170
 
     def test_qr_mnk(self, we):
-        assert _cost_of(we.linalg.qr, numpy.random.rand(10, 5)) == 250
+        # qr_cost(10,5,mode="reduced"): k=5, factor=2*10*5*5-2*5^3//3=500-83=417, 2*factor=834
+        assert _cost_of(we.linalg.qr, numpy.random.rand(10, 5)) == 834
 
     @pytest.mark.parametrize("name", ["eig", "eigvals"])
     def test_eig_n3(self, name, we):
-        assert _cost_of(getattr(we.linalg, name), numpy.random.rand(8, 8)) == 512
+        # eig: 25*n^3=25*512=12800; eigvals: 10*n^3=10*512=5120 (n=8, PROVISIONAL)
+        expected = {"eig": 25 * 8**3, "eigvals": 10 * 8**3}
+        assert (
+            _cost_of(getattr(we.linalg, name), numpy.random.rand(8, 8))
+            == expected[name]
+        )
 
     @pytest.mark.parametrize("name", ["eigh", "eigvalsh"])
     def test_eigh_n3(self, name, we):
         S = numpy.eye(8) + numpy.random.rand(8, 8)
         S = S @ S.T
-        assert _cost_of(getattr(we.linalg, name), S) == 512
+        # eigh: 9*n^3=9*512=4608; eigvalsh: 4*n^3//3=4*512//3=682 (n=8, PROVISIONAL)
+        expected = {"eigh": 9 * 8**3, "eigvalsh": 4 * 8**3 // 3}
+        assert _cost_of(getattr(we.linalg, name), S) == expected[name]
 
     def test_svd_mnk(self, we):
-        assert _cost_of(we.linalg.svd, numpy.random.rand(10, 5)) == 250
+        # full_matrices=True (default), non-square (10,5): 4*a^2*b+22*b^3
+        # a=10, b=5: 4*100*5+22*125=2000+2750=4750
+        assert _cost_of(we.linalg.svd, numpy.random.rand(10, 5)) == 4750
+        # thin (full_matrices=False): 6*10*25+20*125=1500+2500=4000
+        assert (
+            _cost_of(we.linalg.svd, numpy.random.rand(10, 5), full_matrices=False)
+            == 4000
+        )
 
     def test_svdvals_mnk(self, we):
-        assert _cost_of(we.linalg.svdvals, numpy.random.rand(10, 5)) == 250
+        # values-only: 2*10*25+2*125=500+250=750
+        assert _cost_of(we.linalg.svdvals, numpy.random.rand(10, 5)) == 750
 
 
 class TestLinalgSolvers:
     def test_solve_n3(self, we):
+        # solve_cost(8, nrhs=1): 2*8^3//3 + 2*8^2*1 = 341 + 128 = 469
         assert (
             _cost_of(we.linalg.solve, numpy.random.rand(8, 8), numpy.random.rand(8))
-            == 512
+            == 469
         )
 
     def test_inv_n3(self, we):
-        assert _cost_of(we.linalg.inv, numpy.random.rand(8, 8)) == 512
+        # inv_cost(8): 2*8^3 = 1024
+        assert _cost_of(we.linalg.inv, numpy.random.rand(8, 8)) == 1024
 
     def test_lstsq_mnk(self, we):
         # lstsq_cost(10,5,b_cols=1,b_ndim=1):
-        #   k=5, svd=10*5*5=250
+        #   k=5, svd=svd_cost(10,5,with_vectors=True)=4000
         #   ut_b=matmul_cost(5,10,1)=2*5*10*1-5*1=95
         #   divide=5*1=5
         #   reconstruction=matmul_cost(5,5,1)=2*5*5*1-5*1=45
-        #   total=250+95+5+45=395
+        #   total=4000+95+5+45=4145
         assert (
             _cost_of(we.linalg.lstsq, numpy.random.rand(10, 5), numpy.random.rand(10))
-            == 395
+            == 4145
         )
 
     def test_pinv_mnk(self, we):
-        assert _cost_of(we.linalg.pinv, numpy.random.rand(10, 5)) == 730
+        # pinv_cost(10,5): svd(with_vecs)=4000+threshold=5+diag_scale=25+matmul(5,5,10)=450
+        assert _cost_of(we.linalg.pinv, numpy.random.rand(10, 5)) == 4480
 
     def test_tensorsolve_n3(self, we):
+        # tensorsolve_cost((2,2,2,2)): n=prod(trailing 2)=4; 2*4^3//3 + 2*4^2 = 42 + 32 = 74
         assert (
             _cost_of(
                 we.linalg.tensorsolve,
                 numpy.eye(4).reshape(2, 2, 2, 2),
                 numpy.random.rand(2, 2),
             )
-            == 64
+            == 74
         )
 
     def test_tensorinv_n3(self, we):
-        assert _cost_of(we.linalg.tensorinv, numpy.eye(4).reshape(2, 2, 2, 2)) == 64
+        # tensorinv_cost((2,2,2,2)): n=prod(leading 2)=4; 2*4^3 = 128
+        assert _cost_of(we.linalg.tensorinv, numpy.eye(4).reshape(2, 2, 2, 2)) == 128
 
 
 class TestLinalgProperties:
     def test_det_n3(self, we):
-        assert _cost_of(we.linalg.det, numpy.random.rand(8, 8)) == 512
+        # det_cost(8) = 2*8^3//3 + 8 = 341 + 8 = 349
+        assert _cost_of(we.linalg.det, numpy.random.rand(8, 8)) == 349
 
     def test_slogdet_n3(self, we):
-        assert _cost_of(we.linalg.slogdet, numpy.random.rand(8, 8)) == 512
+        # slogdet_cost(8) = 2*8^3//3 + 8 = 341 + 8 = 349
+        assert _cost_of(we.linalg.slogdet, numpy.random.rand(8, 8)) == 349
 
     def test_cond_mnk(self, we):
-        assert _cost_of(we.linalg.cond, numpy.random.rand(8, 8)) == 512
+        # cond_cost(8,8): values-only SVD(8,8)=2*8*64+2*512=1024+1024=2048, +1=2049
+        assert _cost_of(we.linalg.cond, numpy.random.rand(8, 8)) == 2049
 
     def test_matrix_rank_mnk(self, we):
-        assert _cost_of(we.linalg.matrix_rank, numpy.random.rand(10, 5)) == 250
+        # matrix_rank_cost(10,5): svd_vals(10,5)+min(10,5)=750+5=755
+        assert _cost_of(we.linalg.matrix_rank, numpy.random.rand(10, 5)) == 755
 
     def test_trace(self, we):
         assert _cost_of(we.trace, numpy.random.rand(8, 8)) == 8
@@ -575,10 +615,10 @@ class TestLinalgDelegates:
         )
 
     def test_cross(self, we):
-        # linalg.cross charges out_size * 5 (5 ops/output element, issue #69)
+        # linalg.cross charges out_size * 3 (3 ops/output element, 6 mul + 3 sub)
         assert (
             _cost_of(we.linalg.cross, numpy.random.rand(5, 3), numpy.random.rand(5, 3))
-            == 75
+            == 45
         )
 
     def test_matrix_power(self, we):
@@ -618,20 +658,21 @@ class TestPolynomial:
         assert _cost_of(we.polyint, numpy.ones(5)) == 5
 
     def test_polymul(self, we):
-        assert _cost_of(we.polymul, numpy.ones(5), numpy.ones(3)) == 15
+        assert _cost_of(we.polymul, numpy.ones(5), numpy.ones(3)) == 22
 
     def test_polydiv(self, we):
-        assert _cost_of(we.polydiv, numpy.ones(5), numpy.ones(3)) == 15
+        assert _cost_of(we.polydiv, numpy.ones(5), numpy.ones(3)) == 22
 
     def test_polyfit(self, we):
         x = numpy.random.rand(20)
         assert _cost_of(we.polyfit, x, numpy.random.rand(20), 2) == 360
 
     def test_poly(self, we):
-        assert _cost_of(we.poly, numpy.ones(5)) == 25
+        assert _cost_of(we.poly, numpy.ones(5)) == 50  # 2 * 5^2 = 50
 
     def test_roots(self, we):
-        assert _cost_of(we.roots, numpy.array([1.0, 2.0, 3.0, 4.0, 5.0])) == 64
+        # degree=4 (len=5 -> n=4); eigvals_cost(4)=10*64=640 (PROVISIONAL)
+        assert _cost_of(we.roots, numpy.array([1.0, 2.0, 3.0, 4.0, 5.0])) == 10 * 4**3
 
 
 # ---------------------------------------------------------------------------
@@ -741,7 +782,7 @@ class TestStatistics:
         assert _cost_of(we.cov, numpy.random.rand(3, 10)) == 180
 
     def test_interp_n_log_xp(self, we):
-        # 10 * ceil(log2(32)) = 50
+        # 3*10 + 10*ceil(log2(32)) = 30 + 10*5 = 80
         assert (
             _cost_of(
                 we.interp,
@@ -749,7 +790,7 @@ class TestStatistics:
                 numpy.arange(32, dtype=float),
                 numpy.random.rand(32),
             )
-            == 50
+            == 80
         )
 
 
@@ -789,7 +830,9 @@ class TestFreeOps:
         assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10)) == 10
 
     def test_arange(self, we):
-        assert _cost_of(we.arange, 20) == 20
+        assert (
+            _cost_of(we.arange, 20) == 2 * 20
+        )  # migrated: arange bills 2*numel (start + i*step, FMA=2)
 
     def test_full(self, we):
         assert _cost_of(we.full, (3, 4), 1.0) == 12
@@ -859,18 +902,18 @@ class TestRandom:
 
 
 class TestStats:
-    """All stats methods charge numel(input) * 1 = numel(input) FLOPs."""
+    """Stats methods charge composite cost_per_elem * numel(input) FLOPs (weight=1.0)."""
 
     def test_norm_pdf(self, we):
-        assert _cost_of(flopscope.stats.norm.pdf, numpy.random.rand(100)) == 100
+        assert _cost_of(flopscope.stats.norm.pdf, numpy.random.rand(100)) == 27 * 100
 
     def test_norm_cdf(self, we):
-        assert _cost_of(flopscope.stats.norm.cdf, numpy.random.rand(100)) == 100
+        assert _cost_of(flopscope.stats.norm.cdf, numpy.random.rand(100)) == 48 * 100
 
     def test_norm_ppf(self, we):
         assert (
             _cost_of(flopscope.stats.norm.ppf, numpy.random.rand(100) * 0.98 + 0.01)
-            == 100
+            == 83 * 100
         )
 
     def test_uniform_pdf(self, we):
@@ -914,8 +957,8 @@ class TestStats:
         )
 
     def test_scalar_input(self, we):
-        """Scalar input should charge 1 FLOP."""
-        assert _cost_of(flopscope.stats.norm.pdf, 0.0) == 1
+        """Scalar input should charge cost_per_elem FLOPs (norm.pdf=27)."""
+        assert _cost_of(flopscope.stats.norm.pdf, 0.0) == 27
 
 
 # ---------------------------------------------------------------------------
@@ -968,8 +1011,8 @@ def test_convolve_cost_pinned(we):
 def test_cross_cost_pinned(we):
     a = we.asarray(numpy.zeros((100, 3)))
     b = we.asarray(numpy.zeros((100, 3)))
-    # 5 ops per output element; output.size = 100*3 = 300, formula: a.shape[0]*3*5 = 1500
-    assert _cost_of(we.cross, a, b) == 1500
+    # 3 ops per output element; output.size = 100*3 = 300, formula: a.shape[0]*3*3 = 900
+    assert _cost_of(we.cross, a, b) == 900
 
 
 def test_matrix_power_cost_pinned(we):

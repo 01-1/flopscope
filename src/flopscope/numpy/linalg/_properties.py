@@ -78,13 +78,13 @@ def det_cost(n: int, symmetric: bool = False) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: $2n^3/3 + n$.
 
     Notes
     -----
-    Simplified cubic cost model for determinant computation.
+    2n^3/3 + n FLOPs (LU + product of diagonal).
     """
-    return max(n**3, 1)
+    return max(2 * n**3 // 3 + n, 1)
 
 
 @_counted_wrapper
@@ -109,7 +109,9 @@ def det(a: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(det, _np.linalg.det, "linalg", r"$n^3$ FLOPs")
+attach_docstring(
+    det, _np.linalg.det, "linalg", r"$\frac{2}{3}n^3 + n$ FLOPs (LU + diagonal product)"
+)
 
 
 def slogdet_cost(n: int, symmetric: bool = False) -> int:
@@ -125,13 +127,13 @@ def slogdet_cost(n: int, symmetric: bool = False) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: $2n^3/3 + n$.
 
     Notes
     -----
-    Simplified cubic cost model for sign and log-determinant computation.
+    2n^3/3 + n FLOPs (LU + product of diagonal).
     """
-    return max(n**3, 1)
+    return max(2 * n**3 // 3 + n, 1)
 
 
 @_counted_wrapper
@@ -165,7 +167,12 @@ def slogdet(a: ArrayLike) -> SlogdetResult:
     return result
 
 
-attach_docstring(slogdet, _np.linalg.slogdet, "linalg", r"$n^3$ FLOPs")
+attach_docstring(
+    slogdet,
+    _np.linalg.slogdet,
+    "linalg",
+    r"$\frac{2}{3}n^3 + n$ FLOPs (LU + diagonal product)",
+)
 
 
 def norm_cost(shape: tuple, ord=None) -> int:
@@ -188,15 +195,20 @@ def norm_cost(shape: tuple, ord=None) -> int:
     Cost depends on the ``ord`` parameter and input dimensionality.
 
     - Elementwise norms (Frobenius, L1, Linf, etc.): ``2 * numel`` (FMA=2, weight=1 baked in).
-    - SVD-based norms (2-norm, nuclear norm): ``4 * m * n * min(m, n)``
-      (weight=4 baked in, consistent with linalg.svd weight=4).
+    - SVD-based norms (2-norm, nuclear norm): values-only SVD cost
+      ``2*a*b^2 + 2*b^3`` where a=max(m,n), b=min(m,n).
+    - General-p vector norms (ord not in {None, 0, 1, 2, inf, -inf}):
+      ``18 * numel + 16`` (abs + pow per elem + sum-reduce + root pow).
     """
     numel = 1
     for d in shape:
         numel *= d
     numel = max(numel, 1)
     if len(shape) == 1:
-        # FMA=2: all vector norms cost 2*numel (one multiply + accumulate per element)
+        # General-p norm: abs + pow(16) per elem + sum + root pow(16)
+        if ord not in (None, 0, 1, 2, _np.inf, -_np.inf):
+            return 18 * numel + 16
+        # FMA=2: standard vector norms cost 2*numel (one multiply + accumulate per element)
         return 2 * numel
     else:
         m, n = shape[-2], shape[-1]
@@ -204,10 +216,10 @@ def norm_cost(shape: tuple, ord=None) -> int:
             return 2 * numel  # FMA=2
         elif ord in (1, -1, _np.inf, -_np.inf):
             return 2 * numel  # FMA=2
-        elif ord == 2 or ord == -2:
-            return 4 * m * n * min(m, n)  # SVD-based, weight=4 baked in
-        elif ord == "nuc":
-            return 4 * m * n * min(m, n)  # SVD-based, weight=4 baked in
+        elif ord in (2, -2, "nuc"):
+            from flopscope._flops import svd_cost
+
+            return svd_cost(m, n, with_vectors=False)
         return 2 * numel  # FMA=2
 
 
@@ -218,7 +230,13 @@ def norm(
     axis: int | tuple[int, ...] | None = None,
     keepdims: bool = False,
 ) -> FlopscopeArray:
-    """Matrix or vector norm with FLOP counting."""
+    """Matrix or vector norm with FLOP counting.
+
+    Cost = norm_cost(effective_shape, ord) × batch groups.
+    When axis=None the whole array is one group (batch groups == 1).
+    When axis selects a subset of dimensions, every combination of the
+    remaining (non-reduced) dimensions is a separate group.
+    """
     budget = require_budget()
     inputs_were_whest = isinstance(x, FlopscopeArray)
     if not isinstance(x, _np.ndarray):
@@ -239,7 +257,11 @@ def norm(
             effective_shape = (x.shape[norm_axis],) if ndim > 0 else ()
         else:
             effective_shape = tuple(x.shape[ax] for ax in axis)
-        cost = norm_cost(effective_shape, ord=ord)
+        group_numel = 1
+        for dim in effective_shape:
+            group_numel *= dim
+        n_groups = (x.size // group_numel) if group_numel else 0
+        cost = norm_cost(effective_shape, ord=ord) * max(n_groups, 0)
     except (IndexError, ValueError):
         # Let numpy raise the proper error with the right type/message
         return _np.linalg.norm(  # type: ignore[reportReturnType]
@@ -257,7 +279,10 @@ def norm(
 
 
 attach_docstring(
-    norm, _np.linalg.norm, "linalg", "depends on ord parameter -- see docstring"
+    norm,
+    _np.linalg.norm,
+    "linalg",
+    "depends on ord parameter -- see docstring; × batch groups",
 )
 
 
@@ -278,13 +303,20 @@ def vector_norm_cost(shape: tuple, ord=None) -> int:
 
     Notes
     -----
-    All norms cost 2*numel FLOPs (FMA=2: one multiply + accumulate per element).
+    Standard norms (ord in {None, 0, 1, 2, inf, -inf}) cost 2*numel FLOPs
+    (FMA=2: one multiply + accumulate per element).
+    General-p norms cost 18*numel + 16 FLOPs per group: abs(1) + pow(16)
+    per element + sum-reduce(1) + final root pow(16). The wrapper's
+    n_groups multiplier scales the +16 correctly per group.
     """
     numel = 1
     for d in shape:
         numel *= d
     numel = max(numel, 1)
-    # FMA=2: all norms cost 2*numel (one multiply + accumulate per element).
+    # General-p norm: abs + pow(16) per elem + sum + root pow(16)
+    if ord not in (None, 0, 1, 2, _np.inf, -_np.inf):
+        return 18 * numel + 16
+    # FMA=2: standard norms cost 2*numel (one multiply + accumulate per element).
     return 2 * numel
 
 
@@ -295,7 +327,13 @@ def vector_norm(
     axis: int | tuple[int, ...] | None = None,
     keepdims: bool = False,
 ) -> FlopscopeArray:
-    """Vector norm with FLOP counting."""
+    """Vector norm with FLOP counting.
+
+    Cost = vector_norm_cost(effective_shape, ord) × batch groups.
+    When axis=None the whole array is one group (batch groups == 1).
+    When axis selects a subset of dimensions, every combination of the
+    remaining (non-reduced) dimensions is a separate group.
+    """
     budget = require_budget()
     inputs_were_whest = isinstance(x, FlopscopeArray)
     if not isinstance(x, _np.ndarray):
@@ -307,7 +345,11 @@ def vector_norm(
             effective_shape = tuple(x.shape[ax] for ax in axis)
     else:
         effective_shape = x.shape
-    cost = vector_norm_cost(effective_shape, ord=ord)
+    group_numel = 1
+    for dim in effective_shape:
+        group_numel *= dim
+    n_groups = (x.size // group_numel) if group_numel else 0
+    cost = vector_norm_cost(effective_shape, ord=ord) * max(n_groups, 0)
     with budget.deduct(
         "linalg.vector_norm", flop_cost=cost, subscripts=None, shapes=(x.shape,)
     ):
@@ -324,7 +366,10 @@ def vector_norm(
 
 
 attach_docstring(
-    vector_norm, _np.linalg.vector_norm, "linalg", "depends on ord parameter"
+    vector_norm,
+    _np.linalg.vector_norm,
+    "linalg",
+    "depends on ord parameter; × batch groups",
 )
 
 
@@ -346,8 +391,8 @@ def matrix_norm_cost(shape: tuple, ord=None) -> int:
     Notes
     -----
     - Elementwise norms (Frobenius, L1, Linf): ``2 * numel`` (FMA=2, weight=1 baked in).
-    - SVD-based norms (2-norm, nuclear): ``4 * m * n * min(m, n)``
-      (weight=4 baked in, consistent with linalg.svd weight=4).
+    - SVD-based norms (2-norm, nuclear): values-only SVD cost
+      ``2*a*b^2 + 2*b^3`` where a=max(m,n), b=min(m,n).
     """
     m, n = shape[-2], shape[-1]
     numel = m * n
@@ -355,10 +400,10 @@ def matrix_norm_cost(shape: tuple, ord=None) -> int:
         return 2 * numel  # FMA=2
     elif ord in (1, -1, _np.inf, -_np.inf):
         return 2 * numel  # FMA=2
-    elif ord == 2 or ord == -2:
-        return 4 * m * n * min(m, n)  # SVD-based, weight=4 baked in
-    elif ord == "nuc":
-        return 4 * m * n * min(m, n)  # SVD-based, weight=4 baked in
+    elif ord in (2, -2, "nuc"):
+        from flopscope._flops import svd_cost
+
+        return svd_cost(m, n, with_vectors=False)
     return 2 * numel  # FMA=2
 
 
@@ -366,12 +411,21 @@ def matrix_norm_cost(shape: tuple, ord=None) -> int:
 def matrix_norm(
     x: ArrayLike, ord: Any = "fro", keepdims: bool = False
 ) -> FlopscopeArray:
-    """Matrix norm with FLOP counting."""
+    """Matrix norm with FLOP counting.
+
+    Cost = matrix_norm_cost(x.shape[-2:], ord) × batch groups.
+    Batch groups = product of all dimensions except the last two.
+    Zero-dim inputs cost 0 FLOPs.
+    """
     budget = require_budget()
     inputs_were_whest = isinstance(x, FlopscopeArray)
     if not isinstance(x, _np.ndarray):
         x = _np.asarray(x)
-    cost = matrix_norm_cost(x.shape, ord=ord)
+    cost = (
+        matrix_norm_cost(x.shape, ord=ord) * _batch_size(x.shape)
+        if not _has_zero_dim(x.shape)
+        else 0
+    )
     with budget.deduct(
         "linalg.matrix_norm", flop_cost=cost, subscripts=None, shapes=(x.shape,)
     ):
@@ -384,39 +438,26 @@ def matrix_norm(
 
 
 attach_docstring(
-    matrix_norm, _np.linalg.matrix_norm, "linalg", "depends on ord parameter"
+    matrix_norm,
+    _np.linalg.matrix_norm,
+    "linalg",
+    "depends on ord parameter; × batch groups",
 )
 
 
 def cond_cost(m: int, n: int, p=None) -> int:
     """FLOP cost of condition number.
 
-    Parameters
-    ----------
-    m : int
-        Number of rows.
-    n : int
-        Number of columns.
-    p : {None, 2, -2, 1, -1, inf, -inf}, optional
-        Norm type. ``None`` and ``2``/``-2`` use SVD; ``1``/``-1``/``inf``/``-inf``
-        use LU factorization, which is cheaper.
-
-    Returns
-    -------
-    int
-        Estimated FLOP count.
-
-    Notes
-    -----
-    For ``p=None``, ``p=2``, or ``p=-2``, computed via SVD (cost m*n*min(m,n)).
-    For ``p=1``, ``p=-1``, ``p=inf``, or ``p=-inf``, computed via LU factorization
-    (cost ~min(m,n)^3 + m*n for norm).
+    p in {None, 2, -2}: values-only SVD + 1 divide.
+    other p (square only): norm(A)*norm(inv(A)) -> inv (2n^3) + two
+    elementwise norm passes (2n^2 each) + 1 multiply.
     """
+    from flopscope._flops import svd_cost
+
     if p is None or p == 2 or p == -2:
-        return max(m * n * min(m, n), 1)
-    # LU-based: factorization cost + norm computation
+        return max(svd_cost(m, n, with_vectors=False) + 1, 1)
     k = min(m, n)
-    return max(k**3 + m * n, 1)
+    return max(2 * k**3 + 4 * m * n + 1, 1)
 
 
 @_counted_wrapper
@@ -464,30 +505,15 @@ attach_docstring(
     cond,
     _np.linalg.cond,
     "linalg",
-    r"$m \cdot n \cdot \min(m,n)$ FLOPs (SVD) or $\min(m,n)^3 + mn$ (LU) depending on p",
+    r"values-only SVD + 1 (p in {None,2,-2}) or 2n^3 + 4n^2 + 1 (inv-based)",
 )
 
 
 def matrix_rank_cost(m: int, n: int) -> int:
-    """FLOP cost of matrix rank.
+    """FLOP cost of matrix rank: values-only SVD + min(m, n) threshold compares."""
+    from flopscope._flops import svd_cost
 
-    Parameters
-    ----------
-    m : int
-        Number of rows.
-    n : int
-        Number of columns.
-
-    Returns
-    -------
-    int
-        Estimated FLOP count: m * n * min(m, n).
-
-    Notes
-    -----
-    Computed via SVD.
-    """
-    return max(m * n * min(m, n), 1)
+    return max(svd_cost(m, n, with_vectors=False) + min(m, n), 1)
 
 
 @_counted_wrapper
@@ -529,5 +555,5 @@ attach_docstring(
     matrix_rank,
     _np.linalg.matrix_rank,
     "linalg",
-    r"$m \cdot n \cdot \min(m,n)$ FLOPs (SVD)",
+    r"values-only SVD + min(m,n)",
 )

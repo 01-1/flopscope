@@ -32,27 +32,26 @@ def _has_zero_dim(shape):
 
 
 def solve_cost(n: int, nrhs: int = 1, symmetric: bool = False) -> int:
-    r"""FLOP cost of solving a linear system Ax = b.
+    r"""FLOP cost of solving Ax = b: LU + two triangular solves (FMA=2).
+
+    2n^3/3 (getrf) + 2n^2*nrhs (getrs). G&VL 4e §3.2. ``symmetric`` is
+    kept for API compatibility and ignored.
 
     Parameters
     ----------
     n : int
         Matrix dimension.
     nrhs : int, optional
-        Ignored (kept for API compatibility). Default is 1.
+        Number of right-hand side columns. Default is 1.
     symmetric : bool, optional
-        Ignored (kept for API compatibility). Default is False.
+        Kept for API compatibility; ignored. Default is False.
 
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
-
-    Notes
-    -----
-    Simplified cubic cost model for linear solve.
+        Estimated FLOP count: $\frac{2}{3}n^3 + 2n^2 \cdot nrhs$.
     """
-    return max(n**3, 1)
+    return max(2 * n**3 // 3 + 2 * n * n * nrhs, 1)
 
 
 @_counted_wrapper
@@ -75,7 +74,8 @@ def solve(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
         b = _np.asarray(b)
     n = a.shape[-1]
     batch = _batch_size(a.shape)
-    cost = solve_cost(n) * batch if not _has_zero_dim(a.shape) else 0
+    nrhs = b.shape[-1] if b.ndim >= 2 else 1
+    cost = solve_cost(n, nrhs=nrhs) * batch if not _has_zero_dim(a.shape) else 0
     with budget.deduct(
         "linalg.solve", flop_cost=cost, subscripts=None, shapes=(a.shape,)
     ):
@@ -85,7 +85,12 @@ def solve(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(solve, _np.linalg.solve, "linalg", r"$n^3$ FLOPs")
+attach_docstring(
+    solve,
+    _np.linalg.solve,
+    "linalg",
+    r"$\frac{2}{3}n^3 + 2n^2 \cdot nrhs$ FLOPs (LU + triangular solves)",
+)
 
 
 def inv_cost(n: int, symmetric: bool = False) -> int:
@@ -106,11 +111,12 @@ def inv_cost(n: int, symmetric: bool = False) -> int:
     Notes
     -----
     Uses $n^3/3 + n^3$ for symmetric input (Cholesky factorization + n
-    triangular solves against identity), or $n^3$ for general input (LU-based).
+    triangular solves against identity), or $2n^3$ for general input
+    (getrf 2n^3/3 + getri 4n^3/3).
     """
     if symmetric:
         return max(n**3 // 3 + n**3, 1)
-    return max(n**3, 1)
+    return max(2 * n**3, 1)
 
 
 @_counted_wrapper
@@ -145,7 +151,7 @@ attach_docstring(
     inv,
     _np.linalg.inv,
     "linalg",
-    r"$n^3$ FLOPs, or $n^3/3 + n^3$ for SymmetricTensor input. Returns SymmetricTensor if input is symmetric.",
+    r"$2n^3$ FLOPs, or $n^3/3 + n^3$ for SymmetricTensor input. Returns SymmetricTensor if input is symmetric.",
 )
 
 
@@ -181,12 +187,15 @@ def lstsq_cost(m: int, n: int, b_cols: int = 1, b_ndim: int = 1) -> int:
 
     Issue #69 (was previously just ``svd_cost`` ignoring the
     back-substitution).
+
+    The SVD term uses with_vectors=True (the reconstruction needs U/V); the
+    4.0 linalg weight is gone, so this composed value is exactly what is charged.
     """
     from flopscope._flops import matmul_cost, svd_cost
 
     k = min(m, n)
     c = b_cols
-    svd = svd_cost(m, n)
+    svd = svd_cost(m, n, with_vectors=True)
     # matmul 2D×1D is now exact (== matmul_cost), so both b_ndim branches use it.
     if b_ndim == 1:
         ut_b = matmul_cost(k, m, 1)
@@ -277,11 +286,14 @@ def pinv_cost(m: int, n: int) -> int:
 
     Total: ``svd(m,n) + threshold(min(m,n)) + diag_scale(n*min(m,n))
     + matmul(n, min(m,n), m)``.
+
+    The SVD term uses with_vectors=True (the reconstruction needs U/V); the
+    4.0 linalg weight is gone, so this composed value is exactly what is charged.
     """
     from flopscope._flops import matmul_cost, svd_cost
 
     k = min(m, n)
-    svd = svd_cost(m, n)
+    svd = svd_cost(m, n, with_vectors=True)
     threshold = k
     diag_scale = n * k
     reconstruction = matmul_cost(n, k, m)
@@ -319,7 +331,10 @@ def pinv(
 
 
 attach_docstring(
-    pinv, _np.linalg.pinv, "linalg", r"$m \cdot n \cdot \min(m,n)$ FLOPs (SVD-based)"
+    pinv,
+    _np.linalg.pinv,
+    "linalg",
+    r"SVD(with U/V) + min(m,n) + n*min(m,n) + matmul(n, min(m,n), m) FLOPs (see pinv_cost)",
 )
 
 
@@ -336,7 +351,8 @@ def tensorsolve_cost(a_shape: tuple, ind: int | None = None) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$ where $n$ = product of trailing dims.
+        Estimated FLOP count: $\frac{2}{3}n^3 + 2n^2$ where $n$ = product of
+        trailing dims. Reduces to ``solve_cost(n, 1)``.
 
     Notes
     -----
@@ -347,7 +363,7 @@ def tensorsolve_cost(a_shape: tuple, ind: int | None = None) -> int:
     n = 1
     for d in a_shape[ind:]:
         n *= d
-    return max(n**3, 1)
+    return solve_cost(n, nrhs=1)
 
 
 @_counted_wrapper
@@ -376,7 +392,7 @@ attach_docstring(
     tensorsolve,
     _np.linalg.tensorsolve,
     "linalg",
-    r"$n^3$ FLOPs where n = product of trailing dims",
+    r"$\frac{2}{3}n^3 + 2n^2$ FLOPs where n = product of trailing dims (reduces to solve)",
 )
 
 
@@ -393,7 +409,8 @@ def tensorinv_cost(a_shape: tuple, ind: int = 2) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$ where $n$ = product of leading dims.
+        Estimated FLOP count: $2n^3$ where $n$ = product of leading dims.
+        Reduces to ``inv_cost(n)``.
 
     Notes
     -----
@@ -402,7 +419,7 @@ def tensorinv_cost(a_shape: tuple, ind: int = 2) -> int:
     n = 1
     for d in a_shape[:ind]:
         n *= d
-    return max(n**3, 1)
+    return inv_cost(n)
 
 
 @_counted_wrapper
@@ -426,5 +443,5 @@ attach_docstring(
     tensorinv,
     _np.linalg.tensorinv,
     "linalg",
-    r"$n^3$ FLOPs where n = product of leading dims",
+    r"$2n^3$ FLOPs where n = product of leading dims (reduces to inv)",
 )

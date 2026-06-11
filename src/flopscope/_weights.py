@@ -84,6 +84,24 @@ _RANDOM_METHOD_RENAMES: dict[str, str] = {
     "random": "random_sample",  # Generator.random   → random.random_sample
 }
 
+# NumPy 2.x ufunc aliases → canonical name. Each alias IS the same ufunc object
+# as its canonical twin (np.acos is np.arccos), so it does identical work and
+# must bill the canonical's weight. Without this, an alias with no explicit JSON
+# entry falls through to the 1.0 default — a bit-identical 16x substitution
+# exploit (acos vs arccos). Resolving to the canonical keeps a single source of
+# truth, so future alias additions stay in sync automatically.
+_UFUNC_ALIAS_RENAMES: dict[str, str] = {
+    "acos": "arccos",
+    "acosh": "arccosh",
+    "asin": "arcsin",
+    "asinh": "arcsinh",
+    "atan": "arctan",
+    "atanh": "arctanh",
+    "atan2": "arctan2",
+    "pow": "power",
+    "divmod": "floor_divide",  # divmod >= floor_divide work; 16.0 is a conservative floor
+}
+
 
 def get_weight(op_name: str) -> float:
     """Return the FLOP weight multiplier for an operation.
@@ -122,7 +140,14 @@ def get_weight(op_name: str) -> float:
                 return _ACTIVE_WEIGHTS[legacy_op]
             break
 
-    # 3. Default fallback (unchanged).
+    # 3. NumPy 2.x ufunc-alias fallback (acos→arccos, pow→power, ...). The alias
+    #    is the same ufunc as its canonical twin, so it must bill the same weight
+    #    rather than fall through to 1.0 (a 16x substitution exploit otherwise).
+    canonical = _UFUNC_ALIAS_RENAMES.get(op_name)
+    if canonical is not None and canonical in _ACTIVE_WEIGHTS:
+        return _ACTIVE_WEIGHTS[canonical]
+
+    # 4. Default fallback (unchanged).
     return 1.0
 
 

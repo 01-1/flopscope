@@ -23,7 +23,8 @@ class TestSolve:
             from flopscope.numpy.linalg import solve
 
             solve(A, b)
-            assert budget.flops_used == n**3
+            # solve_cost(5, nrhs=1): 2*5^3//3 + 2*5^2*1 = 83 + 50 = 133
+            assert budget.flops_used == 133
 
     def test_op_log(self):
         A = numpy.eye(3)
@@ -58,7 +59,8 @@ class TestInv:
             from flopscope.numpy.linalg import inv
 
             inv(A)
-            assert budget.flops_used == n**3
+            # inv_cost(5): 2*5^3 = 250
+            assert budget.flops_used == 250
 
 
 class TestLstsq:
@@ -81,12 +83,12 @@ class TestLstsq:
 
             lstsq(A, b, rcond=None)
             # lstsq_cost(6,4,b_cols=1,b_ndim=1):
-            #   k=4, svd=6*4*4=96
+            #   k=4, svd=svd_cost(6,4,with_vectors=True)=6*6*16+20*64=576+1280=1856
             #   ut_b=matmul_cost(4,6,1)=2*4*6*1-4*1=44
             #   divide=4*1=4
             #   reconstruction=matmul_cost(4,4,1)=2*4*4*1-4*1=28
-            #   total=96+44+4+28=172
-            assert budget.flops_used == 172
+            #   total=1856+44+4+28=1932
+            assert budget.flops_used == 1932
 
 
 class TestPinv:
@@ -105,9 +107,10 @@ class TestPinv:
             from flopscope.numpy.linalg import pinv
 
             pinv(A)
+            # pinv_cost(4,3): svd(4,3,with_vectors=True)=756+threshold=3+diag_scale=9+matmul(3,3,4)=60
             assert (
-                budget.flops_used == 108
-            )  # svd(4,3) + threshold + diag_scale + matmul(3,3,4)
+                budget.flops_used == 828
+            )  # svd(4,3,with_vectors) + threshold + diag_scale + matmul(3,3,4)
 
 
 class TestTensorsolve:

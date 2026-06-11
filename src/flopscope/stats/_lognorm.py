@@ -30,8 +30,10 @@ class LognormDistribution(ContinuousDistribution):
     -----
     ``s`` is the shape parameter: the standard deviation of the underlying
     normal distribution. It is the first positional argument, ahead of
-    ``loc`` and ``scale``, matching SciPy's ``lognorm`` signature. Each
-    public method deducts ``1 * numel(input)`` FLOPs from the active budget.
+    ``loc`` and ``scale``, matching SciPy's ``lognorm`` signature. pdf and
+    cdf deduct ``1 * numel(input)`` FLOPs (unverified; pending follow-up
+    audit). ppf deducts ``106 * numel(input)`` FLOPs (composite: ndtri +
+    exp, weight 1.0; audit-2 verified).
     """
 
     def __init__(self):
@@ -127,7 +129,7 @@ class LognormDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.lognorm.ppf(q, s, loc, scale)``.
-        FLOP cost: ``1 * numel(q)``.
+        FLOP cost: ``106 * numel(q)`` (composite: ndtri + exp, weight 1.0).
 
         Examples
         --------
@@ -137,7 +139,7 @@ class LognormDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.lognorm.ppf(q, s=0.5), 3)
         array([0.714, 1.   , 1.401])
         """
-        return self._deduct_and_call("ppf", 1, q, s, loc=loc, scale=scale)
+        return self._deduct_and_call("ppf", 106, q, s, loc=loc, scale=scale)
 
     def _compute_pdf(self, x, s, loc=0, scale=1):
         y = (x - loc) / scale

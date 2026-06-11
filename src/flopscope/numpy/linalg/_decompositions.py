@@ -29,13 +29,13 @@ def cholesky_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: $n^3/3$.
 
     Notes
     -----
-    Simplified cubic cost model for Cholesky decomposition.
+    n^3/3 FLOPs (G&VL 4e Alg 4.2.1; LAPACK dpotrf).
     """
-    return max(n**3, 1)
+    return max(n**3 // 3, 1)
 
 
 @_counted_wrapper
@@ -57,29 +57,22 @@ def cholesky(a: ArrayLike, /, *, upper: bool = False) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(cholesky, _np.linalg.cholesky, "linalg", r"$n^3$ FLOPs")
+attach_docstring(cholesky, _np.linalg.cholesky, "linalg", r"$n^3/3$ FLOPs")
 
 
-def qr_cost(m: int, n: int) -> int:
-    r"""FLOP cost of QR decomposition.
+def qr_cost(m: int, n: int, mode: str = "reduced") -> int:
+    """FLOP cost of QR decomposition (Householder, FMA=2).
 
-    Parameters
-    ----------
-    m : int
-        Number of rows.
-    n : int
-        Number of columns.
-
-    Returns
-    -------
-    int
-        Estimated FLOP count: $m \cdot n \cdot \min(m, n)$.
-
-    Notes
-    -----
-    Simplified cubic cost model for QR decomposition.
+    Factorization (dgeqrf): 2*m*n*k - 2*k^3/3, k = min(m, n)
+    (G&VL 4e §5.2). Modes "reduced"/"complete" additionally form Q
+    explicitly (dorgqr), modeled as the same count again. Modes
+    "r"/"raw" bill the factorization only.
     """
-    return max(m * n * min(m, n), 1)
+    k = min(m, n)
+    factor = 2 * m * n * k - 2 * k**3 // 3
+    if mode in ("reduced", "complete"):
+        return max(2 * factor, 1)
+    return max(factor, 1)
 
 
 @_counted_wrapper
@@ -103,7 +96,7 @@ def qr(
         a = _np.asarray(a)
     m, n = a.shape[-2], a.shape[-1]
     batch = _batch_size(a.shape)
-    cost = qr_cost(m, n) * batch if not _has_zero_dim(a.shape) else 0
+    cost = qr_cost(m, n, mode=mode) * batch if not _has_zero_dim(a.shape) else 0
     with budget.deduct("linalg.qr", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
         result = _call_numpy(_np.linalg.qr, _to_base_ndarray(a), mode=mode)  # type: ignore[reportCallIssue]
     if mode in ("reduced", "complete"):
@@ -124,7 +117,12 @@ def qr(
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(qr, _np.linalg.qr, "linalg", r"$m \cdot n \cdot \min(m,n)$ FLOPs")
+attach_docstring(
+    qr,
+    _np.linalg.qr,
+    "linalg",
+    r"$2(2mnk - \frac{2}{3}k^3)$ FLOPs (reduced/complete; form Q) or $2mnk - \frac{2}{3}k^3$ (r/raw), k=min(m,n)",
+)
 
 
 def eig_cost(n: int) -> int:
@@ -138,13 +136,16 @@ def eig_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: ~25n^3.
 
     Notes
     -----
-    Simplified cubic cost model for eigendecomposition.
+    Hessenberg reduction + Francis QR with eigenvector backtransform
+    (LAPACK Users' Guide Table 3.13 DGEEV / G&VL 4e §7.5).
+    Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13
+    / G&VL 4e §7.5, §8.3 + runtime scaling); see docs/reference/cost-model.md.
     """
-    return max(n**3, 1)
+    return max(25 * n**3, 1)
 
 
 @_counted_wrapper
@@ -168,7 +169,9 @@ def eig(a: ArrayLike) -> tuple[FlopscopeArray, FlopscopeArray]:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eig, _np.linalg.eig, "linalg", r"$n^3$ FLOPs")
+attach_docstring(
+    eig, _np.linalg.eig, "linalg", r"$\sim 25 n^3$ FLOPs (confirmed 2026-06 audit)"
+)
 
 
 def eigh_cost(n: int) -> int:
@@ -182,13 +185,16 @@ def eigh_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: ~9n^3.
 
     Notes
     -----
-    Simplified cubic cost model for symmetric eigendecomposition.
+    Tridiagonalization + symmetric QR with vectors
+    (G&VL 4e §8.3; LAPACK dsyevd).
+    Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13
+    / G&VL 4e §7.5, §8.3 + runtime scaling); see docs/reference/cost-model.md.
     """
-    return max(n**3, 1)
+    return max(9 * n**3, 1)
 
 
 @_counted_wrapper
@@ -212,7 +218,9 @@ def eigh(a: ArrayLike, UPLO: str = "L") -> tuple[FlopscopeArray, FlopscopeArray]
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigh, _np.linalg.eigh, "linalg", r"$n^3$ FLOPs")
+attach_docstring(
+    eigh, _np.linalg.eigh, "linalg", r"$\sim 9 n^3$ FLOPs (confirmed 2026-06 audit)"
+)
 
 
 def eigvals_cost(n: int) -> int:
@@ -226,13 +234,18 @@ def eigvals_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: ~10n^3.
 
     Notes
     -----
-    Simplified cubic cost model for eigenvalue computation.
+    ~10n^3, values only (LAPACK Users' Guide Table 3.13 DGEEV values-only
+    = 10.00·N^3 exact; G&VL 4e §7.5).
+    Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13
+    / G&VL 4e §7.5, §8.3 + runtime scaling); see docs/reference/cost-model.md.
     """
-    return max(n**3, 1)
+    # Note: costs MORE than eigh_cost (9n^3) — nonsymmetric Hessenberg+QR without vectors
+    # vs symmetric tridiagonalization with vectors (G&VL §7.5 vs §8.3).
+    return max(10 * n**3, 1)
 
 
 @_counted_wrapper
@@ -254,7 +267,12 @@ def eigvals(a: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigvals, _np.linalg.eigvals, "linalg", r"$n^3$ FLOPs")
+attach_docstring(
+    eigvals,
+    _np.linalg.eigvals,
+    "linalg",
+    r"$\sim 10 n^3$ FLOPs (confirmed 2026-06 audit)",
+)
 
 
 def eigvalsh_cost(n: int) -> int:
@@ -268,13 +286,15 @@ def eigvalsh_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: $n^3$.
+        Estimated FLOP count: 4n^3/3.
 
     Notes
     -----
-    Simplified cubic cost model for symmetric eigenvalue computation.
+    4n^3/3: tridiagonalization, values only (G&VL 4e §8.3).
+    Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13
+    / G&VL 4e §7.5, §8.3 + runtime scaling); see docs/reference/cost-model.md.
     """
-    return max(n**3, 1)
+    return max(4 * n**3 // 3, 1)
 
 
 @_counted_wrapper
@@ -296,33 +316,23 @@ def eigvalsh(a: ArrayLike, UPLO: str = "L") -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigvalsh, _np.linalg.eigvalsh, "linalg", r"$n^3$ FLOPs")
+attach_docstring(
+    eigvalsh,
+    _np.linalg.eigvalsh,
+    "linalg",
+    r"$\frac{4}{3} n^3$ FLOPs (confirmed 2026-06 audit)",
+)
 
 
 def svdvals_cost(m: int, n: int, k: int | None = None) -> int:
-    """FLOP cost of computing singular values.
+    """FLOP cost of computing singular values (values-only SVD).
 
-    Parameters
-    ----------
-    m : int
-        Number of rows.
-    n : int
-        Number of columns.
-    k : int or None, optional
-        Number of singular values to compute. Defaults to min(m, n).
-
-    Returns
-    -------
-    int
-        Estimated FLOP count: m * n * k.
-
-    Notes
-    -----
-    Source: Golub-Reinsch bidiagonalization. Same cost model as SVD.
+    Delegates to :func:`flopscope._flops.svd_cost` with ``with_vectors=False``:
+    2*a*b^2 + 2*b^3, a = max(m, n), b = min(m, n). ``k`` does not reduce cost.
     """
-    if k is None:
-        k = min(m, n)
-    return max(m * n * k, 1)
+    from flopscope._flops import svd_cost
+
+    return svd_cost(m, n, k, with_vectors=False)
 
 
 @_counted_wrapper
@@ -350,4 +360,9 @@ def svdvals(x: ArrayLike, /, *, k: int | None = None) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(svdvals, _np.linalg.svdvals, "linalg", r"$m \cdot n \cdot k$ FLOPs")
+attach_docstring(
+    svdvals,
+    _np.linalg.svdvals,
+    "linalg",
+    r"$2ab^2 + 2b^3$ FLOPs (values-only SVD; a=max(m,n), b=min(m,n))",
+)

@@ -50,12 +50,12 @@ def test_trace_cost_min1():
 
 def test_det_cost_symmetric():
     n = 4
-    assert det_cost(n, symmetric=True) == max(n**3, 1)
+    assert det_cost(n, symmetric=True) == max(2 * n**3 // 3 + n, 1)
 
 
 def test_slogdet_cost_symmetric():
     n = 4
-    assert slogdet_cost(n, symmetric=True) == max(n**3, 1)
+    assert slogdet_cost(n, symmetric=True) == max(2 * n**3 // 3 + n, 1)
 
 
 def test_norm_cost_1d_ord_none():
@@ -75,8 +75,8 @@ def test_norm_cost_1d_ord_0():
 
 
 def test_norm_cost_1d_p_norm():
-    # FMA=2: all vector norms cost 2*numel
-    assert norm_cost((10,), ord=3) == 20  # FMA=2: 2*numel
+    # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
+    assert norm_cost((10,), ord=3) == 18 * 10 + 16  # 196
 
 
 def test_norm_cost_2d_fro():
@@ -85,14 +85,16 @@ def test_norm_cost_2d_fro():
 
 
 def test_norm_cost_2d_nuc():
-    # SVD-based: 4x baked in for weight=4 consistency
+    # SVD-based: values-only SVD cost; a=max(4,5)=5, b=min(4,5)=4
+    # 2*5*16+2*64=160+128=288
     m, n = 4, 5
-    assert norm_cost((m, n), ord="nuc") == 4 * m * n * min(m, n)
+    assert norm_cost((m, n), ord="nuc") == 288
 
 
 def test_norm_cost_2d_minus2():
+    # SVD-based: values-only SVD cost; a=max(4,5)=5, b=min(4,5)=4 -> 288
     m, n = 4, 5
-    assert norm_cost((m, n), ord=-2) == 4 * m * n * min(m, n)
+    assert norm_cost((m, n), ord=-2) == 288
 
 
 def test_norm_cost_2d_1():
@@ -117,13 +119,17 @@ def test_norm_cost_2d_fallback():
 
 
 def test_vector_norm_cost_p_norm():
-    # FMA=2: all norms cost 2*numel (one multiply + accumulate per element)
-    assert vector_norm_cost((10,), ord=3) == 20  # FMA=2: 2*numel
+    # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
+    assert vector_norm_cost((10,), ord=3) == 18 * 10 + 16  # 196
 
 
 def test_vector_norm_cost_special_ords():
-    for o in (None, 2, -2, 1, -1, numpy.inf, -numpy.inf, 0):
+    # Standard vector norms (2*numel): ord in {None, 0, 1, 2, inf, -inf}
+    for o in (None, 2, 1, numpy.inf, -numpy.inf, 0):
         assert vector_norm_cost((10,), ord=o) == 20  # FMA=2: 2*numel
+    # General-p norms (-1, -2, 3, ...): 18*numel + 16
+    for o in (-2, -1):
+        assert vector_norm_cost((10,), ord=o) == 18 * 10 + 16  # 196
 
 
 def test_matrix_norm_cost_fro():
@@ -133,19 +139,22 @@ def test_matrix_norm_cost_fro():
 
 
 def test_matrix_norm_cost_nuc():
-    # SVD-based: 4x baked in for weight=4 consistency
+    # SVD-based: values-only SVD cost; a=max(3,4)=4, b=min(3,4)=3
+    # 2*4*9+2*27=72+54=126
     m, n = 3, 4
-    assert matrix_norm_cost((m, n), ord="nuc") == 4 * m * n * min(m, n)
+    assert matrix_norm_cost((m, n), ord="nuc") == 126
 
 
 def test_matrix_norm_cost_2():
+    # SVD-based: values-only SVD cost; 126
     m, n = 3, 4
-    assert matrix_norm_cost((m, n), ord=2) == 4 * m * n * min(m, n)
+    assert matrix_norm_cost((m, n), ord=2) == 126
 
 
 def test_matrix_norm_cost_minus2():
+    # SVD-based: values-only SVD cost; 126
     m, n = 3, 4
-    assert matrix_norm_cost((m, n), ord=-2) == 4 * m * n * min(m, n)
+    assert matrix_norm_cost((m, n), ord=-2) == 126
 
 
 def test_matrix_norm_cost_1():
@@ -272,36 +281,40 @@ def test_matrix_norm_various_ords(ord_val):
 
 def test_cholesky_cost():
     assert cholesky_cost(1) == 1
-    assert cholesky_cost(3) == max(27, 1)
+    assert cholesky_cost(3) == max(3**3 // 3, 1)  # 9
 
 
 def test_qr_cost_wide_matrix():
     m, n = 3, 5
-    cost = qr_cost(m, n)
-    assert cost == max(m * n * min(m, n), 1)
+    # mode="reduced" (default): 2*(2*m*n*k - 2*k^3//3), k=min(m,n)=3
+    k = min(m, n)
+    factor = 2 * m * n * k - 2 * k**3 // 3
+    result = qr_cost(m, n)
+    assert result == max(2 * factor, 1)
 
 
 def test_eig_cost():
     assert eig_cost(0) == 1
-    assert eig_cost(4) == 64
+    assert eig_cost(4) == 25 * 64
 
 
 def test_eigh_cost():
     assert eigh_cost(0) == 1
-    assert eigh_cost(3) == max(27, 1)
+    assert eigh_cost(3) == max(9 * 27, 1)
 
 
 def test_eigvals_cost():
-    assert eigvals_cost(4) == 64
+    assert eigvals_cost(4) == 10 * 64
 
 
 def test_eigvalsh_cost():
-    assert eigvalsh_cost(4) == max(64, 1)
+    assert eigvalsh_cost(4) == max(4 * 64 // 3, 1)
 
 
 def test_svdvals_cost():
+    # values-only SVD: a=max(4,3)=4, b=min(4,3)=3 -> 2*4*9+2*27=72+54=126
     m, n = 4, 3
-    assert svdvals_cost(m, n) == m * n * min(m, n)
+    assert svdvals_cost(m, n) == 126
 
 
 # ---------------------------------------------------------------------------

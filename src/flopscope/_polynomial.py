@@ -48,13 +48,15 @@ def polyint_cost(n: int) -> int:
 
 
 def polymul_cost(n1: int, n2: int) -> int:
-    """Cost for polymul: n1 * n2 FLOPs."""
-    return max(n1 * n2, 1)
+    """Cost for polymul: 2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2)."""
+    return max(2 * n1 * n2 - n1 - n2, 1)
 
 
 def polydiv_cost(n1: int, n2: int) -> int:
-    """Cost for polydiv: n1 * n2 FLOPs."""
-    return max(n1 * n2, 1)
+    """Cost for polydiv: 1 + Q*(2*n2 + 1), Q = max(n1-n2+1, 0) (work scales with
+    quotient length: per step 1 scale-divide + n2 mul + n2 sub)."""
+    q = max(n1 - n2 + 1, 0)
+    return max(1 + q * (2 * n2 + 1), 1)
 
 
 def polyfit_cost(m: int, deg: int) -> int:
@@ -63,13 +65,22 @@ def polyfit_cost(m: int, deg: int) -> int:
 
 
 def poly_cost(n: int) -> int:
-    """Cost for poly: $n^2$ FLOPs."""
-    return max(n * n, 1)
+    """Cost for poly (1-D build-from-roots): 2*n^2 FLOPs.
+
+    Clean FMA=2 upper bound on the iterated `convolve(p, [1, -r_i])` loop, whose
+    exact cost is ~(3*n^2)/2; 2*n^2 over-approximates it (the safe direction).
+    """
+    return max(2 * n * n, 1)
 
 
 def roots_cost(n: int) -> int:
-    """Cost for roots: $n^3$ FLOPs (companion matrix eigendecomposition, simplified)."""
-    return max(n**3, 1)
+    """Cost for roots: companion-matrix eigenvalues — delegates to
+    eigvals_cost(n) (~10n^3; building the companion matrix itself is free).
+    Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13
+    / G&VL 4e §7.5, §8.3 + runtime scaling); see docs/reference/cost-model.md."""
+    from flopscope.numpy.linalg import eigvals_cost
+
+    return eigvals_cost(n)
 
 
 # ---------------------------------------------------------------------------
@@ -193,7 +204,12 @@ def polymul(a1: ArrayLike, a2: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(polymul, _np.polymul, "counted_custom", "n1 * n2 FLOPs")
+attach_docstring(
+    polymul,
+    _np.polymul,
+    "counted_custom",
+    "2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2)",
+)
 
 
 @_counted_wrapper
@@ -212,7 +228,9 @@ def polydiv(u: ArrayLike, v: ArrayLike) -> tuple[FlopscopeArray, FlopscopeArray]
     return result  # type: ignore[return-value]
 
 
-attach_docstring(polydiv, _np.polydiv, "counted_custom", "n1 * n2 FLOPs")
+attach_docstring(
+    polydiv, _np.polydiv, "counted_custom", "1 + Q*(2*n2+1) FLOPs, Q = max(n1-n2+1, 0)"
+)
 
 
 @_counted_wrapper
@@ -243,16 +261,24 @@ def poly(seq_of_zeros: ArrayLike) -> FlopscopeArray:
     seq = _np.asarray(seq_of_zeros)
     # If 2D (square matrix), n = shape[0]; if 1D, n = len(seq)
     if seq.ndim == 2:
+        from flopscope.numpy.linalg import eigvals_cost
+
         n = seq.shape[0]
+        cost = poly_cost(n) + eigvals_cost(n)
     else:
         n = len(seq)
-    cost = poly_cost(n)
+        cost = poly_cost(n)
     with budget.deduct("poly", flop_cost=cost, subscripts=None, shapes=(seq.shape,)):
-        result = _call_numpy(_np.poly, seq_of_zeros)
+        result = _call_numpy(_np.poly, _to_base_ndarray(seq))
     return result  # type: ignore[return-value]
 
 
-attach_docstring(poly, _np.poly, "counted_custom", "n^2 FLOPs")
+attach_docstring(
+    poly,
+    _np.poly,
+    "counted_custom",
+    "2*n^2 FLOPs (1-D) or 2*n^2 + ~10n^3 FLOPs (2-D, includes eigvals)",
+)
 
 
 @_counted_wrapper
@@ -268,7 +294,10 @@ def roots(p: ArrayLike) -> FlopscopeArray:
 
 
 attach_docstring(
-    roots, _np.roots, "counted_custom", "n^3 FLOPs (companion matrix eig, simplified)"
+    roots,
+    _np.roots,
+    "counted_custom",
+    "~10n^3 FLOPs (companion-matrix eigvals, confirmed 2026-06 audit)",
 )
 
 import sys as _sys  # noqa: E402

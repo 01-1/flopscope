@@ -62,19 +62,19 @@ _FORMULA_STRINGS: dict[str, str] = {
     "correlate": "2*n*k - n - k",
     "corrcoef": "f^2 * s",
     "cov": "f^2 * s",
-    "cross": "15 * n",
+    "cross": "9 * n",
     "histogram": "n * ceil(log2(bins))",
     "histogram2d": "n * 2 * ceil(log2(bins))",
     "histogramdd": "n * ndim * ceil(log2(bins))",
     "histogram_bin_edges": "n",
     "digitize": "n * ceil(log2(bins))",
     "bincount": "n",
-    "interp": "n * ceil(log2(xp))",
+    "interp": "3*n + n * ceil(log2(xp))",
     "trace": "min(m, n)",
     "trapezoid": "n",
     "logspace": "n",
     "geomspace": "n",
-    "vander": "n * (degree - 1)",
+    "vander": "n * (degree - 2)",
 }
 
 
@@ -121,8 +121,8 @@ def _analytical_cost(op: str, **kwargs: int) -> int:
         return f * f * s
 
     if op == "cross":
-        # 5 ops per output element; benchmark shape (n, 3) → a.size = n*3 → 15*n
-        return 15 * n
+        # 3 ops per output element (6 mul + 3 sub); benchmark shape (n, 3) → a.size = n*3 → 9*n
+        return 9 * n
 
     # --- Binning/histogram ---
     if op == "histogram":
@@ -151,7 +151,7 @@ def _analytical_cost(op: str, **kwargs: int) -> int:
     # --- Interpolation ---
     if op == "interp":
         xp = kwargs.get("xp", 10000)
-        return n * math.ceil(math.log2(xp))
+        return 3 * n + n * math.ceil(math.log2(xp))
 
     # --- Linear/generation ---
     if op == "trace":
@@ -161,11 +161,11 @@ def _analytical_cost(op: str, **kwargs: int) -> int:
         return n
 
     if op in ("logspace", "geomspace"):
-        return n
+        return 16 * n  # result.size × 16 (transcendental weight)
 
     if op == "vander":
         degree = kwargs.get("degree", 100)
-        return n * (degree - 1)
+        return n * (degree - 2)
 
     # Fallback
     return n

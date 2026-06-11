@@ -32,7 +32,9 @@ class TestOpsLists:
 
 class TestAnalyticalCost:
     def test_cond_cost(self):
-        assert _analytical_cost("linalg.cond") == 512 * 512 * 512
+        # values-only SVD(512,512)+1: a=512,b=512 -> 2*512*512^2+2*512^3+1
+        # = 2*512^3+2*512^3+1 = 4*512^3+1
+        assert _analytical_cost("linalg.cond") == 4 * 512**3 + 1
 
     def test_cross_cost(self):
         assert _analytical_cost("linalg.cross") == 6 * 1_000_000
@@ -49,7 +51,8 @@ class TestAnalyticalCost:
         assert _analytical_cost("linalg.matrix_power") == 3 * 64**3
 
     def test_matrix_rank_cost(self):
-        assert _analytical_cost("linalg.matrix_rank") == 512**3
+        # values-only SVD(512,512)+512: 4*512^3+512
+        assert _analytical_cost("linalg.matrix_rank") == 4 * 512**3 + 512
 
     def test_multi_dot_cost(self):
         expected = (
@@ -67,10 +70,12 @@ class TestAnalyticalCost:
         assert _analytical_cost("linalg.tensordot") == 64**5
 
     def test_tensorinv_cost(self):
-        assert _analytical_cost("linalg.tensorinv") == 64**3
+        # tensorinv_cost at n=64: 2*64^3 = 524288
+        assert _analytical_cost("linalg.tensorinv") == 2 * 64**3
 
     def test_tensorsolve_cost(self):
-        assert _analytical_cost("linalg.tensorsolve") == 64**3
+        # tensorsolve_cost at n=64: 2*64^3//3 + 2*64^2 = 174762 + 8192 = 182954
+        assert _analytical_cost("linalg.tensorsolve") == 2 * 64**3 // 3 + 2 * 64**2
 
     def test_trace_cost(self):
         assert _analytical_cost("linalg.trace") == 10_000

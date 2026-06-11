@@ -861,12 +861,12 @@ class TestLinalgSolversExtended:
         with BudgetContext(flop_budget=10**9) as budget:
             lstsq(a, b, rcond=None)
         # lstsq_cost(5,3,b_cols=1,b_ndim=1):
-        #   k=3, svd=5*3*3=45
+        #   k=3, svd=svd_cost(5,3,with_vectors=True)=6*5*9+20*27=270+540=810
         #   ut_b=matmul_cost(3,5,1)=2*3*5*1-3*1=27
         #   divide=3*1=3
         #   reconstruction=matmul_cost(3,3,1)=2*3*3*1-3*1=15
-        #   total=45+27+3+15=90
-        assert budget.flops_used == 90
+        #   total=810+27+3+15=855
+        assert budget.flops_used == 855
 
     def test_pinv(self):
         from flopscope.numpy.linalg._solvers import pinv
@@ -875,8 +875,8 @@ class TestLinalgSolversExtended:
         with BudgetContext(flop_budget=10**9) as budget:
             pinv(a)
         assert (
-            budget.flops_used == 292
-        )  # svd(4,6) + threshold + diag_scale + matmul(6,4,4)
+            budget.flops_used == 2052
+        )  # svd(4,6,with_vectors) + threshold + diag_scale + matmul(6,4,4)
 
     def test_tensorsolve(self):
         from flopscope.numpy.linalg._solvers import tensorsolve
@@ -912,7 +912,8 @@ class TestLinalgDecompositionsExtended:
         with BudgetContext(flop_budget=10**9) as budget:
             result = svdvals(a, k=2)
         assert len(result) == 2
-        assert budget.flops_used == 6 * 4 * 2
+        # k does not reduce cost; values-only SVD(6,4): a=6,b=4 -> 2*6*16+2*64=320
+        assert budget.flops_used == 320
 
     def test_svdvals_invalid_k(self):
         from flopscope.numpy.linalg._decompositions import svdvals
@@ -928,7 +929,9 @@ class TestLinalgDecompositionsExtended:
         a = numpy.array([[2.0, 1.0], [1.0, 3.0]])
         with BudgetContext(flop_budget=10**9) as budget:
             eigvalsh(a)
-        assert budget.flops_used == 8  # n^3 = 2^3
+        assert (
+            budget.flops_used == 4 * 2**3 // 3
+        )  # 4*n^3//3 = 4*8//3 = 10 (PROVISIONAL)
 
     def test_qr(self):
         from flopscope.numpy.linalg._decompositions import qr
@@ -936,7 +939,11 @@ class TestLinalgDecompositionsExtended:
         a = numpy.random.rand(5, 3)
         with BudgetContext(flop_budget=10**9) as budget:
             qr(a)
-        assert budget.flops_used == 5 * 3 * 3  # m * n * min(m, n)
+        # qr_cost(5, 3, mode="reduced"): k=3, factor=2*5*3*3-2*3^3//3=90-18=72, 2*factor=144
+        m, n = 5, 3
+        k = min(m, n)
+        factor = 2 * m * n * k - 2 * k**3 // 3
+        assert budget.flops_used == 2 * factor
 
 
 # ============================================================================
@@ -953,8 +960,8 @@ class TestLinalgPropertiesExtended:
         x = numpy.array([1.0, 2.0, 3.0])
         with BudgetContext(flop_budget=10**9) as budget:
             norm(x, ord=3)
-        # FMA=2: all vector norms cost 2*numel
-        assert budget.flops_used == 6  # FMA=2: 2*numel
+        # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
+        assert budget.flops_used == 18 * 3 + 16  # 70
 
     def test_norm_matrix_2(self):
         from flopscope.numpy.linalg._properties import norm
@@ -962,8 +969,9 @@ class TestLinalgPropertiesExtended:
         a = numpy.random.rand(4, 3)
         with BudgetContext(flop_budget=10**9) as budget:
             norm(a, ord=2)
-        # SVD-based: 4 * m * n * min(m, n)
-        assert budget.flops_used == 4 * 4 * 3 * 3
+        # SVD-based: values-only SVD; a=max(4,3)=4, b=min(4,3)=3
+        # 2*4*9+2*27=72+54=126
+        assert budget.flops_used == 126
 
     def test_norm_matrix_nuc(self):
         from flopscope.numpy.linalg._properties import norm
@@ -971,7 +979,9 @@ class TestLinalgPropertiesExtended:
         a = numpy.random.rand(3, 5)
         with BudgetContext(flop_budget=10**9) as budget:
             norm(a, ord="nuc")
-        assert budget.flops_used == 4 * 3 * 5 * 3
+        # SVD-based: values-only SVD; a=max(3,5)=5, b=min(3,5)=3
+        # 2*5*9+2*27=90+54=144
+        assert budget.flops_used == 144
 
     def test_norm_matrix_1(self):
         from flopscope.numpy.linalg._properties import norm
@@ -995,8 +1005,8 @@ class TestLinalgPropertiesExtended:
         a = numpy.array([[1.0, 2.0], [3.0, 4.0]])
         with BudgetContext(flop_budget=10**9) as budget:
             cond(a, p=1)
-        # LU-based: k^3 + m*n where k=min(m,n)=2
-        assert budget.flops_used == 2**3 + 2 * 2
+        # inv-based: 2*k^3 + 4*m*n + 1 where k=min(m,n)=2
+        assert budget.flops_used == 2 * 2**3 + 4 * 2 * 2 + 1
 
     def test_cond_with_p_inf(self):
         from flopscope.numpy.linalg._properties import cond
@@ -1004,7 +1014,8 @@ class TestLinalgPropertiesExtended:
         a = numpy.array([[1.0, 2.0], [3.0, 4.0]])
         with BudgetContext(flop_budget=10**9) as budget:
             cond(a, p=numpy.inf)
-        assert budget.flops_used == 2**3 + 2 * 2
+        # inv-based: 2*k^3 + 4*m*n + 1 = 33
+        assert budget.flops_used == 2 * 2**3 + 4 * 2 * 2 + 1
 
     def test_matrix_rank(self):
         from flopscope.numpy.linalg._properties import matrix_rank
@@ -1012,7 +1023,8 @@ class TestLinalgPropertiesExtended:
         a = numpy.array([[1.0, 2.0], [3.0, 4.0]])
         with BudgetContext(flop_budget=10**9) as budget:
             matrix_rank(a)
-        assert budget.flops_used == 2 * 2 * 2  # m * n * min(m, n)
+        # values-only SVD(2,2)+min(2,2): svd=2*2*4+2*8=24+8=32, +2=34
+        assert budget.flops_used == 34
 
     def test_vector_norm(self):
         from flopscope.numpy.linalg._properties import vector_norm
@@ -1020,8 +1032,8 @@ class TestLinalgPropertiesExtended:
         x = numpy.array([1.0, 2.0, 3.0])
         with BudgetContext(flop_budget=10**9) as budget:
             vector_norm(x, ord=3)
-        # FMA=2: all norms cost 2*numel
-        assert budget.flops_used == 6  # FMA=2: 2*numel
+        # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
+        assert budget.flops_used == 18 * 3 + 16  # 70
 
     def test_vector_norm_default(self):
         from flopscope.numpy.linalg._properties import vector_norm
@@ -1054,7 +1066,8 @@ class TestLinalgPropertiesExtended:
         a = numpy.random.rand(3, 4)
         with BudgetContext(flop_budget=10**9) as budget:
             matrix_norm(a, ord=2)
-        assert budget.flops_used == 4 * 3 * 4 * 3
+        # values-only SVD(3,4): a=max(3,4)=4, b=min(3,4)=3 -> 2*4*9+2*27=72+54=126
+        assert budget.flops_used == 126
 
     def test_matrix_norm_nuc(self):
         from flopscope.numpy.linalg._properties import matrix_norm
@@ -1062,7 +1075,8 @@ class TestLinalgPropertiesExtended:
         a = numpy.random.rand(3, 4)
         with BudgetContext(flop_budget=10**9) as budget:
             matrix_norm(a, ord="nuc")
-        assert budget.flops_used == 4 * 3 * 4 * 3
+        # values-only SVD(3,4)=126
+        assert budget.flops_used == 126
 
 
 # ============================================================================

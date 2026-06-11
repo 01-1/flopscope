@@ -43,7 +43,13 @@ def svd(
 
     FLOP Cost
     ---------
-    m * n * k FLOPs per matrix, where k defaults to min(m, n).
+    values only (compute_uv=False):         2*a*b^2 + 2*b^3 per matrix
+    with thin U/V (full_matrices=False):    6*a*b^2 + 20*b^3 per matrix
+    with full U (full_matrices=True, m!=n): 4*a^2*b + 22*b^3 per matrix
+    where a = max(m, n), b = min(m, n). ``k`` does not reduce the cost
+    (LAPACK computes the full decomposition regardless).
+    Constants confirmed by the 2026-06 evidence audit; see
+    docs/reference/cost-model.md.
 
     Parameters
     ----------
@@ -82,8 +88,16 @@ def svd(
             f"k={k} exceeds min(m, n)={min(m, n)} for array shape {a.shape}"
         )
     effective_k = k if k is not None else min(m, n)
+    # When k is given we always use thin (economy) decomposition, so the
+    # effective full_matrices flag for cost is False in that case.
+    eff_full = full_matrices and (k is None)
     batch = _batch_size(a.shape)
-    cost = svd_cost(m, n, effective_k) * batch if not _has_zero_dim(a.shape) else 0
+    cost = (
+        svd_cost(m, n, effective_k, with_vectors=compute_uv, full_matrices=eff_full)
+        * batch
+        if not _has_zero_dim(a.shape)
+        else 0
+    )
     with budget.deduct(
         "linalg.svd", flop_cost=cost, subscripts=None, shapes=(a.shape,)
     ):

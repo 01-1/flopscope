@@ -40,8 +40,8 @@ _FORMULA_STRINGS: dict[str, str] = {
     "linalg.norm": "numel",
     "linalg.outer": "M*N",
     "linalg.tensordot": "product of free * contracted dims",
-    "linalg.tensorinv": "n^3",
-    "linalg.tensorsolve": "n^3",
+    "linalg.tensorinv": "2n^3",
+    "linalg.tensorsolve": "2n^3/3 + 2n^2",
     "linalg.trace": "min(m,n)",
     "linalg.vecdot": "batch*K",
     "linalg.vector_norm": "numel",
@@ -77,13 +77,13 @@ def _analytical_cost(op_name: str) -> int:
     """
     short = op_name.split(".")[-1]
     costs: dict[str, int] = {
-        "cond": 512 * 512 * 512,  # m*n*min(m,n) via SVD
+        "cond": 4 * 512**3 + 1,  # values-only SVD(512,512)+1 = 2*512*512^2+2*512^3+1
         "cross": 6 * 1_000_000,  # 6*n
         "matmul": 2 * 512 * 512 * 512
         - 512 * 512,  # 2*M*N*K - M*N (FMA=2); = 268,173,312
         "matrix_norm": 2 * 512 * 512,  # 2*numel (Frobenius)
         "matrix_power": 3 * 64**3,  # 3 matmuls for n=5
-        "matrix_rank": 512 * 512 * 512,  # m*n*min(m,n) via SVD
+        "matrix_rank": 4 * 512**3 + 512,  # values-only SVD(512,512)+512
         "multi_dot": 128 * 64 * 128
         + 128
         * 128
@@ -92,8 +92,9 @@ def _analytical_cost(op_name: str) -> int:
         "outer": 5000 * 5000,  # M*N
         "tensordot": 64
         ** 5,  # d^5 (FMA=2 textbook; matches flopscope charge = 1,073,741,824)
-        "tensorinv": 64**3,  # n^3 after reshape
-        "tensorsolve": 64**3,  # n^3 after reshape
+        "tensorinv": 2 * 64**3,  # 2n^3 after reshape (reduces to inv_cost)
+        "tensorsolve": 2 * 64**3 // 3
+        + 2 * 64**2,  # 2n^3/3 + 2n^2 (reduces to solve_cost)
         "trace": 10_000,  # min(m,n)
         "vecdot": 1000 * (2 * 512 - 1),  # FMA=2: batch * (2*K - 1)
         "vector_norm": 2 * 10_000_000,  # 2*numel (FMA=2)

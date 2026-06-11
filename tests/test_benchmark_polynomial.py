@@ -31,13 +31,16 @@ class TestAnalyticalCost:
         assert _analytical_cost("polyfit", 1000, 5) == 2 * 1000 * 6**2
 
     def test_roots(self):
-        assert _analytical_cost("roots", 100, 10) == 10**3
+        # roots delegates to eigvals_cost(degree) = 10*degree^3 (PROVISIONAL)
+        assert _analytical_cost("roots", 100, 10) == 10 * 10**3
 
     def test_polymul(self):
-        assert _analytical_cost("polymul", 100, 10) == 11**2
+        # FMA=2 convolution formula: 2*(degree+1)^2 - 2*(degree+1) = 2*121 - 22 = 220
+        assert _analytical_cost("polymul", 100, 10) == 2 * 11**2 - 2 * 11
 
     def test_polydiv(self):
-        assert _analytical_cost("polydiv", 100, 10) == 11**2
+        # n1=n2=degree+1=11, Q=max(11-11+1,0)=1, cost=1+1*(2*11+1)=24
+        assert _analytical_cost("polydiv", 100, 10) == 24
 
     def test_polyadd(self):
         assert _analytical_cost("polyadd", 100, 10) == 11
@@ -52,7 +55,7 @@ class TestAnalyticalCost:
         assert _analytical_cost("polyint", 100, 10) == 11  # degree + 1 = len(c)
 
     def test_poly(self):
-        assert _analytical_cost("poly", 100, 10) == 100
+        assert _analytical_cost("poly", 100, 10) == 200  # 2 * degree^2 = 2 * 100
 
     def test_unknown_op_raises(self):
         with pytest.raises(ValueError, match="Unknown polynomial op"):

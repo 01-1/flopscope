@@ -375,14 +375,14 @@ REGISTRY: dict[str, dict] = {
         "notes": "Test if element is complex element-wise.",
     },
     "iscomplexobj": {
-        "category": "counted_unary",
+        "category": "free",
         "module": "numpy",
-        "notes": "Return True if input is a complex type or array.",
+        "notes": "Return True if input is a complex type or array (dtype predicate, O(1)).",
     },
     "isrealobj": {
-        "category": "counted_unary",
+        "category": "free",
         "module": "numpy",
-        "notes": "Return True if x is a not complex type or array.",
+        "notes": "Return True if x is not a complex type or array (dtype predicate, O(1)).",
     },
     "real_if_close": {
         "category": "counted_unary",
@@ -392,7 +392,7 @@ REGISTRY: dict[str, dict] = {
     "sort_complex": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Sort complex array. Cost: $n \\cdot \\lceil\\log_2 n\\rceil$.",
+        "notes": "Sort complex array. Cost: n*ceil(log2 n) per last-axis slice.",
     },
     # ------------------------------------------------------------------
     # counted_binary — implemented in _pointwise.py
@@ -940,17 +940,17 @@ REGISTRY: dict[str, dict] = {
     "linalg.svd": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Singular value decomposition; cost ~ O(min(m,n)*m*n).",
+        "notes": "Singular value decomposition. Cost: $4a^2b+22b^3$ (full U, full_matrices=True and m!=n), $6ab^2+20b^3$ (thin U/V), or $2ab^2+2b^3$ (values-only); a=max(m,n), b=min(m,n). Confirmed by the 2026-06 evidence audit (LAPACK dgesdd + G&VL 4e §8.6).",
     },
     "linalg.cholesky": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Cholesky decomposition. Cost: $n^3$.",
+        "notes": "Cholesky decomposition. Cost: $n^3/3$.",
     },
     "linalg.cond": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Condition number. Cost: m*n*min(m,n) (via SVD).",
+        "notes": "Condition number. Cost: values-only SVD + 1 (p in {None,2,-2}) or $2n^3 + 4n^2 + 1$ (inv-based).",
     },
     "linalg.cross": {
         "category": "counted_custom",
@@ -960,7 +960,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.det": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Determinant. Cost: $n^3$.",
+        "notes": "Determinant. Cost: $\\frac{2}{3}n^3 + n$.",
     },
     "linalg.diagonal": {
         "category": "free",
@@ -970,32 +970,32 @@ REGISTRY: dict[str, dict] = {
     "linalg.eig": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Eigendecomposition. Cost: $n^3$.",
+        "notes": "Eigendecomposition. Cost: ~$25n^3$. Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §7.5).",
     },
     "linalg.eigh": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Symmetric eigendecomposition. Cost: $n^3$.",
+        "notes": "Symmetric eigendecomposition. Cost: ~$9n^3$. Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §8.3).",
     },
     "linalg.eigvals": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Eigenvalues only. Cost: $n^3$.",
+        "notes": "Eigenvalues only. Cost: ~$10n^3$ (LAPACK Users' Guide Table 3.13 DGEEV values-only = 10.00·N^3 exact). Confirmed by the 2026-06 evidence audit.",
     },
     "linalg.eigvalsh": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Symmetric eigenvalues. Cost: $n^3$.",
+        "notes": "Symmetric eigenvalues. Cost: ~$\\frac{4}{3}n^3$ (tridiagonalization, values only; G&VL 4e §8.3). Confirmed by the 2026-06 evidence audit.",
     },
     "linalg.inv": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Matrix inverse. Cost: $n^3$ (LU + solve).",
+        "notes": "Matrix inverse. Cost: $2n^3$, or $n^3/3 + n^3$ for symmetric.",
     },
     "linalg.lstsq": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Least squares. Cost: m*n*min(m,n) (LAPACK gelsd/SVD).",
+        "notes": "Least squares. Cost: SVD(with U/V) + back-substitution matmuls (see lstsq_cost).",
     },
     "linalg.matmul": {
         "category": "counted_custom",
@@ -1005,7 +1005,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.matrix_norm": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius, m*n*min(m,n) for ord=2.",
+        "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius/L1/Linf, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)); × batch groups (product of dims except last two).",
     },
     "linalg.matrix_power": {
         "category": "counted_custom",
@@ -1015,7 +1015,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.matrix_rank": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Matrix rank. Cost: m*n*min(m,n) (via SVD).",
+        "notes": "Matrix rank. Cost: values-only SVD + min(m,n).",
     },
     "linalg.matrix_transpose": {
         "category": "free",
@@ -1030,7 +1030,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.norm": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Norm. Cost depends on ord: numel for L1/inf, 2*numel for Frobenius, m*n*min(m,n) for ord=2.",
+        "notes": "Norm. Cost depends on ord: 2*numel for L1/inf/Frobenius, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)); × batch groups (non-reduced dims); axis=None → 1 group.",
     },
     "linalg.outer": {
         "category": "counted_custom",
@@ -1040,27 +1040,27 @@ REGISTRY: dict[str, dict] = {
     "linalg.pinv": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Pseudoinverse. Cost: m*n*min(m,n) (via SVD).",
+        "notes": "Pseudoinverse. Cost: SVD(with U/V) + min(m,n) + n*min(m,n) + matmul (see pinv_cost).",
     },
     "linalg.qr": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "QR decomposition. Cost: $m \\cdot n \\cdot \\min(m,n)$.",
+        "notes": "QR decomposition. Cost: $2(2mnk - \\frac{2}{3}k^3)$ (reduced/complete) or $2mnk - \\frac{2}{3}k^3$ (r/raw), k=min(m,n).",
     },
     "linalg.slogdet": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Sign + log determinant. Cost: $n^3$.",
+        "notes": "Sign + log determinant. Cost: $\\frac{2}{3}n^3 + n$.",
     },
     "linalg.solve": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Solve Ax=b. Cost: $n^3$.",
+        "notes": "Solve Ax=b. Cost: $\\frac{2}{3}n^3 + 2n^2 \\cdot nrhs$.",
     },
     "linalg.svdvals": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Singular values only. Cost: m*n*min(m,n) (Golub-Reinsch).",
+        "notes": "Singular values only. Cost: $2ab^2+2b^3$ (values-only SVD; a=max(m,n), b=min(m,n)).",
     },
     "linalg.tensordot": {
         "category": "counted_custom",
@@ -1070,12 +1070,12 @@ REGISTRY: dict[str, dict] = {
     "linalg.tensorinv": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Tensor inverse. Cost: $n^3$ after reshape (delegates to inv).",
+        "notes": "Tensor inverse. Cost: $2n^3$ after reshape, n=prod(leading dims) (delegates to inv).",
     },
     "linalg.tensorsolve": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Tensor solve. Cost: $n^3$ after reshape (delegates to solve).",
+        "notes": "Tensor solve. Cost: $\\frac{2}{3}n^3 + 2n^2$ after reshape, n=prod(trailing dims) (delegates to solve).",
     },
     "linalg.trace": {
         "category": "counted_custom",
@@ -1090,7 +1090,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.vector_norm": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Vector norm. Cost: numel (or 2*numel for general p-norm).",
+        "notes": "Vector norm. Cost: 2*numel(effective_shape) × batch groups (non-reduced dims); axis=None → 1 group.",
     },
     # ------------------------------------------------------------------
     # fft — counted_custom (14 transforms) + free (4 utility ops)
@@ -1226,12 +1226,12 @@ REGISTRY: dict[str, dict] = {
     "arange": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return evenly spaced values in given interval. Cost: numel(output).",
+        "notes": "Return evenly spaced values in given interval. Cost: 2*numel(output).",
     },
     "linspace": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return evenly spaced numbers over interval. Cost: numel(output).",
+        "notes": "Return evenly spaced numbers over interval. Cost: 2*numel(output).",
     },
     "zeros_like": {
         "category": "free",
@@ -1518,7 +1518,7 @@ REGISTRY: dict[str, dict] = {
     "select": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return array from list of choices based on conditions. Cost: numel(input).",
+        "notes": "Return array from list of choices based on conditions. Cost: numel(output), gather tier ×4.",
     },
     "extract": {
         "category": "counted_custom",
@@ -1715,7 +1715,7 @@ REGISTRY: dict[str, dict] = {
     "lexsort": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Multi-key sort; cost = k*n*ceil(log2(n)).",
+        "notes": "Multi-key sort; cost = k keys × num_slices × n·ceil(log2 n).",
     },
     "partition": {
         "category": "counted_custom",
@@ -1790,7 +1790,7 @@ REGISTRY: dict[str, dict] = {
     "indices": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return array representing indices of a grid. Cost: numel(output).",
+        "notes": "Return array representing indices of a grid. Cost: numel of materialized output (dense N*prod(dims); sparse sum(dims)).",
     },
     "diag_indices": {
         "category": "free",
@@ -2084,7 +2084,7 @@ REGISTRY: dict[str, dict] = {
     "random.multivariate_normal": {
         "category": "counted_custom",
         "module": "numpy.random",
-        "notes": "Sampling; cost = numel(output).",
+        "notes": "Composite cost: d^3//3 (Cholesky factorization) + 2*N*d^2 (affine transform) + 16*N*d (N*d standard-normal draws at transcendental tier); weight 1.0.",
     },
     "random.negative_binomial": {
         "category": "counted_custom",
@@ -2362,8 +2362,8 @@ REGISTRY: dict[str, dict] = {
     "random.Generator.multivariate_normal": {
         "category": "counted_random_method",
         "module": "numpy.random",
-        "cost_formula": "numel(output)",
-        "notes": "Multivariate normal; cost = numel(output).",
+        "cost_formula": "multivariate_normal",
+        "notes": "Composite cost: d^3//3 (Cholesky factorization) + 2*N*d^2 (affine transform) + 16*N*d (N*d standard-normal draws at transcendental tier); weight 1.0.",
     },
     "random.Generator.negative_binomial": {
         "category": "counted_random_method",
@@ -2622,8 +2622,8 @@ REGISTRY: dict[str, dict] = {
     "random.RandomState.multivariate_normal": {
         "category": "counted_random_method",
         "module": "numpy.random",
-        "cost_formula": "numel(output)",
-        "notes": "Legacy multivariate normal; cost = numel(output).",
+        "cost_formula": "multivariate_normal",
+        "notes": "Composite cost: d^3//3 (Cholesky factorization) + 2*N*d^2 (affine transform) + 16*N*d (N*d standard-normal draws at transcendental tier); weight 1.0.",
     },
     "random.RandomState.negative_binomial": {
         "category": "counted_random_method",
@@ -2815,17 +2815,17 @@ REGISTRY: dict[str, dict] = {
     "stats.norm.pdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Normal PDF; cost = numel(input).",
+        "notes": "Normal PDF; composite: 27 FLOPs/elem (exp + arithmetic), weight 1.0.",
     },
     "stats.norm.cdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Normal CDF; cost = numel(input).",
+        "notes": "Normal CDF; composite: 48 FLOPs/elem (erf rational approx + arithmetic), weight 1.0.",
     },
     "stats.norm.ppf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Normal PPF (inverse CDF); cost = numel(input).",
+        "notes": "Normal PPF (inverse CDF); composite: 83 FLOPs/elem (Acklam rational ndtri + Newton polish with erf+exp), weight 1.0.",
     },
     "stats.uniform.pdf": {
         "category": "counted_custom",
@@ -2915,7 +2915,7 @@ REGISTRY: dict[str, dict] = {
     "stats.lognorm.ppf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Log-normal PPF; cost = numel(input).",
+        "notes": "Log-normal PPF; composite: 106 FLOPs/elem (ndtri + exp), weight 1.0.",
     },
     "stats.truncnorm.pdf": {
         "category": "counted_custom",
@@ -2930,7 +2930,7 @@ REGISTRY: dict[str, dict] = {
     "stats.truncnorm.ppf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Truncated normal PPF; cost = numel(input).",
+        "notes": "Truncated normal PPF; composite: 81 FLOPs/elem (erf + ndtri rational approx + arithmetic), weight 1.0.",
     },
     # ------------------------------------------------------------------
     # blacklisted — poly functions
@@ -2943,7 +2943,7 @@ REGISTRY: dict[str, dict] = {
     "roots": {
         "category": "counted_custom",
         "module": "flopscope._polynomial",
-        "notes": "Return roots of polynomial with given coefficients. Cost: $n^3$ (companion matrix eig, simplified).",
+        "notes": "Return roots of polynomial with given coefficients. Cost: ~$10n^3$ (companion-matrix eigvals). Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §7.5).",
     },
     "polyadd": {
         "category": "counted_custom",

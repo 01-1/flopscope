@@ -892,21 +892,19 @@ class TestCustomOps:
         with BudgetContext(flop_budget=10**6) as budget:
             result = tensordot(a, b, axes=([1], [0]))
         assert result.shape == (3, 5)
-        # contracted = 4, result.size = 15, cost = 60
-        assert budget.flops_used == 60
+        # (3,4)·(4,5)->(3,5): 15 outputs, each 2*4-1 ops (FMA=2) = 105
+        assert budget.flops_used == 105
 
     def test_tensordot_no_symmetry_unchanged(self):
-        """Without any input symmetry, the cost equals the dense
-        formula (a.size * b.size / contracted) — no behaviour change
-        from the pre-symmetry-adjustment code."""
+        """Without any input symmetry, the cost is the dense FMA=2
+        contraction count (no symmetry discount)."""
         n = 6
         a = numpy.ones((n, n))
         b = numpy.ones((n, n))
         with BudgetContext(flop_budget=10**8) as budget:
             tensordot(a, b, axes=1)
-        # output shape (n, n) = 36 elements, contracted = n = 6,
-        # dense = 6*6*6 = 216
-        assert budget.flops_used == n * n * n
+        # output (n, n) = n^2 elements, contracted = n; FMA=2 = n^2*(2n-1)
+        assert budget.flops_used == 2 * n * n * n - n * n
 
     def test_tensordot_surviving_symmetry_lowers_cost(self):
         """A 4D × 4D contraction that preserves S₂ symmetry on each
@@ -1144,7 +1142,7 @@ class TestAdditionalCustomOps:
         y = numpy.array([1.0, 2.0, 3.0, 4.0])
         with BudgetContext(flop_budget=10**6) as budget:
             result = trapezoid(y)
-        assert budget.flops_used == 4
+        assert budget.flops_used == 4 * 4  # 4 * numel (FMA=2)
 
     def test_trapezoid_with_x(self):
         y = numpy.array([1.0, 2.0, 3.0])
@@ -1163,8 +1161,8 @@ class TestAdditionalCustomOps:
         with BudgetContext(flop_budget=10**6) as budget:
             result = interp(x, xp, fp)
         assert numpy.allclose(result, [15.0, 25.0])
-        # n * ceil(log2(xp_len)) = 2 * ceil(log2(3)) = 2 * 2 = 4
-        assert budget.flops_used == 4
+        # 3*n + n*ceil(log2(xp_len)) = 3*2 + 2*ceil(log2(3)) = 6 + 2*2 = 10
+        assert budget.flops_used == 10
 
     def test_interp_from_list(self):
         with BudgetContext(flop_budget=10**6):
@@ -1186,7 +1184,7 @@ class TestTrapz:
             warnings.simplefilter("ignore", DeprecationWarning)
             with BudgetContext(flop_budget=10**6) as budget:
                 result = trapz(y)
-            assert budget.flops_used == 3
+            assert budget.flops_used == 4 * 3  # 4 * numel (FMA=2)
 
     def test_trapz_from_list(self):
         from flopscope._pointwise import trapz

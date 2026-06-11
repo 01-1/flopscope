@@ -169,12 +169,12 @@ def test_polymul_result():
 
 
 def test_polymul_cost():
-    # len 2 * len 3 -> cost = 6
+    # len 2 * len 3 -> cost = 2*2*3 - 2 - 3 = 7 (FMA=2 convolution formula)
     a1 = numpy.array([1.0, 2.0])
     a2 = numpy.array([3.0, 4.0, 5.0])
     with BudgetContext(flop_budget=10**6) as budget:
         polymul(a1, a2)
-        assert budget.flops_used == 6
+        assert budget.flops_used == 7
 
 
 def test_polymul_no_budget():
@@ -199,12 +199,12 @@ def test_polydiv_result():
 
 
 def test_polydiv_cost():
-    # len 3 * len 2 -> cost = 6
+    # len 3, len 2 -> Q=max(3-2+1,0)=2, cost=1+2*(2*2+1)=11
     u = numpy.array([1.0, 2.0, 3.0])
     v = numpy.array([1.0, 1.0])
     with BudgetContext(flop_budget=10**6) as budget:
         polydiv(u, v)
-        assert budget.flops_used == 6
+        assert budget.flops_used == 11
 
 
 def test_polydiv_no_budget():
@@ -254,11 +254,11 @@ def test_poly_result():
 
 
 def test_poly_cost():
-    # 4 roots -> cost = 4^2 = 16
+    # 4 roots -> cost = 2 * 4^2 = 32 (FMA=2 iterated-convolve upper bound)
     zeros = numpy.array([1.0, 2.0, 3.0, 4.0])
     with BudgetContext(flop_budget=10**6) as budget:
         poly(zeros)
-        assert budget.flops_used == 16
+        assert budget.flops_used == 32
 
 
 def test_poly_no_budget():
@@ -281,11 +281,11 @@ def test_roots_result():
 
 
 def test_roots_cost():
-    # 4 coeffs -> n = len(p)-1 = 3 -> cost = 3^3 = 27 (simplified)
+    # 4 coeffs -> n = len(p)-1 = 3 -> eigvals_cost(3) = 10*3^3 = 270 (PROVISIONAL)
     p = numpy.array([1.0, -6.0, 11.0, -6.0])
     with BudgetContext(flop_budget=10**6) as budget:
         roots(p)
-        assert budget.flops_used == 27
+        assert budget.flops_used == 10 * 3**3
 
 
 def test_roots_no_budget():

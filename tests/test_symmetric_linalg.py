@@ -33,7 +33,8 @@ class TestSolveSymmetric:
         b = numpy.ones(n)
         with BudgetContext(flop_budget=10**8, quiet=True) as budget:
             la.solve(S, b)
-            assert budget.flops_used == n**3  # simplified cubic cost
+            # solve_cost(10, nrhs=1): 2*10^3//3 + 2*10^2 = 666 + 200 = 866
+            assert budget.flops_used == 866
 
     def test_solve_plain_uses_cubic_cost(self):
         n = 10
@@ -41,7 +42,8 @@ class TestSolveSymmetric:
         b = numpy.ones(n)
         with BudgetContext(flop_budget=10**8, quiet=True) as budget:
             la.solve(A, b)
-            assert budget.flops_used == n**3  # simplified cubic cost
+            # solve_cost(10, nrhs=1): 2*10^3//3 + 2*10^2 = 666 + 200 = 866
+            assert budget.flops_used == 866
 
     def test_solve_returns_plain(self):
         A = numpy.eye(3) * 2.0
@@ -59,7 +61,8 @@ class TestDetSymmetric:
         S = as_symmetric(A, symmetry=SymmetryGroup.symmetric(axes=(0, 1)))
         with BudgetContext(flop_budget=10**8, quiet=True) as budget:
             la.det(S)
-            assert budget.flops_used == n**3  # simplified cubic cost
+            # det_cost(10) = 2*10^3//3 + 10 = 666 + 10 = 676
+            assert budget.flops_used == 2 * n**3 // 3 + n
 
 
 class TestInvSymmetric:

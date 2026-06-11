@@ -295,12 +295,12 @@ def _setup_cross(rng):
 
 
 def _oracle_cross(a, b):
-    # 3-vec cross product per row: 6 mults + 3 subs per row = 9 ops/row.
-    # We model 5 ops per output element (output is (100, 3) = 300 elements -> 1500 ops).
+    # 3-vec cross product per row: 6 mults + 3 subs = 9 ops per 3-element output
+    # row = 3 ops per output element (output (100, 3) = 300 elements -> 900 ops).
     import numpy as _np
 
     out_size = a.shape[0] * 3
-    probe = _np.zeros(out_size * 5)
+    probe = _np.zeros(out_size * 3)
     fnp.multiply(probe, 1.0)
 
 

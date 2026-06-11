@@ -220,15 +220,20 @@ attach_docstring(diag, _np.diag, "free", "0 FLOPs")
 
 @_counted_wrapper
 def arange(*args: Any, **kwargs: Any) -> FlopscopeArray:
-    """Return evenly spaced values. Cost: numel(output)."""
+    """Return evenly spaced values. Cost: 2*numel(output) FLOPs (start + i*step per element, FMA=2)."""
     budget = require_budget()
     with budget.deduct_after("arange", subscripts=None, shapes=()) as _op:
         result = _call_numpy(_np.arange, *args, **kwargs)
-        _op.set_cost(result.size if hasattr(result, "size") else 1)
+        _op.set_cost(2 * (result.size if hasattr(result, "size") else 1))
     return result
 
 
-attach_docstring(arange, _np.arange, "counted_custom", "numel(output) FLOPs")
+attach_docstring(
+    arange,
+    _np.arange,
+    "counted_custom",
+    "2*numel(output) FLOPs (start + i*step per element, FMA=2)",
+)
 
 
 @_counted_wrapper
@@ -238,15 +243,27 @@ def linspace(
     num: int = 50,
     **kwargs: Any,
 ) -> FlopscopeArray:
-    """Return evenly spaced numbers. Cost: numel(output)."""
+    """Return evenly spaced numbers. Cost: 2*numel(output) FLOPs (start + i*step per element, FMA=2)."""
     budget = require_budget()
-    cost = max(int(num), 1)
-    with budget.deduct("linspace", flop_cost=cost, subscripts=None, shapes=()):
-        result = _call_numpy(_np.linspace, start, stop, num=num, **kwargs)  # type: ignore[arg-type, call-overload]
-    return result
+    with budget.deduct_after("linspace", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(  # type: ignore[arg-type, call-overload]
+            _np.linspace,
+            _to_base_ndarray(start) if hasattr(start, "__array__") else start,
+            _to_base_ndarray(stop) if hasattr(stop, "__array__") else stop,
+            num=num,
+            **kwargs,
+        )
+        samples = result[0] if isinstance(result, tuple) else result
+        _op.set_cost(2 * (samples.size if hasattr(samples, "size") else 1))
+    return result  # pyright: ignore[reportReturnType]  # (samples, step) tuple when retstep=True
 
 
-attach_docstring(linspace, _np.linspace, "counted_custom", "numel(output) FLOPs")
+attach_docstring(
+    linspace,
+    _np.linspace,
+    "counted_custom",
+    "2*numel(output) FLOPs (start + i*step per element, FMA=2)",
+)
 
 
 def zeros_like(
@@ -1828,15 +1845,24 @@ attach_docstring(fromstring, _np.fromstring, "free", "0 FLOPs")
 
 @_counted_wrapper
 def indices(*args: Any, **kwargs: Any) -> FlopscopeArray:
-    """Return array representing indices of a grid. Cost: numel(output)."""
+    """Return array representing indices of a grid. Cost: numel of materialized output FLOPs (dense N*prod(dims); sparse sum(dims))."""
     budget = require_budget()
     with budget.deduct_after("indices", subscripts=None, shapes=()) as _op:
         result = _call_numpy(_np.indices, *args, **kwargs)
-        _op.set_cost(result.size if hasattr(result, "size") else 1)
-    return result
+        _op.set_cost(
+            sum(int(a.size) for a in result)
+            if isinstance(result, tuple)
+            else int(result.size)
+        )
+    return result  # pyright: ignore[reportReturnType]  # tuple of grids when sparse=True
 
 
-attach_docstring(indices, _np.indices, "free", "0 FLOPs")
+attach_docstring(
+    indices,
+    _np.indices,
+    "counted_custom",
+    "numel of materialized output FLOPs (dense N*prod(dims); sparse sum(dims))",
+)
 
 
 @_counted_wrapper
@@ -2267,21 +2293,29 @@ def select(
     choicelist: Sequence[ArrayLike],
     default: Any = 0,
 ) -> FlopscopeArray:
-    """Return array drawn from elements depending on conditions. Cost: numel(input)."""
+    """Return array drawn from elements depending on conditions.
+
+    Cost: numel(output) — the true broadcast size of the result.
+    Weight tier: gather (×4.0 from the packaged table).
+    """
     budget = require_budget()
-    # Cost based on the size of the choice arrays
-    cost = max((_np.asarray(c).size for c in choicelist), default=1)
-    with budget.deduct("select", flop_cost=cost, subscripts=None, shapes=()):
+    with budget.deduct_after("select", subscripts=None, shapes=()) as _op:
         result = _call_numpy(
             _np.select,
             _to_base_ndarray_tree(condlist),  # type: ignore[arg-type]
             _to_base_ndarray_tree(choicelist),  # type: ignore[arg-type]
             default=default,
         )
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
-attach_docstring(select, _np.select, "free", "0 FLOPs")
+attach_docstring(
+    select,
+    _np.select,
+    "counted_custom",
+    "numel(output) FLOPs (Cost: numel(output), gather tier ×4)",
+)
 
 
 def shape(*args, **kwargs):

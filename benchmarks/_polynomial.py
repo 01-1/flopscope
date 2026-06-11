@@ -22,14 +22,14 @@ POLYNOMIAL_OPS: list[str] = [
 _FORMULA_STRINGS: dict[str, str] = {
     "polyval": "2 * n * degree (FMA=2)",
     "polyfit": "2 * n * (degree+1)^2",
-    "roots": "degree^3",
-    "polymul": "(degree+1)^2",
-    "polydiv": "(degree+1)^2",
+    "roots": "10*degree^3 (provisional, eigvals_cost)",
+    "polymul": "2*(degree+1)^2 - 2*(degree+1) (FMA=2)",
+    "polydiv": "1 + Q*(2*n2+1), Q=max(n1-n2+1,0) (quotient length)",
     "polyadd": "degree + 1",
     "polysub": "degree + 1",
     "polyder": "degree + 1",
     "polyint": "degree + 1",
-    "poly": "degree^2",
+    "poly": "2*degree^2",
 }
 
 
@@ -46,15 +46,20 @@ def _analytical_cost(op: str, n: int, degree: int) -> int:
     elif op == "polyfit":
         return 2 * n * (degree + 1) ** 2
     elif op == "roots":
-        return degree**3
-    elif op in ("polymul", "polydiv"):
-        return (degree + 1) ** 2
+        return 10 * degree**3
+    elif op == "polymul":
+        n = degree + 1
+        return max(2 * n * n - n - n, 1)
+    elif op == "polydiv":
+        n = degree + 1
+        q = max(n - n + 1, 0)  # equal-length benchmark: n1=n2=degree+1, Q=1
+        return max(1 + q * (2 * n + 1), 1)
     elif op in ("polyadd", "polysub"):
         return degree + 1
     elif op in ("polyder", "polyint"):
         return degree + 1  # runtime charges len(c) = degree + 1
     elif op == "poly":
-        return degree**2
+        return 2 * degree**2
     else:
         raise ValueError(f"Unknown polynomial op: {op!r}")
 

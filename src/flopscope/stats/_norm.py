@@ -29,8 +29,9 @@ class NormDistribution(ContinuousDistribution):
 
     Notes
     -----
-    ``loc`` is the mean and ``scale`` is the standard deviation. Each public
-    method deducts ``1 * numel(input)`` FLOPs from the active budget.
+    ``loc`` is the mean and ``scale`` is the standard deviation. Cost constants
+    are composite (rational-approximation + transcendental kernels), weight 1.0:
+    pdf=27 FLOPs/elem, cdf=48 FLOPs/elem, ppf=83 FLOPs/elem.
     """
 
     def __init__(self):
@@ -56,7 +57,7 @@ class NormDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.norm.pdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``27 * numel(x)`` (composite: exp + arithmetic, weight 1.0).
 
         Examples
         --------
@@ -66,7 +67,7 @@ class NormDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.norm.pdf(x), 3)
         array([0.242, 0.399, 0.242])
         """
-        return self._deduct_and_call("pdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("pdf", 27, x, loc=loc, scale=scale)
 
     def cdf(self, x, loc=0, scale=1):
         """Evaluate the cumulative distribution function.
@@ -88,7 +89,7 @@ class NormDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.norm.cdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``48 * numel(x)`` (composite: erf rational approx + arithmetic, weight 1.0).
 
         Examples
         --------
@@ -98,7 +99,7 @@ class NormDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.norm.cdf(x), 3)
         array([0.159, 0.5  , 0.841])
         """
-        return self._deduct_and_call("cdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("cdf", 48, x, loc=loc, scale=scale)
 
     def ppf(self, q, loc=0, scale=1):
         """Evaluate the percent-point function.
@@ -120,7 +121,7 @@ class NormDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.norm.ppf(q, loc, scale)``.
-        FLOP cost: ``1 * numel(q)``.
+        FLOP cost: ``83 * numel(q)`` (composite: Acklam rational ndtri + Newton polish with erf+exp, weight 1.0).
 
         Examples
         --------
@@ -130,7 +131,7 @@ class NormDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.norm.ppf(q), 3)
         array([-0.674,  0.   ,  0.674])
         """
-        return self._deduct_and_call("ppf", 1, q, loc=loc, scale=scale)
+        return self._deduct_and_call("ppf", 83, q, loc=loc, scale=scale)
 
     # --- Pure-NumPy implementations (no budget deduction) ---
 

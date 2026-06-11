@@ -23,7 +23,7 @@ class TestCholesky:
             from flopscope.numpy.linalg import cholesky
 
             cholesky(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == n**3 // 3
 
     def test_op_log(self):
         A = numpy.eye(3) * 10
@@ -59,7 +59,10 @@ class TestQR:
             from flopscope.numpy.linalg import qr
 
             qr(A)
-            expected = m * n * min(m, n)
+            # mode="reduced" (default): 2 * (2*m*n*k - 2*k^3//3), k=min(m,n)=4
+            k = min(m, n)
+            factor = 2 * m * n * k - 2 * k**3 // 3
+            expected = 2 * factor
             assert budget.flops_used == expected
 
     def test_op_log(self):
@@ -88,7 +91,7 @@ class TestEig:
             from flopscope.numpy.linalg import eig
 
             eig(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 25 * n**3
 
 
 class TestEigh:
@@ -109,7 +112,7 @@ class TestEigh:
             from flopscope.numpy.linalg import eigh
 
             eigh(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 9 * n**3
 
 
 class TestEigvals:
@@ -129,7 +132,7 @@ class TestEigvals:
             from flopscope.numpy.linalg import eigvals
 
             eigvals(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 10 * n**3
 
 
 class TestEigvalsh:
@@ -141,7 +144,7 @@ class TestEigvalsh:
             from flopscope.numpy.linalg import eigvalsh
 
             eigvalsh(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 4 * n**3 // 3
 
 
 class TestSvdvals:
@@ -161,4 +164,6 @@ class TestSvdvals:
             from flopscope.numpy.linalg import svdvals
 
             svdvals(A)
-            assert budget.flops_used == m * n * min(m, n)
+            # values-only SVD: a=max(6,4)=6, b=min(6,4)=4
+            # 2*6*16 + 2*64 = 192 + 128 = 320
+            assert budget.flops_used == 320

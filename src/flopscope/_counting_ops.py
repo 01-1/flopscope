@@ -307,9 +307,15 @@ def logspace(
     **kwargs: Any,
 ) -> FlopscopeArray:
     budget = require_budget()
-    cost = _builtins.max(num, 1)
-    with budget.deduct("logspace", flop_cost=cost, subscripts=None, shapes=((num,),)):
-        result = _call_numpy(_np.logspace, start, stop, num=num, **kwargs)
+    with budget.deduct_after("logspace", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.logspace,
+            _to_base_ndarray(start) if hasattr(start, "__array__") else start,
+            _to_base_ndarray(stop) if hasattr(stop, "__array__") else stop,
+            num=num,
+            **kwargs,
+        )
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
@@ -325,9 +331,15 @@ def geomspace(
     **kwargs: Any,
 ) -> FlopscopeArray:
     budget = require_budget()
-    cost = _builtins.max(num, 1)
-    with budget.deduct("geomspace", flop_cost=cost, subscripts=None, shapes=((num,),)):
-        result = _call_numpy(_np.geomspace, start, stop, num=num, **kwargs)
+    with budget.deduct_after("geomspace", subscripts=None, shapes=()) as _op:
+        result = _call_numpy(
+            _np.geomspace,
+            _to_base_ndarray(start) if hasattr(start, "__array__") else start,
+            _to_base_ndarray(stop) if hasattr(stop, "__array__") else stop,
+            num=num,
+            **kwargs,
+        )
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
@@ -346,13 +358,13 @@ def vander(
     n = _builtins.len(x)
     if N is None:
         N = n
-    cost = _builtins.max(n * (N - 1), 1)
+    cost = _builtins.max(n * (N - 2), 1)
     with budget.deduct("vander", flop_cost=cost, subscripts=None, shapes=(x.shape,)):
         result = _call_numpy(_np.vander, x, N=N, **kwargs)
     return result  # type: ignore[return-value]
 
 
-attach_docstring(vander, _np.vander, "counted_custom", "len(x) * (N-1) FLOPs")
+attach_docstring(vander, _np.vander, "counted_custom", "len(x) * (N-2) FLOPs")
 vander.__signature__ = _inspect.signature(_np.vander)  # pyright: ignore[reportFunctionMemberAccess]
 
 # ---------------------------------------------------------------------------

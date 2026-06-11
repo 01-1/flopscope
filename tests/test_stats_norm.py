@@ -175,25 +175,25 @@ class TestNormPpf:
 
 
 class TestFlopCosts:
-    """Verify that FLOP deductions match expected costs."""
+    """Verify that FLOP deductions match expected costs (composite constants)."""
 
     def test_pdf_cost(self):
         xs = np.ones(100)
         with BudgetContext(10**9, quiet=True) as ctx:
             norm.pdf(xs)
-        assert ctx.flops_used == 100
+        assert ctx.flops_used == 27 * 100
 
     def test_cdf_cost(self):
         xs = np.ones(100)
         with BudgetContext(10**9, quiet=True) as ctx:
             norm.cdf(xs)
-        assert ctx.flops_used == 100
+        assert ctx.flops_used == 48 * 100
 
     def test_ppf_cost(self):
         qs = np.ones(100) * 0.5
         with BudgetContext(10**9, quiet=True) as ctx:
             norm.ppf(qs)
-        assert ctx.flops_used == 100
+        assert ctx.flops_used == 83 * 100
 
 
 # ---------------------------------------------------------------------------

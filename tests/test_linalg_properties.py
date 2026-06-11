@@ -38,7 +38,7 @@ class TestDet:
             from flopscope.numpy.linalg import det
 
             det(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 2 * n**3 // 3 + n
 
 
 class TestSlogdet:
@@ -59,7 +59,7 @@ class TestSlogdet:
             from flopscope.numpy.linalg import slogdet
 
             slogdet(A)
-            assert budget.flops_used == n**3
+            assert budget.flops_used == 2 * n**3 // 3 + n
 
 
 class TestNorm:
@@ -88,13 +88,14 @@ class TestNorm:
             assert budget.flops_used == 40  # FMA=2: 2*numel
 
     def test_matrix_ord2_cost(self):
-        # SVD-based: 4x baked into cost function
+        # SVD-based: values-only SVD cost; a=max(4,5)=5, b=min(4,5)=4
+        # 2*5*16+2*64=160+128=288
         A = numpy.random.randn(4, 5)
         with BudgetContext(flop_budget=10**6) as budget:
             from flopscope.numpy.linalg import norm
 
             norm(A, ord=2)
-            assert budget.flops_used == 4 * 4 * 5 * 4
+            assert budget.flops_used == 288
 
     def test_matrix_ord1_cost(self):
         A = numpy.random.randn(4, 5)
@@ -105,13 +106,13 @@ class TestNorm:
             assert budget.flops_used == 40  # FMA=2: 2*numel
 
     def test_vector_p_norm_cost(self):
-        # FMA=2: p-norm costs 2*numel
+        # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
         x = numpy.random.randn(10)
         with BudgetContext(flop_budget=10**6) as budget:
             from flopscope.numpy.linalg import norm
 
             norm(x, ord=3)
-            assert budget.flops_used == 20  # FMA=2: 2*numel
+            assert budget.flops_used == 18 * 10 + 16  # 196
 
 
 class TestVectorNorm:
@@ -164,7 +165,8 @@ class TestCond:
             from flopscope.numpy.linalg import cond
 
             cond(A)
-            assert budget.flops_used == m * n * min(m, n)
+            # cond_cost(4,3): values-only SVD(4,3)=126 + 1 = 127
+            assert budget.flops_used == 127
 
 
 class TestMatrixRank:
@@ -182,4 +184,5 @@ class TestMatrixRank:
             from flopscope.numpy.linalg import matrix_rank
 
             matrix_rank(A)
-            assert budget.flops_used == m * n * min(m, n)
+            # values-only SVD(5,3)+min(5,3): a=5,b=3 -> 2*5*9+2*27=144, +3=147
+            assert budget.flops_used == 147

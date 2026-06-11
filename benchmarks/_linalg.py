@@ -5,6 +5,8 @@ from __future__ import annotations
 import statistics
 
 from benchmarks._perf import measure_flops
+from flopscope._flops import svd_cost
+from flopscope.numpy.linalg import lstsq_cost, pinv_cost
 
 LINALG_OPS: list[str] = [
     "linalg.cholesky",
@@ -27,20 +29,20 @@ LINALG_OPS: list[str] = [
 _SPD_OPS = {"linalg.cholesky", "linalg.eigh", "linalg.eigvalsh"}
 
 _FORMULA_STRINGS: dict[str, str] = {
-    "linalg.cholesky": "n^3",
-    "linalg.qr": "m*n*min(m,n)",
-    "linalg.eig": "n^3",
-    "linalg.eigh": "n^3",
-    "linalg.eigvals": "n^3",
-    "linalg.eigvalsh": "n^3",
-    "linalg.svd": "m*n*min(m,n)",
-    "linalg.svdvals": "m*n*min(m,n)",
-    "linalg.solve": "n^3",
-    "linalg.inv": "n^3",
-    "linalg.lstsq": "m*n*min(m,n)",
-    "linalg.pinv": "m*n*min(m,n)",
-    "linalg.det": "n^3",
-    "linalg.slogdet": "n^3",
+    "linalg.cholesky": "n^3/3",
+    "linalg.qr": "2*(2mnk - 2k^3/3), k=min(m,n) (reduced/complete)",
+    "linalg.eig": "25n^3 (provisional)",
+    "linalg.eigh": "9n^3 (provisional)",
+    "linalg.eigvals": "10n^3 (provisional)",
+    "linalg.eigvalsh": "4n^3/3 (provisional)",
+    "linalg.svd": "4a^2b+22b^3 (full U, default) or 6ab^2+20b^3 (thin); a=max(m,n), b=min(m,n)",
+    "linalg.svdvals": "2ab^2+2b^3 (values only), a=max(m,n), b=min(m,n)",
+    "linalg.solve": "2n^3/3 + 2n^2 (nrhs=1)",
+    "linalg.inv": "2n^3",
+    "linalg.lstsq": "composed: svd+matmuls (lstsq_cost)",
+    "linalg.pinv": "composed: svd+reconstruction (pinv_cost)",
+    "linalg.det": "2n^3/3 + n",
+    "linalg.slogdet": "2n^3/3 + n",
 }
 
 
@@ -61,21 +63,26 @@ def _analytical_cost(op_name: str, n: int) -> int:
     """
     m = n  # square matrices
     short = op_name.split(".")[-1]
+    # qr: mode="reduced" (default); k=min(m,n)=n for square
+    k = min(m, n)
+    qr_factor = 2 * m * n * k - 2 * k**3 // 3
+    # lstsq benchmark: A is (n,n), b is 1D vector of length n
+    # pinv benchmark: A is (n,n)
     costs: dict[str, int] = {
-        "cholesky": n**3,
-        "qr": m * n * min(m, n),
-        "eig": n**3,
-        "eigh": n**3,
-        "eigvals": n**3,
-        "eigvalsh": n**3,
-        "svd": m * n * min(m, n),
-        "svdvals": m * n * min(m, n),
-        "solve": n**3,
-        "inv": n**3,
-        "lstsq": m * n * min(m, n),
-        "pinv": m * n * min(m, n),
-        "det": n**3,
-        "slogdet": n**3,
+        "cholesky": n**3 // 3,
+        "qr": 2 * qr_factor,
+        "eig": 25 * n**3,
+        "eigh": 9 * n**3,
+        "eigvals": 10 * n**3,
+        "eigvalsh": 4 * n**3 // 3,
+        "svd": svd_cost(m, n, with_vectors=True),
+        "svdvals": svd_cost(m, n, with_vectors=False),
+        "solve": 2 * n**3 // 3 + 2 * n * n,
+        "inv": 2 * n**3,
+        "lstsq": lstsq_cost(m, n, b_cols=1, b_ndim=1),
+        "pinv": pinv_cost(m, n),
+        "det": 2 * n**3 // 3 + n,
+        "slogdet": 2 * n**3 // 3 + n,
     }
     return costs[short]
 

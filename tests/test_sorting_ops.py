@@ -72,6 +72,23 @@ class TestSort:
         with BudgetContext(flop_budget=10**6):
             assert numpy.array_equal(sort(a), numpy.sort(a))
 
+    def test_order_structured_dtype(self):
+        """sort(order=...) must forward to numpy — reproduces the drop-order bug."""
+        dt = numpy.dtype([("a", "i4"), ("b", "i4")])
+        s = numpy.array([(2, 1), (1, 5), (2, 0)], dtype=dt)
+        with BudgetContext(flop_budget=10**9, quiet=True):
+            result = numpy.asarray(sort(s, order="b"))
+        expected = numpy.sort(s, order="b")
+        numpy.testing.assert_array_equal(result, expected)
+
+    def test_kind_stable_float(self):
+        """sort(kind='stable') must forward to numpy — duplicate-preserving sort."""
+        a = numpy.array([3.0, 1.0, 2.0, 1.0, 3.0, 2.0])
+        with BudgetContext(flop_budget=10**9, quiet=True):
+            result = numpy.asarray(sort(a, kind="stable"))
+        expected = numpy.sort(a, kind="stable")
+        numpy.testing.assert_array_equal(result, expected)
+
 
 class TestArgsort:
     def test_result_matches_numpy(self):

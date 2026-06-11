@@ -57,7 +57,15 @@ def test_every_wrapper_with_budget_deduct_is_decorated():
         if path.name.startswith("test_"):
             continue
         for fn in _functions_with_budget_deduct(path):
-            if fn.name in ("deduct", "_call_numpy", "_einsum_routed_binary"):
+            if fn.name in (
+                "deduct",
+                "_call_numpy",
+                "_einsum_routed_binary",
+                # Factory function — its inner `wrapper` (decorated with
+                # @_counted_wrapper) calls budget.deduct; the outer factory
+                # is a closure builder, not itself a counted wrapper.
+                "_counted_variance",
+            ):
                 continue
             if not _has_counted_wrapper_decorator(fn):
                 rel = path.relative_to(SRC_ROOT.parent.parent)
