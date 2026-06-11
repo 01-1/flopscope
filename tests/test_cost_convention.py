@@ -398,9 +398,9 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         max(4, 5),  # 5
     ),
     "polyder": (
-        # polyder_cost(p) = max(len(p), 1) = 11 for len-11 input
+        # polyder_cost(n=11, m=1): t=min(1,10)=1; cost=1*11 - 1*2//2 = 10
         lambda: fnp.polyder(_p11),
-        11,
+        10,
     ),
     "polyint": (
         lambda: fnp.polyint(_p11),

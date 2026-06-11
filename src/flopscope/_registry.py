@@ -1376,7 +1376,7 @@ REGISTRY: dict[str, dict] = {
     "unique": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Sort-based unique; cost = n*ceil(log2(n)).",
+        "notes": "Sort-based unique; cost = n*ceil(log2(n)); with axis=, num_slices*R*ceil(log2(R)) (R = shape[axis], lexicographic row sort).",
     },
     "pad": {
         "category": "counted_custom",
@@ -1507,7 +1507,7 @@ REGISTRY: dict[str, dict] = {
     "isin": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Set membership; cost = (n+m)*ceil(log2(n+m)).",
+        "notes": "Set membership; cost = (n+m)*ceil(log2(n+m)) (sort path) or max(sort_cost(n+m), 2*n*m) when numpy's masked-loop path triggers (m < 10*n**0.145 with non-integer dtypes, or object dtype).",
     },
     "in1d": {
         "category": "counted_custom",
@@ -2943,7 +2943,7 @@ REGISTRY: dict[str, dict] = {
     "roots": {
         "category": "counted_custom",
         "module": "flopscope._polynomial",
-        "notes": "Return roots of polynomial with given coefficients. Cost: ~$10n^3$ (companion-matrix eigvals). Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §7.5).",
+        "notes": "Return roots of polynomial with given coefficients. Cost: ~$10n^3$ (companion-matrix eigvals). n = trimmed degree (zero coefficients stripped, as np.roots does). Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §7.5).",
     },
     "polyadd": {
         "category": "counted_custom",
@@ -2953,7 +2953,7 @@ REGISTRY: dict[str, dict] = {
     "polyder": {
         "category": "counted_custom",
         "module": "flopscope._polynomial",
-        "notes": "Differentiate polynomial. Cost: n FLOPs.",
+        "notes": "Differentiate polynomial m times. Cost: t*n - t*(t+1)/2 FLOPs, t = min(m, n-1) (one multiply per surviving coefficient per step).",
     },
     "polydiv": {
         "category": "counted_custom",
@@ -2968,7 +2968,7 @@ REGISTRY: dict[str, dict] = {
     "polyint": {
         "category": "counted_custom",
         "module": "flopscope._polynomial",
-        "notes": "Integrate polynomial. Cost: n FLOPs.",
+        "notes": "Integrate polynomial. Cost: m*n + m*(m-1)/2 FLOPs (m = integration order).",
     },
     "polymul": {
         "category": "counted_custom",

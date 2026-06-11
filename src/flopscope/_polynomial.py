@@ -37,14 +37,47 @@ def polysub_cost(n1: int, n2: int) -> int:
     return max(n1, n2, 1)
 
 
-def polyder_cost(n: int) -> int:
-    """Cost for polyder: n FLOPs (n = len of coeffs)."""
-    return max(n, 1)
+def polyder_cost(n: int, m: int = 1) -> int:
+    """Cost for polyder: one multiply per surviving coefficient per derivative step.
+
+    sum_{j=1..m} max(n-j, 0) = t*n - t*(t+1)//2 with t = min(m, n-1).
+
+    Parameters
+    ----------
+    n : int
+        Length of coefficient array (len(coeffs)).
+    m : int
+        Derivative order (default 1).
+
+    Returns
+    -------
+    int
+        Estimated FLOP count: t*n - t*(t+1)//2, t = min(m, n-1).
+    """
+    t = min(max(int(m), 0), max(n - 1, 0))
+    return max(t * n - t * (t + 1) // 2, 1)
 
 
-def polyint_cost(n: int) -> int:
-    """Cost for polyint: n FLOPs (n = len of coeffs)."""
-    return max(n, 1)
+def polyint_cost(n: int, m: int = 1) -> int:
+    """Cost for polyint: m*n + m*(m-1)//2 FLOPs.
+
+    numpy recurses m times; pass j divides n+j coefficients, so total cost
+    = sum_{j=0}^{m-1} (n+j) = m*n + m*(m-1)//2.
+
+    Parameters
+    ----------
+    n : int
+        Length of coefficient array (len(coeffs)).
+    m : int
+        Integration order (default 1).
+
+    Returns
+    -------
+    int
+        Estimated FLOP count: m*n + m*(m-1)//2.
+        m=1 reduces to max(n, 1), backward-compatible.
+    """
+    return max(m * n + m * (m - 1) // 2, 1)
 
 
 def polymul_cost(n1: int, n2: int) -> int:
@@ -161,13 +194,18 @@ def polyder(p: ArrayLike, m: int = 1) -> FlopscopeArray:
     budget = require_budget()
     p = _np.asarray(p)
     n = len(p)
-    cost = polyder_cost(n)
+    cost = polyder_cost(n, int(m))
     with budget.deduct("polyder", flop_cost=cost, subscripts=None, shapes=(p.shape,)):
         result = _call_numpy(_np.polyder, p, m=m)
     return result  # type: ignore[return-value]
 
 
-attach_docstring(polyder, _np.polyder, "counted_custom", "n FLOPs (n = len(coeffs))")
+attach_docstring(
+    polyder,
+    _np.polyder,
+    "counted_custom",
+    "t*n - t*(t+1)/2 FLOPs, t = min(m, n-1) (n = len(coeffs), m = derivative order)",
+)
 
 
 @_counted_wrapper
@@ -176,7 +214,8 @@ def polyint(p: ArrayLike, m: int = 1, k: ArrayLike | None = None) -> FlopscopeAr
     budget = require_budget()
     p = _np.asarray(p)
     n = len(p)
-    cost = polyint_cost(n)
+    m_int = int(m)
+    cost = polyint_cost(n, m_int)
     with budget.deduct("polyint", flop_cost=cost, subscripts=None, shapes=(p.shape,)):
         if k is None:
             result = _call_numpy(_np.polyint, p, m=m)
@@ -185,7 +224,12 @@ def polyint(p: ArrayLike, m: int = 1, k: ArrayLike | None = None) -> FlopscopeAr
     return result  # type: ignore[return-value]
 
 
-attach_docstring(polyint, _np.polyint, "counted_custom", "n FLOPs (n = len(coeffs))")
+attach_docstring(
+    polyint,
+    _np.polyint,
+    "counted_custom",
+    "m*n + m*(m-1)/2 FLOPs (n = len(coeffs), m = integration order)",
+)
 
 
 @_counted_wrapper
@@ -286,7 +330,15 @@ def roots(p: ArrayLike) -> FlopscopeArray:
     """Return the roots of a polynomial with given coefficients. Wraps ``numpy.roots``."""
     budget = require_budget()
     p = _np.asarray(p)
-    n = len(p) - 1  # degree = number of roots
+    # Mirror np.roots' O(len(p)) strip: find first and last nonzero coefficient.
+    # Done at Python level so the scan is cheap metadata work (no counted op logged).
+    _p_flat = p.ravel()
+    _first = next((i for i, v in enumerate(_p_flat) if v != 0), None)
+    _last = next((i for i, v in enumerate(reversed(_p_flat)) if v != 0), None)
+    if _first is None:
+        n = 0
+    else:
+        n = (len(_p_flat) - 1 - _last) - _first  # trimmed companion dimension
     cost = roots_cost(n)
     with budget.deduct("roots", flop_cost=cost, subscripts=None, shapes=(p.shape,)):
         result = _call_numpy(_np.roots, p)

@@ -150,8 +150,8 @@ def partition(
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
-    # kth can be int or sequence of ints
-    kth_count = len(kth) if hasattr(kth, "__len__") else 1  # type: ignore[arg-type]
+    # kth can be int, sequence of ints, or 0-d ndarray; np.size handles all forms
+    kth_count = int(_np.size(kth))
     if a.ndim == 0:
         cost = 1
     else:
@@ -187,8 +187,8 @@ def argpartition(
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
-    # kth can be int or sequence of ints
-    kth_count = len(kth) if hasattr(kth, "__len__") else 1  # type: ignore[arg-type]
+    # kth can be int, sequence of ints, or 0-d ndarray; np.size handles all forms
+    kth_count = int(_np.size(kth))
     if a.ndim == 0:
         cost = 1
     else:
@@ -302,12 +302,19 @@ digitize.__signature__ = _inspect.signature(_np.digitize)  # type: ignore[attr-d
 # ---------------------------------------------------------------------------
 
 
-def _unique_cost(ar):
-    """Compute sort-based cost for uniqueness: n * ceil(log2(n))."""
+def _unique_cost(ar, axis=None):
+    """Compute sort-based cost for uniqueness.
+
+    With ``axis=None`` (flat): sort_cost(ar.size).
+    With ``axis=k``: num_slices * sort_cost(R) where R = shape[axis] (lexicographic
+    row sort — each row of width W is compared as a unit, R rows, W words per key).
+    This matches the Sort-and-select family rule declared in cost-model.md §Sort.
+    """
     if not isinstance(ar, _np.ndarray):
         ar = _np.asarray(ar)
-    n = max(ar.size, 1)
-    return sort_cost(n)
+    if axis is None or ar.ndim == 0:
+        return sort_cost(max(ar.size, 1))
+    return _sort_cost_nd(ar, int(axis) % ar.ndim)
 
 
 @_counted_wrapper
@@ -320,7 +327,7 @@ def unique(ar: ArrayLike, **kwargs: Any) -> FlopscopeArray | tuple[FlopscopeArra
     """
     budget = require_budget()
     ar_arr = _np.asarray(ar)
-    cost = _unique_cost(ar_arr)
+    cost = _unique_cost(ar_arr, axis=kwargs.get("axis", None))
     # The compat re-sort below only applies to the default signature (no
     # auxiliary-return kwargs); decide before opening the deduct block.
     _returns_tuple = any(
@@ -344,7 +351,12 @@ def unique(ar: ArrayLike, **kwargs: Any) -> FlopscopeArray | tuple[FlopscopeArra
     return result  # type: ignore[return-value]
 
 
-attach_docstring(unique, _np.unique, "counted_custom", "n*ceil(log2(n)) FLOPs")
+attach_docstring(
+    unique,
+    _np.unique,
+    "counted_custom",
+    "n*ceil(log2(n)) FLOPs; axis-aware: num_slices x n x ceil(log2 n), n = axis length",
+)
 unique.__signature__ = _inspect.signature(_np.unique)  # type: ignore[attr-defined]
 
 
@@ -431,15 +443,36 @@ def _set_cost(ar1, ar2):
     return sort_cost(total)
 
 
+def _membership_cost(a1: _np.ndarray, a2: _np.ndarray) -> int:
+    """Cost for isin/in1d: replicates numpy 2.x _in1d branch selection.
+
+    Returns max(sort_cost(n+m), 2*n*m) when numpy's masked-loop path triggers
+    (m < 10*n**0.145 with non-integer dtypes, or object dtype), else sort_cost(n+m).
+    The loop path runs n*m comparisons + n*m boolean accumulates = 2*n*m FLOPs.
+    """
+    n = a1.size
+    m = a2.size
+    base = sort_cost(max(n + m, 1))
+    table_eligible = a1.dtype.kind in "uib" and a2.dtype.kind in "uib"
+    contains_object = a1.dtype.hasobject or a2.dtype.hasobject
+    if contains_object or (not table_eligible and m < 10 * max(n, 1) ** 0.145):
+        return max(base, 2 * n * m)
+    return base
+
+
 if hasattr(_np, "in1d"):
 
     @_counted_wrapper
     def in1d(ar1: ArrayLike, ar2: ArrayLike, **kwargs: Any) -> FlopscopeArray:  # pyright: ignore[reportRedeclaration]
-        """Counted version of ``numpy.in1d``. Cost: (n+m)*ceil(log2(n+m)) FLOPs."""
+        """Counted version of ``numpy.in1d``.
+
+        Cost: (n+m)*ceil(log2(n+m)) FLOPs (sort path) or max(sort_cost(n+m), 2*n*m)
+        when numpy's masked-loop path triggers.
+        """
         budget = require_budget()
         a1 = _np.asarray(ar1)
         a2 = _np.asarray(ar2)
-        cost = _set_cost(a1, a2)
+        cost = _membership_cost(a1, a2)
         with budget.deduct(
             "in1d", flop_cost=cost, subscripts=None, shapes=(a1.shape, a2.shape)
         ):
@@ -448,7 +481,12 @@ if hasattr(_np, "in1d"):
             )
         return result  # type: ignore[return-value]
 
-    attach_docstring(in1d, _np.in1d, "counted_custom", "(n+m)*ceil(log2(n+m)) FLOPs")
+    attach_docstring(
+        in1d,
+        _np.in1d,
+        "counted_custom",
+        "(n+m)*ceil(log2(n+m)) FLOPs; 2*n*m when numpy's masked-loop path triggers",
+    )
     in1d.__signature__ = _inspect.signature(_np.in1d)  # type: ignore[attr-defined]
 
 else:
@@ -463,11 +501,16 @@ def isin(
     test_elements: ArrayLike,
     **kwargs: Any,
 ) -> FlopscopeArray:
-    """Counted version of ``numpy.isin``. Cost: (n+m)*ceil(log2(n+m)) FLOPs."""
+    """Counted version of ``numpy.isin``.
+
+    Cost: (n+m)*ceil(log2(n+m)) FLOPs (sort path) or max(sort_cost(n+m), 2*n*m)
+    when numpy's masked-loop path triggers (m < 10*n**0.145 for non-integer dtypes,
+    or object dtype).
+    """
     budget = require_budget()
     el = _np.asarray(element)
     te = _np.asarray(test_elements)
-    cost = _set_cost(el, te)
+    cost = _membership_cost(el, te)
     with budget.deduct(
         "isin", flop_cost=cost, subscripts=None, shapes=(el.shape, te.shape)
     ):
@@ -480,7 +523,12 @@ def isin(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(isin, _np.isin, "counted_custom", "(n+m)*ceil(log2(n+m)) FLOPs")
+attach_docstring(
+    isin,
+    _np.isin,
+    "counted_custom",
+    "(n+m)*ceil(log2(n+m)) FLOPs; 2*n*m when numpy's masked-loop path triggers",
+)
 isin.__signature__ = _inspect.signature(_np.isin)  # type: ignore[attr-defined]
 
 

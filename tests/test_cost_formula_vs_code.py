@@ -671,7 +671,8 @@ class TestPolynomial:
         assert _cost_of(we.polysub, numpy.ones(5), numpy.ones(3)) == 5
 
     def test_polyder(self, we):
-        assert _cost_of(we.polyder, numpy.ones(5)) == 5
+        # n=5, m=1: t=min(1,4)=1; cost=1*5 - 1*2//2 = 4
+        assert _cost_of(we.polyder, numpy.ones(5)) == 4
 
     def test_polyint(self, we):
         assert _cost_of(we.polyint, numpy.ones(5)) == 5

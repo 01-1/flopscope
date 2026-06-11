@@ -116,11 +116,11 @@ def test_polyder_result():
 
 
 def test_polyder_cost():
-    # 4 coeffs -> cost = 4
+    # 4 coeffs, m=1: t=min(1,3)=1; cost=1*4 - 1*2//2 = 3
     p = numpy.array([1.0, 2.0, 3.0, 4.0])
     with BudgetContext(flop_budget=10**6) as budget:
         polyder(p)
-        assert budget.flops_used == 4
+        assert budget.flops_used == 3
 
 
 def test_polyder_no_budget():

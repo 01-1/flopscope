@@ -27,8 +27,8 @@ _FORMULA_STRINGS: dict[str, str] = {
     "polydiv": "1 + Q*(2*n2+1), Q=max(n1-n2+1,0) (quotient length)",
     "polyadd": "degree + 1",
     "polysub": "degree + 1",
-    "polyder": "degree + 1",
-    "polyint": "degree + 1",
+    "polyder": "degree (t*n - t*(t+1)//2, t=min(m,n-1); m=1 default gives n-1=degree)",
+    "polyint": "degree + 1 (m*n + m*(m-1)//2; m=1 default gives n=degree+1)",
     "poly": "2*degree^2",
 }
 
@@ -56,8 +56,12 @@ def _analytical_cost(op: str, n: int, degree: int) -> int:
         return max(1 + q * (2 * n + 1), 1)
     elif op in ("polyadd", "polysub"):
         return degree + 1
-    elif op in ("polyder", "polyint"):
-        return degree + 1  # runtime charges len(c) = degree + 1
+    elif op == "polyder":
+        # m=1 default: t=min(1, n-1)=1, cost=n-1=degree (n=degree+1)
+        return max(degree, 1)
+    elif op == "polyint":
+        # m=1 default: m*n + m*(m-1)//2 = n = degree+1
+        return degree + 1
     elif op == "poly":
         return 2 * degree**2
     else:
