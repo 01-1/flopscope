@@ -190,13 +190,18 @@ def norm_cost(shape: tuple, ord=None) -> int:
     - Elementwise norms (Frobenius, L1, Linf, etc.): ``2 * numel`` (FMA=2, weight=1 baked in).
     - SVD-based norms (2-norm, nuclear norm): values-only SVD cost
       ``2*a*b^2 + 2*b^3`` where a=max(m,n), b=min(m,n).
+    - General-p vector norms (ord not in {None, 0, 1, 2, inf, -inf}):
+      ``18 * numel + 16`` (abs + pow per elem + sum-reduce + root pow).
     """
     numel = 1
     for d in shape:
         numel *= d
     numel = max(numel, 1)
     if len(shape) == 1:
-        # FMA=2: all vector norms cost 2*numel (one multiply + accumulate per element)
+        # General-p norm: abs + pow(16) per elem + sum + root pow(16)
+        if ord not in (None, 0, 1, 2, _np.inf, -_np.inf):
+            return 18 * numel + 16
+        # FMA=2: standard vector norms cost 2*numel (one multiply + accumulate per element)
         return 2 * numel
     else:
         m, n = shape[-2], shape[-1]
@@ -288,13 +293,20 @@ def vector_norm_cost(shape: tuple, ord=None) -> int:
 
     Notes
     -----
-    All norms cost 2*numel FLOPs (FMA=2: one multiply + accumulate per element).
+    Standard norms (ord in {None, 0, 1, 2, inf, -inf}) cost 2*numel FLOPs
+    (FMA=2: one multiply + accumulate per element).
+    General-p norms cost 18*numel + 16 FLOPs per group: abs(1) + pow(16)
+    per element + sum-reduce(1) + final root pow(16). The wrapper's
+    n_groups multiplier scales the +16 correctly per group.
     """
     numel = 1
     for d in shape:
         numel *= d
     numel = max(numel, 1)
-    # FMA=2: all norms cost 2*numel (one multiply + accumulate per element).
+    # General-p norm: abs + pow(16) per elem + sum + root pow(16)
+    if ord not in (None, 0, 1, 2, _np.inf, -_np.inf):
+        return 18 * numel + 16
+    # FMA=2: standard norms cost 2*numel (one multiply + accumulate per element).
     return 2 * numel
 
 

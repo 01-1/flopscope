@@ -75,8 +75,8 @@ def test_norm_cost_1d_ord_0():
 
 
 def test_norm_cost_1d_p_norm():
-    # FMA=2: all vector norms cost 2*numel
-    assert norm_cost((10,), ord=3) == 20  # FMA=2: 2*numel
+    # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
+    assert norm_cost((10,), ord=3) == 18 * 10 + 16  # 196
 
 
 def test_norm_cost_2d_fro():
@@ -119,13 +119,17 @@ def test_norm_cost_2d_fallback():
 
 
 def test_vector_norm_cost_p_norm():
-    # FMA=2: all norms cost 2*numel (one multiply + accumulate per element)
-    assert vector_norm_cost((10,), ord=3) == 20  # FMA=2: 2*numel
+    # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
+    assert vector_norm_cost((10,), ord=3) == 18 * 10 + 16  # 196
 
 
 def test_vector_norm_cost_special_ords():
-    for o in (None, 2, -2, 1, -1, numpy.inf, -numpy.inf, 0):
+    # Standard vector norms (2*numel): ord in {None, 0, 1, 2, inf, -inf}
+    for o in (None, 2, 1, numpy.inf, -numpy.inf, 0):
         assert vector_norm_cost((10,), ord=o) == 20  # FMA=2: 2*numel
+    # General-p norms (-1, -2, 3, ...): 18*numel + 16
+    for o in (-2, -1):
+        assert vector_norm_cost((10,), ord=o) == 18 * 10 + 16  # 196
 
 
 def test_matrix_norm_cost_fro():

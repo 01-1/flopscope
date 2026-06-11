@@ -22,8 +22,9 @@ def test_svd_full_cost():
     A = numpy.random.randn(10, 5)
     with BudgetContext(flop_budget=10**6) as budget:
         svd(A)
-        # with_vectors=True: 6*10*25+20*125=1500+2500=4000
-        assert budget.flops_used == 4000
+        # full_matrices=True (default), non-square (10,5): 4*a^2*b+22*b^3
+        # a=10, b=5: 4*100*5+22*125=2000+2750=4750
+        assert budget.flops_used == 4750
 
 
 def test_svd_truncated_result():
@@ -42,7 +43,7 @@ def test_svd_truncated_cost():
     A = numpy.random.randn(10, 5)
     with BudgetContext(flop_budget=10**6) as budget:
         svd(A, k=3)
-        # k does not reduce SVD cost; with_vectors=True: 6*10*25+20*125=4000
+        # k forces eff_full=False (economy decomp); thin: 6*10*25+20*125=4000
         assert budget.flops_used == 4000
 
 

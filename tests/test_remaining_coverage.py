@@ -958,8 +958,8 @@ class TestLinalgPropertiesExtended:
         x = numpy.array([1.0, 2.0, 3.0])
         with BudgetContext(flop_budget=10**9) as budget:
             norm(x, ord=3)
-        # FMA=2: all vector norms cost 2*numel
-        assert budget.flops_used == 6  # FMA=2: 2*numel
+        # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
+        assert budget.flops_used == 18 * 3 + 16  # 70
 
     def test_norm_matrix_2(self):
         from flopscope.numpy.linalg._properties import norm
@@ -1030,8 +1030,8 @@ class TestLinalgPropertiesExtended:
         x = numpy.array([1.0, 2.0, 3.0])
         with BudgetContext(flop_budget=10**9) as budget:
             vector_norm(x, ord=3)
-        # FMA=2: all norms cost 2*numel
-        assert budget.flops_used == 6  # FMA=2: 2*numel
+        # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
+        assert budget.flops_used == 18 * 3 + 16  # 70
 
     def test_vector_norm_default(self):
         from flopscope.numpy.linalg._properties import vector_norm

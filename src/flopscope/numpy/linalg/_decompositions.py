@@ -136,8 +136,9 @@ def eig_cost(n: int) -> int:
     Notes
     -----
     Hessenberg reduction + Francis QR with eigenvector backtransform
-    (G&VL 4e §7.5; LAPACK dgeev).
-    PROVISIONAL pending the audit's driver-count and runtime-scaling evidence.
+    (LAPACK Users' Guide Table 3.13 DGEEV / G&VL 4e §7.5).
+    Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13
+    / G&VL 4e §7.5, §8.3 + runtime scaling); see docs/reference/cost-model.md.
     """
     return max(25 * n**3, 1)
 
@@ -163,7 +164,7 @@ def eig(a: ArrayLike) -> tuple[FlopscopeArray, FlopscopeArray]:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eig, _np.linalg.eig, "linalg", r"$\sim 25 n^3$ FLOPs (provisional)")
+attach_docstring(eig, _np.linalg.eig, "linalg", r"$\sim 25 n^3$ FLOPs (confirmed 2026-06 audit)")
 
 
 def eigh_cost(n: int) -> int:
@@ -183,7 +184,8 @@ def eigh_cost(n: int) -> int:
     -----
     Tridiagonalization + symmetric QR with vectors
     (G&VL 4e §8.3; LAPACK dsyevd).
-    PROVISIONAL pending the audit's driver-count and runtime-scaling evidence.
+    Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13
+    / G&VL 4e §7.5, §8.3 + runtime scaling); see docs/reference/cost-model.md.
     """
     return max(9 * n**3, 1)
 
@@ -209,7 +211,7 @@ def eigh(a: ArrayLike, UPLO: str = "L") -> tuple[FlopscopeArray, FlopscopeArray]
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigh, _np.linalg.eigh, "linalg", r"$\sim 9 n^3$ FLOPs (provisional)")
+attach_docstring(eigh, _np.linalg.eigh, "linalg", r"$\sim 9 n^3$ FLOPs (confirmed 2026-06 audit)")
 
 
 def eigvals_cost(n: int) -> int:
@@ -227,8 +229,10 @@ def eigvals_cost(n: int) -> int:
 
     Notes
     -----
-    ~10n^3, values only (dgeev without vectors; G&VL 4e §7.5).
-    PROVISIONAL pending the audit's driver-count and runtime-scaling evidence.
+    ~10n^3, values only (LAPACK Users' Guide Table 3.13 DGEEV values-only
+    = 10.00·N^3 exact; G&VL 4e §7.5).
+    Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13
+    / G&VL 4e §7.5, §8.3 + runtime scaling); see docs/reference/cost-model.md.
     """
     # Note: costs MORE than eigh_cost (9n^3) — nonsymmetric Hessenberg+QR without vectors
     # vs symmetric tridiagonalization with vectors (G&VL §7.5 vs §8.3).
@@ -254,7 +258,7 @@ def eigvals(a: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigvals, _np.linalg.eigvals, "linalg", r"$\sim 10 n^3$ FLOPs (provisional)")
+attach_docstring(eigvals, _np.linalg.eigvals, "linalg", r"$\sim 10 n^3$ FLOPs (confirmed 2026-06 audit)")
 
 
 def eigvalsh_cost(n: int) -> int:
@@ -273,7 +277,8 @@ def eigvalsh_cost(n: int) -> int:
     Notes
     -----
     4n^3/3: tridiagonalization, values only (G&VL 4e §8.3).
-    PROVISIONAL pending the audit's driver-count and runtime-scaling evidence.
+    Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13
+    / G&VL 4e §7.5, §8.3 + runtime scaling); see docs/reference/cost-model.md.
     """
     return max(4 * n**3 // 3, 1)
 
@@ -297,7 +302,7 @@ def eigvalsh(a: ArrayLike, UPLO: str = "L") -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigvalsh, _np.linalg.eigvalsh, "linalg", r"$\frac{4}{3} n^3$ FLOPs (provisional)")
+attach_docstring(eigvalsh, _np.linalg.eigvalsh, "linalg", r"$\frac{4}{3} n^3$ FLOPs (confirmed 2026-06 audit)")
 
 
 def svdvals_cost(m: int, n: int, k: int | None = None) -> int:

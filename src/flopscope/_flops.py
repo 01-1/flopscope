@@ -175,13 +175,29 @@ pointwise_cost = analytical_pointwise_cost
 reduction_cost = analytical_reduction_cost
 
 
-def svd_cost(m: int, n: int, k: int | None = None, *, with_vectors: bool = False) -> int:
+def svd_cost(
+    m: int,
+    n: int,
+    k: int | None = None,
+    *,
+    with_vectors: bool = False,
+    full_matrices: bool = False,
+) -> int:
     """FLOP cost of an SVD (FMA=2, leading order).
 
-    values only      : 2*a*b^2 + 2*b^3   (a = max(m,n), b = min(m,n))
-    with thin U, V   : 6*a*b^2 + 20*b^3  (Golub & Van Loan 4e §8.6; numpy
-                       dispatches LAPACK ``gesdd`` — constant is PROVISIONAL
-                       pending the audit's driver-count + scaling evidence)
+    values only (with_vectors=False):
+        2*a*b^2 + 2*b^3   (a = max(m,n), b = min(m,n))
+
+    with thin U, V (full_matrices=False or m==n):
+        6*a*b^2 + 20*b^3  (LAPACK dgesdd thin path; G&VL 4e §8.6)
+
+    with full U (full_matrices=True and m != n):
+        4*a^2*b + 22*b^3  (forming full U dominates; LAPACK dgesdd,
+                           G&VL 4e §8.6)
+
+    Constants confirmed by the 2026-06 evidence audit: LAPACK driver
+    op-counts (dgesdd) + runtime scaling + G&VL citation; see
+    docs/reference/cost-model.md.
 
     ``k`` is accepted for API compatibility but does not reduce the cost:
     LAPACK computes the full decomposition regardless of how many singular
@@ -189,6 +205,8 @@ def svd_cost(m: int, n: int, k: int | None = None, *, with_vectors: bool = False
     """
     a, b = max(m, n), min(m, n)
     if with_vectors:
+        if full_matrices and m != n:
+            return max(4 * a * a * b + 22 * b**3, 1)
         return max(6 * a * b * b + 20 * b**3, 1)
     return max(2 * a * b * b + 2 * b**3, 1)
 

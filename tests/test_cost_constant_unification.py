@@ -30,8 +30,11 @@ def test_svdvals_values_only_constant():
 
 def test_svd_with_vectors_constant():
     A = fnp.asarray(np.random.rand(200, 20))
-    # 6*a*b^2 + 20*b^3 = 480000 + 160000 = 640000
-    assert cost(lambda: fnp.linalg.svd(A)) == 640_000
+    # numpy default full_matrices=True, non-square (200,20):
+    # 4*a^2*b + 22*b^3 = 4*200*200*20 + 22*20^3 = 3200000 + 176000 = 3376000
+    assert cost(lambda: fnp.linalg.svd(A)) == 3_376_000
+    # thin SVD: 6*a*b^2 + 20*b^3 = 6*200*400 + 20*8000 = 480000 + 160000 = 640000
+    assert cost(lambda: fnp.linalg.svd(A, full_matrices=False)) == 640_000
     # values-only path matches svdvals
     assert cost(lambda: fnp.linalg.svd(A, compute_uv=False)) == 176_000
 
@@ -246,3 +249,24 @@ def test_arange_two_flops_per_element():
 def test_indices_sparse_and_dense():
     assert cost(lambda: fnp.indices((1000, 1000), sparse=True)) == 2000
     assert cost(lambda: fnp.indices((1000, 1000))) == 2_000_000
+
+
+# ---------------- svd full_matrices + general-p norms (audit-2 verified) ----------------
+
+def test_svd_full_matrices_default_costs_full_u():
+    A = fnp.asarray(np.random.rand(200, 20))
+    a, b = 200, 20
+    assert cost(lambda: fnp.linalg.svd(A)) == 4 * a * a * b + 22 * b**3          # default full_matrices=True
+    assert cost(lambda: fnp.linalg.svd(A, full_matrices=False)) == 6 * a * b * b + 20 * b**3
+    S = fnp.asarray(np.random.rand(50, 50))
+    assert cost(lambda: fnp.linalg.svd(S)) == cost(lambda: fnp.linalg.svd(S, full_matrices=False))  # square unchanged
+    assert cost(lambda: fnp.linalg.svd(A, compute_uv=False)) == 2 * a * b * b + 2 * b**3
+
+
+def test_vector_norm_general_p_bills_pow():
+    v = fnp.asarray(np.random.rand(100))
+    assert cost(lambda: fnp.linalg.vector_norm(v, ord=3)) == 18 * 100 + 16
+    assert cost(lambda: fnp.linalg.vector_norm(v, ord=2)) == 2 * 100
+    assert cost(lambda: fnp.linalg.norm(v, 3)) == 18 * 100 + 16
+    V = fnp.asarray(np.random.rand(50, 100))
+    assert cost(lambda: fnp.linalg.vector_norm(V, axis=-1, ord=3)) == 50 * (18 * 100 + 16)

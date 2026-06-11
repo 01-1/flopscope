@@ -478,8 +478,11 @@ class TestLinalgDecompositions:
         assert _cost_of(getattr(we.linalg, name), S) == expected[name]
 
     def test_svd_mnk(self, we):
-        # with_vectors=True: 6*10*25+20*125=1500+2500=4000
-        assert _cost_of(we.linalg.svd, numpy.random.rand(10, 5)) == 4000
+        # full_matrices=True (default), non-square (10,5): 4*a^2*b+22*b^3
+        # a=10, b=5: 4*100*5+22*125=2000+2750=4750
+        assert _cost_of(we.linalg.svd, numpy.random.rand(10, 5)) == 4750
+        # thin (full_matrices=False): 6*10*25+20*125=1500+2500=4000
+        assert _cost_of(we.linalg.svd, numpy.random.rand(10, 5), full_matrices=False) == 4000
 
     def test_svdvals_mnk(self, we):
         # values-only: 2*10*25+2*125=500+250=750

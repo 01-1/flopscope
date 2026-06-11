@@ -35,7 +35,7 @@ _FORMULA_STRINGS: dict[str, str] = {
     "linalg.eigh": "9n^3 (provisional)",
     "linalg.eigvals": "10n^3 (provisional)",
     "linalg.eigvalsh": "4n^3/3 (provisional)",
-    "linalg.svd": "6ab^2+20b^3 (with U/V), a=max(m,n), b=min(m,n)",
+    "linalg.svd": "4a^2b+22b^3 (full U, default) or 6ab^2+20b^3 (thin); a=max(m,n), b=min(m,n)",
     "linalg.svdvals": "2ab^2+2b^3 (values only), a=max(m,n), b=min(m,n)",
     "linalg.solve": "2n^3/3 + 2n^2 (nrhs=1)",
     "linalg.inv": "2n^3",

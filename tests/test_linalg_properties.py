@@ -106,13 +106,13 @@ class TestNorm:
             assert budget.flops_used == 40  # FMA=2: 2*numel
 
     def test_vector_p_norm_cost(self):
-        # FMA=2: p-norm costs 2*numel
+        # general-p norm: 18*numel + 16 (abs+pow per elem + sum + root pow)
         x = numpy.random.randn(10)
         with BudgetContext(flop_budget=10**6) as budget:
             from flopscope.numpy.linalg import norm
 
             norm(x, ord=3)
-            assert budget.flops_used == 20  # FMA=2: 2*numel
+            assert budget.flops_used == 18 * 10 + 16  # 196
 
 
 class TestVectorNorm:

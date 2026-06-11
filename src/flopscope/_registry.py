@@ -940,7 +940,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.svd": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Singular value decomposition. Cost: $6ab^2+20b^3$ (with U/V) or $2ab^2+2b^3$ (values-only); a=max(m,n), b=min(m,n) (provisional).",
+        "notes": "Singular value decomposition. Cost: $4a^2b+22b^3$ (full U, full_matrices=True and m!=n), $6ab^2+20b^3$ (thin U/V), or $2ab^2+2b^3$ (values-only); a=max(m,n), b=min(m,n). Confirmed by the 2026-06 evidence audit (LAPACK dgesdd + G&VL 4e §8.6).",
     },
     "linalg.cholesky": {
         "category": "counted_custom",
@@ -970,22 +970,22 @@ REGISTRY: dict[str, dict] = {
     "linalg.eig": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Eigendecomposition. Cost: ~$25n^3$ (provisional).",
+        "notes": "Eigendecomposition. Cost: ~$25n^3$. Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §7.5).",
     },
     "linalg.eigh": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Symmetric eigendecomposition. Cost: ~$9n^3$ (provisional).",
+        "notes": "Symmetric eigendecomposition. Cost: ~$9n^3$. Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §8.3).",
     },
     "linalg.eigvals": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Eigenvalues only. Cost: ~$10n^3$ (provisional).",
+        "notes": "Eigenvalues only. Cost: ~$10n^3$ (LAPACK Users' Guide Table 3.13 DGEEV values-only = 10.00·N^3 exact). Confirmed by the 2026-06 evidence audit.",
     },
     "linalg.eigvalsh": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Symmetric eigenvalues. Cost: ~$\\frac{4}{3}n^3$ (provisional).",
+        "notes": "Symmetric eigenvalues. Cost: ~$\\frac{4}{3}n^3$ (tridiagonalization, values only; G&VL 4e §8.3). Confirmed by the 2026-06 evidence audit.",
     },
     "linalg.inv": {
         "category": "counted_custom",
@@ -2943,7 +2943,7 @@ REGISTRY: dict[str, dict] = {
     "roots": {
         "category": "counted_custom",
         "module": "flopscope._polynomial",
-        "notes": "Return roots of polynomial with given coefficients. Cost: ~$10n^3$ (companion-matrix eigvals, provisional).",
+        "notes": "Return roots of polynomial with given coefficients. Cost: ~$10n^3$ (companion-matrix eigvals). Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §7.5).",
     },
     "polyadd": {
         "category": "counted_custom",
