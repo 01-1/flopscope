@@ -384,8 +384,8 @@ def multivariate_normal(mean, cov, size=None, check_valid="warn", tol=1e-8):
         mean,
         cov,
         size=size,
-        check_valid=check_valid,
-        tol=tol,  # pyright: ignore[reportArgumentType]
+        check_valid=check_valid,  # pyright: ignore[reportArgumentType]
+        tol=tol,
     )
     with budget.deduct(
         "random.multivariate_normal",

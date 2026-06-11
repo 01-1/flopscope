@@ -1510,8 +1510,8 @@ def _counted_variance(np_func, op_name: str, *, with_sqrt: bool):
                 **kwargs,
             )
         if out is not None:
-            return _wrap_result(result, out=out, symmetry=new_symmetry)
-        return _wrap_result(result, symmetry=new_symmetry)
+            return _wrap_result(result, out=out, symmetry=new_symmetry)  # type: ignore[return-value]
+        return _wrap_result(result, symmetry=new_symmetry)  # type: ignore[return-value]
 
     _apply_numpy_signature(wrapper, np_func)
     return wrapper
