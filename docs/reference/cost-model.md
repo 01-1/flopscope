@@ -330,7 +330,7 @@ Random ops are composite: the generation kernel cost and any setup cost
 | `random.shuffle`, `random.permutation` | `numel(input)` | DECLARED: Fisher-Yates O(n) | `_cost_formulas.py` |
 | `random.exponential` | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.poisson`, `random.binomial`, `random.geometric`, `random.hypergeometric`, `random.negative_binomial`, `random.multinomial` | `numel(output)` | DECLARED | `_cost_formulas.py` |
-| `random.multivariate_normal` | `d³/3 + 2×N×d² + 16×N×d` (N=size, d=dims) | DERIVED composite: Cholesky factorization + affine transform + transcendental draw; note: numpy's default is SVD not Cholesky — factorization term undercounts by ≈30× for large d when default method used (known gap) | `_cost_formulas.py` |
+| `random.multivariate_normal` | `d³/3 + 2×N×d² + 16×N×d` (N=size, d=dims) | DERIVED composite: covariance factorization + affine transform + N·d transcendental draws | `_cost_formulas.py` |
 | `random.beta`, `random.dirichlet`, `random.f`, `random.gamma`, `random.gumbel`, `random.laplace`, `random.logistic`, `random.lognormal`, `random.logseries`, `random.pareto`, `random.power`, `random.rayleigh`, `random.standard_cauchy`, `random.standard_exponential`, `random.standard_gamma`, `random.standard_t`, `random.triangular`, `random.vonmises`, `random.wald`, `random.weibull`, `random.zipf` | `numel(output)` (with transcendental weight or composite constant, per distribution) | DECLARED / DERIVED | `_cost_formulas.py` |
 
 Source: `src/flopscope/numpy/random/_cost_formulas.py`.
