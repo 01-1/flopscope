@@ -270,3 +270,30 @@ def test_vector_norm_general_p_bills_pow():
     assert cost(lambda: fnp.linalg.norm(v, 3)) == 18 * 100 + 16
     V = fnp.asarray(np.random.rand(50, 100))
     assert cost(lambda: fnp.linalg.vector_norm(V, axis=-1, ord=3)) == 50 * (18 * 100 + 16)
+
+
+# ---------------- lexsort / sort_complex / select (audit-2 verified) ----------------
+
+def test_lexsort_bills_all_slices():
+    from flopscope._flops import sort_cost
+    k1 = fnp.asarray(np.random.rand(100, 70))   # axis=-1: 100 slices of n=70, 2 keys
+    k2 = fnp.asarray(np.random.rand(100, 70))
+    assert cost(lambda: fnp.lexsort((k1, k2), axis=-1)) == 2 * 100 * sort_cost(70)
+    v1 = fnp.asarray(np.random.rand(1000))       # 1-D unchanged
+    v2 = fnp.asarray(np.random.rand(1000))
+    assert cost(lambda: fnp.lexsort((v1, v2))) == 2 * sort_cost(1000)
+
+
+def test_sort_complex_per_slice():
+    from flopscope._flops import sort_cost
+    a = fnp.asarray(np.random.rand(100, 70) + 1j * np.random.rand(100, 70))
+    assert cost(lambda: fnp.sort_complex(a)) == 100 * sort_cost(70)
+    v = fnp.asarray(np.random.rand(1000) + 1j)
+    assert cost(lambda: fnp.sort_complex(v)) == sort_cost(1000)
+
+
+def test_select_bills_broadcast_output():
+    x = fnp.asarray(np.random.rand(1000))
+    conds = [np.asarray(x) < 0.3, np.asarray(x) > 0.7]
+    # scalar choices used to collapse the charge; output is 1000 elements
+    assert cost(lambda: fnp.select(conds, [0.0, 1.0], default=0.5)) == 1000

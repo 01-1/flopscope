@@ -392,7 +392,7 @@ REGISTRY: dict[str, dict] = {
     "sort_complex": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Sort complex array. Cost: $n \\cdot \\lceil\\log_2 n\\rceil$.",
+        "notes": "Sort complex array. Cost: n*ceil(log2 n) per last-axis slice.",
     },
     # ------------------------------------------------------------------
     # counted_binary — implemented in _pointwise.py
@@ -1518,7 +1518,7 @@ REGISTRY: dict[str, dict] = {
     "select": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return array from list of choices based on conditions. Cost: numel(input).",
+        "notes": "Return array from list of choices based on conditions. Cost: numel(output), gather tier ×4.",
     },
     "extract": {
         "category": "counted_custom",
@@ -1715,7 +1715,7 @@ REGISTRY: dict[str, dict] = {
     "lexsort": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Multi-key sort; cost = k*n*ceil(log2(n)).",
+        "notes": "Multi-key sort; cost = k keys × num_slices × n·ceil(log2 n).",
     },
     "partition": {
         "category": "counted_custom",

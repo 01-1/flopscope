@@ -2276,21 +2276,29 @@ def select(
     choicelist: Sequence[ArrayLike],
     default: Any = 0,
 ) -> FlopscopeArray:
-    """Return array drawn from elements depending on conditions. Cost: numel(input)."""
+    """Return array drawn from elements depending on conditions.
+
+    Cost: numel(output) — the true broadcast size of the result.
+    Weight tier: gather (×4.0 from the packaged table).
+    """
     budget = require_budget()
-    # Cost based on the size of the choice arrays
-    cost = max((_np.asarray(c).size for c in choicelist), default=1)
-    with budget.deduct("select", flop_cost=cost, subscripts=None, shapes=()):
+    with budget.deduct_after("select", subscripts=None, shapes=()) as _op:
         result = _call_numpy(
             _np.select,
             _to_base_ndarray_tree(condlist),  # type: ignore[arg-type]
             _to_base_ndarray_tree(choicelist),  # type: ignore[arg-type]
             default=default,
         )
+        _op.set_cost(result.size if hasattr(result, "size") else 1)
     return result  # type: ignore[return-value]
 
 
-attach_docstring(select, _np.select, "free", "0 FLOPs")
+attach_docstring(
+    select,
+    _np.select,
+    "counted_custom",
+    "numel(output) FLOPs (Cost: numel(output), gather tier ×4)",
+)
 
 
 def shape(*args, **kwargs):

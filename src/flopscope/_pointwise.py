@@ -1141,15 +1141,19 @@ sinh = _counted_unary(_np.sinh, "sinh")
 
 @_counted_wrapper
 def sort_complex(a: ArrayLike) -> FlopscopeArray:
-    """Counted version of np.sort_complex. Cost: n*ceil(log2(n))."""
-    import math
+    """Counted version of np.sort_complex.
+
+    Cost: n*ceil(log2(n)) per last-axis slice (n = a.shape[-1]).
+    numpy.sort_complex sorts each 1-D slice along the last axis, so the
+    total cost is num_slices * sort_cost(n).  For 1-D input this equals
+    the previous n*ceil(log2(n)) formula.
+    """
+    from flopscope._sorting_ops import _sort_cost_nd
 
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
-    n = a.size
-    log2n = math.ceil(math.log2(n)) if n > 1 else 1
-    cost = n * log2n
+    cost = 1 if a.ndim == 0 else _sort_cost_nd(a, a.ndim - 1)
     with budget.deduct(
         "sort_complex", flop_cost=cost, subscripts=None, shapes=(a.shape,)
     ):
