@@ -12,7 +12,7 @@ import numpy as np
 
 import flopscope as f
 import flopscope.numpy as fnp
-from flopscope._weights import load_weights
+from flopscope._weights import load_weights, reset_weights
 
 
 def cost(fn, *args, **kwargs) -> int:
@@ -548,9 +548,12 @@ def test_put_bills_numel_indices():
     # must NOT scale with destination size (was: a.size; now: ind.size)
     assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 7
     # With packaged weights loaded (weight=4.0): charged = int(7*4.0) = 28
-    load_weights()
-    assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 28
-    assert cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap")) == 4000
+    try:
+        load_weights()
+        assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 28
+        assert cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap")) == 4000
+    finally:
+        reset_weights()
 
 
 def test_put_along_axis_bills_scattered_elements():
@@ -576,22 +579,27 @@ def test_put_along_axis_bills_scattered_elements():
         == 1_000_000
     )
     # With packaged weights loaded (weight=4.0): charged = scattered_count * 4
-    load_weights()
-    assert cost(lambda: fnp.put_along_axis(dest, np.arange(5), np.ones(5), 0)) == 20
-    assert (
-        cost(
-            lambda: fnp.put_along_axis(dest2d, np.zeros((1, 5), dtype=int), 1.0, axis=1)
-        )
-        == 2000
-    )
-    assert (
-        cost(
-            lambda: fnp.put_along_axis(
-                dest_small, np.zeros(1_000_000, dtype=np.int64), 1.0, 0
+    try:
+        load_weights()
+        assert cost(lambda: fnp.put_along_axis(dest, np.arange(5), np.ones(5), 0)) == 20
+        assert (
+            cost(
+                lambda: fnp.put_along_axis(
+                    dest2d, np.zeros((1, 5), dtype=int), 1.0, axis=1
+                )
             )
+            == 2000
         )
-        == 4_000_000
-    )
+        assert (
+            cost(
+                lambda: fnp.put_along_axis(
+                    dest_small, np.zeros(1_000_000, dtype=np.int64), 1.0, 0
+                )
+            )
+            == 4_000_000
+        )
+    finally:
+        reset_weights()
 
 
 def test_roll_bills_numel_output():

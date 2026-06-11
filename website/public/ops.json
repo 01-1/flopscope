@@ -1132,7 +1132,7 @@
       "slug": "column_stack",
       "status": "supported",
       "summary": "Stack 1-D arrays as columns into a 2-D array.",
-      "weight": 0.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -3148,7 +3148,7 @@
       "slug": "hstack",
       "status": "supported",
       "summary": "Stack arrays in sequence horizontally (column wise).",
-      "weight": 0.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -3316,7 +3316,7 @@
       "slug": "insert",
       "status": "supported",
       "summary": "Insert values along the given axis before the given indices.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -6151,7 +6151,7 @@
       "slug": "put",
       "status": "supported",
       "summary": "Replaces specified elements of an array with given values.",
-      "weight": 1.0
+      "weight": 4.0
     },
     {
       "area": "core",
@@ -6172,7 +6172,7 @@
       "slug": "put_along_axis",
       "status": "supported",
       "summary": "Put values into the destination array by matching 1d index and data slices.",
-      "weight": 1.0
+      "weight": 4.0
     },
     {
       "area": "core",
@@ -9616,7 +9616,7 @@
       "slug": "row_stack",
       "status": "supported",
       "summary": "Stack arrays in sequence vertically (row wise).",
-      "weight": 0.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -10918,7 +10918,7 @@
       "slug": "tril",
       "status": "supported",
       "summary": "Lower triangle of an array.",
-      "weight": 0.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -11002,7 +11002,7 @@
       "slug": "triu",
       "status": "supported",
       "summary": "Upper triangle of an array.",
-      "weight": 0.0
+      "weight": 1.0
     },
     {
       "area": "core",
