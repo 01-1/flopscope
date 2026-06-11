@@ -278,7 +278,7 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         100 * int(math.ceil(math.log2(100))),                 # 700
     ),
     "lexsort": (
-        lambda: fnp.lexsort(_int3x100),
+        lambda: fnp.lexsort(_int3x100),  # pyright: ignore[reportArgumentType]  # 2-D keys array is valid
         3 * 100 * int(math.ceil(math.log2(100))),             # 2100
     ),
     "sort_complex": (
