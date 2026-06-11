@@ -116,7 +116,7 @@ def _choice_cost(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> 
             elif isinstance(a, _np.ndarray):
                 n = int(a.shape[0]) if a.ndim > 0 else 1
             elif hasattr(a, "__len__"):
-                n = len(a)
+                n = len(a)  # pyright: ignore[reportArgumentType]  # guarded by hasattr
             else:
                 n = 1
             n = _builtins.max(n, 1)
