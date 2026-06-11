@@ -1059,7 +1059,12 @@ def meshgrid(*xi: ArrayLike, **kwargs: Any) -> tuple[FlopscopeArray, ...]:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(meshgrid, _np.meshgrid, "counted_custom", "numel of materialized output grids; sparse=True bills sum of input lengths; copy=False views cost 1")
+attach_docstring(
+    meshgrid,
+    _np.meshgrid,
+    "counted_custom",
+    "numel of materialized output grids; sparse=True bills sum of input lengths; copy=False views cost 1",
+)
 
 # ---------------------------------------------------------------------------
 # Type / info helpers
@@ -1161,7 +1166,9 @@ def append(
     _warn_if_symmetric(arr, "append")
     arr_arr = _np.asarray(arr)
     values_arr = _np.asarray(values)
-    cost = max(arr_arr.size + values_arr.size, 1)  # numel(output): np.append = concatenate([arr, values])
+    cost = max(
+        arr_arr.size + values_arr.size, 1
+    )  # numel(output): np.append = concatenate([arr, values])
     with budget.deduct("append", flop_cost=cost, subscripts=None, shapes=()):
         result = _call_numpy(
             _np.append,
@@ -1173,7 +1180,9 @@ def append(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(append, _np.append, "counted_custom", "numel(output) = arr.size + values.size FLOPs")
+attach_docstring(
+    append, _np.append, "counted_custom", "numel(output) = arr.size + values.size FLOPs"
+)
 
 
 @_counted_wrapper
@@ -1493,7 +1502,9 @@ def column_stack(tup: Sequence[ArrayLike]) -> FlopscopeArray:
     return _asplainflopscope(result)  # type: ignore[return-value]
 
 
-attach_docstring(column_stack, _np.column_stack, "counted_custom", "numel(output) FLOPs")
+attach_docstring(
+    column_stack, _np.column_stack, "counted_custom", "numel(output) FLOPs"
+)
 
 
 def common_type(*args, **kwargs):
@@ -2215,7 +2226,12 @@ def put_along_axis(
     return result
 
 
-attach_docstring(put_along_axis, _np.put_along_axis, "counted_custom", "elements scattered x gather-tier weight 4.0 FLOPs")
+attach_docstring(
+    put_along_axis,
+    _np.put_along_axis,
+    "counted_custom",
+    "elements scattered x gather-tier weight 4.0 FLOPs",
+)
 
 
 @_counted_wrapper

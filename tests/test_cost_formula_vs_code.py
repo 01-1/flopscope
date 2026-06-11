@@ -821,15 +821,21 @@ class TestStatistics:
 class TestFreeOps:
     def test_append_numel_output(self, we):
         # np.append = concatenate([arr, values]); bills numel(output) = arr.size + values.size
-        assert _cost_of(we.append, numpy.array([1, 2, 3]), [4, 5]) == 5  # was 2 (values.size only)
+        assert (
+            _cost_of(we.append, numpy.array([1, 2, 3]), [4, 5]) == 5
+        )  # was 2 (values.size only)
 
     def test_delete_numel_output(self, we):
         # np.delete copies surviving elements; bills numel(output) = arr.size - deleted
-        assert _cost_of(we.delete, numpy.array([1, 2, 3, 4, 5]), [0, 2]) == 3  # was 2 (num_deleted)
+        assert (
+            _cost_of(we.delete, numpy.array([1, 2, 3, 4, 5]), [0, 2]) == 3
+        )  # was 2 (num_deleted)
 
     def test_insert_numel_output(self, we):
         # np.insert copies all elements; bills numel(output) = arr.size + values.size
-        assert _cost_of(we.insert, numpy.array([1, 2, 3]), 1, [10, 20]) == 5  # was 2 (values.size only)
+        assert (
+            _cost_of(we.insert, numpy.array([1, 2, 3]), 1, [10, 20]) == 5
+        )  # was 2 (values.size only)
 
     def test_trim_zeros_num_trimmed(self, we):
         assert _cost_of(we.trim_zeros, numpy.array([0, 0, 1, 2, 0, 0])) == 4
@@ -942,7 +948,9 @@ class TestStats:
         assert _cost_of(flopscope.stats.uniform.pdf, numpy.random.rand(100)) == 100
 
     def test_uniform_cdf(self, we):
-        assert _cost_of(flopscope.stats.uniform.cdf, numpy.random.rand(100)) == 4 * 100  # sub+div+2 select
+        assert (
+            _cost_of(flopscope.stats.uniform.cdf, numpy.random.rand(100)) == 4 * 100
+        )  # sub+div+2 select
 
     def test_uniform_ppf(self, we):
         assert _cost_of(flopscope.stats.uniform.ppf, numpy.random.rand(100)) == 100
@@ -951,7 +959,9 @@ class TestStats:
         assert _cost_of(flopscope.stats.expon.pdf, numpy.random.rand(100)) == 100
 
     def test_cauchy_pdf(self, we):
-        assert _cost_of(flopscope.stats.cauchy.pdf, numpy.random.rand(100)) == 6 * 100  # pure-arithmetic: 6 FLOPs/elem
+        assert (
+            _cost_of(flopscope.stats.cauchy.pdf, numpy.random.rand(100)) == 6 * 100
+        )  # pure-arithmetic: 6 FLOPs/elem
 
     def test_logistic_cdf(self, we):
         assert _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 100

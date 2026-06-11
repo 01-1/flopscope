@@ -1381,7 +1381,12 @@ def clip(
     return _wrap_result(result, out=out, symmetry=symmetry)  # type: ignore[return-value]
 
 
-attach_docstring(clip, _np.clip, "counted_custom", "n_bounds x numel(output) FLOPs (1 compare-select per bound; numel copy floor with no bounds)")
+attach_docstring(
+    clip,
+    _np.clip,
+    "counted_custom",
+    "n_bounds x numel(output) FLOPs (1 compare-select per bound; numel copy floor with no bounds)",
+)
 clip.__signature__ = _inspect.signature(_np.clip)  # pyright: ignore[reportFunctionMemberAccess]
 
 
@@ -1641,11 +1646,15 @@ def count_nonzero(
         if symmetry is not None
         else None
     )
-    with budget.deduct("count_nonzero", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
-        result = _call_numpy(_np.count_nonzero, _to_base_ndarray(a), axis=axis, keepdims=keepdims)
+    with budget.deduct(
+        "count_nonzero", flop_cost=cost, subscripts=None, shapes=(a.shape,)
+    ):
+        result = _call_numpy(
+            _np.count_nonzero, _to_base_ndarray(a), axis=axis, keepdims=keepdims
+        )
     if axis is None and not keepdims:
         return int(result)
-    return _wrap_result(result, symmetry=new_symmetry)
+    return _wrap_result(result, symmetry=new_symmetry)  # type: ignore[return-value]
 
 
 attach_docstring(
@@ -2662,7 +2671,7 @@ def _gradient_spacing_surcharge(f_shape, f_size, varargs, axes) -> int:
     Returns the integer surcharge to add to the base gradient cost.
     """
     surcharge = 0
-    for ax, v in zip(axes, varargs):
+    for ax, v in zip(axes, varargs, strict=False):
         v_arr = _np.asarray(v)
         if v_arr.ndim == 1 and v_arr.size == f_shape[ax]:
             L = f_shape[ax]
@@ -2677,10 +2686,13 @@ def _gradient_spacing_surcharge(f_shape, f_size, varargs, axes) -> int:
                 surcharge += 3 * (L - 1)
             else:
                 surcharge += (
-                    3 * S * _builtins.max(L - 2, 0) // L   # blend pass: +3 per interior elem
-                    + 10 * _builtins.max(L - 2, 0)          # coefficient arrays a,b,c
-                    + 3 * (L - 1)                           # diff + uniformity check
-                    + 4 * S // L                            # two boundary hyperplanes
+                    3
+                    * S
+                    * _builtins.max(L - 2, 0)
+                    // L  # blend pass: +3 per interior elem
+                    + 10 * _builtins.max(L - 2, 0)  # coefficient arrays a,b,c
+                    + 3 * (L - 1)  # diff + uniformity check
+                    + 4 * S // L  # two boundary hyperplanes
                 )
     return surcharge
 
@@ -2864,9 +2876,8 @@ def _correlate_cost(n: int, m: int, mode) -> int:
         # dot-length starting from 1 and stepping by 1 → FLOPs = 2*i - 1 per position
         n_left = mn // 2
         n_right = mn - n_left - 1
-        edge_flops = (
-            (n_left * mn - n_left * (n_left + 1) // 2)
-            + (n_right * mn - n_right * (n_right + 1) // 2)
+        edge_flops = (n_left * mn - n_left * (n_left + 1) // 2) + (
+            n_right * mn - n_right * (n_right + 1) // 2
         )
         interior = mn * (mx - mn + 1)
         return _builtins.max(2 * (interior + edge_flops) - mx, 1)
