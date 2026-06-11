@@ -375,14 +375,14 @@ REGISTRY: dict[str, dict] = {
         "notes": "Test if element is complex element-wise.",
     },
     "iscomplexobj": {
-        "category": "counted_unary",
+        "category": "free",
         "module": "numpy",
-        "notes": "Return True if input is a complex type or array.",
+        "notes": "Return True if input is a complex type or array (dtype predicate, O(1)).",
     },
     "isrealobj": {
-        "category": "counted_unary",
+        "category": "free",
         "module": "numpy",
-        "notes": "Return True if x is a not complex type or array.",
+        "notes": "Return True if x is not a complex type or array (dtype predicate, O(1)).",
     },
     "real_if_close": {
         "category": "counted_unary",

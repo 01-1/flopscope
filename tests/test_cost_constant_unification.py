@@ -342,3 +342,37 @@ def test_stats_ppf_composites_packaged_weight_unity():
     assert cost(lambda: fstats.norm.ppf(x)) == 83 * 100
     assert cost(lambda: fstats.truncnorm.ppf(x, -1.0, 1.0)) == 81 * 100
     assert cost(lambda: fstats.lognorm.ppf(x, 0.5)) == 106 * 100
+
+
+# ---------------- reductions & predicates (audit-2 verified) ----------------
+
+def test_nanpercentile_nanquantile_positional_q_and_cost():
+    a = fnp.asarray(np.random.rand(500, 2))
+    assert cost(lambda: fnp.nanpercentile(a, 50)) == cost(lambda: fnp.percentile(a, 50))
+    assert cost(lambda: fnp.nanquantile(a, 0.5, axis=1)) == cost(lambda: fnp.quantile(a, 0.5, axis=1))
+    with f.BudgetContext(flop_budget=10**9, quiet=True):
+        r = np.asarray(fnp.nanpercentile(a, 50, axis=1))
+    np.testing.assert_allclose(r, np.nanpercentile(np.asarray(a), 50, axis=1))
+
+
+def test_ptp_two_passes():
+    v = fnp.asarray(np.random.rand(10_000))
+    assert cost(lambda: fnp.ptp(v)) == 2 * 10_000 - 1            # 2*(N-1)+1
+    A = fnp.asarray(np.random.rand(100, 50))
+    assert cost(lambda: fnp.ptp(A, axis=1)) == 2 * (100 * 50 - 100) + 100
+
+
+def test_average_matches_mean_and_bills_weight_pipeline():
+    W = fnp.asarray(np.random.rand(1000, 1000))
+    w = fnp.asarray(np.random.rand(1000) + 0.5)
+    assert cost(lambda: fnp.average(W, axis=1)) == cost(lambda: fnp.mean(W, axis=1))
+    weighted = cost(lambda: fnp.average(W, axis=1, weights=w))
+    unweighted = cost(lambda: fnp.average(W, axis=1))
+    # + a*w pass (numel) + w.sum reduction (numel - M) where M=1000
+    assert weighted == unweighted + W.size + (W.size - 1000)
+
+
+def test_dtype_predicates_are_free():
+    v = fnp.asarray(np.random.rand(10_000))
+    assert cost(lambda: fnp.iscomplexobj(v)) == 0
+    assert cost(lambda: fnp.isrealobj(v)) == 0

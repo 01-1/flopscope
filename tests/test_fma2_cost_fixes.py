@@ -42,12 +42,15 @@ def test_polymul_equals_convolve():
     assert cost(lambda: fnp.polymul(a, b)) == cost(lambda: fnp.convolve(a, b))
 
 
-def test_average_weighted_doubles_unweighted():
+def test_average_weighted_bills_aw_and_wsum():
+    # average now charges: sum + m divides (no weights); + a*w pass + w.sum + m divides (weighted).
+    # unweighted == mean cost; weighted == unweighted + W.size (a*w) + (W.size - M) (w.sum).
     W = fnp.asarray(np.random.rand(1000, 1000))
     w = fnp.asarray(np.random.rand(1000) + 0.5)
     unweighted = cost(lambda: fnp.average(W, axis=1))
     weighted = cost(lambda: fnp.average(W, axis=1, weights=w))
-    assert weighted == unweighted + W.size      # +1 multiply pass for a*w
+    # M = 1000 output orbits along axis=1
+    assert weighted == unweighted + W.size + (W.size - 1000)
 
 
 def test_var_is_four_passes_and_shape_stable():

@@ -121,8 +121,7 @@ _UNARY_NUMEL = [
     "isreal",
     "isneginf",
     "isposinf",
-    "iscomplexobj",
-    "isrealobj",
+    # iscomplexobj and isrealobj are dtype predicates (free, 0 FLOPs) — see test_dtype_predicates_are_free
 ]
 
 
@@ -255,7 +254,7 @@ _REDUCTION_NUMEL = [
     "max",
     "min",
     "prod",
-    "ptp",
+    # ptp is excluded: 2-pass formula (2*numel - M); see test_ptp_two_passes
     "sum",
     "nanargmax",
     "nanargmin",
@@ -267,8 +266,8 @@ _REDUCTION_NUMEL = [
     "nansum",
     "nanmedian",
     # mean is excluded: it charges +1 divide for the scalar output orbit
+    # average is excluded: now matches mean cost (reduction + M divides); see test_average_matches_mean_and_bills_weight_pipeline
     # std/var/nanstd/nanvar are excluded: 4-pass formula; see test_variance_family_cost
-    "average",
     "nanmean",
 ]
 
@@ -325,11 +324,12 @@ def test_percentile_tier2_cost(we):
 
 @pytest.mark.parametrize("name", ["nanpercentile"])
 def test_nanpercentile_numel(name, we):
-    # nanpercentile still uses the old orbit-mapping model.
-    # Full reduction of (10,10): prod(shape) - 1 = 100 - 1 = 99 additions.
+    # nanpercentile now uses Tier-2 model (same as percentile): num_output_orbits × axis_dim.
+    # Full reduction of (10,10) dense: axis_dim = prod(shape) = 100, scalar output → 1 orbit.
+    # Cost = 1 * 100 = 100.
     a = numpy.random.rand(10, 10)
     cost = _cost_of(getattr(we, name), a, q=50)
-    assert cost == 99, f"{name}: expected orbit-mapping cost=99, got {cost}"
+    assert cost == 100, f"{name}: expected Tier-2 cost=100, got {cost}"
 
 
 def test_quantile_tier2_cost(we):
@@ -343,11 +343,12 @@ def test_quantile_tier2_cost(we):
 
 @pytest.mark.parametrize("name", ["nanquantile"])
 def test_nanquantile_numel(name, we):
-    # nanquantile still uses the old orbit-mapping model.
-    # Full reduction of (10,10): prod(shape) - 1 = 100 - 1 = 99 additions.
+    # nanquantile now uses Tier-2 model (same as quantile): num_output_orbits × axis_dim.
+    # Full reduction of (10,10) dense: axis_dim = prod(shape) = 100, scalar output → 1 orbit.
+    # Cost = 1 * 100 = 100.
     a = numpy.random.rand(10, 10)
     cost = _cost_of(getattr(we, name), a, q=0.5)
-    assert cost == 99, f"{name}: expected orbit-mapping cost=99, got {cost}"
+    assert cost == 100, f"{name}: expected Tier-2 cost=100, got {cost}"
 
 
 @pytest.mark.parametrize("name", ["cumulative_sum", "cumulative_prod"])
