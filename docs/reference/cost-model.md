@@ -143,8 +143,8 @@ plus the per-output subtract, and `mean`/`average` add the per-output divide.
 | `median`, `nanmedian` | axis length per output slice | 1.0 | DECLARED; partition (introselect) per output |
 | `percentile`, `nanpercentile`, `quantile`, `nanquantile` | axis length per output slice | 1.0 | DECLARED; partition (introselect) per output |
 | `ptp` | 2 × numel(input) − numel(output) | 1.0 | DERIVED: max pass + min pass + M subtracts (2·(numel−M)+M) |
-| `count_nonzero` | numel(input) − numel(output) | 1.0 | DECLARED comparison scan |
-| `nanmean` | numel(input) − numel(output) | 1.0 | factory skeleton; the missing per-output divide is a known gap (see appendix) |
+| `count_nonzero` | numel(input) | 1.0 | DECLARED comparison scan (every element tested regardless of axis) |
+| `nanmean` | numel(input) | 1.0 | DERIVED: reduction (numel−M) + M divides; billed identically to mean |
 
 Source: `src/flopscope/_pointwise.py`; reduction accumulation model in
 `src/flopscope/_accumulation/`.
@@ -182,7 +182,7 @@ sums per-step costs.
 | `einsum` | whole-expression accumulation; k≥3 binary path | DERIVED | G&VL 4e §1.1.11; `_accumulation/_cost.py` |
 | `kron` | `a.size × b.size` (outer product, no contraction) | DERIVED | Kronecker product definition; FMA=2 |
 | `linalg.matrix_power` | `(⌊log₂ k⌋ + popcount(k) − 1) × matmul_cost(n,n,n)` | DERIVED | Knuth TAOCP §4.6.3 × G&VL 4e §1.1.11 |
-| `linalg.multi_dot` | sum of optimal-chain matmul costs (CLRS §15.2) | DERIVED | G&VL 4e §1.1.11; note: each step uses `2mnk` (missing `−mn` vs `matmul_cost`) |
+| `linalg.multi_dot` | sum of optimal-chain matmul costs (CLRS §15.2); each step uses `matmul_cost(m,k,n)` = `2mkn − mn` | DERIVED | G&VL 4e §1.1.11; `_compound.py:multi_dot_cost` |
 
 All contraction ops use **weight 1.0** (the shape constants capture everything).
 Source: `src/flopscope/_accumulation/`, `src/flopscope/_flops.py`.
@@ -198,7 +198,7 @@ Source: `src/flopscope/_accumulation/`, `src/flopscope/_flops.py`.
 | `geomspace` | `2 × num × B + 6B` where `B` = product of broadcast batch dims | DERIVED: log + linspace + exp per-batch per-point | `_free_ops.py` |
 | `logspace` | same as geomspace | DERIVED | `_free_ops.py` |
 | `zeros`, `ones`, `full`, `zeros_like`, `ones_like`, `full_like`, `eye`, `identity`, `empty`, `empty_like` | 0 (allocation, no arithmetic) | DECLARED free/metadata | `_free_ops.py` |
-| `meshgrid` | 0 per array (view or copy — no arithmetic; copies billed at numel if `copy=True`) | DECLARED | `_free_ops.py` |
+| `meshgrid` | dense: `len(xi) × prod(sizes)`; sparse (`sparse=True`): `sum(sizes)`; `copy=False` views: 1 | DECLARED: numel of materialized output grids | `_free_ops.py` |
 
 Weight: **1.0** for all counted generators.  Source: `src/flopscope/_free_ops.py`.
 
@@ -210,12 +210,13 @@ Weight: **1.0** for all counted generators.  Source: `src/flopscope/_free_ops.py
 
 | Op | flop_cost | basis |
 |---|---|---|
-| `sort`, `argsort`, `unique`, `unique_counts`, `unique_inverse`, `unique_values` | `num_slices × n × ⌈log₂ n⌉` | DECLARED comparison sort (n = axis length) |
-| `lexsort` | `k × n × ⌈log₂ n⌉` (k = number of keys, n = sequence length) | DECLARED; note: does not multiply by num_slices for multi-dim arrays (known gap) |
+| `sort`, `argsort` | `num_slices × n × ⌈log₂ n⌉` | DECLARED comparison sort (n = axis length) |
+| `unique`, `unique_counts`, `unique_inverse`, `unique_values`, `unique_all` | `n × ⌈log₂ n⌉` (axis=None); `num_slices × shape[axis] × ⌈log₂ shape[axis]⌉` (axis=k) | DECLARED sort-based; axis-aware per-slice |
+| `lexsort` | `k × n × ⌈log₂ n⌉` (k = number of keys, n = sequence length) | DECLARED |
 | `partition`, `argpartition` | `num_slices × n × len(kth)` | DECLARED quickselect O(n) expected |
 | `searchsorted` | `m × ⌈log₂ n⌉` (m = queries, n = sorted size) | DECLARED binary search |
-| `sort_complex` | `a.size × ⌈log₂(a.size)⌉` on flattened size (note: per-last-axis model of `sort` not applied; known gap) | DECLARED |
-| `in1d`, `isin` | `(n + m) × ⌈log₂(n + m)⌉` | DECLARED sort-based model (small-ar2 masked-loop path not separately modeled) |
+| `sort_complex` | `a.size × ⌈log₂(a.size)⌉` on flattened size | DECLARED |
+| `in1d`, `isin` | `(n + m) × ⌈log₂(n + m)⌉` (sort path); `max(sort_cost(n+m), 2nm)` when numpy's masked-loop path triggers (small integer ar2) | DECLARED algo-aware |
 | `intersect1d`, `setdiff1d`, `setxor1d`, `union1d` | `(n + m) × ⌈log₂(n + m)⌉` | DECLARED |
 
 All sort/select ops use **weight 1.0**; comparison = 1 FLOP convention.
@@ -236,18 +237,20 @@ matrices charge 0.
 | `linalg.qr` (r/raw) | `2mnk − 2k³/3` | DERIVED: factorization only | `_decompositions.py:qr_cost` |
 | `linalg.solve` | `2n³/3 + 2n²×nrhs` | DERIVED: G&VL 4e §3.2 (dgesv = dgetrf + dgetrs) | `_solvers.py:solve_cost` |
 | `linalg.inv` | `2n³` | DERIVED: G&VL 4e §3.4 (dgetrf + dgetri ≈ 2n³) | `_solvers.py:inv_cost` |
-| `linalg.det`, `linalg.slogdet` | `2n³/3 + n` | DERIVED: G&VL 4e §3.2 LU (dgetrf) + diagonal product/log-sum | `_properties.py:det_cost` |
+| `linalg.det` | `2n³/3 + n` | DERIVED: G&VL 4e §3.2 LU (dgetrf) + diagonal product | `_properties.py:det_cost` |
+| `linalg.slogdet` | `2n³/3 + 18n` | DERIVED: LU (dgetrf) + sum of log\|diag\| (abs + 16/elem log + reduce) | `_properties.py:slogdet_cost` |
 | `linalg.norm` (fro/L1/Linf) | `2 × numel(effective_shape) × n_groups` | DERIVED: FMA=2 square+accumulate or abs+accumulate | `_properties.py:norm_cost` |
 | `linalg.norm` (ord=2, nuc) | `4 × m × n × min(m,n) × n_groups` | DERIVED: via SVD (4× baked in) | `_properties.py:norm_cost` |
-| `linalg.vector_norm` | `2 × numel(effective_shape) × n_groups` (all ord) | DERIVED: FMA=2; note: general fractional ord undercounts (known gap) | `_properties.py:vector_norm_cost` |
+| `linalg.vector_norm` | `2 × numel(effective_shape) × n_groups` (standard ord); `(18 × numel + 16) × n_groups` (general fractional p-norm: abs + pow per element) | DERIVED: FMA=2 | `_properties.py:vector_norm_cost` |
 | `linalg.matrix_norm` | same as `linalg.norm` | DERIVED | `_properties.py` |
-| `linalg.trace` | `n = min(m,n)` | DERIVED: n−1 diagonal adds; note: batch multiply missing (known gap) | `_properties.py:trace_cost` |
+| `linalg.trace` | `min(m,n) × batch` | DERIVED: n−1 diagonal adds, batch-multiplied | `_properties.py:trace_cost` |
 | `linalg.tensorinv` | `2n³`, `n = prod(shape[:ind])` | DERIVED: G&VL 4e §3.4 via inv | `_solvers.py:tensorinv_cost` |
 | `linalg.tensorsolve` | `2n³/3 + 2n²`, `n = prod(shape[ind:])` | DERIVED: G&VL 4e §3.2 via solve | `_solvers.py:tensorsolve_cost` |
 | `linalg.cond`, `linalg.matrix_rank` | `4 × m × n × min(m,n)` (via SVD) | DERIVED | `_properties.py` |
 | `linalg.pinv`, `linalg.lstsq` | `m × n × min(m,n)` | DERIVED: LAPACK dgelsd / SVD path; G&VL 4e §5.5 | `_solvers.py` |
 | `linalg.cross` | `6 × n` (delegates to `fnp.cross`) | DERIVED | `_aliases.py` |
-| `linalg.outer`, `linalg.tensordot`, `linalg.vecdot`, `linalg.matmul`, `linalg.multi_dot`, `linalg.matrix_power` | delegates to `fnp.*` | DERIVED | `_compound.py`, `_aliases.py` |
+| `linalg.multi_dot` | optimal chain matmul cost (CLRS §15.2); each step uses `matmul_cost(m,k,n)` = `2mkn − mn` | DERIVED | `_compound.py:multi_dot_cost` |
+| `linalg.outer`, `linalg.tensordot`, `linalg.vecdot`, `linalg.matmul`, `linalg.matrix_power` | delegates to `fnp.*` | DERIVED | `_compound.py`, `_aliases.py` |
 | `linalg.diagonal`, `linalg.matrix_transpose` | 0 (view) | DECLARED free | `_aliases.py` |
 
 ---
@@ -285,8 +288,8 @@ Fourier Transform_, 1992 §1.4, Cooley-Tukey radix-2):
 |---|---|---|
 | `fft.fft`, `fft.ifft`, `fft.fft2`, `fft.ifft2`, `fft.fftn`, `fft.ifftn` | `5 × N × ⌈log₂ N⌉`, `N = prod(transform dims)` | DERIVED: Van Loan 1992 §1.4; 5 real ops per butterfly |
 | `fft.rfft`, `fft.irfft`, `fft.rfft2`, `fft.irfft2`, `fft.rfftn`, `fft.irfftn` | `5 × (N/2) × ⌈log₂ N⌉` | DERIVED: real-input / real-output half-spectrum |
-| `fft.hfft` | `5 × n_out × ⌈log₂ n_out⌉` | DERIVED (current); note: suspected 2× overcount vs honest `rfft_cost(n_out)` — unverified |
-| `fft.ihfft` | `5 × (n/2) × ⌈log₂ n⌉` | DERIVED (current); same suspected gap as hfft — unverified |
+| `fft.hfft` | `5 × (n_out/2) × ⌈log₂ n_out⌉` | DERIVED: hfft = irfft(conj(a)) — conjugate-symmetry halves the work (Van Loan 1992 §1.4) |
+| `fft.ihfft` | `5 × (n/2) × ⌈log₂ n⌉` | DERIVED: same `hfft_cost(n)` formula |
 | `fft.fftfreq`, `fft.rfftfreq`, `fft.fftshift`, `fft.ifftshift` | 0 | DECLARED free/metadata |
 
 All counted FFT ops use **weight 1.0**.  Source: `src/flopscope/numpy/fft/_transforms.py`.
@@ -300,9 +303,10 @@ All counted FFT ops use **weight 1.0**.  Source: `src/flopscope/numpy/fft/_trans
 | `polyval` | `2 × deg × points` (Horner: 1 mul + 1 add per coefficient per point, FMA=2) | DERIVED | `_polynomial.py` |
 | `polyfit` | `2 × m × n × min(m,n)` (via least-squares SVD) | DERIVED | `_polynomial.py` |
 | `polyadd`, `polysub` | `min(len_a, len_b)` | DERIVED | `_polynomial.py` |
-| `polymul`, `convolve` (1-D full mode) | `2nm − n − m` (direct conv, FMA=2) | DERIVED; note: always charged at full-mode cost regardless of `mode=` argument (known gap) | `_polynomial.py` |
-| `polyder`, `polyint` | `n` | DERIVED | `_polynomial.py` |
-| `roots` | see linalg iterative table above | — | — |
+| `polymul`, `convolve` (1-D full mode) | `2nm − n − m` (direct conv, FMA=2) | DERIVED; `convolve` always uses full-mode cost regardless of `mode=` argument | `_polynomial.py` |
+| `polyder` | `t × n − t(t+1)/2`, `t = min(m, n−1)` (order-aware; one multiply per surviving coefficient per derivative step) | DERIVED | `_polynomial.py:polyder_cost` |
+| `polyint` | `m × n + m(m−1)/2` (order-aware; m passes each dividing n+j coefficients) | DERIVED | `_polynomial.py:polyint_cost` |
+| `roots` | `10n³`, `n = stripped companion dimension` (zero-leading/trailing coefficients stripped before companion matrix is built) | DERIVED: delegates to `eigvals_cost` on trimmed degree | `_polynomial.py:roots_cost` |
 
 Source: `src/flopscope/_polynomial.py`.
 
@@ -321,7 +325,8 @@ Random ops are composite: the generation kernel cost and any setup cost
 | `random.randint`, `random.integers` | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=True, p=None) | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=True, p≠None) | `numel(output) + 3n + m×⌈log₂ n⌉` (n=population, m=size) | DERIVED: cumsum + normalize + searchsorted | `_cost_formulas.py`; confirmed issue audit |
-| `random.choice` (replace=False) | `sort_cost(n) = n × ⌈log₂ n⌉` | DECLARED (note: Fisher-Yates O(n) would be cheaper — unverified gap) | `_cost_formulas.py` |
+| `random.choice` (replace=False, p=None) | `n` (Fisher-Yates O(n): conservative ceiling on tail-shuffle / Floyd's algorithm) | DECLARED | `_cost_formulas.py` |
+| `random.choice` (replace=False, p≠None) | `sort_cost(n) = n × ⌈log₂ n⌉` (data-dependent rejection loop with weights) | DECLARED | `_cost_formulas.py` |
 | `random.shuffle`, `random.permutation` | `numel(input)` | DECLARED: Fisher-Yates O(n) | `_cost_formulas.py` |
 | `random.exponential` | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.poisson`, `random.binomial`, `random.geometric`, `random.hypergeometric`, `random.negative_binomial`, `random.multinomial` | `numel(output)` | DECLARED | `_cost_formulas.py` |
@@ -342,12 +347,15 @@ Stats ops are composite (weight 1.0; all per-element factors in `flop_cost`).
 | `stats.norm.pdf` | ≈27 | DERIVED: exp + affine normalization |
 | `stats.norm.cdf` | ≈48 | DERIVED: erf + affine |
 | `stats.truncnorm.ppf` | 81 | DERIVED composite (affine + rational + Newton with erf+exp); calibration 82.52; confirmed issue audit |
-| `stats.lognorm.ppf` | 106 | DERIVED composite (ndtri + outer exp); calibration 106.35; confirmed issue audit |
-| `stats.lognorm.pdf` | current: 16 (unverified — gap under review, see below) | |
-| `stats.lognorm.cdf` | current: 16 (unverified — gap under review) | |
-| `stats.laplace.cdf` | current: 16 (unverified — gap under review) | |
-| `stats.laplace.ppf` | current: 16 (unverified — gap under review) | |
-| `stats.uniform.cdf` | current: 1 (unverified — gap under review) | |
+| `stats.lognorm.ppf` | 106 | DERIVED composite (ndtri + exp); calibration 106.35; confirmed issue audit |
+| `stats.lognorm.pdf` | 62 | DERIVED composite: log + exp + arithmetic per element; audit-2 verified; calibration alpha 62.30 |
+| `stats.lognorm.cdf` | 70 | DERIVED composite: log + erf rational approx + arithmetic; audit-2 verified; calibration alpha 69.98 |
+| `stats.laplace.pdf` | 1 | DECLARED: 1 FLOP/elem (abs + exp; weight 1.0) |
+| `stats.laplace.cdf` | 40 | DERIVED composite: two eager exp branches + 8 arith/cmp/select; audit-2 verified |
+| `stats.laplace.ppf` | 51 | DERIVED composite: two eager log branches + edge selects; audit-2 verified |
+| `stats.uniform.pdf` | 1 | DECLARED: 1 FLOP/elem |
+| `stats.uniform.cdf` | 4 | DERIVED composite: sub + div + 2 clip compare/selects; calibrated alpha 4.0 |
+| `stats.cauchy.pdf` | 6 | DERIVED pure-arithmetic: z=(x−loc)/scale; 1/(π·scale·(1+z²)) = 6 FLOPs/elem; weight 1.0; calibrated alpha 6.0 |
 
 Source: `src/flopscope/stats/`.
 
@@ -357,11 +365,11 @@ Source: `src/flopscope/stats/`.
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
-| `bartlett` | `n` | DECLARED: 1 linear eval/sample (div+add+select, conservative single branch) | `_window.py:bartlett_cost` |
-| `blackman` | `3n` (at weight 16.0 → `48n` charged) | DECLARED: three cosine term count (note: honest is 2 cosine evals, not 3 — unverified gap) | `_window.py:blackman_cost` |
+| `bartlett` | `4n` (weight 1.0) | DERIVED: compare + divide + add + select per sample (FMA=2, 4 ops/sample) | `_window.py:bartlett_cost` |
+| `blackman` | `40n` (weight 1.0) | DERIVED composite: 2 cosine evals at transcendental rate (16/elem each) + 8 mul/div/add per sample; all folded into flop_cost | `_window.py:blackman_cost` |
 | `hamming` | `2n` (weight 1.0) | DECLARED: 1 mul + 1 add per sample (FMA=2) | `_window.py:hamming_cost` |
 | `hanning` | `2n` (weight 1.0) | DECLARED: 1 mul + 1 add per sample (FMA=2) | `_window.py:hanning_cost` |
-| `kaiser` | `3n` (at weight 16.0 → `48n` charged) | DECLARED: Bessel I₀ per sample (note: composite honest ≈23n in-system — unverified gap) | `_window.py:kaiser_cost` |
+| `kaiser` | `23n` (weight 1.0) | DERIVED composite: 1 Bessel I₀ eval at transcendental tier (16/elem) + 7 scalar FLOPs per sample; folded into flop_cost | `_window.py:kaiser_cost` |
 
 Source: `src/flopscope/_window.py`.
 
@@ -373,9 +381,9 @@ Source: `src/flopscope/_window.py`.
 |---|---|---|---|
 | `interp` | `numel(xp) + m × ⌈log₂(numel(xp))⌉` (search + interpolate) | DERIVED | `_counting_ops.py` |
 | `histogram` (integer bins) | `n × ⌈log₂(bins)⌉ + n` (binning pass + sort-based bin-edge search) | DERIVED | `_counting_ops.py` |
-| `histogram` (string bins, e.g. `'auto'`) | `n` (flat scan only; estimator sort not charged — known gap) | DECLARED | `_counting_ops.py` |
-| `histogram2d`, `histogramdd` | similar to `histogram`; string-bins gap same | DERIVED / DECLARED | `_counting_ops.py` |
-| `histogram_bin_edges` | `n` | DECLARED; note: crashes with FlopscopeArray `bins=` argument (known gap) | `_counting_ops.py` |
+| `histogram` (string bins, e.g. `'auto'`) | `n × (2 + estimator_cost + ⌈log₂ resolved_bins⌉)` (deferred: resolved after the call; estimator costs: sturges/sqrt/rice=0, fd/auto=+1n, scott=+4n, doane=+6n, stone=+max(100,√n)n) | DERIVED | `_counting_ops.py` |
+| `histogram2d`, `histogramdd` | same as `histogram` per axis | DERIVED | `_counting_ops.py` |
+| `histogram_bin_edges` | `n × ⌈log₂ bins⌉` (integer bins) | DECLARED | `_counting_ops.py` |
 | `trapezoid`, `trapz` | `4 × numel(y)` | DERIVED: `(d·(y₁+y₂)/2).sum()` ≈ 3 elementwise ops + sum-reduce per point, charged as a clean 4/point upper bound | `_pointwise.py`; fixed in this branch |
 
 Source: `src/flopscope/_counting_ops.py`, `src/flopscope/_free_ops.py`.
@@ -395,13 +403,41 @@ Comparison = 1 FLOP convention; weight 1.0.
 
 ---
 
-### Counting (diff, ediff1d, count_nonzero)
+### Counting (diff, ediff1d, clip, allclose, isclose, count_nonzero, trace)
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
-| `count_nonzero` | `numel(input) − numel(output)` (reduction skeleton; comparison pass undercharged on axis reductions — unverified gap) | DECLARED | `_pointwise.py` |
-| `diff` | `prod(a.shape[:ax]) × (n×L − n×(n+1)/2) × prod(a.shape[ax+1:])`, `L = a.shape[ax]` | DERIVED: `n` passes of `L−k` subtractions; prepend/append padding not folded into L (known gap) | `_pointwise.py` |
-| `ediff1d` | `ary.size − 1 + size(to_begin) + size(to_end)` | DECLARED; note: to_begin/to_end do zero arithmetic — `+extra` term is an overcount (unverified gap) | `_pointwise.py` |
+| `clip` | `max(n_bounds, 1) × numel(output)` (1 compare-select per bound; n_bounds=0,1,2; floor of 1 ensures materialising copy is not free) | DERIVED | `_pointwise.py` |
+| `count_nonzero` | `numel(input)` (every element tested regardless of axis; comparison-scan model) | DECLARED | `_pointwise.py` |
+| `diff` | `prod(a.shape[:ax]) × (n×L − n×(n+1)/2) × prod(a.shape[ax+1:])`, `L = a.shape[ax]` | DERIVED: `n` passes of `L−k` subtractions | `_pointwise.py` |
+| `ediff1d` | `ary.size − 1 + size(to_begin) + size(to_end)` | DECLARED | `_pointwise.py` |
+| `gradient` | base: `sum_ax 2·S·(L−2)/L`; each coord-array axis adds a spacing surcharge (uniform: `+3(L−1)`; non-uniform: `+3S(L−2)/L + 10(L−2) + 3(L−1) + 4S/L`) | DERIVED | `_pointwise.py:gradient` |
+| `allclose` | `7·numel(broadcast) − 1` (6 FLOPs/elem tolerance core + numel−1 all-reduce) | DERIVED | `_counting_ops.py` |
+| `isclose` | `6·numel(broadcast)` (sub + 2·abs + mul + add + cmp per element) | DECLARED | `_pointwise.py` |
+| `trace` (numpy.trace) | `min(ax1, ax2) × n_traces` where `n_traces = size / (shape[ax1] × shape[ax2])` (batch-multiplied) | DERIVED | `_counting_ops.py:trace` |
+| `correlate` | mode-aware: `full` = `2nm−n−m+1`; `valid` = `(2·min−1)·(max−min+1)`; `same` = exact dot-length sum per numpy C layout | DERIVED per-mode | `_pointwise.py:_correlate_cost` |
+
+---
+
+### Copy and gather
+
+Operations that materialize or scatter memory — no arithmetic, but billed
+for the elements touched.  All use **weight 1.0** unless noted (weight 4.0
+for gather-tier scatter ops).
+
+| Op | flop_cost | basis | source |
+|---|---|---|---|
+| `insert` | `numel(output)` | DECLARED: np.insert allocates and copies arr + values | `_free_ops.py` |
+| `append` | `numel(output)` = arr.size + values.size | DECLARED: np.append = concatenate | `_free_ops.py` |
+| `delete` | `numel(output)` | DECLARED: surviving elements copied | `_free_ops.py` |
+| `copyto` | elements written (numel(dst) when `where=True`; count_nonzero(broadcast(where)) otherwise) | DECLARED | `_free_ops.py` |
+| `hstack` | `numel(output)` | DECLARED: allocates horizontally | `_free_ops.py` |
+| `column_stack` | `numel(output)` | DECLARED: allocates as 2-D column array | `_free_ops.py` |
+| `row_stack` | `numel(output)` (alias for vstack) | DECLARED | `_free_ops.py` |
+| `tril`, `triu` | `numel(output)` | DECLARED: numpy returns a copy | `_free_ops.py` |
+| `roll` | `numel(output)` | DECLARED: cyclic copy | `_free_ops.py` |
+| `put` | `numel(indices)` (scatter writes; mode-independent) | DECLARED | `_free_ops.py` |
+| `put_along_axis` | `(numel(arr) / arr.shape[axis]) × indices.shape[axis]`; `numel(indices)` when `axis=None` | DECLARED gather-tier (weight 4.0) | `_free_ops.py` |
 
 ---
 
@@ -417,8 +453,7 @@ Includes: `reshape`, `ravel`, `flatten`, `transpose`, `squeeze`,
 `ndim`, `shape`, `size`, `nbytes`, `itemsize`, `dtype`, `flags`, `base`,
 `data`, `ctypes`, `strides`, `T`, `linalg.diagonal`, `linalg.matrix_transpose`,
 `fft.fftfreq`, `fft.rfftfreq`, `fft.fftshift`, `fft.ifftshift`,
-`iscomplexobj`/`isrealobj` (dtype predicate, O(1); overcounted in current
-implementation — unverified gap), `isscalar`, `isfortran`, `ndim` attribute.
+`isscalar`, `isfortran`, `ndim` attribute.
 
 Source: `src/flopscope/_free_ops.py`.
 
@@ -521,79 +556,3 @@ Raw timings (median of 5 runs, float64, `numpy.random.default_rng(42)`):
 | `inv` | 2n³ | high (implied ~0.7–1.0n³) | G&VL §3.4 | overcharges; retained |
 | `det` | 2n³/3 | supports | G&VL §3.2 LU only | keep |
 
----
-
-## Known gaps under review
-
-The following findings were identified by the 2026-06 audit and await full
-adversarial verification.  Current billing is shown as stated; the suspected
-issue is noted.  These are not confirmed bugs — they are open items.
-
-**View-free family (copy ops billed 0)**
-
-| Op | current formula | suspected issue |
-|---|---|---|
-| `hstack` | 0 (view_free) | np.hstack allocates; should charge numel(output) like vstack/concatenate |
-| `column_stack` | 0 (view_free) | same allocation pattern as vstack |
-| `row_stack` | 0 (view_free) | alias of vstack, which charges numel(output); internal contradiction |
-| `tril`, `triu` | 0 (view_free) | np.tril/triu return copies (base is None); equivalent `where` is charged |
-| `roll` | 0 (despite registry declaring counted_custom numel(output)) | counted op charging 0; `@_counted_wrapper` missing |
-
-**Stats family (minor undercount)**
-
-| Op | current formula | suspected issue |
-|---|---|---|
-| `stats.lognorm.pdf` | 16/elem | kernel: log + exp per elem ≈43 FLOPs; calibration alpha 62.3 |
-| `stats.lognorm.cdf` | 16/elem | kernel: log + erf ≈40 FLOPs; calibration alpha 70.3 |
-| `stats.laplace.cdf` | 16/elem | two eager exp branches ≈40 FLOPs; calibration alpha 49.3 |
-| `stats.laplace.ppf` | 16/elem | two log branches ≈46 FLOPs; calibration alpha 71.3 |
-| `stats.uniform.cdf` | 1/elem (arithmetic) | clip=(sub+div+2 select)=4 FLOPs; calibration alpha 4.3 |
-
-**FFT (suspected overcounts)**
-
-| Op | current formula | suspected issue |
-|---|---|---|
-| `fft.hfft` | `5×n_out×⌈log₂ n_out⌉` | numpy implements hfft as irfft(conj(a)): real-output, should cost `5×(n_out/2)×⌈log₂ n_out⌉` (2× overcount) |
-| `fft.ihfft` | `5×(n/2)×⌈log₂ n⌉` (uses hfft_cost; possibly affected by same issue) | suspect same formula error as hfft |
-
-**Convolve / correlate (mode-blind)**
-
-| Op | current formula | suspected issue |
-|---|---|---|
-| `correlate` | `2nm−n−m` (full-mode cost) | charged for every mode; default is `mode='valid'` (~100× overcount on default call for equal-length arrays) |
-| `convolve` | `2nm−n−m+1` (full-mode cost) | same mode-blindness |
-
-**Gather-tier classification**
-
-| Op | current | suspected issue |
-|---|---|---|
-| `argwhere` | `numel(input)` at weight 4.0 | identical scan as `nonzero`/`flatnonzero` which use weight 1.0 (4× overcount) |
-| `fromiter` | `numel(output)` at weight 16.0 | Python-iterator copy; should be weight 1.0 (16× overcount) |
-
-**Linalg minor**
-
-| Op | current | suspected issue |
-|---|---|---|
-| `linalg.trace` | `min(m,n)` — no batch multiply | stacked `(B,m,n)` billed at single-matrix cost (B× undercount) |
-| `linalg.vector_norm` (fractional ord) | `2×numel` flat | general p-norm uses pow (≈16/elem); undercount ≈9× for non-standard ord |
-| `random.multivariate_normal` | d³/3 factorization (Cholesky) | numpy default is SVD (≈10d³); ≈30× undercount of factorization term for large d |
-| `random.choice` (replace=False) | sort_cost(n) | algorithm is Fisher-Yates O(n), not O(n log n) |
-
-**Other counting gaps**
-
-| Op | current | suspected issue |
-|---|---|---|
-| `count_nonzero` (axis) | reduction skeleton (numel−M) | comparison pass is numel regardless of axis; 2× undercount for short reduce axes |
-| `ediff1d` (to_begin/to_end) | `ary.size−1 + size(to_begin) + size(to_end)` | padding is pure copy (no arithmetic); `+extra` term is an overcount |
-| `diff` (prepend/append) | uses original `a.shape[ax]` | prepend/append extend the differenced axis; extra subtractions not counted |
-| `histogram` (string bins) | flat `n` | estimator resolution involves a sort O(n log n); not charged |
-| `isin`, `in1d` (small ar2) | sort model `(n+m)log(n+m)` | numpy uses masked-loop O(nm) when len(ar2) < 10×len(ar1)^0.145 |
-| `allclose` | `numel(broadcast)` at 1.0 | underlying isclose does 5 FLOPs/elem (sub+abs+mul+add+cmp) |
-| `clip` | `numel` | clip = 2 compare-selects; `fnp.minimum(fnp.maximum(...))` charges `2×numel` |
-| `append` | `values.size` | np.append = concatenate; should charge `arr.size + values.size` |
-| `insert` | `4×values.size` | np.insert materializes numel(output); should charge output size |
-| `delete` | `arr.size − result.size` | should charge `numel(output)` (surviving elements copied) |
-
-All items above are identified findings awaiting adversarial verification.
-Current billing amounts are what participants will see until fixes are merged
-and deployed.
