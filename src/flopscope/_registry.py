@@ -2815,17 +2815,17 @@ REGISTRY: dict[str, dict] = {
     "stats.norm.pdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Normal PDF; cost = numel(input).",
+        "notes": "Normal PDF; composite: 27 FLOPs/elem (exp + arithmetic), weight 1.0.",
     },
     "stats.norm.cdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Normal CDF; cost = numel(input).",
+        "notes": "Normal CDF; composite: 48 FLOPs/elem (erf rational approx + arithmetic), weight 1.0.",
     },
     "stats.norm.ppf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Normal PPF (inverse CDF); cost = numel(input).",
+        "notes": "Normal PPF (inverse CDF); composite: 83 FLOPs/elem (Acklam rational ndtri + Newton polish with erf+exp), weight 1.0.",
     },
     "stats.uniform.pdf": {
         "category": "counted_custom",
@@ -2915,7 +2915,7 @@ REGISTRY: dict[str, dict] = {
     "stats.lognorm.ppf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Log-normal PPF; cost = numel(input).",
+        "notes": "Log-normal PPF; composite: 106 FLOPs/elem (ndtri + exp), weight 1.0.",
     },
     "stats.truncnorm.pdf": {
         "category": "counted_custom",
@@ -2930,7 +2930,7 @@ REGISTRY: dict[str, dict] = {
     "stats.truncnorm.ppf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Truncated normal PPF; cost = numel(input).",
+        "notes": "Truncated normal PPF; composite: 81 FLOPs/elem (erf + ndtri rational approx + arithmetic), weight 1.0.",
     },
     # ------------------------------------------------------------------
     # blacklisted — poly functions

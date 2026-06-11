@@ -40,8 +40,10 @@ class TruncnormDistribution(ContinuousDistribution):
     -----
     ``a`` and ``b`` are standardized lower and upper bounds. The truncated
     support is ``[a * scale + loc, b * scale + loc]``, and both bounds appear
-    before ``loc`` and ``scale`` to match SciPy's signature. Each public
-    method deducts ``1 * numel(input)`` FLOPs from the active budget.
+    before ``loc`` and ``scale`` to match SciPy's signature. pdf and cdf
+    deduct ``1 * numel(input)`` FLOPs (unverified; pending follow-up audit).
+    ppf deducts ``81 * numel(input)`` FLOPs (composite: erf + ndtri rational
+    approx + arithmetic, weight 1.0; audit-2 verified).
     """
 
     def __init__(self):
@@ -146,7 +148,7 @@ class TruncnormDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.truncnorm.ppf(q, a, b, loc, scale)``.
-        FLOP cost: ``1 * numel(q)``.
+        FLOP cost: ``81 * numel(q)`` (composite: erf + ndtri rational approx + arithmetic, weight 1.0).
 
         Examples
         --------
@@ -156,7 +158,7 @@ class TruncnormDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.truncnorm.ppf(q, a=-1.0, b=1.0), 3)
         array([-0.442,  0.   ,  0.442])
         """
-        return self._deduct_and_call("ppf", 1, q, a, b, loc=loc, scale=scale)
+        return self._deduct_and_call("ppf", 81, q, a, b, loc=loc, scale=scale)
 
     def _compute_pdf(self, x, a, b, loc=0, scale=1):
         z = (x - loc) / scale

@@ -889,18 +889,18 @@ class TestRandom:
 
 
 class TestStats:
-    """All stats methods charge numel(input) * 1 = numel(input) FLOPs."""
+    """Stats methods charge composite cost_per_elem * numel(input) FLOPs (weight=1.0)."""
 
     def test_norm_pdf(self, we):
-        assert _cost_of(flopscope.stats.norm.pdf, numpy.random.rand(100)) == 100
+        assert _cost_of(flopscope.stats.norm.pdf, numpy.random.rand(100)) == 27 * 100
 
     def test_norm_cdf(self, we):
-        assert _cost_of(flopscope.stats.norm.cdf, numpy.random.rand(100)) == 100
+        assert _cost_of(flopscope.stats.norm.cdf, numpy.random.rand(100)) == 48 * 100
 
     def test_norm_ppf(self, we):
         assert (
             _cost_of(flopscope.stats.norm.ppf, numpy.random.rand(100) * 0.98 + 0.01)
-            == 100
+            == 83 * 100
         )
 
     def test_uniform_pdf(self, we):
@@ -944,8 +944,8 @@ class TestStats:
         )
 
     def test_scalar_input(self, we):
-        """Scalar input should charge 1 FLOP."""
-        assert _cost_of(flopscope.stats.norm.pdf, 0.0) == 1
+        """Scalar input should charge cost_per_elem FLOPs (norm.pdf=27)."""
+        assert _cost_of(flopscope.stats.norm.pdf, 0.0) == 27
 
 
 # ---------------------------------------------------------------------------

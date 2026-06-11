@@ -323,3 +323,22 @@ def test_diff_bills_and_accepts_prepend_append():
     with f.BudgetContext(flop_budget=10**9, quiet=True):
         out = np.asarray(fnp.diff(a, prepend=pre))
     np.testing.assert_array_equal(out, np.diff(np.asarray(a), prepend=np.asarray(pre)))
+
+
+# ---------------- stats composites (audit-2 verified) ----------------
+
+def test_stats_norm_family_composites():
+    x = fnp.asarray(np.random.rand(1000) * 0.8 + 0.1)
+    import flopscope.stats as fstats
+    assert cost(lambda: fstats.norm.ppf(x)) == 83 * 1000
+    assert cost(lambda: fstats.norm.pdf(x)) == 27 * 1000
+    assert cost(lambda: fstats.norm.cdf(x)) == 48 * 1000
+
+
+def test_stats_ppf_composites_packaged_weight_unity():
+    load_weights()
+    x = fnp.asarray(np.random.rand(100) * 0.8 + 0.1)
+    import flopscope.stats as fstats
+    assert cost(lambda: fstats.norm.ppf(x)) == 83 * 100
+    assert cost(lambda: fstats.truncnorm.ppf(x, -1.0, 1.0)) == 81 * 100
+    assert cost(lambda: fstats.lognorm.ppf(x, 0.5)) == 106 * 100

@@ -59,7 +59,7 @@ class TestLognormPpf:
         q = np.random.rand(60)
         with BudgetContext(flop_budget=10**6) as b:
             lognorm.ppf(q, 1.0)
-            assert b.flops_used == 60
+            assert b.flops_used == 106 * 60
 
 
 # ============================================================
