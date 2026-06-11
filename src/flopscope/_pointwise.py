@@ -2619,7 +2619,10 @@ def cross(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:
 
 
 attach_docstring(
-    cross, _np.cross, "counted_custom", "3 * numel(output) FLOPs (2 mul + 1 sub per output element)"
+    cross,
+    _np.cross,
+    "counted_custom",
+    "3 * numel(output) FLOPs (2 mul + 1 sub per output element)",
 )
 cross.__signature__ = _inspect.signature(_np.cross)  # pyright: ignore[reportFunctionMemberAccess]
 
@@ -2875,8 +2878,10 @@ def convolve(a: ArrayLike, v: ArrayLike, mode: str = "full") -> FlopscopeArray:
 
 
 attach_docstring(
-    convolve, _np.convolve, "counted_custom",
-    "per-mode FLOPs (FMA=2): full 2nm-n-m; valid (2*min-1)*(max-min+1); same exact dot-length sum"
+    convolve,
+    _np.convolve,
+    "counted_custom",
+    "per-mode FLOPs (FMA=2): full 2nm-n-m; valid (2*min-1)*(max-min+1); same exact dot-length sum",
 )
 
 
@@ -3031,8 +3036,10 @@ def corrcoef(x: ArrayLike, y: ArrayLike | None = None, **kwargs: Any) -> Flopsco
 
 
 attach_docstring(
-    corrcoef, _np.corrcoef, "counted_custom",
-    r"$(2 f^2 s + 2 f s) + 2 f^2 + f$ FLOPs (cov + normalization)"
+    corrcoef,
+    _np.corrcoef,
+    "counted_custom",
+    r"$(2 f^2 s + 2 f s) + 2 f^2 + f$ FLOPs (cov + normalization)",
 )
 corrcoef.__signature__ = _inspect.signature(_np.corrcoef)  # pyright: ignore[reportFunctionMemberAccess]
 
@@ -3054,7 +3061,9 @@ def cov(m: ArrayLike, y: ArrayLike | None = None, **kwargs: Any) -> FlopscopeArr
     return result  # type: ignore[return-value]  # wrapped at fnp.cov import time
 
 
-attach_docstring(cov, _np.cov, "counted_custom", r"$2 f^2 s + 2 f s$ FLOPs (Gram + centering)")
+attach_docstring(
+    cov, _np.cov, "counted_custom", r"$2 f^2 s + 2 f s$ FLOPs (Gram + centering)"
+)
 cov.__signature__ = _inspect.signature(_np.cov)  # pyright: ignore[reportFunctionMemberAccess]
 
 

@@ -993,9 +993,7 @@ def diagonal(
     budget = require_budget()
     _warn_if_symmetric(a, "diagonal")
     a_arr = _np.asarray(a)
-    with budget.deduct(
-        "diagonal", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)
-    ):
+    with budget.deduct("diagonal", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
         result = _call_numpy(
             _np.diagonal, _to_base_ndarray(a), offset=offset, axis1=axis1, axis2=axis2
         )

@@ -92,7 +92,9 @@ class TestLinalgDiagonal:
             from flopscope.numpy.linalg import diagonal
 
             diagonal(A)
-            assert budget.flops_used == 0  # view; 0 FLOPs (numpy.diagonal returns a read-only view)
+            assert (
+                budget.flops_used == 0
+            )  # view; 0 FLOPs (numpy.diagonal returns a read-only view)
 
 
 class TestLinalgMatrixTranspose:

@@ -477,7 +477,10 @@ OP_EXPECTATIONS: dict[str, tuple] = {
     "where": (lambda: fnp.where(_v100_pos, _v100, _zeros100), 100),
     "tile": (lambda: fnp.tile(_v100, 3), 300),
     "repeat": (lambda: fnp.repeat(_v100, 3), 300),
-    "corrcoef": (lambda: fnp.corrcoef(_sq10), 2410),  # 2*f^2*s+2*f*s+2*f^2+f; f=s=10 -> 2000+200+200+10
+    "corrcoef": (
+        lambda: fnp.corrcoef(_sq10),
+        2410,
+    ),  # 2*f^2*s+2*f*s+2*f^2+f; f=s=10 -> 2000+200+200+10
     "cov": (lambda: fnp.cov(_sq10), 2200),  # 2*f^2*s+2*f*s; f=s=10 -> 2000+200
     "linalg.trace": (lambda: fnp.linalg.trace(_sq10), 10),
     "trace": (lambda: fnp.trace(_sq10), 10),

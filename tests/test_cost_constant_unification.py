@@ -243,7 +243,9 @@ def test_intersect1d_sorts_both_inputs():
 
     a = fnp.asarray(np.random.rand(1000))
     b = fnp.asarray(np.random.rand(500))
-    assert cost(lambda: fnp.intersect1d(a, b)) == sort_cost(1000) + sort_cost(500) + sort_cost(1500)
+    assert cost(lambda: fnp.intersect1d(a, b)) == sort_cost(1000) + sort_cost(
+        500
+    ) + sort_cost(1500)
     assert cost(lambda: fnp.intersect1d(a, b, assume_unique=True)) == sort_cost(1500)
 
 
@@ -256,7 +258,10 @@ def test_mvn_factorization_is_svd():
     d, N = 50, 100
     fac = svd_cost(d, d, with_vectors=True)
     expected = fac + 2 * N * d * d + 16 * N * d
-    assert cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d), size=N)) == expected
+    assert (
+        cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d), size=N))
+        == expected
+    )
 
 
 # ---------------- norm-family batch dims ----------------
@@ -1480,7 +1485,9 @@ def test_cov_corrcoef_centering():
     """cov: 2*f^2*s + 2*f*s (Gram + centering); corrcoef: + 2*f^2 + f (normalization)."""
     X = fnp.asarray(np.random.rand(5, 100))
     assert cost(lambda: fnp.cov(X)) == 2 * 5 * 5 * 100 + 2 * 5 * 100
-    assert cost(lambda: fnp.corrcoef(X)) == (2 * 5 * 5 * 100 + 2 * 5 * 100) + 2 * 5 * 5 + 5
+    assert (
+        cost(lambda: fnp.corrcoef(X)) == (2 * 5 * 5 * 100 + 2 * 5 * 100) + 2 * 5 * 5 + 5
+    )
 
 
 def test_unwrap_passes():
@@ -1495,4 +1502,6 @@ def test_unwrap_passes():
 def test_poly_1d_exact_convolution():
     """poly (1-D from roots): (3*n^2+n)//2 FLOPs (exact iterated-convolution cost)."""
     r = fnp.asarray(np.random.rand(100))
-    assert cost(lambda: fnp.poly(r)) == (3 * 100 * 100 + 100) // 2  # was 2*100*100=20000
+    assert (
+        cost(lambda: fnp.poly(r)) == (3 * 100 * 100 + 100) // 2
+    )  # was 2*100*100=20000

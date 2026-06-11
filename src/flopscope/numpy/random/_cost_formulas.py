@@ -156,7 +156,9 @@ def multivariate_normal_flops(N: int, d: int) -> int:
     RandomState always SVD, module-level np.random.multivariate_normal) calls
     np.linalg.svd(cov) on the symmetric d×d covariance matrix.
     """
-    return _builtins.max(_svd_cost(d, d, with_vectors=True) + 2 * N * d * d + 16 * N * d, 1)
+    return _builtins.max(
+        _svd_cost(d, d, with_vectors=True) + 2 * N * d * d + 16 * N * d, 1
+    )
 
 
 def _multivariate_normal_cost(
