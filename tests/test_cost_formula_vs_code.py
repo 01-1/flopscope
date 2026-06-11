@@ -692,7 +692,8 @@ class TestPolynomial:
         assert _cost_of(we.polyfit, x, numpy.random.rand(20), 2) == 360
 
     def test_poly(self, we):
-        assert _cost_of(we.poly, numpy.ones(5)) == 50  # 2 * 5^2 = 50
+        # n=5: (3*25 + 5) // 2 = 80 // 2 = 40  (was 2*25=50)
+        assert _cost_of(we.poly, numpy.ones(5)) == 40
 
     def test_roots(self, we):
         # degree=4 (len=5 -> n=4); eigvals_cost(4)=10*64=640 (PROVISIONAL)
@@ -802,11 +803,15 @@ class TestWindows:
 
 class TestStatistics:
     def test_corrcoef_2f2s(self, we):
-        # 3 features, 10 samples → 2*3^2*10 = 180
-        assert _cost_of(we.corrcoef, numpy.random.rand(3, 10)) == 180
+        # 3 features, 10 samples → f=3, s=10
+        # cov: 2*9*10 + 2*3*10 = 180 + 60 = 240
+        # + normalization: 2*9 + 3 = 21
+        # total: 261
+        assert _cost_of(we.corrcoef, numpy.random.rand(3, 10)) == 261
 
     def test_cov_2f2s(self, we):
-        assert _cost_of(we.cov, numpy.random.rand(3, 10)) == 180
+        # 3 features, 10 samples → 2*f^2*s + 2*f*s = 2*9*10 + 2*3*10 = 180 + 60 = 240
+        assert _cost_of(we.cov, numpy.random.rand(3, 10)) == 240
 
     def test_interp_n_log_xp(self, we):
         # 3*10 + 10*ceil(log2(32)) = 30 + 10*5 = 80
@@ -1040,7 +1045,7 @@ def test_gradient_cost_pinned(shape, expected, we):
     assert _cost_of(we.gradient, f) == expected
 
 
-@pytest.mark.parametrize("size,expected", [(100, 700), (1000, 7000)])
+@pytest.mark.parametrize("size,expected", [(100, 1300), (1000, 13000)])
 def test_unwrap_cost_pinned(size, expected, we):
     a = we.asarray(numpy.zeros(size))
     assert _cost_of(we.unwrap, a) == expected

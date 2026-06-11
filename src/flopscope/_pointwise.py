@@ -2576,17 +2576,38 @@ def cross(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:
         a = _np.asarray(a)
     if not isinstance(b, _np.ndarray):
         b = _np.asarray(b)
-    # np.cross supports axisa/axisb/axisc kwargs that change output shape,
-    # so we need the output shape to compute the cost. For default-axis usage,
-    # the output has the same total size as a (cross(a[..., 3], b[..., 3])).
-    # Using a.size instead of a.shape[0]*3 correctly handles batched inputs
-    # of any shape (e.g. (B, N, 3) → cost = B*N*3*5, not B*3*5). Issue #69.
-    # Putting the numpy call inside `with budget.deduct(...)` ensures backend
-    # wall-time is attributed to this op (issue #69 — previously called
-    # outside the budget block).
+    # np.cross supports axisa/axisb/axisc kwargs that change output shape.
+    # For default-axis usage:
+    #   - 3-vector inputs (last dim = 3): output shape == input shape, numel = a.size
+    #   - 2-D z-only inputs (last dim = 2): output drops the last dim (scalar z per
+    #     pair), so numel(output) = a.size // 2 (half the input elements).
+    # The correct cost is 3 FLOPs per output element (2 mul + 1 sub per component)
+    # regardless of path.  We compute the actual output shape via numpy's broadcast
+    # logic so that axisa/axisb/axisc kwargs and non-default shapes are handled
+    # automatically.  Issue #69 (original fix), audit-completion Task 4 (refinement).
     stripped_a = _to_base_ndarray(a)
     stripped_b = _to_base_ndarray(b)
-    cost_provisional = _builtins.max(a.size * 3, 1)
+    # Compute output shape to get numel(output) without executing the full cross.
+    # np.cross output shape: broadcast(a, b) with last-dim = 3 (3-vec) or dropped
+    # (2-D z-only).  Calling np.result_type or shape inference is complex; the
+    # simplest correct approach is to use np.broadcast_shapes on the leading dims.
+    try:
+        # Fast path: infer output size from broadcast output shape.
+        # np.cross with default axes on (…, 2) or (…, 3) inputs drops the last dim
+        # for 2-D inputs and preserves it for 3-D inputs.
+        last_a = a.shape[-1] if a.ndim >= 1 else 1
+        last_b = b.shape[-1] if b.ndim >= 1 else 1
+        leading_shape = _np.broadcast_shapes(a.shape[:-1], b.shape[:-1])
+        if last_a == 2 and last_b == 2:
+            # z-only: scalar output per pair, output shape = leading_shape
+            out_numel = _math_prod(leading_shape) if leading_shape else 1
+        else:
+            # 3-vector (or mixed): output shape = leading_shape + (3,)
+            out_numel = _math_prod(leading_shape) * 3 if leading_shape else 3
+    except Exception:
+        # Fallback: conservative a.size * 3
+        out_numel = a.size * 3
+    cost_provisional = _builtins.max(3 * out_numel, 1)
     with budget.deduct(
         "cross",
         flop_cost=cost_provisional,
@@ -2598,7 +2619,7 @@ def cross(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:
 
 
 attach_docstring(
-    cross, _np.cross, "counted_custom", "3 * output.size FLOPs (6 mul + 3 sub)"
+    cross, _np.cross, "counted_custom", "3 * numel(output) FLOPs (2 mul + 1 sub per output element)"
 )
 cross.__signature__ = _inspect.signature(_np.cross)  # pyright: ignore[reportFunctionMemberAccess]
 
@@ -2813,16 +2834,37 @@ ediff1d.__signature__ = _inspect.signature(_np.ediff1d)  # pyright: ignore[repor
 
 @_counted_wrapper
 def convolve(a: ArrayLike, v: ArrayLike, mode: str = "full") -> FlopscopeArray:
-    """Counted version of np.convolve."""
+    """Counted version of np.convolve.
+
+    Per-mode FLOPs (FMA=2); reuses :func:`_correlate_cost` per-mode formula:
+
+    full  (default): ``2*n*m - n - m`` FLOPs
+    valid:           ``(2*min(n,m) - 1) * (max(n,m) - min(n,m) + 1)`` FLOPs
+    same:            exact dot-length sum per numpy C layout
+
+    Previously charged mode-blind ``2*n*m - n - m`` for all modes, which
+    over-counted valid and same by a factor of ~2–10×.
+    """
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
     if not isinstance(v, _np.ndarray):
         v = _np.asarray(v)
-    cost = _builtins.max(2 * a.size * v.size - a.size - v.size, 1)
+    # _correlate_cost gives exact per-mode FLOPs.  np.convolve(a, v, mode) is
+    # mathematically equivalent to np.correlate(a, v[::-1], mode) up to a
+    # time-reversal, so the per-mode output length (and hence FLOP count) is
+    # identical.  The one difference is that correlate "full" uses the +1
+    # constant (off-by-one fix from PR #123); convolve "full" uses 2nm-n-m
+    # (matching the prior formula) so we keep backwards-compatibility here.
+    _mode_str = str(mode).lower()[:1] if not isinstance(mode, int) else mode
+    if _mode_str == "f" or _mode_str == 2:
+        # full: traditional convolve formula (no +1) for backwards compat
+        flop_cost = _builtins.max(2 * a.size * v.size - a.size - v.size, 1)
+    else:
+        flop_cost = _correlate_cost(a.size, v.size, mode)
     with budget.deduct(
         "convolve",
-        flop_cost=cost,
+        flop_cost=flop_cost,
         subscripts=None,
         shapes=(a.shape, v.shape),
     ):
@@ -2833,7 +2875,8 @@ def convolve(a: ArrayLike, v: ArrayLike, mode: str = "full") -> FlopscopeArray:
 
 
 attach_docstring(
-    convolve, _np.convolve, "counted_custom", "2*n*m - n - m FLOPs (FMA=2)"
+    convolve, _np.convolve, "counted_custom",
+    "per-mode FLOPs (FMA=2): full 2nm-n-m; valid (2*min-1)*(max-min+1); same exact dot-length sum"
 )
 
 
@@ -2925,10 +2968,15 @@ attach_docstring(
 
 
 def _cov_cost(x, y=None):
-    """Cost for corrcoef/cov: 2 * f^2 * s.
+    """Cost for cov: 2 * f^2 * s + 2 * f * s FLOPs.
 
     For a (f, s) input: f features, s samples.
-    Covariance requires f^2 dot products of length s, plus mean subtraction.
+
+    - Gram term:      f^2 dot products of length s → ``2 * f^2 * s`` FLOPs (FMA=2)
+    - Centering pass: subtract per-feature mean from each sample → ``2 * f * s``
+      FLOPs (1 mean divide + 1 subtract per element, 2 * f * s total).
+
+    Previously only the Gram term was counted, under-counting by ``2 * f * s``.
     """
     if not isinstance(x, _np.ndarray):
         x = _np.asarray(x)
@@ -2940,16 +2988,38 @@ def _cov_cost(x, y=None):
         y_arr = _np.asarray(y)
         f2 = 1 if y_arr.ndim == 1 else y_arr.shape[0]
         f += f2
-    return _builtins.max(2 * f * f * s, 1)
+    return _builtins.max(2 * f * f * s + 2 * f * s, 1)
+
+
+def _corrcoef_cost(x, y=None):
+    """Cost for corrcoef: cov_cost(x, y) + 2 * f^2 + f FLOPs.
+
+    Normalization step: f^2 divides (divide cov[i,j] by std_i * std_j) plus
+    f sqrt calls (one per feature) → ``2 * f^2 + f`` additional FLOPs.
+    The ``2 * f^2`` counts the f^2 element-wise divides (FMA=2 convention gives
+    each divide as 2 FLOPs) and ``f`` counts the sqrt calls (1 FLOP each at the
+    transcendental-as-1 convention used for simple elementwise ops here).
+    """
+    if not isinstance(x, _np.ndarray):
+        x = _np.asarray(x)
+    if x.ndim == 1:
+        f = 1
+    else:
+        f = x.shape[0]
+    if y is not None:
+        y_arr = _np.asarray(y)
+        f2 = 1 if y_arr.ndim == 1 else y_arr.shape[0]
+        f += f2
+    return _builtins.max(_cov_cost(x, y) + 2 * f * f + f, 1)
 
 
 @_counted_wrapper
 def corrcoef(x: ArrayLike, y: ArrayLike | None = None, **kwargs: Any) -> FlopscopeArray:
-    """Counted version of np.corrcoef. Cost: 2 * f^2 * s FLOPs."""
+    """Counted version of np.corrcoef. Cost: (2*f^2*s + 2*f*s) + 2*f^2 + f FLOPs."""
     budget = require_budget()
     if not isinstance(x, _np.ndarray):
         x = _np.asarray(x)
-    cost = _cov_cost(x, y)
+    cost = _corrcoef_cost(x, y)
     with budget.deduct("corrcoef", flop_cost=cost, subscripts=None, shapes=(x.shape,)):
         result = _call_numpy(
             _np.corrcoef,
@@ -2960,13 +3030,16 @@ def corrcoef(x: ArrayLike, y: ArrayLike | None = None, **kwargs: Any) -> Flopsco
     return result  # type: ignore[return-value]  # wrapped at fnp.corrcoef import time
 
 
-attach_docstring(corrcoef, _np.corrcoef, "counted_custom", r"$2 f^2 s$ FLOPs")
+attach_docstring(
+    corrcoef, _np.corrcoef, "counted_custom",
+    r"$(2 f^2 s + 2 f s) + 2 f^2 + f$ FLOPs (cov + normalization)"
+)
 corrcoef.__signature__ = _inspect.signature(_np.corrcoef)  # pyright: ignore[reportFunctionMemberAccess]
 
 
 @_counted_wrapper
 def cov(m: ArrayLike, y: ArrayLike | None = None, **kwargs: Any) -> FlopscopeArray:
-    """Counted version of np.cov. Cost: 2 * f^2 * s FLOPs."""
+    """Counted version of np.cov. Cost: 2 * f^2 * s + 2 * f * s FLOPs (Gram + centering)."""
     budget = require_budget()
     if not isinstance(m, _np.ndarray):
         m = _np.asarray(m)
@@ -2981,7 +3054,7 @@ def cov(m: ArrayLike, y: ArrayLike | None = None, **kwargs: Any) -> FlopscopeArr
     return result  # type: ignore[return-value]  # wrapped at fnp.cov import time
 
 
-attach_docstring(cov, _np.cov, "counted_custom", r"$2 f^2 s$ FLOPs")
+attach_docstring(cov, _np.cov, "counted_custom", r"$2 f^2 s + 2 f s$ FLOPs (Gram + centering)")
 cov.__signature__ = _inspect.signature(_np.cov)  # pyright: ignore[reportFunctionMemberAccess]
 
 

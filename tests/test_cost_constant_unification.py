@@ -161,8 +161,10 @@ def test_roots_composes_eigvals():
 
 def test_poly_2d_inherits_new_eigvals_constant():
     M = fnp.asarray(np.random.rand(50, 50))
-    # poly 2-D = 2*n^2 + eigvals_cost(n) = 5000 + 10*125000
-    assert cost(lambda: fnp.poly(M)) == 2 * 50 * 50 + 10 * 50**3
+    # poly 2-D = poly_cost(n) + eigvals_cost(n)
+    # poly_cost(50) = (3*50^2+50)//2 = 7550//2 = 3775  (was 2*50^2=5000)
+    # eigvals_cost(50) = 10*50^3 = 1250000
+    assert cost(lambda: fnp.poly(M)) == (3 * 50 * 50 + 50) // 2 + 10 * 50**3
 
 
 # ---------------- Task 5: multivariate_normal ----------------
@@ -1415,3 +1417,52 @@ def test_mask_indices_formula():
     k = n * (n + 1) // 2  # 1275
     expected = 2 * n * n + 8 * k  # 15200
     assert cost(lambda: fnp.mask_indices(n, np.triu)) == expected
+
+
+# ---------------------------------------------------------------------------
+# Task 4: _pointwise + _polynomial cost fixes (6 ops)
+# ---------------------------------------------------------------------------
+
+
+def test_cross_2d_three_per_output():
+    """cross: 2-D z-only path charges 3/pair (not 6/pair); 3-vec unchanged."""
+    a = fnp.asarray(np.random.rand(100, 2))
+    b = fnp.asarray(np.random.rand(100, 2))
+    # z-only: output shape (100,), numel=100; 3*100=300 (was 3*200=600)
+    assert cost(lambda: fnp.cross(a, b)) == 3 * 100
+    a3 = fnp.asarray(np.random.rand(100, 3))
+    b3 = fnp.asarray(np.random.rand(100, 3))
+    # 3-vec: output shape (100,3), numel=300; 3*300=900 (unchanged)
+    assert cost(lambda: fnp.cross(a3, b3)) == 3 * (100 * 3)
+
+
+def test_convolve_mode_aware():
+    """convolve: per-mode cost via _correlate_cost; same/valid under-billed before fix."""
+    a = fnp.asarray(np.random.rand(100))
+    v = fnp.asarray(np.random.rand(50))
+    # full: same formula as before (2*n*m - n - m = 19750 for n=200,m=50 old test; here n=100,m=50)
+    assert cost(lambda: fnp.convolve(a, v, mode="full")) == 2 * 100 * 50 - 100 - 50
+    # valid: must be strictly less than the old mode-blind formula
+    assert cost(lambda: fnp.convolve(a, v, mode="valid")) < 2 * 100 * 50 - 100 - 50
+
+
+def test_cov_corrcoef_centering():
+    """cov: 2*f^2*s + 2*f*s (Gram + centering); corrcoef: + 2*f^2 + f (normalization)."""
+    X = fnp.asarray(np.random.rand(5, 100))
+    assert cost(lambda: fnp.cov(X)) == 2 * 5 * 5 * 100 + 2 * 5 * 100
+    assert cost(lambda: fnp.corrcoef(X)) == (2 * 5 * 5 * 100 + 2 * 5 * 100) + 2 * 5 * 5 + 5
+
+
+def test_unwrap_passes():
+    """unwrap: 13 one-FLOP ufunc passes per element
+    (diff, +period/2, mod, -period/2, ==low, >0, &, select, sub, abs, <discont, select, cumsum)
+    plus final add of correction to p: total 13 passes on N-1 elements, charged as 13*N.
+    """
+    v = fnp.asarray(np.random.rand(1000))
+    assert cost(lambda: fnp.unwrap(v)) == 13 * 1000
+
+
+def test_poly_1d_exact_convolution():
+    """poly (1-D from roots): (3*n^2+n)//2 FLOPs (exact iterated-convolution cost)."""
+    r = fnp.asarray(np.random.rand(100))
+    assert cost(lambda: fnp.poly(r)) == (3 * 100 * 100 + 100) // 2  # was 2*100*100=20000

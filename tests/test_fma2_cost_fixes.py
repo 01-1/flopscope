@@ -127,7 +127,8 @@ def test_vander_column_count():
 
 def test_poly_runs_on_flopscope_array_and_bills_1d():
     r = fnp.asarray(np.random.rand(100))
-    assert cost(lambda: fnp.poly(r)) == 2 * 100 * 100  # 2*n^2 (1-D build-from-roots)
+    # n=100: (3*100^2 + 100) // 2 = 15050  (was 2*100^2=20000)
+    assert cost(lambda: fnp.poly(r)) == (3 * 100 * 100 + 100) // 2
 
 
 def test_poly_2d_includes_eigvals():

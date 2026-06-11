@@ -23,22 +23,43 @@ def unwrap_cost(shape: tuple[int, ...]) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: ``7 * numel(input)``.
+        Estimated FLOP count: ``13 * numel(input)``.
 
     Notes
     -----
-    NumPy's unwrap (``numpy.lib._function_base_impl.unwrap``) does
-    approximately 6 full-array ufunc passes: ``diff``, ``mod``, ``add``,
-    ``subtract``, ``cumsum``, and ``where``. The ``where`` pass with two
-    real-array arguments charges 2*(N-1) elements rather than N-1,
-    bringing the effective total to ~7*(N-1). We charge a fixed
-    ``7 * numel`` to approximate the sum without tracking numpy's
-    internal implementation byte-by-byte. Issue #69.
+    NumPy's unwrap (``numpy.lib._function_base_impl.unwrap``) performs 13
+    one-FLOP ufunc passes over the N-1 element ``dd = diff(p)`` array, then
+    one final add of the cumulative correction into the output.  Counting
+    each named ufunc call as one pass:
+
+    1.  ``diff``            — subtract adjacent elements (N-1 elements)
+    2.  ``dd - low``        — subtract scalar ``interval_low`` from dd
+    3.  ``mod(..., period)``— elementwise modulo
+    4.  ``+ interval_low``  — add scalar back
+    5.  ``ddmod == low``    — elementwise compare (boundary check)
+    6.  ``dd > 0``          — elementwise compare
+    7.  ``& ``              — bitwise-and of two bool arrays
+    8.  ``copyto/select``   — conditional write (boundary fix)
+    9.  ``ddmod - dd``      — elementwise subtract (ph_correct)
+    10. ``abs(dd)``         — elementwise absolute value
+    11. ``< discont``       — elementwise compare
+    12. ``copyto/select``   — conditional write (small-jump zeroing)
+    13. ``cumsum``          — prefix-sum scan
+
+    The ``p[slice1] + ph_correct.cumsum(axis)`` expression (final output
+    materialization) involves one add pass but is treated as part of the
+    output-write cost — following the convention that the output buffer
+    fill is attributed to the issuing op.  Charging all 13 op-passes
+    against ``numel(input)`` rather than ``N-1`` avoids tracking the
+    edge-element correction (one extra element) and gives a clean formula.
+
+    Prior value was ``7 * numel`` (under-counted by ~2×). Audit-completion
+    Task 4 (2026-06-12).
     """
     numel = 1
     for d in shape:
         numel *= d
-    return max(7 * numel, 1)
+    return max(13 * numel, 1)
 
 
 @_counted_wrapper
@@ -61,7 +82,7 @@ def unwrap(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(unwrap, _np.unwrap, "counted_custom", "7 * numel(input) FLOPs")
+attach_docstring(unwrap, _np.unwrap, "counted_custom", "13 * numel(input) FLOPs")
 
 import sys as _sys  # noqa: E402
 
