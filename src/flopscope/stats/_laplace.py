@@ -25,10 +25,11 @@ class LaplaceDistribution(ContinuousDistribution):
     -----
     ``loc`` is the center and ``scale`` controls the exponential decay away
     from that center. Per-method FLOP costs (weight 1.0): pdf deducts
-    ``1 * numel(input)``, cdf deducts ``40 * numel(input)`` (composite: two
-    eager exp branches + 8 arith/cmp/select; audit-2 verified), ppf deducts
-    ``51 * numel(input)`` (composite: two eager log branches + edge selects;
-    audit-2 verified).
+    ``22 * numel(input)`` (composite: |x-loc|(3) + exp(-z)(17) +
+    /(2*scale)(2), FMA=2), cdf deducts ``40 * numel(input)`` (composite:
+    two eager exp branches + 8 arith/cmp/select; audit-2 verified), ppf
+    deducts ``51 * numel(input)`` (composite: two eager log branches + edge
+    selects; audit-2 verified).
     """
 
     def __init__(self):
@@ -54,7 +55,8 @@ class LaplaceDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.laplace.pdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``22 * numel(x)`` (composite: |x-loc|(3) + exp(-z)(17) +
+        /(2*scale)(2), FMA=2, weight 1.0).
 
         Examples
         --------
@@ -64,7 +66,7 @@ class LaplaceDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.laplace.pdf(x), 3)
         array([0.184, 0.5  , 0.184])
         """
-        return self._deduct_and_call("pdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("pdf", 22, x, loc=loc, scale=scale)
 
     def cdf(self, x, loc=0, scale=1):
         """Evaluate the cumulative distribution function.

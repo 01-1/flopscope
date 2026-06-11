@@ -964,7 +964,8 @@ class TestStats:
         assert _cost_of(flopscope.stats.uniform.ppf, numpy.random.rand(100)) == 100
 
     def test_expon_pdf(self, we):
-        assert _cost_of(flopscope.stats.expon.pdf, numpy.random.rand(100)) == 100
+        # old: == 100 (cost_per_elem=1, weight=16.0); now: 22*100 (composite, weight 1.0)
+        assert _cost_of(flopscope.stats.expon.pdf, numpy.random.rand(100)) == 22 * 100
 
     def test_cauchy_pdf(self, we):
         assert (
@@ -972,7 +973,8 @@ class TestStats:
         )  # pure-arithmetic: 6 FLOPs/elem
 
     def test_logistic_cdf(self, we):
-        assert _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 100
+        # old: == 100 (cost_per_elem=1, weight=16.0); now: 21*100 (composite, weight 1.0)
+        assert _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 21 * 100
 
     def test_laplace_ppf(self, we):
         assert (
@@ -991,9 +993,10 @@ class TestStats:
         )
 
     def test_truncnorm_cdf(self, we):
+        # old: == 100 (cost_per_elem=1, weight=16.0); now: 51*100 (composite, weight 1.0)
         assert (
             _cost_of(flopscope.stats.truncnorm.cdf, numpy.random.rand(100), -2, 2)
-            == 100
+            == 51 * 100
         )
 
     def test_scalar_input(self, we):

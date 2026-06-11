@@ -1174,3 +1174,165 @@ def test_choice_replace_false_with_p_uses_sort_cost():
     assert cost(lambda: fnp.random.choice(n, size=5, replace=False, p=p)) == sort_cost(
         n
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 1: stats composite family (13 ops) — PR fix/cost-model-gaps
+# Each op: cost_per_elem moved from 1 to K; weight 16.0 → 1.0.
+# K derived from structural FMA=2 count (transcendental = 16 FLOPs).
+# ---------------------------------------------------------------------------
+
+
+def test_stats_expon_pdf_composite():
+    """expon.pdf: z=(x-loc)/scale(2) + exp(-z)(17) + /scale(1) + where(2) = 22/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.random.rand(1000) * 3.0)
+        assert cost(lambda: fstats.expon.pdf(x)) == 22 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_expon_cdf_composite():
+    """expon.cdf: z=(x-loc)/scale(2) + exp(-z)(17) + 1-exp(1) + where(2) = 22/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.random.rand(1000) * 3.0)
+        assert cost(lambda: fstats.expon.cdf(x)) == 22 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_expon_ppf_composite():
+    """expon.ppf: loc-scale*log1p(-q)(19) + 3 where/cmp/and(8) = 27/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        q = fnp.asarray(np.random.rand(1000) * 0.98 + 0.01)
+        assert cost(lambda: fstats.expon.ppf(q)) == 27 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_cauchy_cdf_composite():
+    """cauchy.cdf: z(2) + arctan(16) + /pi(1) + 0.5+(1) = 20/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+        assert cost(lambda: fstats.cauchy.cdf(x)) == 20 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_cauchy_ppf_composite():
+    """cauchy.ppf: q-0.5(1)+pi*(1)+tan(16)+loc+scale*(2)+3 where(8) = 28/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        q = fnp.asarray(np.random.rand(1000) * 0.98 + 0.01)
+        assert cost(lambda: fstats.cauchy.ppf(q)) == 28 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_logistic_pdf_composite():
+    """logistic.pdf: z(2)+exp(-z)(17)+(1+ez)(1)+sq(1)+scale*(1)+ez/denom(1) = 23/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+        assert cost(lambda: fstats.logistic.pdf(x)) == 23 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_logistic_cdf_composite():
+    """logistic.cdf: z(2)+exp(-z)(17)+1+ez(1)+1/denom(1) = 21/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+        assert cost(lambda: fstats.logistic.cdf(x)) == 21 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_logistic_ppf_composite():
+    """logistic.ppf: 1-q(1)+q/...(1)+log(16)+scale*(1)+loc+(1)+3 where(8) = 28/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        q = fnp.asarray(np.random.rand(1000) * 0.98 + 0.01)
+        assert cost(lambda: fstats.logistic.ppf(q)) == 28 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_laplace_pdf_composite():
+    """laplace.pdf: |x-loc|(3)+exp(-z)(17)+/(2*scale)(2) = 22/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+        assert cost(lambda: fstats.laplace.pdf(x)) == 22 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_truncnorm_pdf_composite():
+    """truncnorm.pdf: z(2)+std_norm_pdf(z)(20)+phi_denom(scalar)+div(1)+bounds(4) = 28/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.random.rand(1000) * 0.6 + 0.2)
+        assert cost(lambda: fstats.truncnorm.pdf(x, -1.0, 1.0)) == 28 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_truncnorm_cdf_composite():
+    """truncnorm.cdf: z(2)+std_norm_cdf(z)(46)+result(3)+2 where(4) = 51/elem (α=50.6), weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.random.rand(1000) * 0.6 + 0.2)
+        assert cost(lambda: fstats.truncnorm.cdf(x, -1.0, 1.0)) == 51 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_composite_family_packaged_weight_unity():
+    """With packaged weights loaded, all 13 composite constants hold (weight=1.0)."""
+    load_weights()
+    import flopscope.stats as fstats
+
+    x = fnp.asarray(np.random.rand(100) * 3.0)
+    q = fnp.asarray(np.random.rand(100) * 0.98 + 0.01)
+    xl = fnp.asarray(np.linspace(-3.0, 3.0, 100))
+    xt = fnp.asarray(np.random.rand(100) * 0.6 + 0.2)
+
+    assert cost(lambda: fstats.expon.pdf(x)) == 22 * 100
+    assert cost(lambda: fstats.expon.cdf(x)) == 22 * 100
+    assert cost(lambda: fstats.expon.ppf(q)) == 27 * 100
+    assert cost(lambda: fstats.cauchy.cdf(xl)) == 20 * 100
+    assert cost(lambda: fstats.cauchy.ppf(q)) == 28 * 100
+    assert cost(lambda: fstats.logistic.pdf(xl)) == 23 * 100
+    assert cost(lambda: fstats.logistic.cdf(xl)) == 21 * 100
+    assert cost(lambda: fstats.logistic.ppf(q)) == 28 * 100
+    assert cost(lambda: fstats.laplace.pdf(xl)) == 22 * 100
+    assert cost(lambda: fstats.truncnorm.pdf(xt, -1.0, 1.0)) == 28 * 100
+    assert cost(lambda: fstats.truncnorm.cdf(xt, -1.0, 1.0)) == 51 * 100

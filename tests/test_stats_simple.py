@@ -97,7 +97,8 @@ class TestExponPpf:
         x = np.random.rand(200)
         with BudgetContext(flop_budget=10**6) as b:
             expon.pdf(x)
-            assert b.flops_used == 200
+            # old: == 200 (cost_per_elem=1, weight=16.0); now: 22*200 (composite, weight 1.0)
+            assert b.flops_used == 22 * 200
 
 
 # ============================================================
@@ -143,7 +144,8 @@ class TestCauchyPpf:
         x = np.random.randn(50)
         with BudgetContext(flop_budget=10**6) as b:
             cauchy.cdf(x)
-            assert b.flops_used == 50
+            # old: == 50 (cost_per_elem=1, weight=16.0); now: 20*50 (composite, weight 1.0)
+            assert b.flops_used == 20 * 50
 
 
 # ============================================================
@@ -189,7 +191,8 @@ class TestLogisticPpf:
         q = np.random.rand(80)
         with BudgetContext(flop_budget=10**6) as b:
             logistic.ppf(q)
-            assert b.flops_used == 80
+            # old: == 80 (cost_per_elem=1, weight=16.0); now: 28*80 (composite, weight 1.0)
+            assert b.flops_used == 28 * 80
 
 
 # ============================================================
@@ -235,4 +238,5 @@ class TestLaplacePpf:
         x = np.random.randn(150)
         with BudgetContext(flop_budget=10**6) as b:
             laplace.pdf(x)
-            assert b.flops_used == 150
+            # old: == 150 (cost_per_elem=1, weight=16.0); now: 22*150 (composite, weight 1.0)
+            assert b.flops_used == 22 * 150
