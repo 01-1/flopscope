@@ -417,8 +417,14 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         10 * 9**3,  # 7290
     ),
     # ---- Window (flop_cost at weight=1.0) ---------------------------------
-    "bartlett": (lambda: fnp.bartlett(50), 4 * 50),  # compare+div+add+select per sample (FMA=2)
-    "blackman": (lambda: fnp.blackman(50), 40 * 50),  # 2 cosine evals @16 + 8 arith per sample
+    "bartlett": (
+        lambda: fnp.bartlett(50),
+        4 * 50,
+    ),  # compare+div+add+select per sample (FMA=2)
+    "blackman": (
+        lambda: fnp.blackman(50),
+        40 * 50,
+    ),  # 2 cosine evals @16 + 8 arith per sample
     "hamming": (lambda: fnp.hamming(50), 2 * 50),  # 1 mul + 1 cos
     "hanning": (lambda: fnp.hanning(50), 2 * 50),
     "kaiser": (lambda: fnp.kaiser(50, 14), 23 * 50),  # Bessel I0 @16 + 7 arith (FMA=2)

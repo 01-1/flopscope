@@ -75,7 +75,9 @@ def blackman(M: int) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(blackman, _np.blackman, "counted_custom", "40n FLOPs (2 cos + 8 arith per sample)")
+attach_docstring(
+    blackman, _np.blackman, "counted_custom", "40n FLOPs (2 cos + 8 arith per sample)"
+)
 
 
 def hamming_cost(n: int) -> int:

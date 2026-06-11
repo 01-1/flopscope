@@ -217,7 +217,9 @@ class TestWindowConsistency:
     def test_bartlett(self):
         n = 1000
         runtime_cost = _run_and_get_cost(fnp.bartlett, n)
-        assert runtime_cost == 4 * n, f"bartlett({n}): runtime={runtime_cost}, expected={4*n}"
+        assert runtime_cost == 4 * n, (
+            f"bartlett({n}): runtime={runtime_cost}, expected={4 * n}"
+        )
 
 
 # ---------------------------------------------------------------------------

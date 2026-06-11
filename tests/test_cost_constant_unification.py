@@ -903,13 +903,13 @@ def test_isclose_6per_elem():
 
 def test_histogram_string_bins_charges_more_than_int():
     """histogram with string estimator bins must charge >= int-bins equivalent + 2n."""
-    import math
+
     rng = np.random.default_rng(42)
     a = rng.standard_normal(1000)
     # 'auto' resolves to some nbins; must charge strictly more than int-path
-    nb = len(np.histogram_bin_edges(a, 'auto')) - 1
+    nb = len(np.histogram_bin_edges(a, "auto")) - 1
     int_cost = cost(lambda: fnp.histogram(a, bins=nb))
-    str_cost = cost(lambda: fnp.histogram(a, bins='auto'))
+    str_cost = cost(lambda: fnp.histogram(a, bins="auto"))
     assert str_cost >= int_cost + 2 * 1000, (
         f"string 'auto' cost {str_cost} not >= int cost {int_cost} + 2n=2000"
     )
@@ -920,7 +920,7 @@ def test_histogram_bin_edges_wrapped_bins_no_crash():
     a = np.random.rand(100)
     edges = fnp.linspace(0.0, 1.0, 11)
     with f.BudgetContext(flop_budget=10**12, quiet=True) as b:
-        result = fnp.histogram_bin_edges(a, bins=edges)
+        result = fnp.histogram_bin_edges(a, bins=edges)  # type: ignore[arg-type]
     plain = np.histogram_bin_edges(a, bins=np.linspace(0.0, 1.0, 11))
     np.testing.assert_array_equal(np.asarray(result), plain)
 
@@ -930,7 +930,7 @@ def test_histogram_wrapped_bins_no_crash():
     a = np.random.rand(100)
     edges = fnp.linspace(0.0, 1.0, 11)
     with f.BudgetContext(flop_budget=10**12, quiet=True):
-        counts, out_edges = fnp.histogram(a, bins=edges)
+        counts, out_edges = fnp.histogram(a, bins=edges)  # type: ignore[arg-type]
     plain_counts, plain_edges = np.histogram(a, bins=np.linspace(0.0, 1.0, 11))
     np.testing.assert_array_equal(np.asarray(counts), plain_counts)
 
@@ -955,6 +955,7 @@ def test_kaiser_23n():
 def test_hfft_half_cost():
     """fft.hfft must bill rfft_cost(n_out) not full complex cost."""
     import math
+
     # default n_out = 2*(n_in - 1) = 126 for input length 64
     a = np.random.rand(64).astype(complex)
     # rfft_cost(126) = 5 * (126//2) * ceil(log2(126)) = 5 * 63 * 7 = 2205
@@ -968,6 +969,7 @@ def test_hfft_half_cost():
 def test_ihfft_rfft_cost():
     """fft.ihfft must bill rfft_cost(n) not full complex cost."""
     import math
+
     a = np.random.rand(64)
     # rfft_cost(64) = 5 * 32 * 6 = 960
     expected = 5 * (64 // 2) * math.ceil(math.log2(64))

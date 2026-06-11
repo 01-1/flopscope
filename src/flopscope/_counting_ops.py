@@ -173,7 +173,9 @@ def histogram(
     elif isinstance(bins, _builtins.str):
         # Deferred cost: resolve nbins from returned edges, then charge
         # 2n (min/max scan) + estimator_cost*n + n*ceil_log2(nbins_resolved)
-        with budget.deduct_after("histogram", subscripts=None, shapes=(a.shape,)) as _op:
+        with budget.deduct_after(
+            "histogram", subscripts=None, shapes=(a.shape,)
+        ) as _op:
             result = _call_numpy(
                 _np.histogram,
                 a,

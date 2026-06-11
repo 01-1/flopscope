@@ -28,10 +28,14 @@ class TestOpsLists:
 
 class TestAnalyticalCost:
     def test_bartlett_cost(self):
-        assert _ANALYTICAL_COST["bartlett"] == 4  # compare+div+add+select per sample (FMA=2)
+        assert (
+            _ANALYTICAL_COST["bartlett"] == 4
+        )  # compare+div+add+select per sample (FMA=2)
 
     def test_blackman_cost(self):
-        assert _ANALYTICAL_COST["blackman"] == 40  # 2 cos evals @16 + 8 arith per sample
+        assert (
+            _ANALYTICAL_COST["blackman"] == 40
+        )  # 2 cos evals @16 + 8 arith per sample
 
     def test_hamming_cost(self):
         assert _ANALYTICAL_COST["hamming"] == 1
@@ -40,7 +44,9 @@ class TestAnalyticalCost:
         assert _ANALYTICAL_COST["hanning"] == 1
 
     def test_kaiser_cost(self):
-        assert _ANALYTICAL_COST["kaiser"] == 23  # Bessel I0 @16 + 7 arith per sample (FMA=2)
+        assert (
+            _ANALYTICAL_COST["kaiser"] == 23
+        )  # Bessel I0 @16 + 7 arith per sample (FMA=2)
 
     def test_all_ops_have_cost(self):
         for op in WINDOW_OPS:

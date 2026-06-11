@@ -1216,7 +1216,12 @@ def isclose(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray | bool:
     return _wrap_result(result, symmetry=out_symmetry)  # type: ignore[return-value]
 
 
-attach_docstring(isclose, _np.isclose, "counted_unary", "6*numel(output) FLOPs (tolerance core: sub+2*abs+mul+add+cmp)")
+attach_docstring(
+    isclose,
+    _np.isclose,
+    "counted_unary",
+    "6*numel(output) FLOPs (tolerance core: sub+2*abs+mul+add+cmp)",
+)
 isclose.__signature__ = _inspect.signature(_np.isclose)  # pyright: ignore[reportFunctionMemberAccess]
 
 

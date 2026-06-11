@@ -184,6 +184,7 @@ class TestHistogram:
         # bins="auto" → cost = n*(2 + estimator + ceil_log2(resolved_bins))
         # "auto" estimator cost = 1 (percentile), must be >= int-path equivalent
         import math
+
         a = numpy.random.randn(100)
         n = 100
         nb = len(numpy.histogram_bin_edges(a, "auto")) - 1
