@@ -2576,45 +2576,21 @@ def cross(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:
         a = _np.asarray(a)
     if not isinstance(b, _np.ndarray):
         b = _np.asarray(b)
-    # np.cross supports axisa/axisb/axisc kwargs that change output shape.
-    # For default-axis usage:
-    #   - 3-vector inputs (last dim = 3): output shape == input shape, numel = a.size
-    #   - 2-D z-only inputs (last dim = 2): output drops the last dim (scalar z per
-    #     pair), so numel(output) = a.size // 2 (half the input elements).
-    # The correct cost is 3 FLOPs per output element (2 mul + 1 sub per component)
-    # regardless of path.  We compute the actual output shape via numpy's broadcast
-    # logic so that axisa/axisb/axisc kwargs and non-default shapes are handled
-    # automatically.  Issue #69 (original fix), audit-completion Task 4 (refinement).
+    # Cost is 3 FLOPs per output element (2 mul + 1 sub per component): the
+    # 3-vector path keeps the vector dim, the 2-D z-only path drops it (one
+    # scalar z per pair); both reduce to 3 × numel(output). Bill from the ACTUAL
+    # result so axisa/axisb/axisc and any broadcast shape are exact — inferring
+    # the output shape from input dims undercounts when the vector axis is moved
+    # by an axis kwarg. Issue #69 (original), audit-completion Task 4 (numel out).
     stripped_a = _to_base_ndarray(a)
     stripped_b = _to_base_ndarray(b)
-    # Compute output shape to get numel(output) without executing the full cross.
-    # np.cross output shape: broadcast(a, b) with last-dim = 3 (3-vec) or dropped
-    # (2-D z-only).  Calling np.result_type or shape inference is complex; the
-    # simplest correct approach is to use np.broadcast_shapes on the leading dims.
-    try:
-        # Fast path: infer output size from broadcast output shape.
-        # np.cross with default axes on (…, 2) or (…, 3) inputs drops the last dim
-        # for 2-D inputs and preserves it for 3-D inputs.
-        last_a = a.shape[-1] if a.ndim >= 1 else 1
-        last_b = b.shape[-1] if b.ndim >= 1 else 1
-        leading_shape = _np.broadcast_shapes(a.shape[:-1], b.shape[:-1])
-        if last_a == 2 and last_b == 2:
-            # z-only: scalar output per pair, output shape = leading_shape
-            out_numel = _math_prod(leading_shape) if leading_shape else 1
-        else:
-            # 3-vector (or mixed): output shape = leading_shape + (3,)
-            out_numel = _math_prod(leading_shape) * 3 if leading_shape else 3
-    except Exception:
-        # Fallback: conservative a.size * 3
-        out_numel = a.size * 3
-    cost_provisional = _builtins.max(3 * out_numel, 1)
-    with budget.deduct(
-        "cross",
-        flop_cost=cost_provisional,
-        subscripts=None,
-        shapes=(a.shape, b.shape),
-    ):
+    with budget.deduct_after(
+        "cross", subscripts=None, shapes=(a.shape, b.shape)
+    ) as _op:
         result = _call_numpy(_np.cross, stripped_a, stripped_b, **kwargs)
+        _op.set_cost(
+            _builtins.max(3 * (result.size if hasattr(result, "size") else 1), 1)
+        )
     return result  # type: ignore[return-value]
 
 
