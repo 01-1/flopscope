@@ -13,7 +13,7 @@ from typing import Any
 
 import numpy as _np
 
-from flopscope._flops import sort_cost as _sort_cost
+from flopscope._flops import _ceil_log2 as _ceil_log2, sort_cost as _sort_cost
 
 
 def _numel_output(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> int:
@@ -96,12 +96,33 @@ def _choice_cost(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> 
     # Generator.choice:    choice(a, size=None, replace=True, p=None, axis=0, shuffle=True)
     # RandomState.choice:  choice(a, size=None, replace=True, p=None)
     # `replace` is the 3rd positional or the `replace` kwarg.
+    # `p`       is the 4th positional or the `p` kwarg.
     if len(args) >= 3:
         replace = bool(args[2])
     else:
         replace = bool(kwargs.get("replace", True))
+    if len(args) >= 4:
+        p = args[3]
+    else:
+        p = kwargs.get("p", None)
     if replace:
-        return _numel_output(args, kwargs, result)
+        base = _numel_output(args, kwargs, result)
+        if p is not None:
+            # numpy builds a CDF over n-element pool: cumsum + normalise + final pass
+            # (3*n) then binary-searches each draw (size * ceil(log2(n))).
+            a = args[0] if args else kwargs.get("a")
+            if isinstance(a, (int, _np.integer)):
+                n = int(a)
+            elif isinstance(a, _np.ndarray):
+                n = int(a.shape[0]) if a.ndim > 0 else 1
+            elif hasattr(a, "__len__"):
+                n = len(a)
+            else:
+                n = 1
+            n = _builtins.max(n, 1)
+            draws = _builtins.max(base, 1)
+            base += 3 * n + draws * _ceil_log2(n)
+        return base
     return _sort_cost_formula(args, kwargs, result)
 
 

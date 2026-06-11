@@ -297,3 +297,29 @@ def test_select_bills_broadcast_output():
     conds = [np.asarray(x) < 0.3, np.asarray(x) > 0.7]
     # scalar choices used to collapse the charge; output is 1000 elements
     assert cost(lambda: fnp.select(conds, [0.0, 1.0], default=0.5)) == 1000
+
+
+# ---------------- choice(p=) + diff prepend/append (audit-2 verified) ----------------
+
+def test_choice_weighted_bills_cdf_build():
+    from flopscope._flops import _ceil_log2
+    n, draws = 1000, 10
+    p = np.full(n, 1.0 / n)
+    unweighted = cost(lambda: fnp.random.choice(n, size=draws))
+    weighted = cost(lambda: fnp.random.choice(n, size=draws, p=p))
+    assert weighted == unweighted + 3 * n + draws * _ceil_log2(n)
+    g = cost(lambda: fnp.random.default_rng(0).choice(n, size=draws, p=p))
+    r = cost(lambda: fnp.random.RandomState(0).choice(n, size=draws, p=p))
+    assert g == weighted and r == weighted
+
+
+def test_diff_bills_and_accepts_prepend_append():
+    a = fnp.asarray(np.random.rand(1000))
+    plain = cost(lambda: fnp.diff(a))                       # 999
+    pre = fnp.asarray(np.random.rand(5))
+    padded = cost(lambda: fnp.diff(a, prepend=pre, append=0.0))  # L=1006 -> 1005
+    assert plain == 999 and padded == 1005
+    # crash regression: FlopscopeArray prepend must not raise
+    with f.BudgetContext(flop_budget=10**9, quiet=True):
+        out = np.asarray(fnp.diff(a, prepend=pre))
+    np.testing.assert_array_equal(out, np.diff(np.asarray(a), prepend=np.asarray(pre)))

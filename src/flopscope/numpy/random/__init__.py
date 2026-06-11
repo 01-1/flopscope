@@ -494,6 +494,10 @@ def choice(a, size=None, replace=True, p=None):
     if replace:
         out_size = _output_size(size=size)
         cost = _builtins.max(out_size, 1)
+        if p is not None:
+            # CDF build: cumsum + normalise + final pass (3*n), then
+            # binary-search per draw (out_size * ceil(log2(n))).
+            cost += 3 * n + _builtins.max(out_size, 1) * _ceil_log2(n)
         with budget.deduct(
             "random.choice", flop_cost=cost, subscripts=None, shapes=((out_size,),)
         ):

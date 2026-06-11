@@ -2278,8 +2278,24 @@ attach_docstring(cross, _np.cross, "counted_custom", "3 * output.size FLOPs (6 m
 cross.__signature__ = _inspect.signature(_np.cross)  # pyright: ignore[reportFunctionMemberAccess]
 
 
+# Use numpy's own stable _NoValue singleton as the "not provided" sentinel for
+# diff's prepend/append.  A plain `object()` would break when _pointwise is
+# reloaded (test_numpy_version_support does this): the function's compiled
+# default would reference the OLD sentinel while the module-level name would
+# resolve to the NEW one after reload, causing a false "is not sentinel" check
+# that then passes the old sentinel object into numpy.diff as a prepend/append
+# value.  np._NoValue survives reloads because it lives in numpy's own module.
+_DIFF_NO_VALUE = _np._NoValue  # type: ignore[attr-defined]
+
+
 @_counted_wrapper
-def diff(a: ArrayLike, n: int = 1, axis: int = -1, **kwargs: Any) -> FlopscopeArray:
+def diff(
+    a: ArrayLike,
+    n: int = 1,
+    axis: int = -1,
+    prepend: Any = _DIFF_NO_VALUE,
+    append: Any = _DIFF_NO_VALUE,
+) -> FlopscopeArray:
     """Counted version of np.diff."""
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
@@ -2290,17 +2306,32 @@ def diff(a: ArrayLike, n: int = 1, axis: int = -1, **kwargs: Any) -> FlopscopeAr
     # the other axes' sizes. Issue #69.
     ax = axis if axis >= 0 else axis + a.ndim
     L = a.shape[ax]
+    # numpy concatenates prepend/append along the diff axis before differencing,
+    # so the effective axis length L grows by their contribution.
+    if prepend is not _np._NoValue:  # type: ignore[attr-defined]
+        p = _np.asanyarray(_to_base_ndarray(prepend))
+        L += 1 if p.ndim == 0 else p.shape[ax] if p.ndim > ax else 1
+    if append is not _np._NoValue:  # type: ignore[attr-defined]
+        p = _np.asanyarray(_to_base_ndarray(append))
+        L += 1 if p.ndim == 0 else p.shape[ax] if p.ndim > ax else 1
     prod_outside = int(_np.prod(a.shape[:ax]))
     prod_inside = int(_np.prod(a.shape[ax + 1 :]))
     per_iter_sum = n * L - n * (n + 1) // 2
     cost = _builtins.max(prod_outside * per_iter_sum * prod_inside, 1)
+    # Forward prepend/append to numpy only when provided; strip FlopscopeArrays
+    # so numpy's internals don't receive counted subclass instances.
+    np_kwargs: dict[str, Any] = {}
+    if prepend is not _np._NoValue:  # type: ignore[attr-defined]
+        np_kwargs["prepend"] = _to_base_ndarray(prepend)
+    if append is not _np._NoValue:  # type: ignore[attr-defined]
+        np_kwargs["append"] = _to_base_ndarray(append)
     with budget.deduct(
         "diff",
         flop_cost=cost,
         subscripts=None,
         shapes=(a.shape,),
     ):
-        result = _call_numpy(_np.diff, _to_base_ndarray(a), n=n, axis=axis, **kwargs)
+        result = _call_numpy(_np.diff, _to_base_ndarray(a), n=n, axis=axis, **np_kwargs)
     return result  # type: ignore[return-value]  # wrapped at fnp.diff import time
 
 
