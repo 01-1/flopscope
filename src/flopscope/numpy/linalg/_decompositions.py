@@ -117,7 +117,12 @@ def qr(
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(qr, _np.linalg.qr, "linalg", r"$2(2mnk - \frac{2}{3}k^3)$ FLOPs (reduced/complete; form Q) or $2mnk - \frac{2}{3}k^3$ (r/raw), k=min(m,n)")
+attach_docstring(
+    qr,
+    _np.linalg.qr,
+    "linalg",
+    r"$2(2mnk - \frac{2}{3}k^3)$ FLOPs (reduced/complete; form Q) or $2mnk - \frac{2}{3}k^3$ (r/raw), k=min(m,n)",
+)
 
 
 def eig_cost(n: int) -> int:
@@ -164,7 +169,9 @@ def eig(a: ArrayLike) -> tuple[FlopscopeArray, FlopscopeArray]:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eig, _np.linalg.eig, "linalg", r"$\sim 25 n^3$ FLOPs (confirmed 2026-06 audit)")
+attach_docstring(
+    eig, _np.linalg.eig, "linalg", r"$\sim 25 n^3$ FLOPs (confirmed 2026-06 audit)"
+)
 
 
 def eigh_cost(n: int) -> int:
@@ -211,7 +218,9 @@ def eigh(a: ArrayLike, UPLO: str = "L") -> tuple[FlopscopeArray, FlopscopeArray]
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigh, _np.linalg.eigh, "linalg", r"$\sim 9 n^3$ FLOPs (confirmed 2026-06 audit)")
+attach_docstring(
+    eigh, _np.linalg.eigh, "linalg", r"$\sim 9 n^3$ FLOPs (confirmed 2026-06 audit)"
+)
 
 
 def eigvals_cost(n: int) -> int:
@@ -258,7 +267,12 @@ def eigvals(a: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigvals, _np.linalg.eigvals, "linalg", r"$\sim 10 n^3$ FLOPs (confirmed 2026-06 audit)")
+attach_docstring(
+    eigvals,
+    _np.linalg.eigvals,
+    "linalg",
+    r"$\sim 10 n^3$ FLOPs (confirmed 2026-06 audit)",
+)
 
 
 def eigvalsh_cost(n: int) -> int:
@@ -302,7 +316,12 @@ def eigvalsh(a: ArrayLike, UPLO: str = "L") -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(eigvalsh, _np.linalg.eigvalsh, "linalg", r"$\frac{4}{3} n^3$ FLOPs (confirmed 2026-06 audit)")
+attach_docstring(
+    eigvalsh,
+    _np.linalg.eigvalsh,
+    "linalg",
+    r"$\frac{4}{3} n^3$ FLOPs (confirmed 2026-06 audit)",
+)
 
 
 def svdvals_cost(m: int, n: int, k: int | None = None) -> int:
@@ -341,4 +360,9 @@ def svdvals(x: ArrayLike, /, *, k: int | None = None) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(svdvals, _np.linalg.svdvals, "linalg", r"$2ab^2 + 2b^3$ FLOPs (values-only SVD; a=max(m,n), b=min(m,n))")
+attach_docstring(
+    svdvals,
+    _np.linalg.svdvals,
+    "linalg",
+    r"$2ab^2 + 2b^3$ FLOPs (values-only SVD; a=max(m,n), b=min(m,n))",
+)

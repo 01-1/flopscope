@@ -5,6 +5,7 @@ shape-independent tier multiplier. Legitimate tiers: view/free=0.0,
 arithmetic=1.0, gather=4.0, transcendental in {8.0, 16.0}. An algorithm
 constant hiding in a weight (the old linalg 4.0) is a policy violation.
 """
+
 from __future__ import annotations
 
 import json
@@ -17,11 +18,39 @@ TIER_VALUES = {0.0, 1.0, 4.0, 8.0, 16.0}
 # by prefix (its 0.0 views are allowed by the {0,1} membership).
 ARITHMETIC_PREFIXES = ("linalg.",)
 ARITHMETIC_OPS = {
-    "matmul", "dot", "vdot", "inner", "outer", "tensordot", "einsum", "kron",
-    "sum", "prod", "mean", "average", "var", "std", "nanvar", "nanstd",
-    "trapezoid", "trapz", "convolve", "correlate", "cov", "corrcoef", "cross",
-    "polyval", "polyadd", "polysub", "polyder", "polyint", "polymul",
-    "polydiv", "polyfit", "poly", "roots",
+    "matmul",
+    "dot",
+    "vdot",
+    "inner",
+    "outer",
+    "tensordot",
+    "einsum",
+    "kron",
+    "sum",
+    "prod",
+    "mean",
+    "average",
+    "var",
+    "std",
+    "nanvar",
+    "nanstd",
+    "trapezoid",
+    "trapz",
+    "convolve",
+    "correlate",
+    "cov",
+    "corrcoef",
+    "cross",
+    "polyval",
+    "polyadd",
+    "polysub",
+    "polyder",
+    "polyint",
+    "polymul",
+    "polydiv",
+    "polyfit",
+    "poly",
+    "roots",
     "random.multivariate_normal",
 }
 
@@ -36,7 +65,10 @@ def policy_violations(table: dict[str, float]) -> list[tuple[str, float, str]]:
     for op, w in table.items():
         if w not in TIER_VALUES:
             bad.append((op, w, "weight is not a known tier value"))
-        if (op.startswith(ARITHMETIC_PREFIXES) or op in ARITHMETIC_OPS) and w not in (0.0, 1.0):
+        if (op.startswith(ARITHMETIC_PREFIXES) or op in ARITHMETIC_OPS) and w not in (
+            0.0,
+            1.0,
+        ):
             bad.append((op, w, "arithmetic-tier op must have weight 0.0 or 1.0"))
     return bad
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 import statistics
 
 from benchmarks._perf import measure_flops
-from flopscope.numpy.linalg import lstsq_cost, pinv_cost
 from flopscope._flops import svd_cost
+from flopscope.numpy.linalg import lstsq_cost, pinv_cost
 
 LINALG_OPS: list[str] = [
     "linalg.cholesky",

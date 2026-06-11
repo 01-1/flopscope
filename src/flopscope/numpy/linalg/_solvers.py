@@ -85,7 +85,12 @@ def solve(a: ArrayLike, b: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(solve, _np.linalg.solve, "linalg", r"$\frac{2}{3}n^3 + 2n^2 \cdot nrhs$ FLOPs (LU + triangular solves)")
+attach_docstring(
+    solve,
+    _np.linalg.solve,
+    "linalg",
+    r"$\frac{2}{3}n^3 + 2n^2 \cdot nrhs$ FLOPs (LU + triangular solves)",
+)
 
 
 def inv_cost(n: int, symmetric: bool = False) -> int:
@@ -326,7 +331,10 @@ def pinv(
 
 
 attach_docstring(
-    pinv, _np.linalg.pinv, "linalg", r"SVD(with U/V) + min(m,n) + n*min(m,n) + matmul(n, min(m,n), m) FLOPs (see pinv_cost)"
+    pinv,
+    _np.linalg.pinv,
+    "linalg",
+    r"SVD(with U/V) + min(m,n) + n*min(m,n) + matmul(n, min(m,n), m) FLOPs (see pinv_cost)",
 )
 
 

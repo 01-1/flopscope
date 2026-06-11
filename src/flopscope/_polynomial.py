@@ -205,7 +205,10 @@ def polymul(a1: ArrayLike, a2: ArrayLike) -> FlopscopeArray:
 
 
 attach_docstring(
-    polymul, _np.polymul, "counted_custom", "2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2)"
+    polymul,
+    _np.polymul,
+    "counted_custom",
+    "2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2)",
 )
 
 
@@ -225,7 +228,9 @@ def polydiv(u: ArrayLike, v: ArrayLike) -> tuple[FlopscopeArray, FlopscopeArray]
     return result  # type: ignore[return-value]
 
 
-attach_docstring(polydiv, _np.polydiv, "counted_custom", "1 + Q*(2*n2+1) FLOPs, Q = max(n1-n2+1, 0)")
+attach_docstring(
+    polydiv, _np.polydiv, "counted_custom", "1 + Q*(2*n2+1) FLOPs, Q = max(n1-n2+1, 0)"
+)
 
 
 @_counted_wrapper
@@ -257,6 +262,7 @@ def poly(seq_of_zeros: ArrayLike) -> FlopscopeArray:
     # If 2D (square matrix), n = shape[0]; if 1D, n = len(seq)
     if seq.ndim == 2:
         from flopscope.numpy.linalg import eigvals_cost
+
         n = seq.shape[0]
         cost = poly_cost(n) + eigvals_cost(n)
     else:
@@ -267,7 +273,12 @@ def poly(seq_of_zeros: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(poly, _np.poly, "counted_custom", "2*n^2 FLOPs (1-D) or 2*n^2 + ~10n^3 FLOPs (2-D, includes eigvals)")
+attach_docstring(
+    poly,
+    _np.poly,
+    "counted_custom",
+    "2*n^2 FLOPs (1-D) or 2*n^2 + ~10n^3 FLOPs (2-D, includes eigvals)",
+)
 
 
 @_counted_wrapper
@@ -283,7 +294,10 @@ def roots(p: ArrayLike) -> FlopscopeArray:
 
 
 attach_docstring(
-    roots, _np.roots, "counted_custom", "~10n^3 FLOPs (companion-matrix eigvals, confirmed 2026-06 audit)"
+    roots,
+    _np.roots,
+    "counted_custom",
+    "~10n^3 FLOPs (companion-matrix eigvals, confirmed 2026-06 audit)",
 )
 
 import sys as _sys  # noqa: E402

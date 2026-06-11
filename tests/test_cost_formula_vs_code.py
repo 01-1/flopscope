@@ -291,8 +291,12 @@ def test_variance_family_cost(we):
     a = numpy.random.rand(10, 10)
     assert _cost_of(we.var, a) == 400, f"var: expected 400, got {_cost_of(we.var, a)}"
     assert _cost_of(we.std, a) == 401, f"std: expected 401, got {_cost_of(we.std, a)}"
-    assert _cost_of(we.nanvar, a) == 400, f"nanvar: expected 400, got {_cost_of(we.nanvar, a)}"
-    assert _cost_of(we.nanstd, a) == 401, f"nanstd: expected 401, got {_cost_of(we.nanstd, a)}"
+    assert _cost_of(we.nanvar, a) == 400, (
+        f"nanvar: expected 400, got {_cost_of(we.nanvar, a)}"
+    )
+    assert _cost_of(we.nanstd, a) == 401, (
+        f"nanstd: expected 401, got {_cost_of(we.nanstd, a)}"
+    )
 
 
 def test_mean_charges_sum_plus_one_divide(we):
@@ -468,7 +472,10 @@ class TestLinalgDecompositions:
     def test_eig_n3(self, name, we):
         # eig: 25*n^3=25*512=12800; eigvals: 10*n^3=10*512=5120 (n=8, PROVISIONAL)
         expected = {"eig": 25 * 8**3, "eigvals": 10 * 8**3}
-        assert _cost_of(getattr(we.linalg, name), numpy.random.rand(8, 8)) == expected[name]
+        assert (
+            _cost_of(getattr(we.linalg, name), numpy.random.rand(8, 8))
+            == expected[name]
+        )
 
     @pytest.mark.parametrize("name", ["eigh", "eigvalsh"])
     def test_eigh_n3(self, name, we):
@@ -483,7 +490,10 @@ class TestLinalgDecompositions:
         # a=10, b=5: 4*100*5+22*125=2000+2750=4750
         assert _cost_of(we.linalg.svd, numpy.random.rand(10, 5)) == 4750
         # thin (full_matrices=False): 6*10*25+20*125=1500+2500=4000
-        assert _cost_of(we.linalg.svd, numpy.random.rand(10, 5), full_matrices=False) == 4000
+        assert (
+            _cost_of(we.linalg.svd, numpy.random.rand(10, 5), full_matrices=False)
+            == 4000
+        )
 
     def test_svdvals_mnk(self, we):
         # values-only: 2*10*25+2*125=500+250=750
@@ -820,7 +830,9 @@ class TestFreeOps:
         assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10)) == 10
 
     def test_arange(self, we):
-        assert _cost_of(we.arange, 20) == 2 * 20  # migrated: arange bills 2*numel (start + i*step, FMA=2)
+        assert (
+            _cost_of(we.arange, 20) == 2 * 20
+        )  # migrated: arange bills 2*numel (start + i*step, FMA=2)
 
     def test_full(self, we):
         assert _cost_of(we.full, (3, 4), 1.0) == 12

@@ -929,7 +929,9 @@ class TestLinalgDecompositionsExtended:
         a = numpy.array([[2.0, 1.0], [1.0, 3.0]])
         with BudgetContext(flop_budget=10**9) as budget:
             eigvalsh(a)
-        assert budget.flops_used == 4 * 2**3 // 3  # 4*n^3//3 = 4*8//3 = 10 (PROVISIONAL)
+        assert (
+            budget.flops_used == 4 * 2**3 // 3
+        )  # 4*n^3//3 = 4*8//3 = 10 (PROVISIONAL)
 
     def test_qr(self):
         from flopscope.numpy.linalg._decompositions import qr

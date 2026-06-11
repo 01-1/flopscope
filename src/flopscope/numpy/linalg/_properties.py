@@ -109,7 +109,9 @@ def det(a: ArrayLike) -> FlopscopeArray:
     return result  # type: ignore[reportReturnType]
 
 
-attach_docstring(det, _np.linalg.det, "linalg", r"$\frac{2}{3}n^3 + n$ FLOPs (LU + diagonal product)")
+attach_docstring(
+    det, _np.linalg.det, "linalg", r"$\frac{2}{3}n^3 + n$ FLOPs (LU + diagonal product)"
+)
 
 
 def slogdet_cost(n: int, symmetric: bool = False) -> int:
@@ -165,7 +167,12 @@ def slogdet(a: ArrayLike) -> SlogdetResult:
     return result
 
 
-attach_docstring(slogdet, _np.linalg.slogdet, "linalg", r"$\frac{2}{3}n^3 + n$ FLOPs (LU + diagonal product)")
+attach_docstring(
+    slogdet,
+    _np.linalg.slogdet,
+    "linalg",
+    r"$\frac{2}{3}n^3 + n$ FLOPs (LU + diagonal product)",
+)
 
 
 def norm_cost(shape: tuple, ord=None) -> int:
@@ -272,7 +279,10 @@ def norm(
 
 
 attach_docstring(
-    norm, _np.linalg.norm, "linalg", "depends on ord parameter -- see docstring; × batch groups"
+    norm,
+    _np.linalg.norm,
+    "linalg",
+    "depends on ord parameter -- see docstring; × batch groups",
 )
 
 
@@ -356,7 +366,10 @@ def vector_norm(
 
 
 attach_docstring(
-    vector_norm, _np.linalg.vector_norm, "linalg", "depends on ord parameter; × batch groups"
+    vector_norm,
+    _np.linalg.vector_norm,
+    "linalg",
+    "depends on ord parameter; × batch groups",
 )
 
 
@@ -425,7 +438,10 @@ def matrix_norm(
 
 
 attach_docstring(
-    matrix_norm, _np.linalg.matrix_norm, "linalg", "depends on ord parameter; × batch groups"
+    matrix_norm,
+    _np.linalg.matrix_norm,
+    "linalg",
+    "depends on ord parameter; × batch groups",
 )
 
 

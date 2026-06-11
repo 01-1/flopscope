@@ -1463,8 +1463,11 @@ def _variance_family_cost(a, axis, symmetry, *, with_sqrt: bool) -> int:
     axes_summed = _normalize_axis(axis, a.ndim)
     m = _num_output_orbits(tuple(a.shape), axes_summed, symmetry)
     reduce_cost = compute_reduction_accumulation_cost(
-        input_shape=tuple(a.shape), axes_summed=axes_summed, symmetry=symmetry,
-        op_factor=2, extra_ops=2 * m,
+        input_shape=tuple(a.shape),
+        axes_summed=axes_summed,
+        symmetry=symmetry,
+        op_factor=2,
+        extra_ops=2 * m,
     ).total
     cost = 2 * pointwise_cost(tuple(a.shape), symmetry) + reduce_cost
     return cost + m if with_sqrt else cost
@@ -1472,23 +1475,40 @@ def _variance_family_cost(a, axis, symmetry, *, with_sqrt: bool) -> int:
 
 def _counted_variance(np_func, op_name: str, *, with_sqrt: bool):
     @_counted_wrapper
-    def wrapper(a: ArrayLike, axis: int | None = None, dtype=None,
-               out: FlopscopeArray | None = None, ddof: int = 0,
-               keepdims: bool = False, **kwargs: Any):
+    def wrapper(
+        a: ArrayLike,
+        axis: int | None = None,
+        dtype=None,
+        out: FlopscopeArray | None = None,
+        ddof: int = 0,
+        keepdims: bool = False,
+        **kwargs: Any,
+    ) -> FlopscopeArray:
         budget = require_budget()
         if not isinstance(a, _np.ndarray):
             a = _np.asarray(a)
         symmetry = _symmetry_of(a)
         keepdims = bool(keepdims)
         cost = _variance_family_cost(a, axis, symmetry, with_sqrt=with_sqrt)
-        new_symmetry = (reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
-                        if symmetry is not None else None)
+        new_symmetry = (
+            reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
+            if symmetry is not None
+            else None
+        )
         _prepare_symmetric_out(out, new_symmetry)
         out_for_np = None if isinstance(out, SymmetricTensor) else out
         with budget.deduct(op_name, flop_cost=cost, subscripts=None, shapes=(a.shape,)):
             result = _call_with_optional_out(
-                np_func, a, axis=axis, out=out_for_np, ddof=ddof,
-                keepdims=keepdims, dtype=dtype, supports_out=True, **kwargs)
+                np_func,
+                a,
+                axis=axis,
+                out=out_for_np,
+                ddof=ddof,
+                keepdims=keepdims,
+                dtype=dtype,
+                supports_out=True,
+                **kwargs,
+            )
         if out is not None:
             return _wrap_result(result, out=out, symmetry=new_symmetry)
         return _wrap_result(result, symmetry=new_symmetry)
@@ -1512,9 +1532,18 @@ all = _counted_reduction(_np.all, "all")
 amax = _counted_reduction(_np.amax, "amax")
 amin = _counted_reduction(_np.amin, "amin")
 any = _counted_reduction(_np.any, "any")
+
+
 @_counted_wrapper
-def average(a: ArrayLike, axis: int | None = None, weights=None, returned: bool = False,
-            *, keepdims: bool = False, **kwargs: Any):
+def average(
+    a: ArrayLike,
+    axis: int | None = None,
+    weights=None,
+    returned: bool = False,
+    *,
+    keepdims: bool = False,
+    **kwargs: Any,
+):
     """Counted np.average.
 
     Cost (no weights) = reduction_cost(input) + num_output_orbits
@@ -1537,15 +1566,27 @@ def average(a: ArrayLike, axis: int | None = None, weights=None, returned: bool 
     m = _num_output_orbits(tuple(a.shape), axes_summed, symmetry)
     cost = reduction_cost(a.shape, axis, symmetry=symmetry) + m
     if weights is not None:
-        cost += pointwise_cost(tuple(a.shape), symmetry)   # the a*w multiply pass
+        cost += pointwise_cost(tuple(a.shape), symmetry)  # the a*w multiply pass
         cost += reduction_cost(a.shape, axis, symmetry=symmetry)  # w.sum() conservative
-    new_symmetry = (reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
-                    if symmetry is not None else None)
+    new_symmetry = (
+        reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
+        if symmetry is not None
+        else None
+    )
     a_raw = _to_base_ndarray(a)
-    weights_raw = _to_base_ndarray(weights) if isinstance(weights, _np.ndarray) else weights
+    weights_raw = (
+        _to_base_ndarray(weights) if isinstance(weights, _np.ndarray) else weights
+    )
     with budget.deduct("average", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
-        result = _call_numpy(_np.average, a_raw, axis=axis, weights=weights_raw,
-                             returned=returned, keepdims=keepdims, **kwargs)
+        result = _call_numpy(
+            _np.average,
+            a_raw,
+            axis=axis,
+            weights=weights_raw,
+            returned=returned,
+            keepdims=keepdims,
+            **kwargs,
+        )
     return _wrap_result(result, symmetry=new_symmetry)
 
 
@@ -2214,7 +2255,7 @@ def _tensordot_einsum_subscripts(a_ndim, b_ndim, a_axes, b_axes):
     b_labels = list(letters[a_ndim : a_ndim + b_ndim])
     a_ax = [ax % a_ndim for ax in a_axes]
     b_ax = [ax % b_ndim for ax in b_axes]
-    for ai, bi in zip(a_ax, b_ax):
+    for ai, bi in zip(a_ax, b_ax, strict=False):
         b_labels[bi] = a_labels[ai]  # tie contracted pairs
     out = [a_labels[i] for i in range(a_ndim) if i not in a_ax]
     out += [b_labels[i] for i in range(b_ndim) if i not in b_ax]
@@ -2315,7 +2356,9 @@ def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
             cost = einsum_cost(_subs, [tuple(a.shape), tuple(b.shape)])
             canonical_subs = _subs
         else:
-            dense = _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+            dense = (
+                _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+            )
             cost = _symmetry_adjusted_cost(dense, output_shape, out_sym)
             canonical_subs = None
     else:
@@ -2345,11 +2388,16 @@ def tensordot(a: ArrayLike, b: ArrayLike, axes: Any = 2) -> FlopscopeArray:
             cost = _info.accumulation.total
             canonical_subs = _subs
         else:
-            dense = _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+            dense = (
+                _builtins.max(a.size * b.size // contracted, 1) if contracted > 0 else 1
+            )
             cost = _symmetry_adjusted_cost(dense, output_shape, out_sym)
             canonical_subs = None
     with budget.deduct(
-        "tensordot", flop_cost=cost, subscripts=canonical_subs, shapes=(a.shape, b.shape)
+        "tensordot",
+        flop_cost=cost,
+        subscripts=canonical_subs,
+        shapes=(a.shape, b.shape),
     ):
         result = _call_numpy(
             _np.tensordot, _to_base_ndarray(a), _to_base_ndarray(b), axes=axes
@@ -2441,7 +2489,9 @@ def cross(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(cross, _np.cross, "counted_custom", "3 * output.size FLOPs (6 mul + 3 sub)")
+attach_docstring(
+    cross, _np.cross, "counted_custom", "3 * output.size FLOPs (6 mul + 3 sub)"
+)
 cross.__signature__ = _inspect.signature(_np.cross)  # pyright: ignore[reportFunctionMemberAccess]
 
 
@@ -2723,7 +2773,9 @@ def trapezoid(
     return result  # type: ignore[return-value]  # wrapped at fnp.trapezoid import time
 
 
-attach_docstring(trapezoid, _np.trapezoid, "counted_custom", "4 * numel(input) FLOPs (FMA=2)")
+attach_docstring(
+    trapezoid, _np.trapezoid, "counted_custom", "4 * numel(input) FLOPs (FMA=2)"
+)
 
 
 if hasattr(_np, "trapz"):
@@ -2748,7 +2800,9 @@ if hasattr(_np, "trapz"):
             )
         return result  # type: ignore[return-value]  # wrapped at fnp.trapz import time
 
-    attach_docstring(trapz, _np.trapz, "counted_custom", "4 * numel(input) FLOPs (FMA=2)")
+    attach_docstring(
+        trapz, _np.trapz, "counted_custom", "4 * numel(input) FLOPs (FMA=2)"
+    )
 
 else:
 
@@ -2782,6 +2836,9 @@ def interp(x: ArrayLike, xp: ArrayLike, fp: ArrayLike, **kwargs: Any) -> Flopsco
 
 
 attach_docstring(
-    interp, _np.interp, "counted_custom", "3*n + n*ceil(log2(xp)) FLOPs (arithmetic + search)"
+    interp,
+    _np.interp,
+    "counted_custom",
+    "3*n + n*ceil(log2(xp)) FLOPs (arithmetic + search)",
 )
 interp.__signature__ = _inspect.signature(_np.interp)  # pyright: ignore[reportFunctionMemberAccess]

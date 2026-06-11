@@ -93,7 +93,8 @@ def svd(
     eff_full = full_matrices and (k is None)
     batch = _batch_size(a.shape)
     cost = (
-        svd_cost(m, n, effective_k, with_vectors=compute_uv, full_matrices=eff_full) * batch
+        svd_cost(m, n, effective_k, with_vectors=compute_uv, full_matrices=eff_full)
+        * batch
         if not _has_zero_dim(a.shape)
         else 0
     )

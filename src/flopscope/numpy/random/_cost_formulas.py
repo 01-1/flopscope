@@ -13,7 +13,8 @@ from typing import Any
 
 import numpy as _np
 
-from flopscope._flops import _ceil_log2 as _ceil_log2, sort_cost as _sort_cost
+from flopscope._flops import _ceil_log2 as _ceil_log2
+from flopscope._flops import sort_cost as _sort_cost
 
 
 def _numel_output(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> int:

@@ -93,7 +93,8 @@ def _analytical_cost(op_name: str) -> int:
         "tensordot": 64
         ** 5,  # d^5 (FMA=2 textbook; matches flopscope charge = 1,073,741,824)
         "tensorinv": 2 * 64**3,  # 2n^3 after reshape (reduces to inv_cost)
-        "tensorsolve": 2 * 64**3 // 3 + 2 * 64**2,  # 2n^3/3 + 2n^2 (reduces to solve_cost)
+        "tensorsolve": 2 * 64**3 // 3
+        + 2 * 64**2,  # 2n^3/3 + 2n^2 (reduces to solve_cost)
         "trace": 10_000,  # min(m,n)
         "vecdot": 1000 * (2 * 512 - 1),  # FMA=2: batch * (2*K - 1)
         "vector_norm": 2 * 10_000_000,  # 2*numel (FMA=2)

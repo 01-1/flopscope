@@ -228,7 +228,12 @@ def arange(*args: Any, **kwargs: Any) -> FlopscopeArray:
     return result
 
 
-attach_docstring(arange, _np.arange, "counted_custom", "2*numel(output) FLOPs (start + i*step per element, FMA=2)")
+attach_docstring(
+    arange,
+    _np.arange,
+    "counted_custom",
+    "2*numel(output) FLOPs (start + i*step per element, FMA=2)",
+)
 
 
 @_counted_wrapper
@@ -253,7 +258,12 @@ def linspace(
     return result  # pyright: ignore[reportReturnType]  # (samples, step) tuple when retstep=True
 
 
-attach_docstring(linspace, _np.linspace, "counted_custom", "2*numel(output) FLOPs (start + i*step per element, FMA=2)")
+attach_docstring(
+    linspace,
+    _np.linspace,
+    "counted_custom",
+    "2*numel(output) FLOPs (start + i*step per element, FMA=2)",
+)
 
 
 def zeros_like(
@@ -1840,12 +1850,19 @@ def indices(*args: Any, **kwargs: Any) -> FlopscopeArray:
     with budget.deduct_after("indices", subscripts=None, shapes=()) as _op:
         result = _call_numpy(_np.indices, *args, **kwargs)
         _op.set_cost(
-            sum(int(a.size) for a in result) if isinstance(result, tuple) else int(result.size)
+            sum(int(a.size) for a in result)
+            if isinstance(result, tuple)
+            else int(result.size)
         )
     return result  # pyright: ignore[reportReturnType]  # tuple of grids when sparse=True
 
 
-attach_docstring(indices, _np.indices, "counted_custom", "numel of materialized output FLOPs (dense N*prod(dims); sparse sum(dims))")
+attach_docstring(
+    indices,
+    _np.indices,
+    "counted_custom",
+    "numel of materialized output FLOPs (dense N*prod(dims); sparse sum(dims))",
+)
 
 
 @_counted_wrapper

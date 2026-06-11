@@ -6,6 +6,7 @@ exploit (a 16x discount for typing ``acos`` instead of ``arccos``).
 
 conftest resets weights to 1.0 per test, so these load the packaged table.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -24,7 +25,10 @@ ALIAS_CANONICAL = [
     ("atanh", "arctanh"),
     ("atan2", "arctan2"),
     ("pow", "power"),
-    ("divmod", "floor_divide"),  # divmod does >= floor_divide work; 16.0 is a conservative floor
+    (
+        "divmod",
+        "floor_divide",
+    ),  # divmod does >= floor_divide work; 16.0 is a conservative floor
 ]
 
 
@@ -45,7 +49,7 @@ def test_ufunc_aliases_resolve_to_canonical_weight():
 def test_ufunc_aliases_bill_identically_to_canonical():
     load_weights()
     v = fnp.asarray(np.random.rand(100))  # cost is shape-based; values irrelevant
-    with np.errstate(all="ignore"):       # arccosh(<1) etc. NaN harmlessly
+    with np.errstate(all="ignore"):  # arccosh(<1) etc. NaN harmlessly
         for alias, canon in ALIAS_CANONICAL:
             fa, fc = getattr(fnp, alias), getattr(fnp, canon)
             if alias in ("atan2", "pow", "divmod"):

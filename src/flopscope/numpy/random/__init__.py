@@ -381,7 +381,11 @@ def multivariate_normal(mean, cov, size=None, check_valid="warn", tol=1e-8):
     N = _output_size(size=size) if size is not None else 1
     flop_cost = multivariate_normal_cost(N, d)
     result = _npr.multivariate_normal(
-        mean, cov, size=size, check_valid=check_valid, tol=tol  # pyright: ignore[reportArgumentType]
+        mean,
+        cov,
+        size=size,
+        check_valid=check_valid,
+        tol=tol,  # pyright: ignore[reportArgumentType]
     )
     with budget.deduct(
         "random.multivariate_normal",
