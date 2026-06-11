@@ -97,8 +97,6 @@ def test_existing_free_ops():
         "reshape",
         "transpose",
         "eye",
-        "triu",
-        "tril",
     ]
     now_counted = [
         "concatenate",
@@ -111,6 +109,11 @@ def test_existing_free_ops():
         "isnan",
         "isinf",
         "isfinite",
+        "triu",
+        "tril",
+        "hstack",
+        "column_stack",
+        "row_stack",
     ]
     for name in still_free:
         assert name in REGISTRY, f"{name} not in registry"

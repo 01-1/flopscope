@@ -540,29 +540,50 @@ def test_triu_bills_numel_output():
 
 
 def test_put_bills_numel_indices():
+    # conftest resets weights to 1.0 so charged == flop_cost = numel(indices)
     a = np.zeros(10000)
-    # 7 indices, weight 4.0 -> int(7*4.0) = 28
-    assert cost(lambda: fnp.put(a, np.arange(7), np.ones(7))) == 28
-    # wrap mode: 1000 indices, weight 4.0 -> 4000
-    assert cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap")) == 4000
-    # must NOT scale with destination size
+    assert cost(lambda: fnp.put(a, np.arange(7), np.ones(7))) == 7
+    # wrap mode: 1000 indices -> flop_cost = 1000
+    assert cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap")) == 1000
+    # must NOT scale with destination size (was: a.size; now: ind.size)
+    assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 7
+    # With packaged weights loaded (weight=4.0): charged = int(7*4.0) = 28
+    load_weights()
     assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 28
+    assert cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap")) == 4000
 
 
 def test_put_along_axis_bills_scattered_elements():
-    # dest=(100,), 5 indices, weight 4.0 -> 20
+    # conftest resets weights to 1.0 so charged == flop_cost = scattered count
     dest = np.zeros(100)
-    assert cost(lambda: fnp.put_along_axis(dest, np.arange(5), np.ones(5), 0)) == 20
-    # dest=(100,10), indices=(1,5) broadcast -> 500 writes, weight 4.0 -> 2000
+    assert cost(lambda: fnp.put_along_axis(dest, np.arange(5), np.ones(5), 0)) == 5
+    # dest=(100,10), indices=(1,5) -> scattered = (100*10 // 10) * 5 = 100*5 = 500
     dest2d = np.zeros((100, 10))
+    assert (
+        cost(
+            lambda: fnp.put_along_axis(dest2d, np.zeros((1, 5), dtype=int), 1.0, axis=1)
+        )
+        == 500
+    )
+    # large J > M: flop_cost = J (axis 0: arr.size // arr.shape[0] == 1) * J = J
+    dest_small = np.zeros(10)
+    assert (
+        cost(
+            lambda: fnp.put_along_axis(
+                dest_small, np.zeros(1_000_000, dtype=np.int64), 1.0, 0
+            )
+        )
+        == 1_000_000
+    )
+    # With packaged weights loaded (weight=4.0): charged = scattered_count * 4
+    load_weights()
+    assert cost(lambda: fnp.put_along_axis(dest, np.arange(5), np.ones(5), 0)) == 20
     assert (
         cost(
             lambda: fnp.put_along_axis(dest2d, np.zeros((1, 5), dtype=int), 1.0, axis=1)
         )
         == 2000
     )
-    # large J > M: must charge J*4, not M
-    dest_small = np.zeros(10)
     assert (
         cost(
             lambda: fnp.put_along_axis(

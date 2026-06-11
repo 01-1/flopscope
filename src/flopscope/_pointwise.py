@@ -1339,7 +1339,13 @@ divmod = _counted_binary_multi(_np.divmod, "divmod")
 def clip(
     a: ArrayLike, *args: Any, out: FlopscopeArray | None = None, **kwargs: Any
 ) -> FlopscopeArray:
-    """Counted version of np.clip. Cost = numel(input) or unique_elements if symmetric."""
+    """Counted version of np.clip.
+
+    Cost = n_bounds * numel(output) FLOPs (1 compare-select per bound, per output elem).
+    n_bounds = number of non-None bounds (0, 1, or 2); max(n_bounds, 1) ensures a
+    materialising-copy floor when no bounds are given (numpy>=2.1 no-bound clip).
+    Output shape is the broadcast of a with all bound arrays.
+    """
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
@@ -1355,10 +1361,12 @@ def clip(
             continue
         arr = value if isinstance(value, _np.ndarray) else _np.asarray(value)
         operand_arrays.append((arr, _symmetry_of(arr)))
-    symmetry, _ = _pointwise_symmetry(operand_arrays, a.shape)
+    n_bounds = len(operand_arrays) - 1
+    output_shape = _np.broadcast_shapes(*(arr.shape for arr, _ in operand_arrays))
+    symmetry, _ = _pointwise_symmetry(operand_arrays, output_shape)
     _prepare_symmetric_out(out, symmetry)
-    cost = pointwise_cost(a.shape, symmetry=symmetry)
-    with budget.deduct("clip", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
+    cost = _builtins.max(n_bounds, 1) * pointwise_cost(output_shape, symmetry=symmetry)
+    with budget.deduct("clip", flop_cost=cost, subscripts=None, shapes=(output_shape,)):
         # Delegate all argument handling (validation, min/max/a_min/a_max) to numpy
         result = _call_with_optional_out(
             _np.clip,
@@ -1373,7 +1381,7 @@ def clip(
     return _wrap_result(result, out=out, symmetry=symmetry)  # type: ignore[return-value]
 
 
-attach_docstring(clip, _np.clip, "counted_custom", "numel(input) FLOPs")
+attach_docstring(clip, _np.clip, "counted_custom", "n_bounds x numel(output) FLOPs (1 compare-select per bound; numel copy floor with no bounds)")
 clip.__signature__ = _inspect.signature(_np.clip)  # pyright: ignore[reportFunctionMemberAccess]
 
 
@@ -1387,68 +1395,76 @@ min = _counted_reduction(_np.min, "min")
 prod = _counted_reduction(_np.prod, "prod")
 
 
-@_counted_wrapper
-def mean(
-    a: ArrayLike,
-    axis: int | None = None,
-    dtype=None,
-    out: FlopscopeArray | None = None,
-    keepdims: bool = False,
-    **kwargs: Any,
-) -> FlopscopeArray:
-    """Counted version of np.mean.
+def _counted_mean(np_func, op_name: str):
+    """Factory for mean-family wrappers (mean, nanmean).
 
     Cost = sum_cost (orbit-mapping FLOPs via Tier-1 model)
            + num_output_orbits (one divide per output orbit).
+
+    np.nanmean shares the (a, axis, dtype, out, keepdims, where) kwargs and
+    supports out — body is identical to mean modulo op_name and np_func.
     """
-    from flopscope._accumulation._reduction import (
-        _normalize_axis,
-        _num_output_orbits,
-        compute_reduction_accumulation_cost,
-    )
 
-    budget = require_budget()
-    if not isinstance(a, _np.ndarray):
-        a = _np.asarray(a)
-    symmetry = _symmetry_of(a)
-    keepdims = bool(keepdims)
-
-    axes_summed = _normalize_axis(axis, a.ndim)
-    num_orbits = _num_output_orbits(tuple(a.shape), axes_summed, symmetry)
-    cost = compute_reduction_accumulation_cost(
-        input_shape=tuple(a.shape),
-        axes_summed=axes_summed,
-        symmetry=symmetry,
-        op_factor=1,
-        extra_ops=num_orbits,  # one divide per output orbit
-    ).total
-
-    new_symmetry = (
-        reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
-        if symmetry is not None
-        else None
-    )
-    _prepare_symmetric_out(out, new_symmetry)
-    out_for_np = None if isinstance(out, SymmetricTensor) else out
-
-    with budget.deduct("mean", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
-        result = _call_with_optional_out(
-            _np.mean,
-            a,
-            axis=axis,
-            out=out_for_np,
-            keepdims=keepdims,
-            dtype=dtype,
-            supports_out=True,
-            **kwargs,
+    @_counted_wrapper
+    def wrapper(
+        a: ArrayLike,
+        axis: int | None = None,
+        dtype=None,
+        out: FlopscopeArray | None = None,
+        keepdims: bool = False,
+        **kwargs: Any,
+    ) -> FlopscopeArray:
+        from flopscope._accumulation._reduction import (
+            _normalize_axis,
+            _num_output_orbits,
+            compute_reduction_accumulation_cost,
         )
 
-    if out is not None:
-        return _wrap_result(result, out=out, symmetry=new_symmetry)  # type: ignore[return-value]
-    return _wrap_result(result, symmetry=new_symmetry)  # type: ignore[return-value]
+        budget = require_budget()
+        if not isinstance(a, _np.ndarray):
+            a = _np.asarray(a)
+        symmetry = _symmetry_of(a)
+        keepdims = bool(keepdims)
+
+        axes_summed = _normalize_axis(axis, a.ndim)
+        num_orbits = _num_output_orbits(tuple(a.shape), axes_summed, symmetry)
+        cost = compute_reduction_accumulation_cost(
+            input_shape=tuple(a.shape),
+            axes_summed=axes_summed,
+            symmetry=symmetry,
+            op_factor=1,
+            extra_ops=num_orbits,  # one divide per output orbit
+        ).total
+
+        new_symmetry = (
+            reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
+            if symmetry is not None
+            else None
+        )
+        _prepare_symmetric_out(out, new_symmetry)
+        out_for_np = None if isinstance(out, SymmetricTensor) else out
+
+        with budget.deduct(op_name, flop_cost=cost, subscripts=None, shapes=(a.shape,)):
+            result = _call_with_optional_out(
+                np_func,
+                a,
+                axis=axis,
+                out=out_for_np,
+                keepdims=keepdims,
+                dtype=dtype,
+                supports_out=True,
+                **kwargs,
+            )
+
+        if out is not None:
+            return _wrap_result(result, out=out, symmetry=new_symmetry)  # type: ignore[return-value]
+        return _wrap_result(result, symmetry=new_symmetry)  # type: ignore[return-value]
+
+    _apply_numpy_signature(wrapper, np_func)
+    return wrapper
 
 
-mean.__signature__ = _inspect.signature(_np.mean)  # pyright: ignore[reportFunctionMemberAccess]
+mean = _counted_mean(_np.mean, "mean")
 
 
 def _variance_family_cost(a, axis, symmetry, *, with_sqrt: bool) -> int:
@@ -1591,26 +1607,45 @@ def average(
 
 
 _apply_numpy_signature(average, _np.average)
-_count_nonzero_counted = _counted_reduction(_np.count_nonzero, "count_nonzero")
 
 
+@_counted_wrapper
 def count_nonzero(
     a: ArrayLike, axis: int | tuple[int, ...] | None = None, *, keepdims: bool = False
 ) -> FlopscopeArray | int:
-    """Counted version of ``numpy.count_nonzero``. Cost: numel(input) FLOPs.
+    """Counted version of ``numpy.count_nonzero``.
+
+    Cost: numel(input) FLOPs (one comparison per element, axis-independent).
+
+    The boolean-sum accumulation (integer adds over the non-zero mask) is
+    intentionally not charged — numel(input) is the documented conservative
+    floor per policy. This is axis-independent: every element is tested
+    regardless of which axis is reduced.
 
     When ``axis is None`` (and not ``keepdims``) the result is always
     coerced to a Python ``int``. This is unconditional because flopscope's
-    ``_counted_reduction`` factory wraps scalar results via ``_asflopscope``
-    on every numpy version, so without this coercion users would see a
+    wrapping machinery wraps scalar results via ``_asflopscope`` on every
+    numpy version, so without this coercion users would see a
     ``FlopscopeArray`` rather than the plain ``int`` that ``numpy.count_nonzero``
     documents. The coercion also normalizes the numpy 2.3+ change where
     the raw numpy return type became a numpy scalar.
     """
-    result = _count_nonzero_counted(a, axis=axis, keepdims=keepdims)  # type: ignore[arg-type]
+    budget = require_budget()
+    if not isinstance(a, _np.ndarray):
+        a = _np.asarray(a)
+    symmetry = _symmetry_of(a)
+    # numel(input) comparisons, orbit-aware; axis-independent cost
+    cost = pointwise_cost(tuple(a.shape), symmetry)
+    new_symmetry = (
+        reduce_group(symmetry, ndim=a.ndim, axis=axis, keepdims=keepdims)
+        if symmetry is not None
+        else None
+    )
+    with budget.deduct("count_nonzero", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
+        result = _call_numpy(_np.count_nonzero, _to_base_ndarray(a), axis=axis, keepdims=keepdims)
     if axis is None and not keepdims:
         return int(result)
-    return result
+    return _wrap_result(result, symmetry=new_symmetry)
 
 
 attach_docstring(
@@ -1713,8 +1748,66 @@ nanargmin = _counted_reduction(_np.nanargmin, "nanargmin")
 nancumprod = _counted_reduction(_np.nancumprod, "nancumprod")
 nancumsum = _counted_reduction(_np.nancumsum, "nancumsum")
 nanmax = _counted_reduction(_np.nanmax, "nanmax")
-nanmean = _counted_reduction(_np.nanmean, "nanmean")
-nanmedian = _counted_reduction(_np.nanmedian, "nanmedian")
+# nanmean: billed identically to mean (reduction + per-output divide; nan-masking not
+# charged, consistent with nansum/nanstd convention).
+nanmean = _counted_mean(_np.nanmean, "nanmean")
+
+
+@_counted_wrapper
+def nanmedian(
+    a: ArrayLike,
+    axis: int | None = None,
+    out: FlopscopeArray | None = None,
+    keepdims: bool = False,
+    **kwargs: Any,
+) -> FlopscopeArray:
+    """Counted version of np.nanmedian.
+
+    Cost = num_output_orbits × axis_dim (Tier-2 partition-based model).
+    Billed identically to median; nan-masking overhead is not charged
+    (consistent with nanpercentile/nanquantile convention).
+    """
+    import math as _math
+
+    budget = require_budget()
+    if not isinstance(a, _np.ndarray):
+        a = _np.asarray(a)
+    sym = _symmetry_of(a)
+
+    # Dense per-output cost for partition-based nanmedian: axis_dim (one pass).
+    if axis is None:
+        axis_dim = _math.prod(a.shape) if a.shape else 1
+    elif isinstance(axis, int):
+        axis_dim = a.shape[axis]
+    else:
+        axis_dim = _math.prod(a.shape[ax] for ax in axis)
+
+    cost = _tier2_reduction_cost(a, axis, dense_per_output_cost=axis_dim)
+
+    out_sym = (
+        reduce_group(sym, ndim=a.ndim, axis=axis, keepdims=keepdims)
+        if sym is not None
+        else None
+    )
+    out_stripped = _to_base_ndarray(out) if out is not None else None
+    with budget.deduct(
+        "nanmedian",
+        flop_cost=cost,
+        subscripts=None,
+        shapes=(a.shape,),
+    ):
+        result = _call_numpy(
+            _np.nanmedian,
+            _to_base_ndarray(a),
+            axis=axis,
+            out=out_stripped,
+            keepdims=keepdims,
+            **kwargs,
+        )
+    return _wrap_result(result, out=out, symmetry=out_sym)  # type: ignore[return-value]
+
+
+nanmedian.__signature__ = _inspect.signature(_np.nanmedian)  # pyright: ignore[reportFunctionMemberAccess]
 nanmin = _counted_reduction(_np.nanmin, "nanmin")
 nanprod = _counted_reduction(_np.nanprod, "nanprod")
 
@@ -2558,20 +2651,57 @@ attach_docstring(
 diff.__signature__ = _inspect.signature(_np.diff)  # pyright: ignore[reportFunctionMemberAccess]
 
 
+def _gradient_spacing_surcharge(f_shape, f_size, varargs, axes) -> int:
+    """Compute the spacing surcharge for np.gradient coord-array arguments.
+
+    This is a pure helper (not a counted wrapper) so that _np.diff can be
+    called outside the @_counted_wrapper guard.  The np.diff call here is
+    part of cost accounting only (not routed through the budget), so it must
+    live outside the decorated function body.
+
+    Returns the integer surcharge to add to the base gradient cost.
+    """
+    surcharge = 0
+    for ax, v in zip(axes, varargs):
+        v_arr = _np.asarray(v)
+        if v_arr.ndim == 1 and v_arr.size == f_shape[ax]:
+            L = f_shape[ax]
+            S = f_size
+            # Convert to float64 as numpy does for integer-typed coord arrays
+            if _np.issubdtype(v_arr.dtype, _np.integer):
+                v_arr = v_arr.astype(_np.float64)
+            d = _np.diff(v_arr)
+            uniform = bool((d == d[0]).all())
+            if uniform:
+                # numpy still executes diff + equal + all-reduce to detect uniformity
+                surcharge += 3 * (L - 1)
+            else:
+                surcharge += (
+                    3 * S * _builtins.max(L - 2, 0) // L   # blend pass: +3 per interior elem
+                    + 10 * _builtins.max(L - 2, 0)          # coefficient arrays a,b,c
+                    + 3 * (L - 1)                           # diff + uniformity check
+                    + 4 * S // L                            # two boundary hyperplanes
+                )
+    return surcharge
+
+
 @_counted_wrapper
 def gradient(
     f: ArrayLike, *varargs: ArrayLike, **kwargs: Any
 ) -> FlopscopeArray | list[FlopscopeArray]:
     """Counted version of np.gradient.
 
-    Cost model: numpy.gradient computes second-order central differences
-    along each axis (one subtract for the interior + one divide-by-2),
-    plus first-order forward/backward differences at the two boundaries.
-    Per axis i: interior elements = f.size * (shape[i] - 2) / shape[i];
-    two ops (subtract + divide) on those interior elements.
-    Total: sum over axes of 2 * f.size * (shape[i] - 2) / shape[i].
-    For large uniform arrays this ≈ 2 * ndim * f.size.
-    Issue #69 — old formula was `f.size` regardless of ndim.
+    Base cost (no coord arrays, or uniform scalar spacing):
+      sum over axes of 2 * f.size * max(shape[ax]-2, 0) // shape[ax]
+
+    Spacing surcharge per coord-array axis (1-D array length == shape[ax]):
+      - If coord diffs are bit-exactly uniform (e.g. np.arange): +3*(L-1)
+        (numpy still runs diff + equal + all-reduce to detect uniformity)
+      - Otherwise (non-uniform floats): + 3*S*(L-2)//L + 10*(L-2) + 3*(L-1) + 4*S//L
+        (blend coeff arrays a,b,c; diff+uniformity check; two edge hyperplanes)
+
+    The non-uniform formula is a conservative floor at edge_order=1 boundaries.
+    Scaling: S = f.size, L = f.shape[ax].
     """
     budget = require_budget()
     if not isinstance(f, _np.ndarray):
@@ -2579,13 +2709,37 @@ def gradient(
     if f.ndim == 0:
         cost = 1
     else:
-        cost = _builtins.max(
+        base = _builtins.max(
             _builtins.sum(
                 2 * f.size * _builtins.max(f.shape[ax] - 2, 0) // f.shape[ax]
                 for ax in range(f.ndim)
             ),
             1,
         )
+
+        # --- spacing surcharge ---
+        # Normalise axes as numpy does
+        ax_kw = kwargs.get("axis")
+        if ax_kw is None:
+            axes = range(f.ndim)
+        elif isinstance(ax_kw, int):
+            axes = (ax_kw % f.ndim,)
+        else:
+            axes = tuple(a % f.ndim for a in ax_kw)
+        axes = tuple(axes)
+
+        n_varargs = len(varargs)
+        if n_varargs == 0 or (n_varargs == 1 and _np.ndim(varargs[0]) == 0):
+            surcharge = 0  # no coord arrays or scalar spacing
+        elif n_varargs == len(axes):
+            # _gradient_spacing_surcharge is a non-decorated helper so _np.diff
+            # is called outside the @_counted_wrapper guard
+            surcharge = _gradient_spacing_surcharge(f.shape, f.size, varargs, axes)
+        else:
+            surcharge = 0  # mismatched varargs; let numpy raise; charge base only
+
+        cost = base + surcharge
+
     with budget.deduct("gradient", flop_cost=cost, subscripts=None, shapes=(f.shape,)):
         result = _call_numpy(
             _np.gradient,
@@ -2600,7 +2754,7 @@ attach_docstring(
     gradient,
     _np.gradient,
     "counted_custom",
-    "sum_axis(2 * f.size * (shape[ax]-2) / shape[ax]) FLOPs",
+    "uniform: sum_ax 2*S*(L-2)/L; non-uniform axis adds 3*S*(L-2)/L + 10*(L-2) + 3*(L-1) + 4*S/L FLOPs",
 )
 gradient.__signature__ = _inspect.signature(_np.gradient)  # pyright: ignore[reportFunctionMemberAccess]
 
@@ -2665,15 +2819,74 @@ attach_docstring(
 )
 
 
+def _correlate_cost(n: int, m: int, mode) -> int:
+    """Per-mode FLOPs for np.correlate(a, v) with len(a)=n, len(v)=m.
+
+    Normalise mode: numpy accepts int 0/1/2 = valid/same/full and
+    case-insensitive strings matched on first letter.  Unknown strings fall
+    back to "f" (conservative max; numpy will raise on truly invalid modes).
+
+    Exact closed forms validated against ground-truth FLOPs for all (n,m) in
+    {1..10, 17, 100, 101}²:
+
+      full  (f): 2*n*m - n - m + 1
+      valid (v): (2*mn - 1) * (mx - mn + 1)   where mn=min(n,m), mx=max(n,m)
+      same  (s): exact dot-length sum via numpy C layout (see below)
+    """
+    _mode_map = {0: "v", 1: "s", 2: "f"}
+    if isinstance(mode, int):
+        _m = _mode_map.get(mode, "f")
+    else:
+        _m = str(mode).lower()[:1]
+        if _m not in ("v", "s", "f"):
+            _m = "f"  # conservative fallback; numpy will raise for truly invalid modes
+
+    mn = _builtins.min(n, m)
+    mx = _builtins.max(n, m)
+
+    if _m == "f":
+        # full: 2*n*m - n - m + 1 (exact; fixes prior off-by-one)
+        return _builtins.max(2 * n * m - n - m + 1, 1)
+    elif _m == "v":
+        # valid: each of (mx - mn + 1) output positions uses a dot of length mn;
+        # FMA=2: 2*mn - 1 FLOPs per position
+        return _builtins.max((2 * mn - 1) * (mx - mn + 1), 1)
+    else:
+        # same: numpy C implementation uses a variable-length dot per output position.
+        # The output has mx elements.  The interior (mx - mn + 1) positions each use
+        # a full-length dot (mn muls + mn-1 adds = 2*mn - 1 FLOPs).  The n_left left-
+        # edge and n_right right-edge positions use progressively shorter dots.
+        # n_left = mn // 2  (left padding)
+        # n_right = mn - n_left - 1  (right padding)
+        # Edge FLOPs = sum_{k=1}^{n_left} (2k - 1) + sum_{k=1}^{n_right} (2k - 1)
+        #            = n_left^2 + n_right^2  (sum of odd = k^2)
+        # Simplify: k*mn - k*(k+1)//2 for each edge group where each position i has
+        # dot-length starting from 1 and stepping by 1 → FLOPs = 2*i - 1 per position
+        n_left = mn // 2
+        n_right = mn - n_left - 1
+        edge_flops = (
+            (n_left * mn - n_left * (n_left + 1) // 2)
+            + (n_right * mn - n_right * (n_right + 1) // 2)
+        )
+        interior = mn * (mx - mn + 1)
+        return _builtins.max(2 * (interior + edge_flops) - mx, 1)
+
+
 @_counted_wrapper
 def correlate(a: ArrayLike, v: ArrayLike, mode: str = "valid") -> FlopscopeArray:
-    """Counted version of np.correlate."""
+    """Counted version of np.correlate.
+
+    Per-mode FLOPs (FMA=2):
+      full  (default for convolve): 2*n*m - n - m + 1
+      valid (numpy default):        (2*min-1) * (max-min+1)
+      same:                         exact dot-length sum per numpy C layout
+    """
     budget = require_budget()
     if not isinstance(a, _np.ndarray):
         a = _np.asarray(a)
     if not isinstance(v, _np.ndarray):
         v = _np.asarray(v)
-    cost = _builtins.max(2 * a.size * v.size - a.size - v.size, 1)
+    cost = _correlate_cost(a.size, v.size, mode)
     with budget.deduct(
         "correlate",
         flop_cost=cost,
@@ -2687,7 +2900,10 @@ def correlate(a: ArrayLike, v: ArrayLike, mode: str = "valid") -> FlopscopeArray
 
 
 attach_docstring(
-    correlate, _np.correlate, "counted_custom", "2*n*m - n - m FLOPs (FMA=2)"
+    correlate,
+    _np.correlate,
+    "counted_custom",
+    "per-mode FLOPs (FMA=2): full 2nm-n-m+1; valid (2*min-1)*(max-min+1); same exact dot-length sum",
 )
 
 

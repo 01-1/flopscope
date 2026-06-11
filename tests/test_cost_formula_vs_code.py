@@ -248,7 +248,8 @@ _REDUCTION_NUMEL = [
     "any",
     "argmax",
     "argmin",
-    "count_nonzero",
+    # count_nonzero is excluded: dedicated wrapper now charges numel(input) axis-independently
+    # (always numel, not numel-1 from skeleton); see test_count_nonzero_bills_numel_axis_independent
     "cumprod",
     "cumsum",
     "max",
@@ -264,11 +265,11 @@ _REDUCTION_NUMEL = [
     "nanmin",
     "nanprod",
     "nansum",
-    "nanmedian",
+    # nanmedian is excluded: Tier-2 cost (num_output_orbits × axis_dim); see test_nanmedian_tier2_full_reduction
     # mean is excluded: it charges +1 divide for the scalar output orbit
+    # nanmean is excluded: billed identically to mean (reduction + M divides); see test_nanmean_matches_mean
     # average is excluded: now matches mean cost (reduction + M divides); see test_average_matches_mean_and_bills_weight_pipeline
     # std/var/nanstd/nanvar are excluded: 4-pass formula; see test_variance_family_cost
-    "nanmean",
 ]
 
 
@@ -315,6 +316,24 @@ def test_median_tier2_cost(we):
     a = numpy.random.rand(10, 10)
     cost = _cost_of(we.median, a)
     assert cost == 100, f"median: expected Tier-2 cost=100, got {cost}"
+
+
+def test_nanmedian_tier2_cost(we):
+    # nanmedian now uses Tier-2 model (same as median): num_output_orbits × axis_dim.
+    # Full reduction of (10,10) dense: axis_dim = prod(shape) = 100, scalar → 1 orbit.
+    # Cost = 1 * 100 = 100.  (Was 99 from _counted_reduction skeleton.)
+    a = numpy.random.rand(10, 10)
+    cost = _cost_of(we.nanmedian, a)
+    assert cost == 100, f"nanmedian: expected Tier-2 cost=100, got {cost}"
+
+
+def test_nanmean_charges_sum_plus_one_divide(we):
+    # nanmean: billed identically to mean (reduction + per-output divide).
+    # Full reduction of (10,10) dense: sum cost = 99, scalar output → 1 divide.
+    # Total = 100. (Was 99 from _counted_reduction skeleton.)
+    a = numpy.random.rand(10, 10)
+    cost = _cost_of(we.nanmean, a)
+    assert cost == 100, f"nanmean: expected sum_cost(99) + 1 divide = 100, got {cost}"
 
 
 def test_percentile_tier2_cost(we):
@@ -800,14 +819,17 @@ class TestStatistics:
 
 
 class TestFreeOps:
-    def test_append_numel_values(self, we):
-        assert _cost_of(we.append, numpy.array([1, 2, 3]), [4, 5]) == 2
+    def test_append_numel_output(self, we):
+        # np.append = concatenate([arr, values]); bills numel(output) = arr.size + values.size
+        assert _cost_of(we.append, numpy.array([1, 2, 3]), [4, 5]) == 5  # was 2 (values.size only)
 
-    def test_delete_num_deleted(self, we):
-        assert _cost_of(we.delete, numpy.array([1, 2, 3, 4, 5]), [0, 2]) == 2
+    def test_delete_numel_output(self, we):
+        # np.delete copies surviving elements; bills numel(output) = arr.size - deleted
+        assert _cost_of(we.delete, numpy.array([1, 2, 3, 4, 5]), [0, 2]) == 3  # was 2 (num_deleted)
 
-    def test_insert_numel_values(self, we):
-        assert _cost_of(we.insert, numpy.array([1, 2, 3]), 1, [10, 20]) == 2
+    def test_insert_numel_output(self, we):
+        # np.insert copies all elements; bills numel(output) = arr.size + values.size
+        assert _cost_of(we.insert, numpy.array([1, 2, 3]), 1, [10, 20]) == 5  # was 2 (values.size only)
 
     def test_trim_zeros_num_trimmed(self, we):
         assert _cost_of(we.trim_zeros, numpy.array([0, 0, 1, 2, 0, 0])) == 4

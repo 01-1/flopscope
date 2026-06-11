@@ -1294,9 +1294,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "Stack arrays vertically. Cost: numel(output).",
     },
     "hstack": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Stack arrays horizontally.",
+        "notes": "Stack arrays horizontally. Cost: numel(output).",
     },
     "split": {
         "category": "free",
@@ -1384,14 +1384,14 @@ REGISTRY: dict[str, dict] = {
         "notes": "Pad array. Cost: numel(output).",
     },
     "triu": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Upper triangle of array.",
+        "notes": "Upper triangle of array. Cost: numel(output) (masked-select copy).",
     },
     "tril": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Lower triangle of array.",
+        "notes": "Lower triangle of array. Cost: numel(output) (masked-select copy).",
     },
     "diagonal": {
         "category": "counted_custom",
@@ -1475,9 +1475,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "View inputs as arrays with at least three dimensions.",
     },
     "column_stack": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Stack 1-D arrays as columns into 2-D array.",
+        "notes": "Stack 1-D arrays as columns into 2-D array. Cost: numel(output).",
     },
     "dstack": {
         "category": "counted_custom",
@@ -1485,9 +1485,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "Stack arrays depth-wise (along third axis). Cost: numel(output).",
     },
     "row_stack": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Stack arrays vertically (alias for vstack).",
+        "notes": "Stack arrays vertically (alias for vstack). Cost: numel(output).",
     },
     "flatnonzero": {
         "category": "counted_custom",
@@ -1533,12 +1533,12 @@ REGISTRY: dict[str, dict] = {
     "put": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Replace elements at given flat indices. Cost: numel(input).",
+        "notes": "Replace elements at given flat indices. Cost: numel(indices).",
     },
     "put_along_axis": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Put values into destination array using indices. Cost: numel(input).",
+        "notes": "Put values into destination array along axis. Cost: elements scattered = (numel(arr) / arr.shape[axis]) x indices.shape[axis] (indices.size when axis=None); gather tier weight 4.0.",
     },
     "putmask": {
         "category": "counted_custom",
@@ -1891,22 +1891,22 @@ REGISTRY: dict[str, dict] = {
     "delete": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return array with sub-arrays deleted along axis. Cost: num deleted.",
+        "notes": "Return array with sub-arrays deleted along axis. Cost: numel(output) (surviving elements copied).",
     },
     "insert": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Insert values along axis before given indices. Cost: numel(values).",
+        "notes": "Insert values along axis before given indices. Cost: numel(output).",
     },
     "append": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Append values to end of array. Cost: numel(values).",
+        "notes": "Append values to end of array. Cost: numel(output) = arr.size + values.size (np.append = concatenate).",
     },
     "copyto": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Copy values from src to dst array. Cost: num copied.",
+        "notes": "Copy values from src to dst array. Cost: numel(dst), or popcount of broadcast where mask.",
     },
     "unique_all": {
         "category": "counted_custom",

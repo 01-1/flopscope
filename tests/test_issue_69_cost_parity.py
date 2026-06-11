@@ -272,7 +272,10 @@ def _setup_correlate(rng):
 def _oracle_correlate(a, v):
     import numpy as _np
 
-    s = 2 * a.size * v.size - a.size - v.size
+    # default mode='valid': honest = (2*min-1)*(max-min+1)
+    mn = min(a.size, v.size)
+    mx = max(a.size, v.size)
+    s = (2 * mn - 1) * (mx - mn + 1)
     probe = _np.zeros(s)
     fnp.multiply(probe, 1.0)
 
