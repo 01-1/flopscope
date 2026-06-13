@@ -85,13 +85,10 @@ def svd(
         raise ValueError(f"svd requires a 2D (or batched) array, got shape {a.shape}")
     m, n = a.shape[-2], a.shape[-1]
     if k is not None and min(m, n) > 0 and not (1 <= k <= min(m, n)):
-        raise ValueError(
-            f"k must satisfy 1 <= k <= min(m, n) = {min(m, n)}, got k={k}"
-        )
+        raise ValueError(f"k must satisfy 1 <= k <= min(m, n) = {min(m, n)}, got k={k}")
     batch = _batch_size(a.shape)
     cost = (
-        svd_cost(m, n, k, with_vectors=compute_uv, full_matrices=full_matrices)
-        * batch
+        svd_cost(m, n, k, with_vectors=compute_uv, full_matrices=full_matrices) * batch
         if not _has_zero_dim(a.shape)
         else 0
     )

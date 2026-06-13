@@ -62,14 +62,18 @@ def test_full_matrices_premium_only_for_k_none():
 @pytest.mark.parametrize("m,n", [(128, 64), (64, 128), (64, 64), (200, 10)])
 @pytest.mark.parametrize("with_vectors", [True, False])
 def test_monotonic_non_decreasing_in_k(m, n, with_vectors):
-    costs = [svd_cost(m, n, k, with_vectors=with_vectors) for k in range(1, min(m, n) + 1)]
+    costs = [
+        svd_cost(m, n, k, with_vectors=with_vectors) for k in range(1, min(m, n) + 1)
+    ]
     assert all(costs[i] <= costs[i + 1] for i in range(len(costs) - 1))
 
 
 def test_full_decomposition_unchanged():
     # Regression guard: k=None paths are exactly the pre-change full costs.
     assert svd_cost(100, 50, None) == 750_000  # values-only
-    assert svd_cost(10, 5, None, with_vectors=True, full_matrices=True) == 4750  # full U
+    assert (
+        svd_cost(10, 5, None, with_vectors=True, full_matrices=True) == 4750
+    )  # full U
     assert svd_cost(10, 5, None, with_vectors=True, full_matrices=False) == 4000  # thin
 
 
@@ -79,4 +83,6 @@ def test_values_only_cheaper_at_cap_region():
     # m=10,n=5,k=4: wv=False -> min(800, 750)=750 ; wv=True -> min(800, 4000)=800.
     assert svd_cost(10, 5, 4, with_vectors=False) == 750
     assert svd_cost(10, 5, 4, with_vectors=True) == 800
-    assert svd_cost(10, 5, 4, with_vectors=False) < svd_cost(10, 5, 4, with_vectors=True)
+    assert svd_cost(10, 5, 4, with_vectors=False) < svd_cost(
+        10, 5, 4, with_vectors=True
+    )
