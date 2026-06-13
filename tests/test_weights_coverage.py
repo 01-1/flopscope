@@ -14,6 +14,7 @@ It also validates that:
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -26,18 +27,6 @@ ROOT = Path(__file__).resolve().parent.parent
 WEIGHTS_PATH = ROOT / "src" / "flopscope" / "data" / "weights.json"
 DOCS_PATH = ROOT / "website" / "content" / "docs" / "development" / "calibration.mdx"
 OPS_INDEX_PATH = ROOT / "website" / "public" / "ops.json"
-
-API_NAME_ALIASES = {
-    "abs": "absolute",
-    "bitwise_invert": "bitwise_not",
-    "concat": "concatenate",
-    "deg2rad": "radians",
-    "rad2deg": "degrees",
-    # row_stack is a deprecated alias of vstack; the generated API reference lists
-    # the canonical vstack (matching load_alias_map in generate_api_docs.py), so the
-    # weighted row_stack resolves through it.
-    "row_stack": "vstack",
-}
 
 # Ensure benchmarks package is importable.
 if str(ROOT) not in sys.path:
@@ -130,6 +119,50 @@ ALL_EXCLUDED: frozenset[str] = frozenset()
 
 
 # ---------------------------------------------------------------------------
+# API-name canonicalization (derived, not hand-maintained)
+# ---------------------------------------------------------------------------
+# A weighted op may be listed in ops.json under a *canonical* name (e.g. weights
+# has `abs`/`row_stack`, but the generated reference lists `absolute`/`vstack`).
+# Rather than hand-maintain that mapping — which silently drifted once, when the
+# generator started treating `row_stack` as a deprecated alias of `vstack` and the
+# hardcoded list lacked the entry — derive it from the generator's OWN resolver,
+# `scripts/generate_api_docs.py::load_alias_map`, so the two can never diverge.
+
+
+def _load_alias_map() -> dict[str, str]:
+    """Return the generator's alias map (op name -> canonical name).
+
+    Imported from ``scripts/generate_api_docs.py`` the same way
+    ``test_cost_model_coverage`` does — importlib plus ``sys.modules`` registration
+    so the module's ``@dataclass`` field annotations resolve on Python 3.14.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "_gen_api_docs", ROOT / "scripts" / "generate_api_docs.py"
+    )
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod.load_alias_map(REGISTRY)
+
+
+def _canonical_api_names(alias_map: dict[str, str]) -> dict[str, str]:
+    """Flatten each alias chain to its TERMINAL canonical — the name under which the
+    generator emits the op in ops.json (e.g. ``around -> round -> rint`` collapses
+    to ``around -> rint``). The ``seen`` set bounds any cycle.
+    """
+    resolved: dict[str, str] = {}
+    for name in alias_map:
+        seen: set[str] = set()
+        cur = name
+        while cur in alias_map and cur not in seen:
+            seen.add(cur)
+            cur = alias_map[cur]
+        resolved[name] = cur
+    return resolved
+
+
+# ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
@@ -158,6 +191,17 @@ def api_operations() -> dict[str, dict]:
     data = json.loads(OPS_INDEX_PATH.read_text())
     assert "operations" in data, "ops.json missing 'operations' key"
     return {entry["name"]: entry for entry in data["operations"]}
+
+
+@pytest.fixture(scope="module")
+def api_name_aliases() -> dict[str, str]:
+    """Weighted-op name -> the canonical name it appears under in ops.json.
+
+    Derived from the generator's own ``load_alias_map`` (not a hand-maintained
+    list) so it cannot silently drift from ops.json — which is exactly how a
+    missing ``row_stack -> vstack`` entry once broke this test.
+    """
+    return _canonical_api_names(_load_alias_map())
 
 
 @pytest.fixture(scope="module")
@@ -281,10 +325,11 @@ class TestDocsWeightCoverage:
         self,
         weights: dict[str, float],
         api_operations: dict[str, dict],
+        api_name_aliases: dict[str, str],
     ):
         """Every weighted op should appear in the generated API reference data."""
         canonical_weights = {
-            API_NAME_ALIASES.get(name, name): weight for name, weight in weights.items()
+            api_name_aliases.get(name, name): weight for name, weight in weights.items()
         }
         missing = [
             name for name in sorted(canonical_weights) if name not in api_operations
