@@ -69,7 +69,7 @@
             },
             {
               "kind": "text",
-              "text": " is the interval width. Each\npublic method deducts "
+              "text": " is the interval width. pdf and\nppf deduct "
             },
             {
               "kind": "code",
@@ -77,7 +77,15 @@
             },
             {
               "kind": "text",
-              "text": " FLOPs from the active budget."
+              "text": " FLOPs. cdf deducts "
+            },
+            {
+              "kind": "code",
+              "text": "4 * numel(input)"
+            },
+            {
+              "kind": "text",
+              "text": "\nFLOPs (composite: sub + div + 2 clip compare/selects, weight 1.0;\ncalibrated alpha 4.0)."
             }
           ],
           "type": "paragraph"
@@ -110,7 +118,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "``loc`` is the lower bound and ``scale`` is the interval width. Each public method deducts ``1 * numel(input)`` FLOPs from the active budget."
+    "``loc`` is the lower bound and ``scale`` is the interval width. pdf and ppf deduct ``1 * numel(input)`` FLOPs. cdf deducts ``4 * numel(input)`` FLOPs (composite: sub + div + 2 clip compare/selects, weight 1.0; calibrated alpha 4.0)."
   ],
   "numpy_ref": "",
   "operation": null,

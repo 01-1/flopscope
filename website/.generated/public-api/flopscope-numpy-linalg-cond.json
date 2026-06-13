@@ -391,7 +391,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.cond",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L422",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L463",
   "href": "/docs/api/numpy/linalg/cond/",
   "import_path": "flopscope.numpy.linalg.cond",
   "is_operation_cost_leaf": true,
@@ -403,7 +403,7 @@
     "href": "/docs/api/numpy/linalg/cross/",
     "label": "fnp.linalg.cross"
   },
-  "notes": "Condition number. Cost: m*n*min(m,n) (via SVD).",
+  "notes": "Condition number. Cost: values-only SVD + 1 (p in {None,2,-2}) or $2n^3 + 4n^2 + 1$ (inv-based).",
   "notes_sections": [
     "The condition number of `x` is defined as the norm of `x` times the norm of the inverse of `x` [1]_; the norm can be the usual L2-norm (root-of-sum-of-squares) or one of a number of other matrix norms."
   ],

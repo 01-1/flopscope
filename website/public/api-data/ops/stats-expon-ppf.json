@@ -212,11 +212,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(q)"
+                "text": "27 * numel(q)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: loc-scale*log1p(-q)(19) +\n3 where/cmp/and(8), FMA=2, weight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -277,7 +277,7 @@
   "schema_version": 1,
   "slug": "stats-expon-ppf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_expon.py#L98",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_expon.py#L103",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.expon.html"
   }
 }

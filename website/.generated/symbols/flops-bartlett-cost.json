@@ -120,7 +120,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "One linear evaluation per sample."
+              "text": "Four ops per sample: compare, divide, add/subtract, select (single branch of\nnumpy where-based evaluation). Weight 1.0 (no transcendental; constant in flop_cost)."
             }
           ],
           "type": "paragraph"

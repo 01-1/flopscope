@@ -241,11 +241,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "51 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: z(2)+std_norm_cdf(46)+\nresult(3)+2 where(4), FMA=2, weight 1.0; calibrated alpha 50.6)."
             }
           ],
           "type": "paragraph"
@@ -305,7 +305,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.stats.truncnorm.cdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L87",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L93",
   "href": "/docs/api/stats/truncnorm/cdf/",
   "import_path": "flopscope.stats.truncnorm.cdf",
   "is_operation_cost_leaf": true,
@@ -316,7 +316,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.truncnorm.cdf(x, a, b, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.truncnorm.cdf(x, a, b, loc, scale)``. FLOP cost: ``51 * numel(x)`` (composite: z(2)+std_norm_cdf(46)+ result(3)+2 where(4), FMA=2, weight 1.0; calibrated alpha 50.6)."
   ],
   "numpy_ref": "",
   "operation": null,

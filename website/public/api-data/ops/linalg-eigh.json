@@ -706,7 +706,7 @@
     "flopscope_ref": "fnp.linalg.eigh",
     "module": "numpy.linalg",
     "name": "linalg.eigh",
-    "notes": "Symmetric eigendecomposition. Cost: $n^3$.",
+    "notes": "Symmetric eigendecomposition. Cost: ~$9n^3$. Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e \u00a78.3).",
     "numpy_ref": "np.linalg.eigh",
     "signature": "fnp.linalg.eigh(a: 'ArrayLike', UPLO: 'str' = 'L') -> 'tuple[FlopscopeArray, FlopscopeArray]'",
     "status": "supported",
@@ -716,7 +716,7 @@
   "schema_version": 1,
   "slug": "linalg-eigh",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L194",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L200",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/linalg/_linalg.py#L1485"
   }
 }

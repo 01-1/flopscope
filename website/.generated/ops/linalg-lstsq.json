@@ -826,7 +826,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.lstsq",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L201",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L210",
   "href": "/docs/api/numpy/linalg/lstsq/",
   "legacy_href": "/docs/api/ops/linalg-lstsq/",
   "module": "numpy.linalg",
@@ -835,7 +835,7 @@
     "href": "/docs/api/numpy/linalg/matmul/",
     "label": "fnp.linalg.matmul"
   },
-  "notes": "Least squares. Cost: m*n*min(m,n) (LAPACK gelsd/SVD).",
+  "notes": "Least squares. Cost: SVD(with U/V) + back-substitution matmuls (see lstsq_cost).",
   "notes_sections": [
     "If `b` is a matrix, then all array results are returned as matrices."
   ],

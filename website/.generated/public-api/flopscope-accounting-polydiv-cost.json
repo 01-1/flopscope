@@ -10,13 +10,27 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Cost for polydiv: n1 * n2 FLOPs."
+              "text": "Cost for polydiv: 1 + Q*(2*n2 + 1), Q = max(n1-n2+1, 0) (work scales with"
             }
           ],
           "type": "paragraph"
         }
       ],
       "title": "Summary"
+    },
+    {
+      "blocks": [
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "quotient length: per step 1 scale-divide + n2 mul + n2 sub)."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
     },
     {
       "blocks": [
@@ -197,7 +211,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.polydiv_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L55",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L88",
   "href": "/docs/api/accounting/polydiv-cost/",
   "import_path": "flopscope.accounting.polydiv_cost",
   "is_operation_cost_leaf": false,
@@ -242,7 +256,7 @@
   "see_also": [],
   "signature": "flopscope.accounting.polydiv_cost(n1: 'int', n2: 'int') -> 'int'",
   "slug": "flopscope-accounting-polydiv-cost",
-  "summary": "Cost for polydiv: n1 * n2 FLOPs.",
+  "summary": "Cost for polydiv: 1 + Q*(2*n2 + 1), Q = max(n1-n2+1, 0) (work scales with",
   "upstream_source_url": "",
   "weight": 1.0
 }

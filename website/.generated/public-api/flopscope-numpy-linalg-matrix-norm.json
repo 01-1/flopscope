@@ -349,7 +349,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.matrix_norm",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L365",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L410",
   "href": "/docs/api/numpy/linalg/matrix-norm/",
   "import_path": "flopscope.numpy.linalg.matrix_norm",
   "is_operation_cost_leaf": true,
@@ -361,7 +361,7 @@
     "href": "/docs/api/numpy/linalg/matrix-power/",
     "label": "fnp.linalg.matrix_power"
   },
-  "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius, m*n*min(m,n) for ord=2.",
+  "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius/L1/Linf, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)); \u00d7 batch groups (product of dims except last two).",
   "notes_sections": [],
   "numpy_ref": "np.linalg.matrix_norm",
   "operation": {

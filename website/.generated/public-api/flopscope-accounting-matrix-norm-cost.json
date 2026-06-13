@@ -203,15 +203,15 @@
                   "inline": [
                     {
                       "kind": "text",
-                      "text": "SVD-based norms (2-norm, nuclear): "
+                      "text": "SVD-based norms (2-norm, nuclear): values-only SVD cost\n"
                     },
                     {
                       "kind": "code",
-                      "text": "4 * m * n * min(m, n)"
+                      "text": "2*a*b^2 + 2*b^3"
                     },
                     {
                       "kind": "text",
-                      "text": "\n(weight=4 baked in, consistent with linalg.svd weight=4)."
+                      "text": " where a=max(m,n), b=min(m,n)."
                     }
                   ],
                   "type": "paragraph"
@@ -239,7 +239,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.matrix_norm_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L331",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L376",
   "href": "/docs/api/accounting/matrix-norm-cost/",
   "import_path": "flopscope.accounting.matrix_norm_cost",
   "is_operation_cost_leaf": false,
@@ -251,7 +251,7 @@
   "notes": "",
   "notes_sections": [
     "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
-    "- Elementwise norms (Frobenius, L1, Linf): ``2 * numel`` (FMA=2, weight=1 baked in). - SVD-based norms (2-norm, nuclear): ``4 * m * n * min(m, n)`` (weight=4 baked in, consistent with linalg.svd weight=4)."
+    "- Elementwise norms (Frobenius, L1, Linf): ``2 * numel`` (FMA=2, weight=1 baked in). - SVD-based norms (2-norm, nuclear): values-only SVD cost ``2*a*b^2 + 2*b^3`` where a=max(m,n), b=min(m,n)."
   ],
   "numpy_ref": "",
   "operation": null,

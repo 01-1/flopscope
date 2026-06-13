@@ -40,14 +40,14 @@
   "example": null,
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.random.random",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L371",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L446",
   "href": "/docs/api/numpy/random/random/",
   "legacy_href": "/docs/api/ops/random-random/",
   "module": "numpy.random",
   "name": "random.random",
   "next": {
-    "href": "/docs/api/numpy/random/random-integers/",
-    "label": "fnp.random.random_integers"
+    "href": "/docs/api/numpy/random/random-sample/",
+    "label": "fnp.random.random_sample"
   },
   "notes": "Sampling; cost = numel(output).",
   "notes_sections": [],

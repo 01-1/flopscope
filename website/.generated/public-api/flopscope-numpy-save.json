@@ -474,8 +474,8 @@
     }
   ],
   "previous": {
-    "href": "/docs/api/numpy/row-stack/",
-    "label": "fnp.row_stack"
+    "href": "/docs/api/numpy/rot90/",
+    "label": "fnp.rot90"
   },
   "provenance_label": "Adapted from NumPy docs",
   "provenance_ref": "np.save",

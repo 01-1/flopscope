@@ -278,7 +278,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.uniform.ppf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L97",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L100",
   "href": "/docs/api/stats/uniform/ppf/",
   "import_path": "flops.stats.uniform.ppf",
   "is_operation_cost_leaf": false,

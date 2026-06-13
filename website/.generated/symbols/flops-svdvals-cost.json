@@ -12,13 +12,51 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Weighted FLOP cost of computing singular values."
+              "text": "Weighted FLOP cost of computing singular values (values-only SVD)."
             }
           ],
           "type": "paragraph"
         }
       ],
       "title": "Summary"
+    },
+    {
+      "blocks": [
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "Delegates to "
+            },
+            {
+              "display_text": "flopscope._flops.svd_cost",
+              "explicit_title": false,
+              "external_url": "",
+              "href": "",
+              "kind": "role_reference",
+              "original_target": "flopscope._flops.svd_cost",
+              "role": "func",
+              "suppress_link": false,
+              "target": "_flops.svd_cost",
+              "unresolved": true
+            },
+            {
+              "kind": "text",
+              "text": " with "
+            },
+            {
+              "kind": "code",
+              "text": "with_vectors=False"
+            },
+            {
+              "kind": "text",
+              "text": ":\n2*a*b^2 + 2*b^3, a = max(m, n), b = min(m, n). Top-k (1 <= k < min(m, n))\nbills min(4*m*n*k, that cost)."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
     },
     {
       "blocks": [
@@ -175,15 +213,6 @@
             }
           ],
           "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "text",
-              "text": "Source: Golub-Reinsch bidiagonalization. Same cost model as SVD."
-            }
-          ],
-          "type": "paragraph"
         }
       ],
       "title": "Notes"
@@ -206,8 +235,8 @@
   ],
   "signature": "flops.flops.svdvals_cost(m: 'int', n: 'int', k: 'int | None' = None) -> 'int'",
   "slug": "flops-svdvals-cost",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L302",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L327",
   "status_note": "",
-  "summary": "Weighted FLOP cost of computing singular values.",
+  "summary": "Weighted FLOP cost of computing singular values (values-only SVD).",
   "upstream_source_url": ""
 }

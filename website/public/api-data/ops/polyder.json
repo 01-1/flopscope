@@ -374,7 +374,7 @@
     "flopscope_ref": "fnp.polyder",
     "module": "flopscope._polynomial",
     "name": "polyder",
-    "notes": "Differentiate polynomial. Cost: n FLOPs.",
+    "notes": "Differentiate polynomial m times. Cost: t*n - t*(t+1)/2 FLOPs, t = min(m, n-1) (one multiply per surviving coefficient per step).",
     "numpy_ref": "np.polyder",
     "signature": "fnp.polyder(p: 'ArrayLike', m: 'int' = 1) -> 'FlopscopeArray'",
     "status": "supported",
@@ -384,7 +384,7 @@
   "schema_version": 1,
   "slug": "polyder",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L147",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L212",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_polynomial_impl.py#L367"
   }
 }

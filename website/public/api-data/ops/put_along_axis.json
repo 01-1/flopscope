@@ -399,17 +399,17 @@
     "flopscope_ref": "fnp.put_along_axis",
     "module": "numpy",
     "name": "put_along_axis",
-    "notes": "Put values into destination array using indices. Cost: numel(input).",
+    "notes": "Put values into destination array along axis. Cost: elements scattered = (numel(arr) / arr.shape[axis]) x indices.shape[axis] (indices.size when axis=None); gather tier weight 4.0.",
     "numpy_ref": "np.put_along_axis",
     "signature": "fnp.put_along_axis(arr: 'ArrayLike', indices: 'ArrayLike', values: 'ArrayLike', axis: 'int | None', *args: 'Any', **kwargs: 'Any') -> 'None'",
     "status": "supported",
     "summary": "Put values into the destination array by matching 1d index and data slices.",
-    "weight": 1.0
+    "weight": 4.0
   },
   "schema_version": 1,
   "slug": "put_along_axis",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2125",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2222",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_shape_base_impl.py#L182"
   }
 }

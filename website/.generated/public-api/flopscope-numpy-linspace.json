@@ -858,7 +858,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linspace",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L234",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L242",
   "href": "/docs/api/numpy/linspace/",
   "import_path": "flopscope.numpy.linspace",
   "is_operation_cost_leaf": true,
@@ -870,7 +870,7 @@
     "href": "/docs/api/numpy/load/",
     "label": "fnp.load"
   },
-  "notes": "Return evenly spaced numbers over interval. Cost: numel(output).",
+  "notes": "Return evenly spaced numbers over interval. Cost: 2*numel(output).",
   "notes_sections": [],
   "numpy_ref": "np.linspace",
   "operation": {

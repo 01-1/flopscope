@@ -86,15 +86,31 @@
             },
             {
               "kind": "text",
-              "text": " to match SciPy's signature. Each public\nmethod deducts "
+              "text": " to match SciPy's signature. pdf deducts\n"
             },
             {
               "kind": "code",
-              "text": "1 * numel(input)"
+              "text": "28 * numel(input)"
             },
             {
               "kind": "text",
-              "text": " FLOPs from the active budget."
+              "text": " FLOPs (composite: z(2)+std_norm_pdf(20)+div(1)+\nbounds(5), FMA=2, weight 1.0; calibrated alpha 28.0). cdf deducts\n"
+            },
+            {
+              "kind": "code",
+              "text": "51 * numel(input)"
+            },
+            {
+              "kind": "text",
+              "text": " FLOPs (composite: z(2)+std_norm_cdf(46)+result(3)+\n2 where(4), FMA=2, weight 1.0; calibrated alpha 50.6). ppf deducts\n"
+            },
+            {
+              "kind": "code",
+              "text": "81 * numel(input)"
+            },
+            {
+              "kind": "text",
+              "text": " FLOPs (composite: erf + ndtri rational approx +\narithmetic, weight 1.0; audit-2 verified)."
             }
           ],
           "type": "paragraph"

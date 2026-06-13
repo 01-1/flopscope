@@ -218,11 +218,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(x)"
+                "text": "62 * numel(x)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: log + exp + arithmetic,\nweight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -273,7 +273,7 @@
     "flopscope_ref": "flops.stats.lognorm.pdf",
     "module": "flopscope.stats",
     "name": "stats.lognorm.pdf",
-    "notes": "Log-normal PDF; cost = numel(input).",
+    "notes": "Log-normal PDF; composite: 62 FLOPs/elem (log + exp + arithmetic), weight 1.0.",
     "numpy_ref": "scipy.stats.lognorm.pdf",
     "signature": "flops.stats.lognorm.pdf(x, s, loc=0, scale=1)",
     "status": "supported",
@@ -283,7 +283,7 @@
   "schema_version": 1,
   "slug": "stats-lognorm-pdf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_lognorm.py#L40",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_lognorm.py#L45",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html"
   }
 }

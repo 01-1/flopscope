@@ -486,7 +486,7 @@
     "flopscope_ref": "fnp.fft.ihfft",
     "module": "numpy.fft",
     "name": "fft.ihfft",
-    "notes": "Inverse FFT of Hermitian signal. Cost: 5*n*ceil(log2(n)) (Cooley-Tukey radix-2; Van Loan 1992 \u00a71.4).",
+    "notes": "Inverse FFT of Hermitian signal; numpy computes conj(rfft(a,n)). Cost: 5*(n//2)*ceil(log2(n)) (Cooley-Tukey radix-2; Van Loan 1992 \u00a71.4).",
     "numpy_ref": "np.fft.ihfft",
     "signature": "fnp.fft.ihfft(a: 'ArrayLike', n: 'int | None' = None, axis: 'int' = -1, norm: 'str | None' = None, out: 'ArrayLike | None' = None) -> 'FlopscopeArray'",
     "status": "supported",

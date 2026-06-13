@@ -292,7 +292,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.blackman",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L66",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L69",
   "href": "/docs/api/numpy/blackman/",
   "legacy_href": "/docs/api/ops/blackman/",
   "module": "flopscope._window",
@@ -301,7 +301,7 @@
     "href": "/docs/api/numpy/block/",
     "label": "fnp.block"
   },
-  "notes": "Blackman window. Cost: 3*n (three cosine terms per sample).",
+  "notes": "Blackman window. Cost: 40*n composite (two cosine evals at transcendental rate + 8 arithmetic per sample; the 0.42 term is a constant, not a third cosine).",
   "notes_sections": [
     "The Blackman window is defined as",
     ".. math::  w(n) = 0.42 - 0.5 \\cos(2\\pi n/M) + 0.08 \\cos(4\\pi n/M)",

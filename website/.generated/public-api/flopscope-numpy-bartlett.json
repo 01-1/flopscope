@@ -330,7 +330,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.bartlett",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L34",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L35",
   "href": "/docs/api/numpy/bartlett/",
   "import_path": "flopscope.numpy.bartlett",
   "is_operation_cost_leaf": true,
@@ -342,7 +342,7 @@
     "href": "/docs/api/numpy/bincount/",
     "label": "fnp.bincount"
   },
-  "notes": "Bartlett window. Cost: n (one linear eval per sample).",
+  "notes": "Bartlett window. Cost: 4*n (compare + divide + add + select per sample; single branch of numpy where-based evaluation).",
   "notes_sections": [
     "The Bartlett window is defined as",
     ".. math:: w(n) = \\frac{2}{M-1} \\left( \\frac{M-1}{2} - \\left|n - \\frac{M-1}{2}\\right| \\right)",

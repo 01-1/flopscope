@@ -1,5 +1,7 @@
 {
-  "aliases": [],
+  "aliases": [
+    "row_stack"
+  ],
   "api_docs_html": "",
   "area": "core",
   "body_sections": [
@@ -485,7 +487,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.vstack",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L525",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L545",
   "href": "/docs/api/numpy/vstack/",
   "legacy_href": "/docs/api/ops/vstack/",
   "module": "numpy",

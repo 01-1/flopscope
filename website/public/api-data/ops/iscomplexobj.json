@@ -201,15 +201,15 @@
     ]
   },
   "op": {
-    "category": "counted_unary",
-    "cost_formula": "numel(output)",
-    "cost_formula_latex": "$\\text{numel}(\\text{output})$",
+    "category": "free",
+    "cost_formula": "0",
+    "cost_formula_latex": "$0$",
     "flopscope_ref": "fnp.iscomplexobj",
     "module": "numpy",
     "name": "iscomplexobj",
-    "notes": "Return True if input is a complex type or array.",
+    "notes": "Return True if input is a complex type or array (dtype predicate, O(1)).",
     "numpy_ref": "np.iscomplexobj",
-    "signature": "fnp.iscomplexobj(x)",
+    "signature": "fnp.iscomplexobj(x: 'Any') -> 'bool'",
     "status": "supported",
     "summary": "Check for a complex type or an array of complex numbers.",
     "weight": 1.0
@@ -217,7 +217,7 @@
   "schema_version": 1,
   "slug": "iscomplexobj",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L364",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L1084",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_type_check_impl.py#L270"
   }
 }

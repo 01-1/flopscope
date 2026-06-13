@@ -120,7 +120,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Simplified cubic cost model for Cholesky decomposition."
+              "text": "n^3/3 FLOPs (G&VL 4e Alg 4.2.1; LAPACK dpotrf)."
             }
           ],
           "type": "paragraph"

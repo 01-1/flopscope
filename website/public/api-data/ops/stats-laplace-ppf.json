@@ -212,11 +212,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(q)"
+                "text": "51 * numel(q)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: two eager log branches +\nedge selects, weight 1.0). Derivation (FMA=2): 2 eager log branches\n(2\u00d716=32) + 19 arith/cmp/select (branch A: maximum+2 mul+add=4;\nbranch B: sub+maximum+2 mul+sub=5; where#1 cmp+select=2; where#2\n2 cmp+and+select=4; where#3,#4 cmp+select=2 each)."
               }
             ],
             "type": "paragraph"
@@ -267,7 +267,7 @@
     "flopscope_ref": "flops.stats.laplace.ppf",
     "module": "flopscope.stats",
     "name": "stats.laplace.ppf",
-    "notes": "Laplace PPF; cost = numel(input).",
+    "notes": "Laplace PPF; composite: 51 FLOPs/elem (two eager log branches), weight 1.0.",
     "numpy_ref": "scipy.stats.laplace.ppf",
     "signature": "flops.stats.laplace.ppf(q, loc=0, scale=1)",
     "status": "supported",
@@ -277,7 +277,7 @@
   "schema_version": 1,
   "slug": "stats-laplace-ppf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_laplace.py#L98",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_laplace.py#L104",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.laplace.html"
   }
 }

@@ -2699,12 +2699,6 @@
     "kind": "op",
     "slug": "random-random"
   },
-  "numpy/random/random-integers": {
-    "canonical_name": "random.random_integers",
-    "href": "/docs/api/numpy/random/random-integers/",
-    "kind": "op",
-    "slug": "random-random_integers"
-  },
   "numpy/random/random-sample": {
     "canonical_name": "random.random_sample",
     "href": "/docs/api/numpy/random/random-sample/",
@@ -3196,12 +3190,6 @@
     "href": "/docs/api/numpy/rot90/",
     "kind": "op",
     "slug": "rot90"
-  },
-  "numpy/row-stack": {
-    "canonical_name": "row_stack",
-    "href": "/docs/api/numpy/row-stack/",
-    "kind": "op",
-    "slug": "row_stack"
   },
   "numpy/save": {
     "canonical_name": "save",

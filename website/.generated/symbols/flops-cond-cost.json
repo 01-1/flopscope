@@ -23,6 +23,20 @@
     {
       "blocks": [
         {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "p in {None, 2, -2}: values-only SVD + 1 divide.\nother p (square only): norm(A)*norm(inv(A)) -> inv (2n^3) + two\nelementwise norm passes (2n^2 each) + 1 multiply."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
+    },
+    {
+      "blocks": [
+        {
           "items": [
             {
               "body_blocks": [
@@ -197,71 +211,6 @@
             }
           ],
           "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "text",
-              "text": "For "
-            },
-            {
-              "kind": "code",
-              "text": "p=None"
-            },
-            {
-              "kind": "text",
-              "text": ", "
-            },
-            {
-              "kind": "code",
-              "text": "p=2"
-            },
-            {
-              "kind": "text",
-              "text": ", or "
-            },
-            {
-              "kind": "code",
-              "text": "p=-2"
-            },
-            {
-              "kind": "text",
-              "text": ", computed via SVD (cost m*n*min(m,n)).\nFor "
-            },
-            {
-              "kind": "code",
-              "text": "p=1"
-            },
-            {
-              "kind": "text",
-              "text": ", "
-            },
-            {
-              "kind": "code",
-              "text": "p=-1"
-            },
-            {
-              "kind": "text",
-              "text": ", "
-            },
-            {
-              "kind": "code",
-              "text": "p=inf"
-            },
-            {
-              "kind": "text",
-              "text": ", or "
-            },
-            {
-              "kind": "code",
-              "text": "p=-inf"
-            },
-            {
-              "kind": "text",
-              "text": ", computed via LU factorization\n(cost ~min(m,n)^3 + m*n for norm)."
-            }
-          ],
-          "type": "paragraph"
         }
       ],
       "title": "Notes"
@@ -284,7 +233,7 @@
   ],
   "signature": "flops.flops.cond_cost(m: 'int', n: 'int', p=None) -> 'int'",
   "slug": "flops-cond-cost",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L391",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L448",
   "status_note": "",
   "summary": "Weighted FLOP cost of condition number.",
   "upstream_source_url": ""

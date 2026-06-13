@@ -379,7 +379,7 @@
     "flopscope_ref": "fnp.linalg.tensorinv",
     "module": "numpy.linalg",
     "name": "linalg.tensorinv",
-    "notes": "Tensor inverse. Cost: $n^3$ after reshape (delegates to inv).",
+    "notes": "Tensor inverse. Cost: $2n^3$ after reshape, n=prod(leading dims) (delegates to inv).",
     "numpy_ref": "np.linalg.tensorinv",
     "signature": "fnp.linalg.tensorinv(a: 'ArrayLike', ind: 'int' = 2) -> 'FlopscopeArray'",
     "status": "supported",
@@ -389,7 +389,7 @@
   "schema_version": 1,
   "slug": "linalg-tensorinv",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L408",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L425",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/linalg/_linalg.py#L419"
   }
 }

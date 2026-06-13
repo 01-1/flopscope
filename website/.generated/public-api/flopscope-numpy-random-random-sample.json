@@ -378,7 +378,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.random.random_sample",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L371",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L446",
   "href": "/docs/api/numpy/random/random-sample/",
   "import_path": "flopscope.numpy.random.random_sample",
   "is_operation_cost_leaf": true,
@@ -413,8 +413,8 @@
     }
   ],
   "previous": {
-    "href": "/docs/api/numpy/random/random-integers/",
-    "label": "fnp.random.random_integers"
+    "href": "/docs/api/numpy/random/random/",
+    "label": "fnp.random.random"
   },
   "provenance_label": "Adapted from NumPy docs",
   "provenance_ref": "np.random.random_sample",

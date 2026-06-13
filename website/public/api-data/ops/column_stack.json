@@ -207,23 +207,23 @@
     ]
   },
   "op": {
-    "category": "free",
-    "cost_formula": "0",
-    "cost_formula_latex": "$0$",
+    "category": "counted_custom",
+    "cost_formula": "per-operation",
+    "cost_formula_latex": "varies",
     "flopscope_ref": "fnp.column_stack",
     "module": "numpy",
     "name": "column_stack",
-    "notes": "Stack 1-D arrays as columns into 2-D array.",
+    "notes": "Stack 1-D arrays as columns into 2-D array. Cost: numel(output).",
     "numpy_ref": "np.column_stack",
     "signature": "fnp.column_stack(tup)",
     "status": "supported",
     "summary": "Stack 1-D arrays as columns into a 2-D array.",
-    "weight": 0.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "column_stack",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1425",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1481",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_shape_base_impl.py#L621"
   }
 }

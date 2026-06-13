@@ -780,7 +780,7 @@
     "flopscope_ref": "fnp.fft.hfft",
     "module": "numpy.fft",
     "name": "fft.hfft",
-    "notes": "FFT of Hermitian-symmetric signal. Cost: 5*n_out*ceil(log2(n_out)) (Cooley-Tukey radix-2; Van Loan 1992 \u00a71.4).",
+    "notes": "FFT of Hermitian-symmetric signal. Cost: 5*(n_out//2)*ceil(log2(n_out)) \u2014 numpy implements hfft(a,n) as irfft(conj(a),n) (c2r; Van Loan 1992 \u00a71.4).",
     "numpy_ref": "np.fft.hfft",
     "signature": "fnp.fft.hfft(a: 'ArrayLike', n: 'int | None' = None, axis: 'int' = -1, norm: 'str | None' = None, out: 'ArrayLike | None' = None) -> 'FlopscopeArray'",
     "status": "supported",

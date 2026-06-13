@@ -613,7 +613,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.random.choice",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L437",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L512",
   "href": "/docs/api/numpy/random/choice/",
   "legacy_href": "/docs/api/ops/random-choice/",
   "module": "numpy.random",
@@ -622,7 +622,7 @@
     "href": "/docs/api/numpy/random/default-rng/",
     "label": "fnp.random.default_rng"
   },
-  "notes": "Sampling; cost = numel(output) if replace, n*ceil(log2(n)) if not.",
+  "notes": "Sampling; cost = numel(output) if replace; n (Fisher-Yates, matches permutation) if replace=False and p is None; n*ceil(log2(n)) conservative floor if replace=False with p.",
   "notes_sections": [
     "Setting user-specified probabilities through ``p`` uses a more general but less efficient sampler than the default. The general sampler produces a different sample than the optimized sampler even if each element of ``p`` is 1 / len(a).",
     "Sampling random rows from a 2-D array is not possible with this function, but is possible with `Generator.choice` through its ``axis`` keyword."

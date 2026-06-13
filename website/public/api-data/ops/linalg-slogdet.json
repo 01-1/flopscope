@@ -386,7 +386,7 @@
     "flopscope_ref": "fnp.linalg.slogdet",
     "module": "numpy.linalg",
     "name": "linalg.slogdet",
-    "notes": "Sign + log determinant. Cost: $n^3$.",
+    "notes": "Sign + log determinant. Cost: $\\frac{2}{3}n^3 + 18n$ (LU + sum of log|diag|).",
     "numpy_ref": "np.linalg.slogdet",
     "signature": "fnp.linalg.slogdet(a: 'ArrayLike') -> 'SlogdetResult'",
     "status": "supported",
@@ -396,7 +396,7 @@
   "schema_version": 1,
   "slug": "linalg-slogdet",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L137",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L139",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/linalg/_linalg.py#L2246"
   }
 }

@@ -598,7 +598,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.append",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1111",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1155",
   "href": "/docs/api/numpy/append/",
   "legacy_href": "/docs/api/ops/append/",
   "module": "numpy",
@@ -607,7 +607,7 @@
     "href": "/docs/api/numpy/apply-along-axis/",
     "label": "fnp.apply_along_axis"
   },
-  "notes": "Append values to end of array. Cost: numel(values).",
+  "notes": "Append values to end of array. Cost: numel(output) = arr.size + values.size (np.append = concatenate).",
   "notes_sections": [],
   "numpy_ref": "np.append",
   "parameters": [

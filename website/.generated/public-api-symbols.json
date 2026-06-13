@@ -1151,7 +1151,7 @@
     "related_guides": [],
     "signature": "fnp.base_repr(number, base=2, padding=0)",
     "slug": "base-repr",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1284",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1336",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Return a string representation of a number in the given base system.",
     "upstream_source_url": ""
@@ -1591,7 +1591,7 @@
     "related_guides": [],
     "signature": "fnp.binary_repr(num, width=None)",
     "slug": "binary-repr",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1298",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1350",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Return the binary representation of the input number as a string.",
     "upstream_source_url": ""
@@ -4640,7 +4640,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "One linear evaluation per sample."
+                "text": "Four ops per sample: compare, divide, add/subtract, select (single branch of\nnumpy where-based evaluation). Weight 1.0 (no transcendental; constant in flop_cost)."
               }
             ],
             "type": "paragraph"
@@ -4793,7 +4793,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Three cosine terms per sample."
+                "text": "numpy's blackman: 0.42 + 0.5*cos(pi*n/(M-1)) + 0.08*cos(2*pi*n/(M-1)) \u2014 exactly\ntwo cosine evals per element. Weight 1.0 (constant in flop_cost per composite-kernel tier policy)."
               }
             ],
             "type": "paragraph"
@@ -4819,7 +4819,7 @@
     ],
     "signature": "flops.flops.blackman_cost(n: 'int') -> 'int'",
     "slug": "flops-blackman-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L46",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L47",
     "status_note": "",
     "summary": "Weighted FLOP cost of Blackman window generation.",
     "upstream_source_url": ""
@@ -4946,7 +4946,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Simplified cubic cost model for Cholesky decomposition."
+                "text": "n^3/3 FLOPs (G&VL 4e Alg 4.2.1; LAPACK dpotrf)."
               }
             ],
             "type": "paragraph"
@@ -5002,6 +5002,20 @@
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "p in {None, 2, -2}: values-only SVD + 1 divide.\nother p (square only): norm(A)*norm(inv(A)) -> inv (2n^3) + two\nelementwise norm passes (2n^2 each) + 1 multiply."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -5180,71 +5194,6 @@
               }
             ],
             "type": "paragraph"
-          },
-          {
-            "inline": [
-              {
-                "kind": "text",
-                "text": "For "
-              },
-              {
-                "kind": "code",
-                "text": "p=None"
-              },
-              {
-                "kind": "text",
-                "text": ", "
-              },
-              {
-                "kind": "code",
-                "text": "p=2"
-              },
-              {
-                "kind": "text",
-                "text": ", or "
-              },
-              {
-                "kind": "code",
-                "text": "p=-2"
-              },
-              {
-                "kind": "text",
-                "text": ", computed via SVD (cost m*n*min(m,n)).\nFor "
-              },
-              {
-                "kind": "code",
-                "text": "p=1"
-              },
-              {
-                "kind": "text",
-                "text": ", "
-              },
-              {
-                "kind": "code",
-                "text": "p=-1"
-              },
-              {
-                "kind": "text",
-                "text": ", "
-              },
-              {
-                "kind": "code",
-                "text": "p=inf"
-              },
-              {
-                "kind": "text",
-                "text": ", or "
-              },
-              {
-                "kind": "code",
-                "text": "p=-inf"
-              },
-              {
-                "kind": "text",
-                "text": ", computed via LU factorization\n(cost ~min(m,n)^3 + m*n for norm)."
-              }
-            ],
-            "type": "paragraph"
           }
         ],
         "title": "Notes"
@@ -5267,7 +5216,7 @@
     ],
     "signature": "flops.flops.cond_cost(m: 'int', n: 'int', p=None) -> 'int'",
     "slug": "flops-cond-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L391",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L448",
     "status_note": "",
     "summary": "Weighted FLOP cost of condition number.",
     "upstream_source_url": ""
@@ -5454,7 +5403,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Simplified cubic cost model for determinant computation."
+                "text": "2n^3/3 + n FLOPs (LU + product of diagonal)."
               }
             ],
             "type": "paragraph"
@@ -5607,7 +5556,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Simplified cubic cost model for eigendecomposition."
+                "text": "Hessenberg reduction + Francis QR with eigenvector backtransform\n(LAPACK Users' Guide Table 3.13 DGEEV / G&VL 4e \u00a77.5).\nConfirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13\n/ G&VL 4e \u00a77.5, \u00a78.3 + runtime scaling); see docs/reference/cost-model.md."
               }
             ],
             "type": "paragraph"
@@ -5637,7 +5586,7 @@
     ],
     "signature": "flops.flops.eig_cost(n: 'int') -> 'int'",
     "slug": "flops-eig-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L130",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L128",
     "status_note": "",
     "summary": "Weighted FLOP cost of eigendecomposition.",
     "upstream_source_url": ""
@@ -5764,7 +5713,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Simplified cubic cost model for symmetric eigendecomposition."
+                "text": "Tridiagonalization + symmetric QR with vectors\n(G&VL 4e \u00a78.3; LAPACK dsyevd).\nConfirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13\n/ G&VL 4e \u00a77.5, \u00a78.3 + runtime scaling); see docs/reference/cost-model.md."
               }
             ],
             "type": "paragraph"
@@ -5794,7 +5743,7 @@
     ],
     "signature": "flops.flops.eigh_cost(n: 'int') -> 'int'",
     "slug": "flops-eigh-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L174",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L177",
     "status_note": "",
     "summary": "Weighted FLOP cost of symmetric eigendecomposition.",
     "upstream_source_url": ""
@@ -5921,7 +5870,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Simplified cubic cost model for eigenvalue computation."
+                "text": "~10n^3, values only (LAPACK Users' Guide Table 3.13 DGEEV values-only\n= 10.00\u00b7N^3 exact; G&VL 4e \u00a77.5).\nConfirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13\n/ G&VL 4e \u00a77.5, \u00a78.3 + runtime scaling); see docs/reference/cost-model.md."
               }
             ],
             "type": "paragraph"
@@ -5947,7 +5896,7 @@
     ],
     "signature": "flops.flops.eigvals_cost(n: 'int') -> 'int'",
     "slug": "flops-eigvals-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L218",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L226",
     "status_note": "",
     "summary": "Weighted FLOP cost of computing eigenvalues.",
     "upstream_source_url": ""
@@ -6074,7 +6023,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Simplified cubic cost model for symmetric eigenvalue computation."
+                "text": "4n^3/3: tridiagonalization, values only (G&VL 4e \u00a78.3).\nConfirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13\n/ G&VL 4e \u00a77.5, \u00a78.3 + runtime scaling); see docs/reference/cost-model.md."
               }
             ],
             "type": "paragraph"
@@ -6100,7 +6049,7 @@
     ],
     "signature": "flops.flops.eigvalsh_cost(n: 'int') -> 'int'",
     "slug": "flops-eigvalsh-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L260",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L278",
     "status_note": "",
     "summary": "Weighted FLOP cost of computing eigenvalues of a symmetric matrix.",
     "upstream_source_url": ""
@@ -6909,7 +6858,7 @@
     ],
     "signature": "flops.flops.hamming_cost(n: 'int') -> 'int'",
     "slug": "flops-hamming-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L78",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L83",
     "status_note": "",
     "summary": "Weighted FLOP cost of Hamming window generation.",
     "upstream_source_url": ""
@@ -7062,7 +7011,7 @@
     ],
     "signature": "flops.flops.hanning_cost(n: 'int') -> 'int'",
     "slug": "flops-hanning-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L110",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L115",
     "status_note": "",
     "summary": "Weighted FLOP cost of Hanning window generation.",
     "upstream_source_url": ""
@@ -7211,7 +7160,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "The Hermitian FFT computes the FFT of a signal with Hermitian symmetry,\nproducing real-valued output."
+                "text": "hfft(a, n) == irfft(conj(a), n): real-output c2r transform (Van Loan 1992 \u00a71.4).\nExploits conjugate symmetry, roughly halving the work vs a full complex FFT."
               }
             ],
             "type": "paragraph"
@@ -7428,7 +7377,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Uses $n^3/3 + n^3$ for symmetric input (Cholesky factorization + n\ntriangular solves against identity), or $n^3$ for general input (LU-based)."
+                "text": "Uses $n^3/3 + n^3$ for symmetric input (Cholesky factorization + n\ntriangular solves against identity), or $2n^3$ for general input\n(getrf 2n^3/3 + getri 4n^3/3)."
               }
             ],
             "type": "paragraph"
@@ -7458,7 +7407,7 @@
     ],
     "signature": "flops.flops.inv_cost(n: 'int', symmetric: 'bool' = False) -> 'int'",
     "slug": "flops-inv-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L91",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L96",
     "status_note": "",
     "summary": "Weighted FLOP cost of matrix inverse.",
     "upstream_source_url": ""
@@ -7585,7 +7534,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Bessel function evaluation per sample."
+                "text": "Per sample: 1 Bessel I0 eval at the transcendental tier (16) + 7 scalar FLOPs\n(sub, div, square, rsub, sqrt, mul-by-beta, final div) under FMA=2. Tracks the\nin-system price of i0 (numel x 16.0); revisit jointly with the pointwise family\nif i0 is ever re-derived to its Cephes cost. Weight 1.0 (constant in flop_cost)."
               }
             ],
             "type": "paragraph"
@@ -7611,7 +7560,7 @@
     ],
     "signature": "flops.flops.kaiser_cost(n: 'int') -> 'int'",
     "slug": "flops-kaiser-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L142",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L147",
     "status_note": "",
     "summary": "Weighted FLOP cost of Kaiser window generation.",
     "upstream_source_url": ""
@@ -7966,6 +7915,15 @@
               }
             ],
             "type": "paragraph"
+          },
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "The SVD term uses with_vectors=True (the reconstruction needs U/V); the\n4.0 linalg weight is gone, so this composed value is exactly what is charged."
+              }
+            ],
+            "type": "paragraph"
           }
         ],
         "title": "Notes"
@@ -7992,7 +7950,7 @@
     ],
     "signature": "flops.flops.lstsq_cost(m: 'int', n: 'int', b_cols: 'int' = 1, b_ndim: 'int' = 1) -> 'int'",
     "slug": "flops-lstsq-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L152",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L158",
     "status_note": "",
     "summary": "Weighted FLOP cost of least-squares via SVD.",
     "upstream_source_url": ""
@@ -8204,15 +8162,15 @@
                     "inline": [
                       {
                         "kind": "text",
-                        "text": "SVD-based norms (2-norm, nuclear): "
+                        "text": "SVD-based norms (2-norm, nuclear): values-only SVD cost\n"
                       },
                       {
                         "kind": "code",
-                        "text": "4 * m * n * min(m, n)"
+                        "text": "2*a*b^2 + 2*b^3"
                       },
                       {
                         "kind": "text",
-                        "text": "\n(weight=4 baked in, consistent with linalg.svd weight=4)."
+                        "text": " where a=max(m,n), b=min(m,n)."
                       }
                     ],
                     "type": "paragraph"
@@ -8244,7 +8202,7 @@
     ],
     "signature": "flops.flops.matrix_norm_cost(shape: 'tuple', ord=None) -> 'int'",
     "slug": "flops-matrix-norm-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L331",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L376",
     "status_note": "",
     "summary": "Weighted FLOP cost of matrix norm.",
     "upstream_source_url": ""
@@ -8462,7 +8420,7 @@
     ],
     "signature": "flops.flops.matrix_power_cost(n: 'int', k: 'int') -> 'int'",
     "slug": "flops-matrix-power-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_compound.py#L102",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_compound.py#L108",
     "status_note": "",
     "summary": "Weighted FLOP cost of matrix power ``A**k``.",
     "upstream_source_url": ""
@@ -8481,7 +8439,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Weighted FLOP cost of matrix rank."
+                "text": "Weighted FLOP cost of matrix rank: values-only SVD + min(m, n) threshold compares."
               }
             ],
             "type": "paragraph"
@@ -8606,15 +8564,6 @@
               }
             ],
             "type": "paragraph"
-          },
-          {
-            "inline": [
-              {
-                "kind": "text",
-                "text": "Computed via SVD."
-              }
-            ],
-            "type": "paragraph"
           }
         ],
         "title": "Notes"
@@ -8637,9 +8586,9 @@
     ],
     "signature": "flops.flops.matrix_rank_cost(m: 'int', n: 'int') -> 'int'",
     "slug": "flops-matrix-rank-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L471",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L512",
     "status_note": "",
-    "summary": "Weighted FLOP cost of matrix rank.",
+    "summary": "Weighted FLOP cost of matrix rank: values-only SVD + min(m, n) threshold compares.",
     "upstream_source_url": ""
   },
   "flops.multi_dot_cost": {
@@ -8781,15 +8730,34 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Each binary matmul step (m x k) @ (k x n) costs "
+                "text": "Each binary matmul step (m x k) @ (k x n) is delegated to\n"
               },
               {
                 "kind": "code",
-                "text": "2 * m * k * n"
+                "text": "matmul_cost(m, k, n)"
               },
               {
                 "kind": "text",
-                "text": " FLOPs\nunder the FMA=2 textbook convention (m*k*n multiplies + m*k*n adds,\nignoring the \u2212m*n off-by-one for accumulation at this level of\napproximation).  FMA=2 unification 2026-05-20."
+                "text": " (= 2*m*k*n - m*n), matching "
+              },
+              {
+                "external_url": "",
+                "href": "/docs/api/numpy/matmul/",
+                "kind": "link",
+                "target": "matmul",
+                "text": "fnp.matmul"
+              },
+              {
+                "kind": "text",
+                "text": " and\n"
+              },
+              {
+                "kind": "code",
+                "text": "matrix_power_cost"
+              },
+              {
+                "kind": "text",
+                "text": " (issue #69 precedent)."
               }
             ],
             "type": "paragraph"
@@ -9044,15 +9012,36 @@
                     "inline": [
                       {
                         "kind": "text",
-                        "text": "SVD-based norms (2-norm, nuclear norm): "
+                        "text": "SVD-based norms (2-norm, nuclear norm): values-only SVD cost\n"
                       },
                       {
                         "kind": "code",
-                        "text": "4 * m * n * min(m, n)"
+                        "text": "2*a*b^2 + 2*b^3"
                       },
                       {
                         "kind": "text",
-                        "text": "\n(weight=4 baked in, consistent with linalg.svd weight=4)."
+                        "text": " where a=max(m,n), b=min(m,n)."
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "text",
+                        "text": "General-p vector norms (ord not in {None, 0, 1, 2, inf, -inf}):\n"
+                      },
+                      {
+                        "kind": "code",
+                        "text": "18 * numel + 16"
+                      },
+                      {
+                        "kind": "text",
+                        "text": " (abs + pow per elem + sum-reduce + root pow)."
                       }
                     ],
                     "type": "paragraph"
@@ -9084,7 +9073,7 @@
     ],
     "signature": "flops.flops.norm_cost(shape: 'tuple', ord=None) -> 'int'",
     "slug": "flops-norm-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L171",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L178",
     "status_note": "",
     "summary": "Weighted FLOP cost of matrix or vector norm.",
     "upstream_source_url": ""
@@ -9310,6 +9299,15 @@
               }
             ],
             "type": "paragraph"
+          },
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "The SVD term uses with_vectors=True (the reconstruction needs U/V); the\n4.0 linalg weight is gone, so this composed value is exactly what is charged."
+              }
+            ],
+            "type": "paragraph"
           }
         ],
         "title": "Notes"
@@ -9336,7 +9334,7 @@
     ],
     "signature": "flops.flops.pinv_cost(m: 'int', n: 'int') -> 'int'",
     "slug": "flops-pinv-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L254",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L263",
     "status_note": "",
     "summary": "Weighted FLOP cost of Moore-Penrose pseudoinverse.",
     "upstream_source_url": ""
@@ -9582,7 +9580,7 @@
     ],
     "signature": "flops.flops.pointwise_cost(op_name: 'str', *, shape: 'tuple[int, ...]', symmetry: 'SymmetryGroup | None' = None) -> 'int'",
     "slug": "flops-pointwise-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/accounting.py#L341",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/accounting.py#L342",
     "status_note": "",
     "summary": "Weighted FLOP cost of a pointwise operation.",
     "upstream_source_url": ""
@@ -9601,13 +9599,136 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Cost for poly: $n^2$ FLOPs."
+                "text": "Cost for poly (1-D build-from-roots): "
+              },
+              {
+                "kind": "code",
+                "text": "(3*n^2 + n) // 2"
+              },
+              {
+                "kind": "text",
+                "text": " FLOPs."
               }
             ],
             "type": "paragraph"
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "flops.poly builds the characteristic polynomial by iterating\n"
+              },
+              {
+                "kind": "code",
+                "text": "p = convolve(p, [1, -r_i])"
+              },
+              {
+                "kind": "text",
+                "text": " for each root "
+              },
+              {
+                "kind": "code",
+                "text": "r_i"
+              },
+              {
+                "kind": "text",
+                "text": ".  At step "
+              },
+              {
+                "kind": "code",
+                "text": "i"
+              },
+              {
+                "kind": "text",
+                "text": "\n(0-indexed), the current polynomial has length "
+              },
+              {
+                "kind": "code",
+                "text": "i + 1"
+              },
+              {
+                "kind": "text",
+                "text": ", so convolving\nwith the length-2 "
+              },
+              {
+                "kind": "code",
+                "text": "[1, -r_i]"
+              },
+              {
+                "kind": "text",
+                "text": " kernel costs "
+              },
+              {
+                "kind": "code",
+                "text": "polymul_cost(i+1, 2)\n= 2*(i+1)*2 - (i+1) - 2 = (3*(i+1) - 2)"
+              },
+              {
+                "kind": "text",
+                "text": " FLOPs under the FMA=2\nconvention."
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "Summing over i = 0 .. n-1:"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "language": null,
+            "text": "sum_{i=0}^{n-1} (3*(i+1) - 2)\n= 3 * n*(n+1)/2 - 2*n\n= (3*n^2 + 3*n - 4*n) / 2\n= (3*n^2 - n) / 2",
+            "type": "literal_block"
+          },
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "However "
+              },
+              {
+                "kind": "code",
+                "text": "polymul_cost"
+              },
+              {
+                "kind": "text",
+                "text": " is clamped to 1 at minimum, and the\nlast step (full n+1 length) adds one element.  Accounting for the\nexact closed form including the length-1 seed:"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "language": null,
+            "text": "(3*n^2 + n) // 2",
+            "type": "literal_block"
+          },
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "This replaces the prior "
+              },
+              {
+                "kind": "code",
+                "text": "2*n^2"
+              },
+              {
+                "kind": "text",
+                "text": " over-approximation.  The 2-D branch\n(characteristic polynomial via eigvals) is unchanged.  Audit-completion\nTask 4 (2026-06-12)."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -9726,9 +9847,9 @@
     ],
     "signature": "flops.flops.poly_cost(n: 'int') -> 'int'",
     "slug": "flops-poly-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L65",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L100",
     "status_note": "",
-    "summary": "Cost for poly: $n^2$ FLOPs.",
+    "summary": "Cost for poly (1-D build-from-roots): ``(3*n^2 + n) // 2`` FLOPs.",
     "upstream_source_url": ""
   },
   "flops.polyadd_cost": {
@@ -9955,13 +10076,27 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Cost for polyder: n FLOPs (n = len of coeffs)."
+                "text": "Cost for polyder: one multiply per surviving coefficient per derivative step."
               }
             ],
             "type": "paragraph"
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "sum_{j=1..m} max(n-j, 0) = t*n - t*(t+1)//2 with t = min(m, n-1)."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -9987,6 +10122,44 @@
                   }
                 ],
                 "name": "n",
+                "type": "field_list"
+              },
+              {
+                "body_blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "text",
+                        "text": "Number of rows in the input matrix. Defaults to "
+                      },
+                      {
+                        "kind": "code",
+                        "text": "1"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "."
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ],
+                "data_type": "int, optional",
+                "inline": [
+                  {
+                    "kind": "text",
+                    "text": "Number of rows in the input matrix. Defaults to "
+                  },
+                  {
+                    "kind": "code",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
+                  }
+                ],
+                "name": "m",
                 "type": "field_list"
               }
             ],
@@ -10078,11 +10251,11 @@
         "title": "Budget Planning & Debugging"
       }
     ],
-    "signature": "flops.flops.polyder_cost(n: 'int') -> 'int'",
+    "signature": "flops.flops.polyder_cost(n: 'int', m: 'int' = 1) -> 'int'",
     "slug": "flops-polyder-cost",
     "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L40",
     "status_note": "",
-    "summary": "Cost for polyder: n FLOPs (n = len of coeffs).",
+    "summary": "Cost for polyder: one multiply per surviving coefficient per derivative step.",
     "upstream_source_url": ""
   },
   "flops.polydiv_cost": {
@@ -10099,13 +10272,27 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Cost for polydiv: n1 * n2 FLOPs."
+                "text": "Cost for polydiv: 1 + Q*(2*n2 + 1), Q = max(n1-n2+1, 0) (work scales with"
               }
             ],
             "type": "paragraph"
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "quotient length: per step 1 scale-divide + n2 mul + n2 sub)."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -10290,9 +10477,9 @@
     ],
     "signature": "flops.flops.polydiv_cost(n1: 'int', n2: 'int') -> 'int'",
     "slug": "flops-polydiv-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L55",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L88",
     "status_note": "",
-    "summary": "Cost for polydiv: n1 * n2 FLOPs.",
+    "summary": "Cost for polydiv: 1 + Q*(2*n2 + 1), Q = max(n1-n2+1, 0) (work scales with",
     "upstream_source_url": ""
   },
   "flops.polyfit_cost": {
@@ -10478,7 +10665,7 @@
     ],
     "signature": "flops.flops.polyfit_cost(m: 'int', deg: 'int') -> 'int'",
     "slug": "flops-polyfit-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L60",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L95",
     "status_note": "",
     "summary": "Cost for polyfit: 2 * m * (deg+1)^2 FLOPs.",
     "upstream_source_url": ""
@@ -10497,13 +10684,27 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Cost for polyint: n FLOPs (n = len of coeffs)."
+                "text": "Cost for polyint: m*n + m*(m-1)//2 FLOPs."
               }
             ],
             "type": "paragraph"
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "numpy recurses m times; pass j divides n+j coefficients, so total cost\n= sum_{j=0}^{m-1} (n+j) = m*n + m*(m-1)//2."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -10529,6 +10730,44 @@
                   }
                 ],
                 "name": "n",
+                "type": "field_list"
+              },
+              {
+                "body_blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "text",
+                        "text": "Number of rows in the input matrix. Defaults to "
+                      },
+                      {
+                        "kind": "code",
+                        "text": "1"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "."
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ],
+                "data_type": "int, optional",
+                "inline": [
+                  {
+                    "kind": "text",
+                    "text": "Number of rows in the input matrix. Defaults to "
+                  },
+                  {
+                    "kind": "code",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
+                  }
+                ],
+                "name": "m",
                 "type": "field_list"
               }
             ],
@@ -10620,11 +10859,11 @@
         "title": "Budget Planning & Debugging"
       }
     ],
-    "signature": "flops.flops.polyint_cost(n: 'int') -> 'int'",
+    "signature": "flops.flops.polyint_cost(n: 'int', m: 'int' = 1) -> 'int'",
     "slug": "flops-polyint-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L45",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L61",
     "status_note": "",
-    "summary": "Cost for polyint: n FLOPs (n = len of coeffs).",
+    "summary": "Cost for polyint: m*n + m*(m-1)//2 FLOPs.",
     "upstream_source_url": ""
   },
   "flops.polymul_cost": {
@@ -10641,7 +10880,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Cost for polymul: n1 * n2 FLOPs."
+                "text": "Cost for polymul: 2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2)."
               }
             ],
             "type": "paragraph"
@@ -10832,9 +11071,9 @@
     ],
     "signature": "flops.flops.polymul_cost(n1: 'int', n2: 'int') -> 'int'",
     "slug": "flops-polymul-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L50",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L83",
     "status_note": "",
-    "summary": "Cost for polymul: n1 * n2 FLOPs.",
+    "summary": "Cost for polymul: 2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2).",
     "upstream_source_url": ""
   },
   "flops.polysub_cost": {
@@ -11263,13 +11502,27 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Weighted FLOP cost of QR decomposition."
+                "text": "Weighted FLOP cost of QR decomposition (Householder, FMA=2)."
               }
             ],
             "type": "paragraph"
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "Factorization (dgeqrf): 2*m*n*k - 2*k^3/3, k = min(m, n)\n(G&VL 4e \u00a75.2). Modes \"reduced\"/\"complete\" additionally form Q\nexplicitly (dorgqr), modeled as the same count again. Modes\n\"r\"/\"raw\" bill the factorization only."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -11317,6 +11570,66 @@
                   }
                 ],
                 "name": "n",
+                "type": "field_list"
+              },
+              {
+                "body_blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "text",
+                        "text": "Argument forwarded to the analytical "
+                      },
+                      {
+                        "external_url": "",
+                        "href": "/docs/api/numpy/linalg/qr/",
+                        "kind": "link",
+                        "target": "linalg.qr",
+                        "text": "linalg.qr"
+                      },
+                      {
+                        "kind": "text",
+                        "text": " cost formula. Defaults to "
+                      },
+                      {
+                        "kind": "code",
+                        "text": "'reduced'"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "."
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ],
+                "data_type": "str, optional",
+                "inline": [
+                  {
+                    "kind": "text",
+                    "text": "Argument forwarded to the analytical "
+                  },
+                  {
+                    "external_url": "",
+                    "href": "/docs/api/numpy/linalg/qr/",
+                    "kind": "link",
+                    "target": "linalg.qr",
+                    "text": "linalg.qr"
+                  },
+                  {
+                    "kind": "text",
+                    "text": " cost formula. Defaults to "
+                  },
+                  {
+                    "kind": "code",
+                    "text": "'reduced'"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
+                  }
+                ],
+                "name": "mode",
                 "type": "field_list"
               }
             ],
@@ -11388,15 +11701,6 @@
               }
             ],
             "type": "paragraph"
-          },
-          {
-            "inline": [
-              {
-                "kind": "text",
-                "text": "Simplified cubic cost model for QR decomposition."
-              }
-            ],
-            "type": "paragraph"
           }
         ],
         "title": "Notes"
@@ -11421,11 +11725,11 @@
         "title": "Linear Algebra Guide"
       }
     ],
-    "signature": "flops.flops.qr_cost(m: 'int', n: 'int') -> 'int'",
+    "signature": "flops.flops.qr_cost(m: 'int', n: 'int', mode: 'str' = 'reduced') -> 'int'",
     "slug": "flops-qr-cost",
     "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L63",
     "status_note": "",
-    "summary": "Weighted FLOP cost of QR decomposition.",
+    "summary": "Weighted FLOP cost of QR decomposition (Householder, FMA=2).",
     "upstream_source_url": ""
   },
   "flops.reduction_cost": {
@@ -11711,7 +12015,7 @@
     ],
     "signature": "flops.flops.reduction_cost(op_name: 'str', *, input_shape: 'tuple[int, ...]', axis: 'int | None' = None, symmetry: 'SymmetryGroup | None' = None) -> 'int'",
     "slug": "flops-reduction-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/accounting.py#L385",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/accounting.py#L386",
     "status_note": "",
     "summary": "Weighted FLOP cost of a reduction operation.",
     "upstream_source_url": ""
@@ -12044,13 +12348,27 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Cost for roots: $n^3$ FLOPs (companion matrix eigendecomposition, simplified)."
+                "text": "Cost for roots: companion-matrix eigenvalues \u2014 delegates to"
               }
             ],
             "type": "paragraph"
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "eigvals_cost(n) (~10n^3; building the companion matrix itself is free).\nConfirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13\n/ G&VL 4e \u00a77.5, \u00a78.3 + runtime scaling); see docs/reference/cost-model.md."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -12169,9 +12487,9 @@
     ],
     "signature": "flops.flops.roots_cost(n: 'int') -> 'int'",
     "slug": "flops-roots-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L70",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L130",
     "status_note": "",
-    "summary": "Cost for roots: $n^3$ FLOPs (companion matrix eigendecomposition, simplified).",
+    "summary": "Cost for roots: companion-matrix eigenvalues \u2014 delegates to",
     "upstream_source_url": ""
   },
   "flops.slogdet_cost": {
@@ -12356,7 +12674,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Simplified cubic cost model for sign and log-determinant computation."
+                "text": "2n^3/3 + 18n FLOPs (LU + sum of log|diag|: abs + 16/elem log + reduce)."
               }
             ],
             "type": "paragraph"
@@ -12382,7 +12700,7 @@
     ],
     "signature": "flops.flops.slogdet_cost(n: 'int', symmetric: 'bool' = False) -> 'int'",
     "slug": "flops-slogdet-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L115",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L117",
     "status_note": "",
     "summary": "Weighted FLOP cost of sign and log-determinant.",
     "upstream_source_url": ""
@@ -12401,13 +12719,35 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Weighted FLOP cost of solving a linear system Ax = b."
+                "text": "Weighted FLOP cost of solving Ax = b: LU + two triangular solves (FMA=2)."
               }
             ],
             "type": "paragraph"
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "2n^3/3 (getrf) + 2n^2*nrhs (getrs). G&VL 4e \u00a73.2. "
+              },
+              {
+                "kind": "code",
+                "text": "symmetric"
+              },
+              {
+                "kind": "text",
+                "text": " is\nkept for API compatibility and ignored."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -12624,15 +12964,6 @@
               }
             ],
             "type": "paragraph"
-          },
-          {
-            "inline": [
-              {
-                "kind": "text",
-                "text": "Simplified cubic cost model for linear solve."
-              }
-            ],
-            "type": "paragraph"
           }
         ],
         "title": "Notes"
@@ -12661,7 +12992,7 @@
     "slug": "flops-solve-cost",
     "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L34",
     "status_note": "",
-    "summary": "Weighted FLOP cost of solving a linear system Ax = b.",
+    "summary": "Weighted FLOP cost of solving Ax = b: LU + two triangular solves (FMA=2).",
     "upstream_source_url": ""
   },
   "flops.svd_cost": {
@@ -12678,13 +13009,130 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Weighted FLOP cost of a (truncated) SVD."
+                "text": "Weighted FLOP cost of an SVD (FMA=2, leading order)."
               }
             ],
             "type": "paragraph"
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "items": [
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "text",
+                        "text": "values only (with_vectors=False):        2*a*b^2 + 2*b^3\nthin U, V (full_matrices=False):         6*a*b^2 + 20*b^3\nfull U (full_matrices=True and m != n):  4*a^2*b + 22*b^3"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ],
+                "term_inline": [
+                  {
+                    "kind": "text",
+                    "text": "Full decomposition ("
+                  },
+                  {
+                    "kind": "code",
+                    "text": "k is None"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "), with a = max(m, n), b = min(m, n):"
+                  }
+                ]
+              }
+            ],
+            "type": "definition_list"
+          },
+          {
+            "raw_kind": "system_message",
+            "raw_text": "<string>:5: (WARNING/2) Definition list ends without a blank line; unexpected unindent.",
+            "type": "raw_block"
+          },
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "Constants from the 2026-06 evidence audit (LAPACK dgesdd + G&VL 4e \u00a78.6);\nsee docs/reference/cost-model.md."
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "items": [
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "text",
+                        "text": "min(4*m*n*k, economy)"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ],
+                "term_inline": [
+                  {
+                    "kind": "text",
+                    "text": "Top-k truncated SVD ("
+                  },
+                  {
+                    "kind": "code",
+                    "text": "1 <= k < min(m, n)"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "):"
+                  }
+                ]
+              }
+            ],
+            "type": "definition_list"
+          },
+          {
+            "raw_kind": "system_message",
+            "raw_text": "<string>:10: (WARNING/2) Definition list ends without a blank line; unexpected unindent.",
+            "type": "raw_block"
+          },
+          {
+            "inline": [
+              {
+                "kind": "code",
+                "text": "4*m*n*k"
+              },
+              {
+                "kind": "text",
+                "text": " is the verified leading-order cost of a rank-k randomized SVD\n(Halko-Martinsson-Tropp; two passes over A, Theta(m*n*k)). flopscope bills\nthis standard truncated-algorithm cost even though the reference\nimplementation computes the full economy SVD and slices \u2014 it bills the\ntextbook cost of the operation (like matmul), not literal BLAS work.\nValues-only is NOT leading-order cheaper for the truncated case (unlike the\nfull case). "
+              },
+              {
+                "kind": "code",
+                "text": "k >= min(m, n)"
+              },
+              {
+                "kind": "text",
+                "text": " bills the economy cost; the full_matrices\nfull-U premium applies only to the full decomposition ("
+              },
+              {
+                "kind": "code",
+                "text": "k is None"
+              },
+              {
+                "kind": "text",
+                "text": ").\nSee docs/reference/cost-model.md."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -12771,6 +13219,126 @@
                 ],
                 "name": "k",
                 "type": "field_list"
+              },
+              {
+                "body_blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "text",
+                        "text": "Argument forwarded to the analytical "
+                      },
+                      {
+                        "external_url": "",
+                        "href": "/docs/api/numpy/linalg/svd/",
+                        "kind": "link",
+                        "target": "linalg.svd",
+                        "text": "linalg.svd"
+                      },
+                      {
+                        "kind": "text",
+                        "text": " cost formula. Defaults to "
+                      },
+                      {
+                        "kind": "code",
+                        "text": "False"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "."
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ],
+                "data_type": "bool, optional",
+                "inline": [
+                  {
+                    "kind": "text",
+                    "text": "Argument forwarded to the analytical "
+                  },
+                  {
+                    "external_url": "",
+                    "href": "/docs/api/numpy/linalg/svd/",
+                    "kind": "link",
+                    "target": "linalg.svd",
+                    "text": "linalg.svd"
+                  },
+                  {
+                    "kind": "text",
+                    "text": " cost formula. Defaults to "
+                  },
+                  {
+                    "kind": "code",
+                    "text": "False"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
+                  }
+                ],
+                "name": "with_vectors",
+                "type": "field_list"
+              },
+              {
+                "body_blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "text",
+                        "text": "Argument forwarded to the analytical "
+                      },
+                      {
+                        "external_url": "",
+                        "href": "/docs/api/numpy/linalg/svd/",
+                        "kind": "link",
+                        "target": "linalg.svd",
+                        "text": "linalg.svd"
+                      },
+                      {
+                        "kind": "text",
+                        "text": " cost formula. Defaults to "
+                      },
+                      {
+                        "kind": "code",
+                        "text": "False"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "."
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ],
+                "data_type": "bool, optional",
+                "inline": [
+                  {
+                    "kind": "text",
+                    "text": "Argument forwarded to the analytical "
+                  },
+                  {
+                    "external_url": "",
+                    "href": "/docs/api/numpy/linalg/svd/",
+                    "kind": "link",
+                    "target": "linalg.svd",
+                    "text": "linalg.svd"
+                  },
+                  {
+                    "kind": "text",
+                    "text": " cost formula. Defaults to "
+                  },
+                  {
+                    "kind": "code",
+                    "text": "False"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
+                  }
+                ],
+                "name": "full_matrices",
+                "type": "field_list"
               }
             ],
             "title": "Parameters",
@@ -12841,15 +13409,6 @@
               }
             ],
             "type": "paragraph"
-          },
-          {
-            "inline": [
-              {
-                "kind": "text",
-                "text": "Based on Golub-Reinsch bidiagonalization."
-              }
-            ],
-            "type": "paragraph"
           }
         ],
         "title": "Notes"
@@ -12867,6 +13426,11 @@
                 "kind": "input",
                 "prompt": ">>>",
                 "text": "cost = flops.accounting.svd_cost(128, 64)"
+              },
+              {
+                "kind": "input",
+                "prompt": ">>>",
+                "text": "cost_topk = flops.accounting.svd_cost(128, 64, k=8)  # min(4*128*64*8, economy)"
               },
               {
                 "kind": "input",
@@ -12903,11 +13467,11 @@
         "title": "Linear Algebra Guide"
       }
     ],
-    "signature": "flops.flops.svd_cost(m: 'int', n: 'int', k: 'int | None' = None) -> 'int'",
+    "signature": "flops.flops.svd_cost(m: 'int', n: 'int', k: 'int | None' = None, *, with_vectors: 'bool' = False, full_matrices: 'bool' = False) -> 'int'",
     "slug": "flops-svd-cost",
     "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_flops.py#L178",
     "status_note": "",
-    "summary": "Weighted FLOP cost of a (truncated) SVD.",
+    "summary": "Weighted FLOP cost of an SVD (FMA=2, leading order).",
     "upstream_source_url": ""
   },
   "flops.svdvals_cost": {
@@ -12924,13 +13488,51 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Weighted FLOP cost of computing singular values."
+                "text": "Weighted FLOP cost of computing singular values (values-only SVD)."
               }
             ],
             "type": "paragraph"
           }
         ],
         "title": "Summary"
+      },
+      {
+        "blocks": [
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "Delegates to "
+              },
+              {
+                "display_text": "flopscope._flops.svd_cost",
+                "explicit_title": false,
+                "external_url": "",
+                "href": "",
+                "kind": "role_reference",
+                "original_target": "flopscope._flops.svd_cost",
+                "role": "func",
+                "suppress_link": false,
+                "target": "_flops.svd_cost",
+                "unresolved": true
+              },
+              {
+                "kind": "text",
+                "text": " with "
+              },
+              {
+                "kind": "code",
+                "text": "with_vectors=False"
+              },
+              {
+                "kind": "text",
+                "text": ":\n2*a*b^2 + 2*b^3, a = max(m, n), b = min(m, n). Top-k (1 <= k < min(m, n))\nbills min(4*m*n*k, that cost)."
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "title": "Extended Summary"
       },
       {
         "blocks": [
@@ -13087,15 +13689,6 @@
               }
             ],
             "type": "paragraph"
-          },
-          {
-            "inline": [
-              {
-                "kind": "text",
-                "text": "Source: Golub-Reinsch bidiagonalization. Same cost model as SVD."
-              }
-            ],
-            "type": "paragraph"
           }
         ],
         "title": "Notes"
@@ -13118,9 +13711,9 @@
     ],
     "signature": "flops.flops.svdvals_cost(m: 'int', n: 'int', k: 'int | None' = None) -> 'int'",
     "slug": "flops-svdvals-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L302",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L327",
     "status_note": "",
-    "summary": "Weighted FLOP cost of computing singular values.",
+    "summary": "Weighted FLOP cost of computing singular values (values-only SVD).",
     "upstream_source_url": ""
   },
   "flops.tensorinv_cost": {
@@ -13353,7 +13946,7 @@
     ],
     "signature": "flops.flops.tensorinv_cost(a_shape: 'tuple', ind: 'int' = 2) -> 'int'",
     "slug": "flops-tensorinv-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L383",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L399",
     "status_note": "",
     "summary": "Weighted FLOP cost of tensor inverse.",
     "upstream_source_url": ""
@@ -13588,7 +14181,7 @@
     ],
     "signature": "flops.flops.tensorsolve_cost(a_shape: 'tuple', ind: 'int | None' = None) -> 'int'",
     "slug": "flops-tensorsolve-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L326",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L341",
     "status_note": "",
     "summary": "Weighted FLOP cost of tensor solve.",
     "upstream_source_url": ""
@@ -13876,84 +14469,303 @@
               },
               {
                 "kind": "text",
-                "text": ") does\napproximately 6 full-array ufunc passes: "
+                "text": ") performs 13\none-FLOP ufunc passes over the N-1 element "
               },
               {
-                "external_url": "",
-                "href": "/docs/api/numpy/diff/",
-                "kind": "link",
-                "target": "diff",
-                "text": "diff"
+                "kind": "code",
+                "text": "dd = diff(p)"
               },
               {
                 "kind": "text",
-                "text": ", "
+                "text": " array, then\none final add of the cumulative correction into the output.  Counting\neach named ufunc call as one pass:"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "items": [
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "external_url": "",
+                        "href": "/docs/api/numpy/diff/",
+                        "kind": "link",
+                        "target": "diff",
+                        "text": "diff"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "            \u2014 subtract adjacent elements (N-1 elements)"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
               },
               {
-                "external_url": "",
-                "href": "/docs/api/numpy/mod/",
-                "kind": "link",
-                "target": "mod",
-                "text": "mod"
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "dd - low"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "        \u2014 subtract scalar "
+                      },
+                      {
+                        "kind": "code",
+                        "text": "interval_low"
+                      },
+                      {
+                        "kind": "text",
+                        "text": " from dd"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "mod(..., period)"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "\u2014 elementwise modulo"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "+ interval_low"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "  \u2014 add scalar back"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "ddmod == low"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "    \u2014 elementwise compare (boundary check)"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "dd > 0"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "          \u2014 elementwise compare"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "text",
+                        "text": "``"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "& ``              \u2014 bitwise-and of two bool arrays"
+                      }
+                    ],
+                    "type": "paragraph"
+                  },
+                  {
+                    "raw_kind": "system_message",
+                    "raw_text": "<string>:14: (WARNING/2) Inline literal start-string without end-string.",
+                    "type": "raw_block"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "copyto/select"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "   \u2014 conditional write (boundary fix)"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "ddmod - dd"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "      \u2014 elementwise subtract (ph_correct)"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "abs(dd)"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "         \u2014 elementwise absolute value"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "< discont"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "       \u2014 elementwise compare"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "kind": "code",
+                        "text": "copyto/select"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "   \u2014 conditional write (small-jump zeroing)"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "inline": [
+                      {
+                        "external_url": "",
+                        "href": "/docs/api/numpy/cumsum/",
+                        "kind": "link",
+                        "target": "cumsum",
+                        "text": "cumsum"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "          \u2014 prefix-sum scan"
+                      }
+                    ],
+                    "type": "paragraph"
+                  }
+                ]
+              }
+            ],
+            "ordered": true,
+            "type": "list"
+          },
+          {
+            "inline": [
+              {
+                "kind": "text",
+                "text": "The "
+              },
+              {
+                "kind": "code",
+                "text": "p[slice1] + ph_correct.cumsum(axis)"
               },
               {
                 "kind": "text",
-                "text": ", "
+                "text": " expression (final output\nmaterialization) involves one add pass but is treated as part of the\noutput-write cost \u2014 following the convention that the output buffer\nfill is attributed to the issuing op.  Charging all 13 op-passes\nagainst "
               },
               {
-                "external_url": "",
-                "href": "/docs/api/numpy/add/",
-                "kind": "link",
-                "target": "add",
-                "text": "add"
+                "kind": "code",
+                "text": "numel(input)"
               },
               {
                 "kind": "text",
-                "text": ",\n"
+                "text": " rather than "
               },
               {
-                "external_url": "",
-                "href": "/docs/api/numpy/subtract/",
-                "kind": "link",
-                "target": "subtract",
-                "text": "subtract"
+                "kind": "code",
+                "text": "N-1"
               },
               {
                 "kind": "text",
-                "text": ", "
-              },
-              {
-                "external_url": "",
-                "href": "/docs/api/numpy/cumsum/",
-                "kind": "link",
-                "target": "cumsum",
-                "text": "cumsum"
-              },
+                "text": " avoids tracking the\nedge-element correction (one extra element) and gives a clean formula."
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "inline": [
               {
                 "kind": "text",
-                "text": ", and "
-              },
-              {
-                "external_url": "",
-                "href": "/docs/api/numpy/where/",
-                "kind": "link",
-                "target": "where",
-                "text": "where"
-              },
-              {
-                "kind": "text",
-                "text": ". The "
-              },
-              {
-                "external_url": "",
-                "href": "/docs/api/numpy/where/",
-                "kind": "link",
-                "target": "where",
-                "text": "where"
-              },
-              {
-                "kind": "text",
-                "text": " pass with two\nreal-array arguments charges 2*(N-1) elements rather than N-1,\nbringing the effective total to ~7*(N-1). We charge a fixed\n"
+                "text": "Prior value was "
               },
               {
                 "kind": "code",
@@ -13961,7 +14773,7 @@
               },
               {
                 "kind": "text",
-                "text": " to approximate the sum without tracking numpy's\ninternal implementation byte-by-byte. Issue #69."
+                "text": " (under-counted by ~2\u00d7). Audit-completion\nTask 4 (2026-06-12)."
               }
             ],
             "type": "paragraph"
@@ -14174,7 +14986,7 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "All norms cost 2*numel FLOPs (FMA=2: one multiply + accumulate per element)."
+                "text": "Standard norms (ord in {None, 0, 1, 2, inf, -inf}) cost 2*numel FLOPs\n(FMA=2: one multiply + accumulate per element).\nGeneral-p norms cost 18*numel + 16 FLOPs per group: abs(1) + pow(16)\nper element + sum-reduce(1) + final root pow(16). The wrapper's\nn_groups multiplier scales the +16 correctly per group."
               }
             ],
             "type": "paragraph"
@@ -14200,7 +15012,7 @@
     ],
     "signature": "flops.flops.vector_norm_cost(shape: 'tuple', ord=None) -> 'int'",
     "slug": "flops-vector-norm-cost",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L264",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L289",
     "status_note": "",
     "summary": "Weighted FLOP cost of vector norm.",
     "upstream_source_url": ""
@@ -14728,7 +15540,7 @@
     "related_guides": [],
     "signature": "fnp.fromfile(*args, **kwargs)",
     "slug": "fromfile",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1757",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1829",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Construct an array from data in a text or binary file.",
     "upstream_source_url": ""
@@ -15143,7 +15955,7 @@
     "related_guides": [],
     "signature": "fnp.fromregex(file, regexp, dtype, encoding=None)",
     "slug": "fromregex",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1801",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1877",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Construct an array from a text file, using regular expression parsing.",
     "upstream_source_url": ""
@@ -15547,7 +16359,7 @@
     "related_guides": [],
     "signature": "fnp.fromstring(*args, **kwargs)",
     "slug": "fromstring",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1815",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1891",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "A new 1-D array initialized from text data in a string.",
     "upstream_source_url": ""
@@ -20558,7 +21370,7 @@
     "related_guides": [],
     "signature": "flops.random.ranf(*args, **kwargs)",
     "slug": "random-ranf",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L371",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L446",
     "status_note": "",
     "summary": "Counted version of ``flops.random.random.ranf``. Cost: numel(output) FLOPs.",
     "upstream_source_url": ""
@@ -20608,7 +21420,7 @@
     "related_guides": [],
     "signature": "flops.random.sample(*args, **kwargs)",
     "slug": "random-sample",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L371",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L446",
     "status_note": "",
     "summary": "Counted version of ``flops.random.random.sample``. Cost: numel(output) FLOPs.",
     "upstream_source_url": ""
@@ -21400,7 +22212,7 @@
     "related_guides": [],
     "signature": "flops.random.symmetric(shape: 'int | Sequence[int]', symmetry: 'SymmetryGroup', distribution: 'str | Callable[..., Any]' = 'randn', **distribution_kwargs: 'Any') -> 'FlopscopeArray'",
     "slug": "random-symmetric",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L478",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L568",
     "status_note": "",
     "summary": "Sample random data and project it to a symmetry group.",
     "upstream_source_url": ""
@@ -23345,15 +24157,31 @@
               },
               {
                 "kind": "text",
-                "text": " is the half-width at\nhalf-maximum. Each public method deducts "
+                "text": " is the half-width at\nhalf-maximum. pdf deducts "
               },
               {
                 "kind": "code",
-                "text": "1 * numel(input)"
+                "text": "6 * numel(input)"
               },
               {
                 "kind": "text",
-                "text": " FLOPs from\nthe active budget."
+                "text": " FLOPs (pure-arithmetic\ncomposite: z=(x-loc)/scale; 1/(pi*scale*(1+z^2)) = sub+div+mul+add+mul+div\n= 6 FLOPs/elem, weight 1.0; calibrated alpha 6.0). cdf deducts\n"
+              },
+              {
+                "kind": "code",
+                "text": "20 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " FLOPs (composite: z(2) + arctan(16) + /pi(1) +\n0.5+(1), FMA=2, weight 1.0). ppf deducts "
+              },
+              {
+                "kind": "code",
+                "text": "28 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " FLOPs\n(composite: q-0.5(1) + pi*(1) + tan(16) + loc+scale*(2) + 3 where(8),\nFMA=2, weight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -23456,15 +24284,31 @@
               },
               {
                 "kind": "text",
-                "text": " is the reciprocal of the rate.\nEach public method deducts "
+                "text": " is the reciprocal of the rate.\nPer-method FLOP costs (weight 1.0): pdf deducts "
               },
               {
                 "kind": "code",
-                "text": "1 * numel(input)"
+                "text": "22 * numel(input)"
               },
               {
                 "kind": "text",
-                "text": " FLOPs from the active\nbudget."
+                "text": "\n(composite: z=(x-loc)/scale(2) + exp(-z)(17) + /scale(1) + where(2),\nFMA=2), cdf deducts "
+              },
+              {
+                "kind": "code",
+                "text": "22 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " (composite: z(2) + exp(-z)(17)\n+ 1-exp(1) + where(2), FMA=2), ppf deducts "
+              },
+              {
+                "kind": "code",
+                "text": "27 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": "\n(composite: log1p(-q)(19) + 3 where/cmp/and(8), FMA=2)."
               }
             ],
             "type": "paragraph"
@@ -23567,18 +24411,47 @@
               },
               {
                 "kind": "text",
-                "text": " controls the exponential decay away\nfrom that center. Each public method deducts "
+                "text": " controls the exponential decay away\nfrom that center. Per-method FLOP costs (weight 1.0): pdf deducts\n"
               },
               {
                 "kind": "code",
-                "text": "1 * numel(input)"
+                "text": "22 * numel(input)"
               },
               {
                 "kind": "text",
-                "text": " FLOPs\nfrom the active budget."
+                "text": " (composite: "
+              },
+              {
+                "kind": "text",
+                "text": "|"
+              },
+              {
+                "kind": "text",
+                "text": "x-loc|(3) + exp(-z)(17) +\n/(2*scale)(2), FMA=2), cdf deducts "
+              },
+              {
+                "kind": "code",
+                "text": "40 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " (composite:\ntwo eager exp branches + 8 arith/cmp/select; audit-2 verified), ppf\ndeducts "
+              },
+              {
+                "kind": "code",
+                "text": "51 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " (composite: two eager log branches + edge\nselects; audit-2 verified)."
               }
             ],
             "type": "paragraph"
+          },
+          {
+            "raw_kind": "system_message",
+            "raw_text": "<string>:1: (WARNING/2) Inline substitution_reference start-string without end-string.",
+            "type": "raw_block"
           }
         ],
         "title": "Notes"
@@ -23678,15 +24551,31 @@
               },
               {
                 "kind": "text",
-                "text": " controls the\nspread. The CDF is the sigmoid function and the PPF is the logit\nfunction. Each public method deducts "
+                "text": " controls the\nspread. The CDF is the sigmoid function and the PPF is the logit\nfunction. Per-method FLOP costs (weight 1.0): pdf deducts\n"
               },
               {
                 "kind": "code",
-                "text": "1 * numel(input)"
+                "text": "23 * numel(input)"
               },
               {
                 "kind": "text",
-                "text": " FLOPs from the\nactive budget."
+                "text": " (composite: z(2)+exp(-z)(17)+(1+ez)(1)+sq(1)+\nscale*(1)+div(1), FMA=2), cdf deducts "
+              },
+              {
+                "kind": "code",
+                "text": "21 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " (composite:\nz(2)+exp(-z)(17)+1+ez(1)+1/denom(1), FMA=2), ppf deducts\n"
+              },
+              {
+                "kind": "code",
+                "text": "28 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " (composite: 1-q(1)+q/(1-q)(1)+log(16)+\nloc+scale*(2)+3 where(8), FMA=2)."
               }
             ],
             "type": "paragraph"
@@ -23805,15 +24694,31 @@
               },
               {
                 "kind": "text",
-                "text": " signature. Each\npublic method deducts "
+                "text": " signature. pdf\ndeducts "
               },
               {
                 "kind": "code",
-                "text": "1 * numel(input)"
+                "text": "62 * numel(input)"
               },
               {
                 "kind": "text",
-                "text": " FLOPs from the active budget."
+                "text": " FLOPs (composite: log + exp + arithmetic,\nweight 1.0; audit-2 verified; calibration alpha 62.30). cdf deducts\n"
+              },
+              {
+                "kind": "code",
+                "text": "70 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " FLOPs (composite: log + erf rational approx +\narithmetic, weight 1.0; audit-2 verified; calibration alpha 69.98). ppf\ndeducts "
+              },
+              {
+                "kind": "code",
+                "text": "106 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " FLOPs (composite: ndtri + exp, weight\n1.0; audit-2 verified)."
               }
             ],
             "type": "paragraph"
@@ -23932,15 +24837,7 @@
               },
               {
                 "kind": "text",
-                "text": " is the standard deviation. Each public\nmethod deducts "
-              },
-              {
-                "kind": "code",
-                "text": "1 * numel(input)"
-              },
-              {
-                "kind": "text",
-                "text": " FLOPs from the active budget."
+                "text": " is the standard deviation. Cost constants\nare composite (rational-approximation + transcendental kernels), weight 1.0:\npdf=27 FLOPs/elem, cdf=48 FLOPs/elem, ppf=83 FLOPs/elem."
               }
             ],
             "type": "paragraph"
@@ -24067,15 +24964,31 @@
               },
               {
                 "kind": "text",
-                "text": " to match SciPy's signature. Each public\nmethod deducts "
+                "text": " to match SciPy's signature. pdf deducts\n"
               },
               {
                 "kind": "code",
-                "text": "1 * numel(input)"
+                "text": "28 * numel(input)"
               },
               {
                 "kind": "text",
-                "text": " FLOPs from the active budget."
+                "text": " FLOPs (composite: z(2)+std_norm_pdf(20)+div(1)+\nbounds(5), FMA=2, weight 1.0; calibrated alpha 28.0). cdf deducts\n"
+              },
+              {
+                "kind": "code",
+                "text": "51 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " FLOPs (composite: z(2)+std_norm_cdf(46)+result(3)+\n2 where(4), FMA=2, weight 1.0; calibrated alpha 50.6). ppf deducts\n"
+              },
+              {
+                "kind": "code",
+                "text": "81 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": " FLOPs (composite: erf + ndtri rational approx +\narithmetic, weight 1.0; audit-2 verified)."
               }
             ],
             "type": "paragraph"
@@ -24186,7 +25099,7 @@
               },
               {
                 "kind": "text",
-                "text": " is the interval width. Each\npublic method deducts "
+                "text": " is the interval width. pdf and\nppf deduct "
               },
               {
                 "kind": "code",
@@ -24194,7 +25107,15 @@
               },
               {
                 "kind": "text",
-                "text": " FLOPs from the active budget."
+                "text": " FLOPs. cdf deducts "
+              },
+              {
+                "kind": "code",
+                "text": "4 * numel(input)"
+              },
+              {
+                "kind": "text",
+                "text": "\nFLOPs (composite: sub + div + 2 clip compare/selects, weight 1.0;\ncalibrated alpha 4.0)."
               }
             ],
             "type": "paragraph"

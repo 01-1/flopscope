@@ -482,7 +482,7 @@
     "flopscope_ref": "fnp.indices",
     "module": "numpy",
     "name": "indices",
-    "notes": "Return array representing indices of a grid. Cost: numel(output).",
+    "notes": "Return array representing indices of a grid. Cost: numel of materialized output (dense N*prod(dims); sparse sum(dims)).",
     "numpy_ref": "np.indices",
     "signature": "fnp.indices(dimensions, dtype=<class 'int'>, sparse=False)",
     "status": "supported",
@@ -492,7 +492,7 @@
   "schema_version": 1,
   "slug": "indices",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1829",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1905",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/numeric.py#L1745"
   }
 }

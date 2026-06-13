@@ -303,7 +303,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.hamming",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L98",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L103",
   "href": "/docs/api/numpy/hamming/",
   "import_path": "flopscope.numpy.hamming",
   "is_operation_cost_leaf": true,

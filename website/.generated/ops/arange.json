@@ -935,7 +935,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.arange",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L221",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L224",
   "href": "/docs/api/numpy/arange/",
   "legacy_href": "/docs/api/ops/arange/",
   "module": "numpy",
@@ -944,7 +944,7 @@
     "href": "/docs/api/numpy/arccos/",
     "label": "fnp.arccos"
   },
-  "notes": "Return evenly spaced values in given interval. Cost: numel(output).",
+  "notes": "Return evenly spaced values in given interval. Cost: 2*numel(output).",
   "notes_sections": [],
   "numpy_ref": "np.arange",
   "parameters": [

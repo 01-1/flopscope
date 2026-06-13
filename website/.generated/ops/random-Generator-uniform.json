@@ -488,8 +488,8 @@
   "canonical_name": "random.Generator.uniform",
   "canonical_path": "numpy/random/generator/uniform",
   "category": "counted_random_method",
-  "cost_formula": "numel(output)",
-  "cost_formula_latex": "$\\text{numel}(\\text{output})$",
+  "cost_formula": "per-method",
+  "cost_formula_latex": "varies",
   "display_type": "counted",
   "doc_coverage": {
     "raw_blocks": [],

@@ -70,7 +70,7 @@
             },
             {
               "kind": "text",
-              "text": " is the interval width. Each\npublic method deducts "
+              "text": " is the interval width. pdf and\nppf deduct "
             },
             {
               "kind": "code",
@@ -78,7 +78,15 @@
             },
             {
               "kind": "text",
-              "text": " FLOPs from the active budget."
+              "text": " FLOPs. cdf deducts "
+            },
+            {
+              "kind": "code",
+              "text": "4 * numel(input)"
+            },
+            {
+              "kind": "text",
+              "text": "\nFLOPs (composite: sub + div + 2 clip compare/selects, weight 1.0;\ncalibrated alpha 4.0)."
             }
           ],
           "type": "paragraph"

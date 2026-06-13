@@ -247,15 +247,15 @@
     ]
   },
   "op": {
-    "category": "counted_unary",
-    "cost_formula": "numel(output)",
-    "cost_formula_latex": "$\\text{numel}(\\text{output})$",
+    "category": "free",
+    "cost_formula": "0",
+    "cost_formula_latex": "$0$",
     "flopscope_ref": "fnp.isrealobj",
     "module": "numpy",
     "name": "isrealobj",
-    "notes": "Return True if x is a not complex type or array.",
+    "notes": "Return True if x is not a complex type or array (dtype predicate, O(1)).",
     "numpy_ref": "np.isrealobj",
-    "signature": "fnp.isrealobj(x)",
+    "signature": "fnp.isrealobj(x: 'Any') -> 'bool'",
     "status": "supported",
     "summary": "Return True if x is a not complex type or an array of complex numbers.",
     "weight": 1.0
@@ -263,7 +263,7 @@
   "schema_version": 1,
   "slug": "isrealobj",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L364",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L1099",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_type_check_impl.py#L312"
   }
 }

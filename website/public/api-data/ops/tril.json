@@ -352,23 +352,23 @@
     ]
   },
   "op": {
-    "category": "free",
-    "cost_formula": "0",
-    "cost_formula_latex": "$0$",
+    "category": "counted_custom",
+    "cost_formula": "per-operation",
+    "cost_formula_latex": "varies",
     "flopscope_ref": "fnp.tril",
     "module": "numpy",
     "name": "tril",
-    "notes": "Lower triangle of array.",
+    "notes": "Lower triangle of array. Cost: numel(output) (masked-select copy).",
     "numpy_ref": "np.tril",
     "signature": "fnp.tril(m: 'ArrayLike', k: 'int' = 0) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Lower triangle of an array.",
-    "weight": 0.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "tril",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L934",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L967",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_twodim_base_impl.py#L441"
   }
 }

@@ -603,7 +603,7 @@
     "flopscope_ref": "fnp.random.choice",
     "module": "numpy.random",
     "name": "random.choice",
-    "notes": "Sampling; cost = numel(output) if replace, n*ceil(log2(n)) if not.",
+    "notes": "Sampling; cost = numel(output) if replace; n (Fisher-Yates, matches permutation) if replace=False and p is None; n*ceil(log2(n)) conservative floor if replace=False with p.",
     "numpy_ref": "np.random.choice",
     "signature": "fnp.random.choice(a, size=None, replace=True, p=None)",
     "status": "supported",
@@ -613,7 +613,7 @@
   "schema_version": 1,
   "slug": "random-choice",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L437",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L512",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.random.choice.html"
   }
 }

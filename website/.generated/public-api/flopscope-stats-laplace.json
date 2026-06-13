@@ -61,18 +61,47 @@
             },
             {
               "kind": "text",
-              "text": " controls the exponential decay away\nfrom that center. Each public method deducts "
+              "text": " controls the exponential decay away\nfrom that center. Per-method FLOP costs (weight 1.0): pdf deducts\n"
             },
             {
               "kind": "code",
-              "text": "1 * numel(input)"
+              "text": "22 * numel(input)"
             },
             {
               "kind": "text",
-              "text": " FLOPs\nfrom the active budget."
+              "text": " (composite: "
+            },
+            {
+              "kind": "text",
+              "text": "|"
+            },
+            {
+              "kind": "text",
+              "text": "x-loc|(3) + exp(-z)(17) +\n/(2*scale)(2), FMA=2), cdf deducts "
+            },
+            {
+              "kind": "code",
+              "text": "40 * numel(input)"
+            },
+            {
+              "kind": "text",
+              "text": " (composite:\ntwo eager exp branches + 8 arith/cmp/select; audit-2 verified), ppf\ndeducts "
+            },
+            {
+              "kind": "code",
+              "text": "51 * numel(input)"
+            },
+            {
+              "kind": "text",
+              "text": " (composite: two eager log branches + edge\nselects; audit-2 verified)."
             }
           ],
           "type": "paragraph"
+        },
+        {
+          "raw_kind": "system_message",
+          "raw_text": "<string>:1: (WARNING/2) Inline substitution_reference start-string without end-string.",
+          "type": "raw_block"
         }
       ],
       "title": "Notes"
@@ -85,7 +114,17 @@
   "display_name": "flopscope.stats.laplace",
   "display_type": "",
   "doc_coverage": {
-    "raw_blocks": [],
+    "raw_blocks": [
+      {
+        "kind": "inline_node",
+        "node_type": "problematic",
+        "raw_text": "|"
+      },
+      {
+        "kind": "system_message",
+        "raw_text": "<string>:1: (WARNING/2) Inline substitution_reference start-string without end-string."
+      }
+    ],
     "unresolved_references": [],
     "unsupported_directives": []
   },
@@ -102,7 +141,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "``loc`` is the center and ``scale`` controls the exponential decay away from that center. Each public method deducts ``1 * numel(input)`` FLOPs from the active budget."
+    "``loc`` is the center and ``scale`` controls the exponential decay away from that center. Per-method FLOP costs (weight 1.0): pdf deducts ``22 * numel(input)`` (composite: |x-loc|(3) + exp(-z)(17) + /(2*scale)(2), FMA=2), cdf deducts ``40 * numel(input)`` (composite: two eager exp branches + 8 arith/cmp/select; audit-2 verified), ppf deducts ``51 * numel(input)`` (composite: two eager log branches + edge selects; audit-2 verified)."
   ],
   "numpy_ref": "",
   "operation": null,

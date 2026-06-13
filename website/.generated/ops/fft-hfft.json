@@ -799,7 +799,7 @@
     "href": "/docs/api/numpy/fft/ifft/",
     "label": "fnp.fft.ifft"
   },
-  "notes": "FFT of Hermitian-symmetric signal. Cost: 5*n_out*ceil(log2(n_out)) (Cooley-Tukey radix-2; Van Loan 1992 \u00a71.4).",
+  "notes": "FFT of Hermitian-symmetric signal. Cost: 5*(n_out//2)*ceil(log2(n_out)) \u2014 numpy implements hfft(a,n) as irfft(conj(a),n) (c2r; Van Loan 1992 \u00a71.4).",
   "notes_sections": [
     "`hfft`/`ihfft` are a pair analogous to `rfft`/`irfft`, but for the opposite case: here the signal has Hermitian symmetry in the time domain and is real in the frequency domain. So here it's `hfft` for which you must supply the length of the result if it is to be odd.",
     "* even: ``ihfft(hfft(a, 2*len(a) - 2)) == a``, within roundoff error, * odd: ``ihfft(hfft(a, 2*len(a) - 1)) == a``, within roundoff error.",

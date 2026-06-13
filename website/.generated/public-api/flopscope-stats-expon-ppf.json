@@ -213,11 +213,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(q)"
+              "text": "27 * numel(q)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: loc-scale*log1p(-q)(19) +\n3 where/cmp/and(8), FMA=2, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -277,7 +277,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.stats.expon.ppf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_expon.py#L98",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_expon.py#L103",
   "href": "/docs/api/stats/expon/ppf/",
   "import_path": "flopscope.stats.expon.ppf",
   "is_operation_cost_leaf": true,
@@ -288,7 +288,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.expon.ppf(q, loc, scale)``. FLOP cost: ``1 * numel(q)``."
+    "Equivalent to ``scipy.stats.expon.ppf(q, loc, scale)``. FLOP cost: ``27 * numel(q)`` (composite: loc-scale*log1p(-q)(19) + 3 where/cmp/and(8), FMA=2, weight 1.0)."
   ],
   "numpy_ref": "",
   "operation": null,

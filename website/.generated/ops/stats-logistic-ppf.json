@@ -212,11 +212,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(q)"
+              "text": "28 * numel(q)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: 1-q(1)+q/(1-q)(1)+log(16)+\nloc+scale*(2)+3 where(8), FMA=2, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -277,7 +277,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.logistic.ppf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_logistic.py#L99",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_logistic.py#L105",
   "href": "/docs/api/stats/logistic/ppf/",
   "legacy_href": "/docs/api/ops/stats-logistic-ppf/",
   "module": "flopscope.stats",
@@ -288,7 +288,7 @@
   },
   "notes": "Logistic PPF; cost = numel(input).",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.logistic.ppf(q, loc, scale)``. FLOP cost: ``1 * numel(q)``."
+    "Equivalent to ``scipy.stats.logistic.ppf(q, loc, scale)``. FLOP cost: ``28 * numel(q)`` (composite: 1-q(1)+q/(1-q)(1)+log(16)+ loc+scale*(2)+3 where(8), FMA=2, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.logistic.ppf",
   "parameters": [

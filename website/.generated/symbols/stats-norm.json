@@ -78,15 +78,7 @@
             },
             {
               "kind": "text",
-              "text": " is the standard deviation. Each public\nmethod deducts "
-            },
-            {
-              "kind": "code",
-              "text": "1 * numel(input)"
-            },
-            {
-              "kind": "text",
-              "text": " FLOPs from the active budget."
+              "text": " is the standard deviation. Cost constants\nare composite (rational-approximation + transcendental kernels), weight 1.0:\npdf=27 FLOPs/elem, cdf=48 FLOPs/elem, ppf=83 FLOPs/elem."
             }
           ],
           "type": "paragraph"

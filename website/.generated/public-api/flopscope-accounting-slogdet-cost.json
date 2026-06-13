@@ -178,7 +178,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Simplified cubic cost model for sign and log-determinant computation."
+              "text": "2n^3/3 + 18n FLOPs (LU + sum of log|diag|: abs + 16/elem log + reduce)."
             }
           ],
           "type": "paragraph"
@@ -200,7 +200,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.slogdet_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L115",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L117",
   "href": "/docs/api/accounting/slogdet-cost/",
   "import_path": "flopscope.accounting.slogdet_cost",
   "is_operation_cost_leaf": false,
@@ -212,7 +212,7 @@
   "notes": "",
   "notes_sections": [
     "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
-    "Simplified cubic cost model for sign and log-determinant computation."
+    "2n^3/3 + 18n FLOPs (LU + sum of log|diag|: abs + 16/elem log + reduce)."
   ],
   "numpy_ref": "",
   "operation": null,

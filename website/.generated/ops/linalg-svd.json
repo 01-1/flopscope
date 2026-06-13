@@ -1244,7 +1244,7 @@
     "href": "/docs/api/numpy/linalg/svdvals/",
     "label": "fnp.linalg.svdvals"
   },
-  "notes": "Singular value decomposition; cost ~ O(min(m,n)*m*n).",
+  "notes": "Singular value decomposition. Cost: $4a^2b+22b^3$ (full U, full_matrices=True and m!=n), $6ab^2+20b^3$ (thin U/V), or $2ab^2+2b^3$ (values-only); a=max(m,n), b=min(m,n). Top-k (1<=k<min(m,n)) bills min(4mnk, economy) (verified randomized-SVD leading cost; see cost-model.md). Confirmed by the 2026-06 evidence audit (LAPACK dgesdd + G&VL 4e \u00a78.6).",
   "notes_sections": [
     "The decomposition is performed using LAPACK routine ``_gesdd``.",
     "SVD is usually described for the factorization of a 2D matrix :math:`A`. The higher-dimensional case will be discussed below. In the 2D case, SVD is written as :math:`A = U S V^H`, where :math:`A = a`, :math:`U= u`, :math:`S= \\mathtt{flops.diag}(s)` and :math:`V^H = vh`. The 1D array `s` contains the singular values of `a` and `u` and `vh` are unitary. The rows of `vh` are the eigenvectors of :math:`A^H A` and the columns of `u` are the eigenvectors of :math:`A A^H`. In both cases the corresponding (possibly non-zero) eigenvalues are given by ``s**2``.",

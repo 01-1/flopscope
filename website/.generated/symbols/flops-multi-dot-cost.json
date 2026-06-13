@@ -137,15 +137,34 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Each binary matmul step (m x k) @ (k x n) costs "
+              "text": "Each binary matmul step (m x k) @ (k x n) is delegated to\n"
             },
             {
               "kind": "code",
-              "text": "2 * m * k * n"
+              "text": "matmul_cost(m, k, n)"
             },
             {
               "kind": "text",
-              "text": " FLOPs\nunder the FMA=2 textbook convention (m*k*n multiplies + m*k*n adds,\nignoring the \u2212m*n off-by-one for accumulation at this level of\napproximation).  FMA=2 unification 2026-05-20."
+              "text": " (= 2*m*k*n - m*n), matching "
+            },
+            {
+              "external_url": "",
+              "href": "/docs/api/numpy/matmul/",
+              "kind": "link",
+              "target": "matmul",
+              "text": "fnp.matmul"
+            },
+            {
+              "kind": "text",
+              "text": " and\n"
+            },
+            {
+              "kind": "code",
+              "text": "matrix_power_cost"
+            },
+            {
+              "kind": "text",
+              "text": " (issue #69 precedent)."
             }
           ],
           "type": "paragraph"

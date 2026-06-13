@@ -4392,15 +4392,6 @@
       "module": "numpy.random",
       "slug": "flopscope-numpy-random-randn"
     },
-    "/docs/api/numpy/random/random-integers/": {
-      "callable": true,
-      "canonical_name": "flopscope.numpy.random.random_integers",
-      "href": "/docs/api/numpy/random/random-integers/",
-      "import_path": "flopscope.numpy.random.random_integers",
-      "kind": "function",
-      "module": "numpy.random",
-      "slug": "flopscope-numpy-random-random-integers"
-    },
     "/docs/api/numpy/random/random-sample/": {
       "callable": true,
       "canonical_name": "flopscope.numpy.random.random_sample",
@@ -5208,7 +5199,7 @@
       "href": "/docs/api/numpy/row-stack/",
       "import_path": "flopscope.numpy.row_stack",
       "kind": "function",
-      "module": "numpy",
+      "module": "flopscope._free_ops",
       "slug": "flopscope-numpy-row-stack"
     },
     "/docs/api/numpy/save/": {

@@ -205,15 +205,15 @@
                   "inline": [
                     {
                       "kind": "text",
-                      "text": "SVD-based norms (2-norm, nuclear): "
+                      "text": "SVD-based norms (2-norm, nuclear): values-only SVD cost\n"
                     },
                     {
                       "kind": "code",
-                      "text": "4 * m * n * min(m, n)"
+                      "text": "2*a*b^2 + 2*b^3"
                     },
                     {
                       "kind": "text",
-                      "text": "\n(weight=4 baked in, consistent with linalg.svd weight=4)."
+                      "text": " where a=max(m,n), b=min(m,n)."
                     }
                   ],
                   "type": "paragraph"
@@ -245,7 +245,7 @@
   ],
   "signature": "flops.flops.matrix_norm_cost(shape: 'tuple', ord=None) -> 'int'",
   "slug": "flops-matrix-norm-cost",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L331",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L376",
   "status_note": "",
   "summary": "Weighted FLOP cost of matrix norm.",
   "upstream_source_url": ""

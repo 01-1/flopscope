@@ -196,11 +196,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(x)"
+                "text": "23 * numel(x)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: z(2)+exp(-z)(17)+\n(1+ez)(1)+sq(1)+scale*(1)+div(1), FMA=2, weight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -261,7 +261,7 @@
   "schema_version": 1,
   "slug": "stats-logistic-pdf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_logistic.py#L35",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_logistic.py#L39",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.logistic.html"
   }
 }

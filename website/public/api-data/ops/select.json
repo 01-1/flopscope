@@ -447,7 +447,7 @@
     "flopscope_ref": "fnp.select",
     "module": "numpy",
     "name": "select",
-    "notes": "Return array from list of choices based on conditions. Cost: numel(input).",
+    "notes": "Return array from list of choices based on conditions. Cost: numel(output), gather tier \u00d74.",
     "numpy_ref": "np.select",
     "signature": "fnp.select(condlist: 'Sequence[ArrayLike]', choicelist: 'Sequence[ArrayLike]', default: 'Any' = 0) -> 'FlopscopeArray'",
     "status": "supported",
@@ -457,7 +457,7 @@
   "schema_version": 1,
   "slug": "select",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2264",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2371",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L786"
   }
 }

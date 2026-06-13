@@ -217,6 +217,15 @@
             }
           ],
           "type": "paragraph"
+        },
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "The SVD term uses with_vectors=True (the reconstruction needs U/V); the\n4.0 linalg weight is gone, so this composed value is exactly what is charged."
+            }
+          ],
+          "type": "paragraph"
         }
       ],
       "title": "Notes"
@@ -235,7 +244,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.pinv_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L254",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L263",
   "href": "/docs/api/accounting/pinv-cost/",
   "import_path": "flopscope.accounting.pinv_cost",
   "is_operation_cost_leaf": false,
@@ -248,7 +257,8 @@
   "notes_sections": [
     "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
     "NumPy implements ``pinv`` as: ``svd(A, full_matrices=False)`` \u2192 threshold tiny singular values \u2192 multiply ``vt.T`` by ``s_inv`` broadcasted \u2192 matmul with ``u.T``. We compose the cost from ``svd_cost`` and ``matmul_cost`` so this formula tracks those helpers automatically (issue #69; was previously missing the post-SVD reconstruction).",
-    "Total: ``svd(m,n) + threshold(min(m,n)) + diag_scale(n*min(m,n)) + matmul(n, min(m,n), m)``."
+    "Total: ``svd(m,n) + threshold(min(m,n)) + diag_scale(n*min(m,n)) + matmul(n, min(m,n), m)``.",
+    "The SVD term uses with_vectors=True (the reconstruction needs U/V); the 4.0 linalg weight is gone, so this composed value is exactly what is charged."
   ],
   "numpy_ref": "",
   "operation": null,

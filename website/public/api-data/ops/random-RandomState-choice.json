@@ -603,7 +603,7 @@
     "flopscope_ref": "fnp.random.RandomState.choice",
     "module": "numpy.random",
     "name": "random.RandomState.choice",
-    "notes": "Legacy choice sampler; numel(output) if replace else sort_cost(n).",
+    "notes": "Legacy choice sampler; numel(output) if replace; n (Fisher-Yates, matches permutation) if replace=False and p is None; sort_cost(n) conservative floor if replace=False with p.",
     "numpy_ref": "np.random.RandomState.choice",
     "signature": "fnp.random.RandomState.choice(self, a, size=None, replace=True, p=None)",
     "status": "supported",

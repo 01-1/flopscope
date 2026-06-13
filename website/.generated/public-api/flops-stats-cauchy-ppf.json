@@ -212,11 +212,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(q)"
+              "text": "28 * numel(q)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: q-0.5(1) + pi*(1) +\ntan(16) + loc+scale*(2) + 3 where(8), FMA=2, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -278,7 +278,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.cauchy.ppf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_cauchy.py#L98",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_cauchy.py#L105",
   "href": "/docs/api/stats/cauchy/ppf/",
   "import_path": "flops.stats.cauchy.ppf",
   "is_operation_cost_leaf": false,
@@ -292,7 +292,7 @@
   },
   "notes": "Cauchy PPF; cost = numel(input).",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.cauchy.ppf(q, loc, scale)``. FLOP cost: ``1 * numel(q)``."
+    "Equivalent to ``scipy.stats.cauchy.ppf(q, loc, scale)``. FLOP cost: ``28 * numel(q)`` (composite: q-0.5(1) + pi*(1) + tan(16) + loc+scale*(2) + 3 where(8), FMA=2, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.cauchy.ppf",
   "operation": {

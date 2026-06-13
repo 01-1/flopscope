@@ -598,7 +598,7 @@
       "module": "flopscope.numpy.linalg._properties",
       "namespace": "accounting",
       "slug": "flopscope-accounting-matrix-rank-cost",
-      "summary": "Weighted FLOP cost of matrix rank."
+      "summary": "Weighted FLOP cost of matrix rank: values-only SVD + min(m, n) threshold compares."
     },
     {
       "callable": true,
@@ -658,7 +658,7 @@
       "module": "flopscope._polynomial",
       "namespace": "accounting",
       "slug": "flopscope-accounting-poly-cost",
-      "summary": "Cost for poly: $n^2$ FLOPs."
+      "summary": "Cost for poly (1-D build-from-roots): ``(3*n^2 + n) // 2`` FLOPs."
     },
     {
       "callable": true,
@@ -682,7 +682,7 @@
       "module": "flopscope._polynomial",
       "namespace": "accounting",
       "slug": "flopscope-accounting-polyder-cost",
-      "summary": "Cost for polyder: n FLOPs (n = len of coeffs)."
+      "summary": "Cost for polyder: one multiply per surviving coefficient per derivative step."
     },
     {
       "callable": true,
@@ -694,7 +694,7 @@
       "module": "flopscope._polynomial",
       "namespace": "accounting",
       "slug": "flopscope-accounting-polydiv-cost",
-      "summary": "Cost for polydiv: n1 * n2 FLOPs."
+      "summary": "Cost for polydiv: 1 + Q*(2*n2 + 1), Q = max(n1-n2+1, 0) (work scales with"
     },
     {
       "callable": true,
@@ -718,7 +718,7 @@
       "module": "flopscope._polynomial",
       "namespace": "accounting",
       "slug": "flopscope-accounting-polyint-cost",
-      "summary": "Cost for polyint: n FLOPs (n = len of coeffs)."
+      "summary": "Cost for polyint: m*n + m*(m-1)//2 FLOPs."
     },
     {
       "callable": true,
@@ -730,7 +730,7 @@
       "module": "flopscope._polynomial",
       "namespace": "accounting",
       "slug": "flopscope-accounting-polymul-cost",
-      "summary": "Cost for polymul: n1 * n2 FLOPs."
+      "summary": "Cost for polymul: 2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2)."
     },
     {
       "callable": true,
@@ -766,7 +766,7 @@
       "module": "flopscope.numpy.linalg._decompositions",
       "namespace": "accounting",
       "slug": "flopscope-accounting-qr-cost",
-      "summary": "Weighted FLOP cost of QR decomposition."
+      "summary": "Weighted FLOP cost of QR decomposition (Householder, FMA=2)."
     },
     {
       "callable": true,
@@ -814,7 +814,7 @@
       "module": "flopscope._polynomial",
       "namespace": "accounting",
       "slug": "flopscope-accounting-roots-cost",
-      "summary": "Cost for roots: $n^3$ FLOPs (companion matrix eigendecomposition, simplified)."
+      "summary": "Cost for roots: companion-matrix eigenvalues \u2014 delegates to"
     },
     {
       "callable": true,
@@ -838,7 +838,7 @@
       "module": "flopscope.numpy.linalg._solvers",
       "namespace": "accounting",
       "slug": "flopscope-accounting-solve-cost",
-      "summary": "Weighted FLOP cost of solving a linear system Ax = b."
+      "summary": "Weighted FLOP cost of solving Ax = b: LU + two triangular solves (FMA=2)."
     },
     {
       "callable": true,
@@ -850,7 +850,7 @@
       "module": "flopscope._flops",
       "namespace": "accounting",
       "slug": "flopscope-accounting-svd-cost",
-      "summary": "Weighted FLOP cost of a (truncated) SVD."
+      "summary": "Weighted FLOP cost of an SVD (FMA=2, leading order)."
     },
     {
       "callable": true,
@@ -862,7 +862,7 @@
       "module": "flopscope.numpy.linalg._decompositions",
       "namespace": "accounting",
       "slug": "flopscope-accounting-svdvals-cost",
-      "summary": "Weighted FLOP cost of computing singular values."
+      "summary": "Weighted FLOP cost of computing singular values (values-only SVD)."
     },
     {
       "callable": true,
@@ -6758,18 +6758,6 @@
     },
     {
       "callable": true,
-      "display_name": "flopscope.numpy.random.random_integers",
-      "href": "/docs/api/numpy/random/random-integers/",
-      "import_path": "flopscope.numpy.random.random_integers",
-      "is_operation_cost_leaf": true,
-      "kind": "function",
-      "module": "numpy.random",
-      "namespace": "numpy",
-      "slug": "flopscope-numpy-random-random-integers",
-      "summary": "Random integers of type `flops.int_` between `low` and `high`, inclusive."
-    },
-    {
-      "callable": true,
       "display_name": "flopscope.numpy.random.random_sample",
       "href": "/docs/api/numpy/random/random-sample/",
       "import_path": "flopscope.numpy.random.random_sample",
@@ -7219,7 +7207,7 @@
       "import_path": "flopscope.numpy.row_stack",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "numpy",
+      "module": "flopscope._free_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-row-stack",
       "summary": "Stack arrays in sequence vertically (row wise)."
@@ -13936,18 +13924,6 @@
     },
     {
       "callable": true,
-      "display_name": "flopscope.numpy.random.random_integers",
-      "href": "/docs/api/numpy/random/random-integers/",
-      "import_path": "flopscope.numpy.random.random_integers",
-      "is_operation_cost_leaf": true,
-      "kind": "function",
-      "module": "numpy.random",
-      "namespace": "numpy",
-      "slug": "flopscope-numpy-random-random-integers",
-      "summary": "Random integers of type `flops.int_` between `low` and `high`, inclusive."
-    },
-    {
-      "callable": true,
       "display_name": "flopscope.numpy.random.random_sample",
       "href": "/docs/api/numpy/random/random-sample/",
       "import_path": "flopscope.numpy.random.random_sample",
@@ -14397,7 +14373,7 @@
       "import_path": "flopscope.numpy.row_stack",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "numpy",
+      "module": "flopscope._free_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-row-stack",
       "summary": "Stack arrays in sequence vertically (row wise)."
@@ -15532,5 +15508,5 @@
     }
   ],
   "schema_version": 1,
-  "total": 709
+  "total": 708
 }

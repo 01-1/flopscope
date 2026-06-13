@@ -768,12 +768,12 @@
     "signature": "fnp.diagonal(a: 'ArrayLike', offset: 'int' = 0, axis1: 'int' = 0, axis2: 'int' = 1) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Return specified diagonals.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "diagonal",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L943",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L981",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/fromnumeric.py#L1695"
   }
 }

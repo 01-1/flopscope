@@ -357,7 +357,7 @@
     "flopscope_ref": "fnp.roots",
     "module": "flopscope._polynomial",
     "name": "roots",
-    "notes": "Return roots of polynomial with given coefficients. Cost: $n^3$ (companion matrix eig, simplified).",
+    "notes": "Return roots of polynomial with given coefficients. Cost: ~$10n^3$ (companion-matrix eigvals). n = trimmed degree (zero coefficients stripped, as np.roots does). Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e \u00a77.5).",
     "numpy_ref": "np.roots",
     "signature": "fnp.roots(p: 'ArrayLike') -> 'FlopscopeArray'",
     "status": "supported",
@@ -367,7 +367,7 @@
   "schema_version": 1,
   "slug": "roots",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L258",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L361",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_polynomial_impl.py#L163"
   }
 }

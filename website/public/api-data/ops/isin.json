@@ -818,7 +818,7 @@
     "flopscope_ref": "fnp.isin",
     "module": "numpy",
     "name": "isin",
-    "notes": "Set membership; cost = (n+m)*ceil(log2(n+m)).",
+    "notes": "Set membership; cost = (n+m)*ceil(log2(n+m)) (sort path) or max(sort_cost(n+m), 2*n*m) when numpy's masked-loop path triggers (m < 10*n**0.145 with non-integer dtypes, or object dtype).",
     "numpy_ref": "np.isin",
     "signature": "fnp.isin(element, test_elements, assume_unique=False, invert=False, *, kind=None)",
     "status": "supported",
@@ -828,7 +828,7 @@
   "schema_version": 1,
   "slug": "isin",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_sorting_ops.py#L449",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_sorting_ops.py#L498",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_arraysetops_impl.py#L1015"
   }
 }

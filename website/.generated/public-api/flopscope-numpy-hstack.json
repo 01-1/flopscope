@@ -432,11 +432,11 @@
   ],
   "canonical_name": "flopscope.numpy.hstack",
   "canonical_path": "/docs/api/numpy/hstack/",
-  "category": "free",
-  "cost_formula": "0",
-  "cost_formula_latex": "$0$",
+  "category": "counted_custom",
+  "cost_formula": "per-operation",
+  "cost_formula_latex": "varies",
   "display_name": "flopscope.numpy.hstack",
-  "display_type": "free",
+  "display_type": "custom",
   "doc_coverage": {
     "raw_blocks": [],
     "unresolved_references": [],
@@ -449,7 +449,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.hstack",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L557",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L577",
   "href": "/docs/api/numpy/hstack/",
   "import_path": "flopscope.numpy.hstack",
   "is_operation_cost_leaf": true,
@@ -461,15 +461,15 @@
     "href": "/docs/api/numpy/hypot/",
     "label": "fnp.hypot"
   },
-  "notes": "Stack arrays horizontally.",
+  "notes": "Stack arrays horizontally. Cost: numel(output).",
   "notes_sections": [],
   "numpy_ref": "np.hstack",
   "operation": {
     "blocked": false,
-    "category": "free",
-    "cost_formula": "0",
-    "cost_formula_latex": "$0$",
-    "free": true,
+    "category": "counted_custom",
+    "cost_formula": "per-operation",
+    "cost_formula_latex": "varies",
+    "free": false,
     "name": "hstack"
   },
   "parameters": [
@@ -656,5 +656,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/shape_base.py#L295",
-  "weight": 0.0
+  "weight": 1.0
 }

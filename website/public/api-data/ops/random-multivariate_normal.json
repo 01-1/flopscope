@@ -817,7 +817,7 @@
     "flopscope_ref": "fnp.random.multivariate_normal",
     "module": "numpy.random",
     "name": "random.multivariate_normal",
-    "notes": "Sampling; cost = numel(output).",
+    "notes": "Composite cost: d^3//3 (Cholesky factorization) + 2*N*d^2 (affine transform) + 16*N*d (N*d standard-normal draws at transcendental tier); weight 1.0.",
     "numpy_ref": "np.random.multivariate_normal",
     "signature": "fnp.random.multivariate_normal(mean, cov, size=None, check_valid='warn', tol=1e-08)",
     "status": "supported",
@@ -827,7 +827,7 @@
   "schema_version": 1,
   "slug": "random-multivariate_normal",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L89",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L394",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.random.multivariate_normal.html"
   }
 }

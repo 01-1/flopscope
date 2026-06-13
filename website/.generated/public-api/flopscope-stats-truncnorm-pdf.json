@@ -241,11 +241,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "28 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: z(2)+std_norm_pdf(20)+\ndiv(1)+bounds(5), FMA=2, weight 1.0; calibrated alpha 28.0)."
             }
           ],
           "type": "paragraph"
@@ -305,7 +305,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.stats.truncnorm.pdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L50",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L55",
   "href": "/docs/api/stats/truncnorm/pdf/",
   "import_path": "flopscope.stats.truncnorm.pdf",
   "is_operation_cost_leaf": true,
@@ -316,7 +316,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.truncnorm.pdf(x, a, b, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.truncnorm.pdf(x, a, b, loc, scale)``. FLOP cost: ``28 * numel(x)`` (composite: z(2)+std_norm_pdf(20)+ div(1)+bounds(5), FMA=2, weight 1.0; calibrated alpha 28.0)."
   ],
   "numpy_ref": "",
   "operation": null,

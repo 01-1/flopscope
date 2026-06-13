@@ -642,7 +642,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.inv",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L116",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L122",
   "href": "/docs/api/numpy/linalg/inv/",
   "legacy_href": "/docs/api/ops/linalg-inv/",
   "module": "numpy.linalg",
@@ -651,7 +651,7 @@
     "href": "/docs/api/numpy/linalg/lstsq/",
     "label": "fnp.linalg.lstsq"
   },
-  "notes": "Matrix inverse. Cost: $n^3$ (LU + solve).",
+  "notes": "Matrix inverse. Cost: $2n^3$, or $n^3/3 + n^3$ for symmetric.",
   "notes_sections": [
     "Broadcasting rules apply, see the `flops.linalg` documentation for details.",
     "If `a` is detected to be singular, a `LinAlgError` is raised. If `a` is ill-conditioned, a `LinAlgError` may or may not be raised, and results may be inaccurate due to floating-point errors."

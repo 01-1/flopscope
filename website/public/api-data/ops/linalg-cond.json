@@ -366,7 +366,7 @@
     "flopscope_ref": "fnp.linalg.cond",
     "module": "numpy.linalg",
     "name": "linalg.cond",
-    "notes": "Condition number. Cost: m*n*min(m,n) (via SVD).",
+    "notes": "Condition number. Cost: values-only SVD + 1 (p in {None,2,-2}) or $2n^3 + 4n^2 + 1$ (inv-based).",
     "numpy_ref": "np.linalg.cond",
     "signature": "fnp.linalg.cond(x: 'ArrayLike', p: 'Any' = None) -> 'FlopscopeArray'",
     "status": "supported",
@@ -376,7 +376,7 @@
   "schema_version": 1,
   "slug": "linalg-cond",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L422",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L463",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/linalg/_linalg.py#L1885"
   }
 }

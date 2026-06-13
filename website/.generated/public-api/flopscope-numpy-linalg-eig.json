@@ -817,7 +817,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.eig",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L150",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L151",
   "href": "/docs/api/numpy/linalg/eig/",
   "import_path": "flopscope.numpy.linalg.eig",
   "is_operation_cost_leaf": true,
@@ -829,7 +829,7 @@
     "href": "/docs/api/numpy/linalg/eigh/",
     "label": "fnp.linalg.eigh"
   },
-  "notes": "Eigendecomposition. Cost: $n^3$.",
+  "notes": "Eigendecomposition. Cost: ~$25n^3$. Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e \u00a77.5).",
   "notes_sections": [
     "Broadcasting rules apply, see the `flops.linalg` documentation for details.",
     "This is implemented using the ``_geev`` LAPACK routines which compute the eigenvalues and eigenvectors of general square arrays.",

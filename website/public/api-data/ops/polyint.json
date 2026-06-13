@@ -483,7 +483,7 @@
     "flopscope_ref": "fnp.polyint",
     "module": "flopscope._polynomial",
     "name": "polyint",
-    "notes": "Integrate polynomial. Cost: n FLOPs.",
+    "notes": "Integrate polynomial. Cost: m*n + m*(m-1)/2 FLOPs (m = integration order).",
     "numpy_ref": "np.polyint",
     "signature": "fnp.polyint(p: 'ArrayLike', m: 'int' = 1, k: 'ArrayLike | None' = None) -> 'FlopscopeArray'",
     "status": "supported",
@@ -493,7 +493,7 @@
   "schema_version": 1,
   "slug": "polyint",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L162",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L232",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_polynomial_impl.py#L260"
   }
 }

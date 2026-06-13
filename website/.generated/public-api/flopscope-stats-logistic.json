@@ -61,15 +61,31 @@
             },
             {
               "kind": "text",
-              "text": " controls the\nspread. The CDF is the sigmoid function and the PPF is the logit\nfunction. Each public method deducts "
+              "text": " controls the\nspread. The CDF is the sigmoid function and the PPF is the logit\nfunction. Per-method FLOP costs (weight 1.0): pdf deducts\n"
             },
             {
               "kind": "code",
-              "text": "1 * numel(input)"
+              "text": "23 * numel(input)"
             },
             {
               "kind": "text",
-              "text": " FLOPs from the\nactive budget."
+              "text": " (composite: z(2)+exp(-z)(17)+(1+ez)(1)+sq(1)+\nscale*(1)+div(1), FMA=2), cdf deducts "
+            },
+            {
+              "kind": "code",
+              "text": "21 * numel(input)"
+            },
+            {
+              "kind": "text",
+              "text": " (composite:\nz(2)+exp(-z)(17)+1+ez(1)+1/denom(1), FMA=2), ppf deducts\n"
+            },
+            {
+              "kind": "code",
+              "text": "28 * numel(input)"
+            },
+            {
+              "kind": "text",
+              "text": " (composite: 1-q(1)+q/(1-q)(1)+log(16)+\nloc+scale*(2)+3 where(8), FMA=2)."
             }
           ],
           "type": "paragraph"
@@ -102,7 +118,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "``loc`` is the center of the distribution and ``scale`` controls the spread. The CDF is the sigmoid function and the PPF is the logit function. Each public method deducts ``1 * numel(input)`` FLOPs from the active budget."
+    "``loc`` is the center of the distribution and ``scale`` controls the spread. The CDF is the sigmoid function and the PPF is the logit function. Per-method FLOP costs (weight 1.0): pdf deducts ``23 * numel(input)`` (composite: z(2)+exp(-z)(17)+(1+ez)(1)+sq(1)+ scale*(1)+div(1), FMA=2), cdf deducts ``21 * numel(input)`` (composite: z(2)+exp(-z)(17)+1+ez(1)+1/denom(1), FMA=2), ppf deducts ``28 * numel(input)`` (composite: 1-q(1)+q/(1-q)(1)+log(16)+ loc+scale*(2)+3 where(8), FMA=2)."
   ],
   "numpy_ref": "",
   "operation": null,

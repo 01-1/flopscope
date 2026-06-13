@@ -662,7 +662,7 @@
     "href": "/docs/api/numpy/linalg/cond/",
     "label": "fnp.linalg.cond"
   },
-  "notes": "Cholesky decomposition. Cost: $n^3$.",
+  "notes": "Cholesky decomposition. Cost: $n^3/3$.",
   "notes_sections": [
     "Broadcasting rules apply, see the `flops.linalg` documentation for details.",
     "The Cholesky decomposition is often used as a fast way of solving",
