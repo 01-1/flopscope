@@ -241,6 +241,33 @@ def test_polyfit_no_budget():
     assert len(result) >= 1
 
 
+def test_polyfit_flopscope_array_inputs():
+    # Regression: tracked FlopscopeArray inputs (the eval's normal path) must be
+    # stripped before numpy.polyfit, which internally uses ops that reject the
+    # subclass. Previously raised RuntimeError "WhestArray reached numpy.polyfit".
+    import flopscope.numpy as fnp
+
+    xs = [0.0, 1.0, 2.0, 3.0, 4.0]
+    ys = [0.0, 1.0, 4.0, 9.0, 16.0]
+    # Build the tracked arrays OUTSIDE the budget so only polyfit's own cost is
+    # measured (array *creation* bills numel under the empirical weight tier).
+    xa, ya, w = fnp.asarray(xs), fnp.asarray(ys), fnp.asarray([1.0] * 5)
+    with BudgetContext(flop_budget=10**6) as b_plain:
+        polyfit(numpy.asarray(xs), numpy.asarray(ys), 2)
+        plain_cost = b_plain.flops_used
+    with BudgetContext(flop_budget=10**6) as b_fnp:
+        result = polyfit(xa, ya, 2)
+        fnp_cost = b_fnp.flops_used
+    assert fnp_cost == plain_cost  # stripping tracked inputs adds no billing
+    assert numpy.allclose(numpy.asarray(result), numpy.polyfit(xs, ys, 2), atol=1e-10)
+    # the `w` (weights) kwarg is also a tracked-array param -> must be stripped
+    with BudgetContext(flop_budget=10**6):
+        result_w = polyfit(xa, ya, 2, w=w)
+    assert numpy.allclose(
+        numpy.asarray(result_w), numpy.polyfit(xs, ys, 2, w=[1.0] * 5), atol=1e-10
+    )
+
+
 # ---------------------------------------------------------------------------
 # poly
 # ---------------------------------------------------------------------------

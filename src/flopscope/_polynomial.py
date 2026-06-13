@@ -305,13 +305,25 @@ def polyfit(
     deg: int,
     **kwargs: Any,
 ) -> FlopscopeArray:
-    """Least-squares polynomial fit. Wraps ``numpy.polyfit``."""
+    """Least-squares polynomial fit. Wraps ``numpy.polyfit``.
+
+    ``x``, ``y`` (and the optional ``w`` weights kwarg) are stripped to plain
+    ``np.ndarray`` (via ``_to_base_ndarray`` after ``np.asarray``) before being
+    passed to ``np.polyfit``, which internally uses ops that do not handle
+    ``FlopscopeArray`` subclasses (they are not in the ``__array_function__``
+    allowlist).
+    """
     budget = require_budget()
-    x = _np.asarray(x)
-    m = len(x)
+    x_arr = _to_base_ndarray(_np.asarray(x))
+    y_arr = _to_base_ndarray(_np.asarray(y))
+    if kwargs.get("w") is not None:
+        kwargs["w"] = _to_base_ndarray(_np.asarray(kwargs["w"]))
+    m = len(x_arr)
     cost = polyfit_cost(m, deg)
-    with budget.deduct("polyfit", flop_cost=cost, subscripts=None, shapes=(x.shape,)):
-        result = _call_numpy(_np.polyfit, x, y, deg, **kwargs)  # type: ignore[arg-type]
+    with budget.deduct(
+        "polyfit", flop_cost=cost, subscripts=None, shapes=(x_arr.shape,)
+    ):
+        result = _call_numpy(_np.polyfit, x_arr, y_arr, deg, **kwargs)  # type: ignore[arg-type]
     return result  # type: ignore[return-value]
 
 
