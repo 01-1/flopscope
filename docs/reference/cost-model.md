@@ -778,8 +778,12 @@ weight tables by `scripts/generate_api_docs.py` and powers the website's API pag
 - **Find an op:** filter `ops.json` by `name`, or browse the website API pages.
 - **Filter a family:** by `area` (`core` / `fft` / `linalg` / `random` / `stats`) or `module`.
 - **It can't drift:** CI runs `scripts/generate_api_docs.py --check`, which regenerates
-  `ops.json` to a temp dir and fails if the committed file differs. Every billed op is
-  present (aliases resolve transitively to their canonical), enforced by
+  `ops.json` to a temp dir and fails if the committed file's **cost-model fields**
+  differ (`weight`, `cost_formula`, `category`, `notes`, …). The `summary` field is
+  sourced from the installed numpy's docstrings and is allowed to vary across the
+  numpy-version matrix, so it is excluded from the check — which means the gate also
+  proves the cost model is numpy-version-independent. Every billed op is present
+  (aliases resolve transitively to their canonical), enforced by
   `tests/test_cost_model_coverage.py`.
 
 > **Granularity note.** `ops.json` is exhaustive in *coverage* — every op, with its

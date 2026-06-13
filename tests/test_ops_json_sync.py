@@ -1,4 +1,11 @@
-"""ops.json must stay in sync with the registry (the generated single source)."""
+"""ops.json cost-model fields must stay in sync with the registry.
+
+`generate_api_docs.py --check` compares every field except ``summary`` (which is
+sourced from the installed numpy's docstrings and legitimately varies across the
+numpy-version matrix). This test therefore also doubles as a guarantee that the
+cost model itself is numpy-version-independent: it runs in every matrixed test job
+(numpy 2.0-2.4) and must pass on all of them.
+"""
 
 import subprocess
 import sys
