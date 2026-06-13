@@ -135,11 +135,12 @@ plus the per-output subtract, and `mean`/`average` add the per-output divide.
 
 | Op | flop_cost | weight | basis |
 |---|---|---|---|
-| `sum`, `prod`, `max`, `min`, `any`, `all`, `cumsum`, `cumprod`, `nansum`, `nanmax`, `nanmin`, `nanprod`, `nancumsum`, `nancumprod`, `cumulative_sum`, `cumulative_prod` | numel(input) − numel(output) | 1.0 | DECLARED reduction skeleton (one add per consumed element) |
+| `sum`, `prod`, `max`, `min`, `any`, `all`, `nansum`, `nanmax`, `nanmin`, `nanprod` | numel(input) − numel(output) | 1.0 | DECLARED reduction skeleton (one add or compare per consumed element) |
+| `cumsum`, `cumprod`, `nancumsum`, `nancumprod`, `cumulative_sum`, `cumulative_prod` | numel(input) − num_output_slices (= n−1 for a full 1-D scan; product of non-reduced dims otherwise) | 1.0 | DECLARED: scan accumulation; output shape = input shape so the generic `numel(in)−numel(out)` formula evaluates to 0 — these use the correct per-slice count instead |
 | `mean`, `average` (unweighted) | numel(input) | 1.0 | DERIVED: reduction (numel−M) + M divides |
-| `average(weights=)` | numel − M + 2·numel + M | 1.0 | DERIVED: a·w pass + a·w sum + w sum + M divides |
+| `average(weights=)` | `3·numel − M`, M = num output slices (1 for full reduction) | 1.0 | DERIVED: a·w multiply pass (numel) + a·w sum (numel−M) + weight sum (numel−M) + M divides |
 | `std`, `var`, `nanstd`, `nanvar` | ≈ 4 × numel(input) (std: + M sqrt) | 1.0 | DERIVED four-pass: mean-sum, centre, square, var-sum (exact: 2·numel + 2·(numel−M) + 2M) |
-| `argmax`, `argmin` | numel(input) | 1.0 | DECLARED scan |
+| `argmax`, `argmin` | numel(input) − num_output_slices (= n−1 for full 1-D; reduction_cost model) | 1.0 | DECLARED scan: same orbit model as reduction family |
 | `median`, `nanmedian` | axis length per output slice | 1.0 | DECLARED; partition (introselect) per output |
 | `percentile`, `nanpercentile`, `quantile`, `nanquantile` | axis length per output slice | 1.0 | DECLARED; partition (introselect) per output |
 | `ptp` | 2 × numel(input) − numel(output) | 1.0 | DERIVED: max pass + min pass + M subtracts (2·(numel−M)+M) |
@@ -187,6 +188,18 @@ sums per-step costs.
 All contraction ops use **weight 1.0** (the shape constants capture everything).
 Source: `src/flopscope/_accumulation/`, `src/flopscope/_flops.py`.
 
+All contraction ops — `matmul`, `dot`, `inner`, `outer`, `tensordot`, `vdot`,
+`vecdot`, `matvec`, `vecmat`, and `einsum` itself — compute cost through one
+shared einsum accumulation engine (`_resolve_cost_and_output_symmetry` /
+`einsum_cost`): a single FMA=2, symmetry-aware source of truth.  The compound
+linalg ops (`linalg.multi_dot`, `linalg.matrix_power`, `linalg.pinv`,
+`linalg.lstsq`) use the `matmul_cost(m,k,n)` helper, which delegates to
+`einsum_cost('ij,jk->ik', …)`, so it is identical to a 2-D matmul by
+construction — no duplicated `2mkn−mn` constant.  `kron` is the sole
+exception: as a pure Kronecker (outer) product with no contraction, its cost
+is exactly `a.size × b.size`, which equals the einsum cost of an outer product,
+so it uses that closed form directly.
+
 ---
 
 ### Generator (linspace, arange, and kin)
@@ -195,12 +208,13 @@ Source: `src/flopscope/_accumulation/`, `src/flopscope/_flops.py`.
 |---|---|---|---|
 | `arange` | `2 × numel(output)` | DERIVED: `start + i×step` per element = 1 mul + 1 add (FMA=2) | `_free_ops.py`; numpy arraytypes.c.src |
 | `linspace` | `2 × numel(output)` (handles broadcast start/stop and `retstep=True`) | DERIVED: same affine model as arange | `_free_ops.py`; commit 790d19af + retstep fix |
-| `geomspace` | `2 × num × B + 6B` where `B` = product of broadcast batch dims | DERIVED: log + linspace + exp per-batch per-point | `_free_ops.py` |
-| `logspace` | same as geomspace | DERIVED | `_free_ops.py` |
+| `geomspace` | `numel(output)` (weight **16.0**) → billed `16 × numel(output)` | DERIVED: flop_cost = numel(output); transcendental weight 16.0 (log + exp path) | `_free_ops.py` |
+| `logspace` | `numel(output)` (weight **16.0**) → billed `16 × numel(output)` | DERIVED: same transcendental path as geomspace | `_free_ops.py` |
 | `zeros`, `ones`, `full`, `zeros_like`, `ones_like`, `full_like`, `eye`, `identity`, `empty`, `empty_like` | 0 (allocation, no arithmetic) | DECLARED free/metadata | `_free_ops.py` |
 | `meshgrid` | dense: `len(xi) × prod(sizes)`; sparse (`sparse=True`): `sum(sizes)`; `copy=False` views: 1 | DECLARED: numel of materialized output grids | `_free_ops.py` |
 
-Weight: **1.0** for all counted generators.  Source: `src/flopscope/_free_ops.py`.
+Weight: **1.0** for `arange` and `linspace`; **16.0** for `geomspace` and
+`logspace` (transcendental path).  Source: `src/flopscope/_free_ops.py`.
 
 ---
 
@@ -215,7 +229,7 @@ Weight: **1.0** for all counted generators.  Source: `src/flopscope/_free_ops.py
 | `lexsort` | `k × n × ⌈log₂ n⌉` (k = number of keys, n = sequence length) | DECLARED |
 | `partition`, `argpartition` | `num_slices × n × len(kth)` | DECLARED quickselect O(n) expected |
 | `searchsorted` | `m × ⌈log₂ n⌉` (m = queries, n = sorted size) | DECLARED binary search |
-| `sort_complex` | `a.size × ⌈log₂(a.size)⌉` on flattened size | DECLARED |
+| `sort_complex` | `num_slices × n × ⌈log₂ n⌉`, `n = a.shape[-1]`, `num_slices = a.size // n` (sorts last axis; equals flat formula only for 1-D) | DECLARED |
 | `in1d`, `isin` | `(n + m) × ⌈log₂(n + m)⌉` (sort path); `max(sort_cost(n+m), 2nm)` when numpy's masked-loop path triggers (small integer ar2) | DECLARED algo-aware |
 | `intersect1d` | `sort_cost(n) + sort_cost(m) + sort_cost(n+m)` (default `assume_unique=False`); `sort_cost(n+m)` when `assume_unique=True` | DECLARED: numpy calls `unique()` on both inputs when `assume_unique` is falsy |
 | `setdiff1d`, `setxor1d`, `union1d` | `(n + m) × ⌈log₂(n + m)⌉` | DECLARED |
@@ -241,14 +255,16 @@ matrices charge 0.
 | `linalg.det` | `2n³/3 + n` | DERIVED: G&VL 4e §3.2 LU (dgetrf) + diagonal product | `_properties.py:det_cost` |
 | `linalg.slogdet` | `2n³/3 + 18n` | DERIVED: LU (dgetrf) + sum of log\|diag\| (abs + 16/elem log + reduce) | `_properties.py:slogdet_cost` |
 | `linalg.norm` (fro/L1/Linf) | `2 × numel(effective_shape) × n_groups` | DERIVED: FMA=2 square+accumulate or abs+accumulate | `_properties.py:norm_cost` |
-| `linalg.norm` (ord=2, nuc) | `4 × m × n × min(m,n) × n_groups` | DERIVED: via SVD (4× baked in) | `_properties.py:norm_cost` |
+| `linalg.norm` (ord=2, nuc) | `(2ab² + 2b³) × n_groups`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: values-only SVD cost per group | `_properties.py:norm_cost` |
 | `linalg.vector_norm` | `2 × numel(effective_shape) × n_groups` (standard ord); `(18 × numel + 16) × n_groups` (general fractional p-norm: abs + pow per element) | DERIVED: FMA=2 | `_properties.py:vector_norm_cost` |
 | `linalg.matrix_norm` | same as `linalg.norm` | DERIVED | `_properties.py` |
 | `linalg.trace` | `min(m,n) × batch` | DERIVED: n−1 diagonal adds, batch-multiplied | `_properties.py:trace_cost` |
 | `linalg.tensorinv` | `2n³`, `n = prod(shape[:ind])` | DERIVED: G&VL 4e §3.4 via inv | `_solvers.py:tensorinv_cost` |
 | `linalg.tensorsolve` | `2n³/3 + 2n²`, `n = prod(shape[ind:])` | DERIVED: G&VL 4e §3.2 via solve | `_solvers.py:tensorsolve_cost` |
-| `linalg.cond`, `linalg.matrix_rank` | `4 × m × n × min(m,n)` (via SVD) | DERIVED | `_properties.py` |
-| `linalg.pinv`, `linalg.lstsq` | `m × n × min(m,n)` | DERIVED: LAPACK dgelsd / SVD path; G&VL 4e §5.5 | `_solvers.py` |
+| `linalg.matrix_rank` | `2ab² + 2b³ + min(m,n)`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: values-only SVD + `min(m,n)` threshold comparisons | `_properties.py:matrix_rank_cost` |
+| `linalg.cond` | `2ab² + 2b³ + 1` for `ord∈{None,2,−2}` (values-only SVD + 1 divide); `2k³ + 4mn + 1`, `k=min(m,n)` for other ords (inv-based) | DERIVED | `_properties.py:cond_cost` |
+| `linalg.pinv` | `6ab² + 20b³ + min(m,n) + n·min(m,n) + matmul\_cost(n, min(m,n), m)`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: thin SVD (with vectors) + threshold + diagonal scale + reconstruction matmul; G&VL 4e §5.5 | `_solvers.py:pinv_cost` |
+| `linalg.lstsq` | `6ab² + 20b³ + matmul\_cost(k,m,c) + k·c + matmul\_cost(n,k,c)`, `k=min(m,n)`, `c=#rhs cols` | DERIVED: thin SVD (with vectors) + U^T b + divide by s + reconstruction; G&VL 4e §5.5 | `_solvers.py:lstsq_cost` |
 | `linalg.cross` | `3 × numel(output)` (delegates to `fnp.cross`) | DERIVED | `_aliases.py` |
 | `linalg.multi_dot` | optimal chain matmul cost (CLRS §15.2); each step uses `matmul_cost(m,k,n)` = `2mkn − mn` | DERIVED | `_compound.py:multi_dot_cost` |
 | `linalg.outer`, `linalg.tensordot`, `linalg.vecdot`, `linalg.matmul`, `linalg.matrix_power` | delegates to `fnp.*` | DERIVED | `_compound.py`, `_aliases.py` |
@@ -272,7 +288,7 @@ for the three-leg derivation.
 | `linalg.svd` (thin, full_matrices=False or square) | `6ab² + 20b³`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD Σ+U₁+V (dgesdd thin path) | `_svd.py:svd_cost` |
 | `linalg.svd` (full, full_matrices=True and m≠n) | `4a²b + 22b³` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD full U (forming full m×m U dominates) | `_svd.py:svd_cost` |
 | `linalg.svdvals` | `2ab² + 2b³` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD Σ only (dgesdd values, no vectors) | `_decompositions.py:svdvals_cost` |
-| `roots` | `10n³`, `n = len(p)−1` | DERIVED: companion-matrix eigvals (delegates to eigvals_cost) | `_polynomial.py`; note: uses raw `len(p)−1`, not stripped zero-padded length |
+| `roots` | `10n³`, `n` = stripped companion dimension (leading and trailing zero coefficients removed before companion matrix is built) | DERIVED: companion-matrix eigvals (delegates to eigvals_cost on trimmed degree) | `_polynomial.py`; consistent with polynomial-table `roots` row |
 
 #### Top-k (truncated) SVD
 
@@ -312,8 +328,10 @@ Fourier Transform_, 1992 §1.4, Cooley-Tukey radix-2):
 
 | Op | flop_cost | basis |
 |---|---|---|
-| `fft.fft`, `fft.ifft`, `fft.fft2`, `fft.ifft2`, `fft.fftn`, `fft.ifftn` | `5 × N × ⌈log₂ N⌉`, `N = prod(transform dims)` | DERIVED: Van Loan 1992 §1.4; 5 real ops per butterfly |
-| `fft.rfft`, `fft.irfft`, `fft.rfft2`, `fft.irfft2`, `fft.rfftn`, `fft.irfftn` | `5 × (N/2) × ⌈log₂ N⌉` | DERIVED: real-input / real-output half-spectrum |
+| `fft.fft`, `fft.ifft` | `5 × N × ⌈log₂ N⌉`, `N` = transform length | DERIVED: Van Loan 1992 §1.4; 5 real ops per butterfly |
+| `fft.fft2`, `fft.ifft2`, `fft.fftn`, `fft.ifftn` | `5 × N × Σᵢ⌈log₂ dᵢ⌉`, `N = prod(transform dims)`, `dᵢ` = individual axis lengths | DERIVED: Van Loan 1992 §1.4; sum of per-axis log₂ terms (coincides with `5N⌈log₂N⌉` only when all axes are the same power of 2) |
+| `fft.rfft`, `fft.irfft` | `5 × (N/2) × ⌈log₂ N⌉` | DERIVED: real-input / real-output half-spectrum |
+| `fft.rfft2`, `fft.irfft2`, `fft.rfftn`, `fft.irfftn` | `5 × (N/2) × Σᵢ⌈log₂ dᵢ⌉` (real half-spectrum) | DERIVED: Van Loan 1992 §1.4; half-spectrum with per-axis log₂ sum |
 | `fft.hfft` | `5 × (n_out/2) × ⌈log₂ n_out⌉` | DERIVED: hfft = irfft(conj(a)) — conjugate-symmetry halves the work (Van Loan 1992 §1.4) |
 | `fft.ihfft` | `5 × (n/2) × ⌈log₂ n⌉` | DERIVED: same `hfft_cost(n)` formula |
 | `fft.fftfreq` | `n` (index grid scaled by `1/(n*d)` — one divide per output element) | DECLARED: `n` divides |
@@ -329,8 +347,8 @@ All counted FFT ops use **weight 1.0**.  Source: `src/flopscope/numpy/fft/_trans
 | Op | flop_cost | basis | source |
 |---|---|---|---|
 | `polyval` | `2 × deg × points` (Horner: 1 mul + 1 add per coefficient per point, FMA=2) | DERIVED | `_polynomial.py` |
-| `polyfit` | `2 × m × n × min(m,n)` (via least-squares SVD) | DERIVED | `_polynomial.py` |
-| `polyadd`, `polysub` | `min(len_a, len_b)` | DERIVED | `_polynomial.py` |
+| `polyfit` | `2 × m × (deg+1)²` (Vandermonde least-squares estimate) | DERIVED: Vandermonde matrix construction + normal-equations cost; NOT an SVD path | `_polynomial.py` |
+| `polyadd`, `polysub` | `max(len_a, len_b)` (= `max(n1, n2, 1)`) | DERIVED: output length equals the longer polynomial | `_polynomial.py` |
 | `polymul` | `2nm − n − m` (direct conv, FMA=2) | DERIVED | `_polynomial.py` |
 | `convolve` | `full`: `2nm − n − m`; `valid`: `(2·min−1)·(max−min+1)`; `same`: exact dot-length sum per numpy C layout | DERIVED per-mode | `_pointwise.py:convolve` |
 | `poly` (1-D, build from roots) | `(3n² + n) // 2`, `n = len(roots)` (iterative convolution with length-2 kernel per root; FMA=2) | DERIVED | `_polynomial.py:poly_cost` |
@@ -345,24 +363,39 @@ Source: `src/flopscope/_polynomial.py`.
 ### Random (module-level, Generator, RandomState)
 
 Random ops are composite: the generation kernel cost and any setup cost
-(PRNG state update, rejection sampling) are folded into `flop_cost` at
-**weight 1.0**.
+(PRNG state update, rejection sampling) are folded into `flop_cost`; the
+weight tier **varies** by distribution family.  Billed cost = `flop_cost ×
+weight`.
+
+Weight tiers:
+
+- **weight 1.0** — uniform/integer/structural draws: `rand`, `random`,
+  `random_sample`, `ranf`, `sample`, `uniform`, `randint`, `integers`,
+  `choice`, `shuffle`, `permutation`, `multivariate_normal`.
+- **weight 16.0** — transcendental samplers (every continuous/transformed
+  distribution): `normal`, `standard_normal`, `randn`, `exponential`,
+  `standard_exponential`, `poisson`, `binomial`, `geometric`,
+  `hypergeometric`, `negative_binomial`, `multinomial`, `beta`, `dirichlet`,
+  `f`, `gamma`, `gumbel`, `laplace`, `logistic`, `lognormal`, `logseries`,
+  `pareto`, `power`, `rayleigh`, `standard_cauchy`, `standard_gamma`,
+  `standard_t`, `triangular`, `vonmises`, `wald`, `weibull`, `zipf`, and all
+  their Generator / RandomState counterparts.
 
 | Op / family | flop_cost | basis | source |
 |---|---|---|---|
 | `random.rand`, `random.random`, `random.random_sample`, `random.ranf`, `random.sample` | `numel(output)` | DECLARED: 1 FLOP per uniform draw | `_cost_formulas.py` |
 | `random.uniform` | `3 × numel(output)` | DERIVED: affine map `low + (high − low) × U` = 1 sub + 1 mul + 1 add per element (FMA=2, three ops) | `_cost_formulas.py` |
-| `random.randn`, `random.standard_normal`, `random.normal` | `6 × numel(output)` | DECLARED: Box-Muller / ziggurat ≈6 ops/sample (Devroye, _Non-Uniform Random Variate Generation_, 1986, §IV.4) | `_cost_formulas.py` |
+| `random.randn`, `random.standard_normal`, `random.normal` | `numel(output)` (weight **16.0**) → billed `16 × numel` | DECLARED: flop_cost = numel(output); transcendental weight 16.0 from `default_weights.json` | `_cost_formulas.py` |
 | `random.randint`, `random.integers` | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=True, p=None) | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=True, p≠None) | `numel(output) + 3n + m×⌈log₂ n⌉` (n=population, m=size) | DERIVED: cumsum + normalize + searchsorted | `_cost_formulas.py`; confirmed issue audit |
 | `random.choice` (replace=False, p=None) | `n` (Fisher-Yates O(n): conservative ceiling on tail-shuffle / Floyd's algorithm) | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=False, p≠None) | `sort_cost(n) = n × ⌈log₂ n⌉` (data-dependent rejection loop with weights) | DECLARED | `_cost_formulas.py` |
 | `random.shuffle`, `random.permutation` | `numel(input)` | DECLARED: Fisher-Yates O(n) | `_cost_formulas.py` |
-| `random.exponential` | `numel(output)` | DECLARED | `_cost_formulas.py` |
-| `random.poisson`, `random.binomial`, `random.geometric`, `random.hypergeometric`, `random.negative_binomial`, `random.multinomial` | `numel(output)` | DECLARED | `_cost_formulas.py` |
+| `random.exponential` | `numel(output)` (weight **16.0**) → billed `16 × numel` | DECLARED: transcendental weight 16.0 | `_cost_formulas.py` |
+| `random.poisson`, `random.binomial`, `random.geometric`, `random.hypergeometric`, `random.negative_binomial`, `random.multinomial` | `numel(output)` (weight **16.0**) → billed `16 × numel` | DECLARED: transcendental weight 16.0 | `_cost_formulas.py` |
 | `random.multivariate_normal` | `26d³ + 2Nd² + 16Nd` (d=dims, N=size) | DERIVED composite: SVD factorization of covariance (`svd_cost(d,d,with_vectors=True)` = `6d·d² + 20d³` = `26d³`) + affine transform (`2Nd²`) + N·d transcendental normal draws (`16Nd`) | `_cost_formulas.py` |
-| `random.beta`, `random.dirichlet`, `random.f`, `random.gamma`, `random.gumbel`, `random.laplace`, `random.logistic`, `random.lognormal`, `random.logseries`, `random.pareto`, `random.power`, `random.rayleigh`, `random.standard_cauchy`, `random.standard_exponential`, `random.standard_gamma`, `random.standard_t`, `random.triangular`, `random.vonmises`, `random.wald`, `random.weibull`, `random.zipf` | `numel(output)` (with transcendental weight or composite constant, per distribution) | DECLARED / DERIVED | `_cost_formulas.py` |
+| `random.beta`, `random.dirichlet`, `random.f`, `random.gamma`, `random.gumbel`, `random.laplace`, `random.logistic`, `random.lognormal`, `random.logseries`, `random.pareto`, `random.power`, `random.rayleigh`, `random.standard_cauchy`, `random.standard_exponential`, `random.standard_gamma`, `random.standard_t`, `random.triangular`, `random.vonmises`, `random.wald`, `random.weibull`, `random.zipf` | `numel(output)` (weight **16.0**) → `16 × numel` | DECLARED: flop_cost = numel(output); transcendental weight 16.0 for all continuous/transformed distributions | `_cost_formulas.py` |
 
 Source: `src/flopscope/numpy/random/_cost_formulas.py`.
 
@@ -420,11 +453,11 @@ Source: `src/flopscope/_window.py`.
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
-| `interp` | `numel(xp) + m × ⌈log₂(numel(xp))⌉` (search + interpolate) | DERIVED | `_counting_ops.py` |
-| `histogram` (integer bins) | `n × ⌈log₂(bins)⌉ + n` (binning pass + sort-based bin-edge search) | DERIVED | `_counting_ops.py` |
+| `interp` | `3m + m × ⌈log₂(numel(xp))⌉`, `m = numel(x)` (interpolation arithmetic + binary search per query) | DERIVED | `_counting_ops.py` |
+| `histogram` (integer bins) | `n × ⌈log₂(bins)⌉` (binary-search binning pass only) | DERIVED | `_counting_ops.py` |
 | `histogram` (string bins, e.g. `'auto'`) | `n × (2 + estimator_cost + ⌈log₂ resolved_bins⌉)` (deferred: resolved after the call; estimator costs: sturges/sqrt/rice=0, fd/auto=+1n, scott=+4n, doane=+6n, stone=+max(100,√n)n) | DERIVED | `_counting_ops.py` |
 | `histogram2d`, `histogramdd` | same as `histogram` per axis | DERIVED | `_counting_ops.py` |
-| `histogram_bin_edges` | `n × ⌈log₂ bins⌉` (integer bins) | DECLARED | `_counting_ops.py` |
+| `histogram_bin_edges` | `n` (= `max(n, 1)`) for integer bins; string estimator bins: same formula as `histogram` string path | DECLARED: integer bins charge one comparison per element (no log₂ factor); estimator resolves bin count at call time | `_counting_ops.py` |
 | `trapezoid`, `trapz` | `4 × numel(y)` | DERIVED: `(d·(y₁+y₂)/2).sum()` ≈ 3 elementwise ops + sum-reduce per point, charged as a clean 4/point upper bound | `_pointwise.py`; fixed in this branch |
 
 Source: `src/flopscope/_counting_ops.py`, `src/flopscope/_free_ops.py`.
@@ -492,7 +525,7 @@ for gather-tier scatter ops).
 | `row_stack` | `numel(output)` (alias for vstack) | DECLARED | `_free_ops.py` |
 | `tril`, `triu` | `numel(output)` | DECLARED: numpy returns a copy | `_free_ops.py` |
 | `roll` | `numel(output)` | DECLARED: cyclic copy | `_free_ops.py` |
-| `put` | `numel(indices)` (scatter writes; mode-independent) | DECLARED | `_free_ops.py` |
+| `put` | `numel(indices)` (weight **4.0**, gather tier) → billed `4 × numel(indices)` | DECLARED: scatter-write at gather tier; mode-independent | `_free_ops.py` |
 | `put_along_axis` | `(numel(arr) / arr.shape[axis]) × indices.shape[axis]`; `numel(indices)` when `axis=None` | DECLARED gather-tier (weight 4.0) | `_free_ops.py` |
 
 ---
