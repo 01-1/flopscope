@@ -692,7 +692,8 @@ class TestPolynomial:
         assert _cost_of(we.polyfit, x, numpy.random.rand(20), 2) == 360
 
     def test_poly(self, we):
-        assert _cost_of(we.poly, numpy.ones(5)) == 50  # 2 * 5^2 = 50
+        # n=5: (3*25 + 5) // 2 = 80 // 2 = 40  (was 2*25=50)
+        assert _cost_of(we.poly, numpy.ones(5)) == 40
 
     def test_roots(self, we):
         # degree=4 (len=5 -> n=4); eigvals_cost(4)=10*64=640 (PROVISIONAL)
@@ -754,7 +755,6 @@ class TestSetOps:
                 ),
             ),
             "isin",
-            "intersect1d",
             "union1d",
             "setdiff1d",
             "setxor1d",
@@ -766,6 +766,26 @@ class TestSetOps:
             getattr(we, name), numpy.random.rand(100), numpy.random.rand(50)
         )
         assert cost == 1200, f"{name}: expected 1200, got {cost}"
+
+    def test_intersect1d_cost(self, we):
+        # Default assume_unique=False: numpy unique()-sorts both inputs first.
+        # sort_cost(100) + sort_cost(50) + sort_cost(150) = 700 + 350 + 1200 = 2250
+        from flopscope._flops import sort_cost as _sc
+
+        cost = _cost_of(we.intersect1d, numpy.random.rand(100), numpy.random.rand(50))
+        assert cost == _sc(100) + _sc(50) + _sc(150)
+
+    def test_intersect1d_cost_assume_unique(self, we):
+        # assume_unique=True: only sort_cost(n+m)
+        from flopscope._flops import sort_cost as _sc
+
+        cost = _cost_of(
+            we.intersect1d,
+            numpy.random.rand(100),
+            numpy.random.rand(50),
+            assume_unique=True,
+        )
+        assert cost == _sc(150)
 
 
 # ---------------------------------------------------------------------------
@@ -802,11 +822,15 @@ class TestWindows:
 
 class TestStatistics:
     def test_corrcoef_2f2s(self, we):
-        # 3 features, 10 samples → 2*3^2*10 = 180
-        assert _cost_of(we.corrcoef, numpy.random.rand(3, 10)) == 180
+        # 3 features, 10 samples → f=3, s=10
+        # cov: 2*9*10 + 2*3*10 = 180 + 60 = 240
+        # + normalization: 2*9 + 3 = 21
+        # total: 261
+        assert _cost_of(we.corrcoef, numpy.random.rand(3, 10)) == 261
 
     def test_cov_2f2s(self, we):
-        assert _cost_of(we.cov, numpy.random.rand(3, 10)) == 180
+        # 3 features, 10 samples → 2*f^2*s + 2*f*s = 2*9*10 + 2*3*10 = 180 + 60 = 240
+        assert _cost_of(we.cov, numpy.random.rand(3, 10)) == 240
 
     def test_interp_n_log_xp(self, we):
         # 3*10 + 10*ceil(log2(32)) = 30 + 10*5 = 80
@@ -909,7 +933,7 @@ class TestRandom:
         assert _cost_of(we.random.normal, 0, 1, 100) == 100
 
     def test_uniform_positional_size(self, we):
-        assert _cost_of(we.random.uniform, 0, 1, 100) == 100
+        assert _cost_of(we.random.uniform, 0, 1, 100) == 3 * 100
 
     def test_beta_positional_size(self, we):
         assert _cost_of(we.random.beta, 2, 5, 100) == 100
@@ -964,7 +988,8 @@ class TestStats:
         assert _cost_of(flopscope.stats.uniform.ppf, numpy.random.rand(100)) == 100
 
     def test_expon_pdf(self, we):
-        assert _cost_of(flopscope.stats.expon.pdf, numpy.random.rand(100)) == 100
+        # old: == 100 (cost_per_elem=1, weight=16.0); now: 22*100 (composite, weight 1.0)
+        assert _cost_of(flopscope.stats.expon.pdf, numpy.random.rand(100)) == 22 * 100
 
     def test_cauchy_pdf(self, we):
         assert (
@@ -972,7 +997,10 @@ class TestStats:
         )  # pure-arithmetic: 6 FLOPs/elem
 
     def test_logistic_cdf(self, we):
-        assert _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 100
+        # old: == 100 (cost_per_elem=1, weight=16.0); now: 21*100 (composite, weight 1.0)
+        assert (
+            _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 21 * 100
+        )
 
     def test_laplace_ppf(self, we):
         assert (
@@ -991,9 +1019,10 @@ class TestStats:
         )
 
     def test_truncnorm_cdf(self, we):
+        # old: == 100 (cost_per_elem=1, weight=16.0); now: 51*100 (composite, weight 1.0)
         assert (
             _cost_of(flopscope.stats.truncnorm.cdf, numpy.random.rand(100), -2, 2)
-            == 100
+            == 51 * 100
         )
 
     def test_scalar_input(self, we):
@@ -1035,7 +1064,7 @@ def test_gradient_cost_pinned(shape, expected, we):
     assert _cost_of(we.gradient, f) == expected
 
 
-@pytest.mark.parametrize("size,expected", [(100, 700), (1000, 7000)])
+@pytest.mark.parametrize("size,expected", [(100, 1300), (1000, 13000)])
 def test_unwrap_cost_pinned(size, expected, we):
     a = we.asarray(numpy.zeros(size))
     assert _cost_of(we.unwrap, a) == expected

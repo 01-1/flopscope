@@ -25,8 +25,12 @@ class LogisticDistribution(ContinuousDistribution):
     -----
     ``loc`` is the center of the distribution and ``scale`` controls the
     spread. The CDF is the sigmoid function and the PPF is the logit
-    function. Each public method deducts ``1 * numel(input)`` FLOPs from the
-    active budget.
+    function. Per-method FLOP costs (weight 1.0): pdf deducts
+    ``23 * numel(input)`` (composite: z(2)+exp(-z)(17)+(1+ez)(1)+sq(1)+
+    scale*(1)+div(1), FMA=2), cdf deducts ``21 * numel(input)`` (composite:
+    z(2)+exp(-z)(17)+1+ez(1)+1/denom(1), FMA=2), ppf deducts
+    ``28 * numel(input)`` (composite: 1-q(1)+q/(1-q)(1)+log(16)+
+    loc+scale*(2)+3 where(8), FMA=2).
     """
 
     def __init__(self):
@@ -52,7 +56,8 @@ class LogisticDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.logistic.pdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``23 * numel(x)`` (composite: z(2)+exp(-z)(17)+
+        (1+ez)(1)+sq(1)+scale*(1)+div(1), FMA=2, weight 1.0).
 
         Examples
         --------
@@ -62,7 +67,7 @@ class LogisticDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.logistic.pdf(x), 3)
         array([0.197, 0.25 , 0.197])
         """
-        return self._deduct_and_call("pdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("pdf", 23, x, loc=loc, scale=scale)
 
     def cdf(self, x, loc=0, scale=1):
         """Evaluate the cumulative distribution function.
@@ -84,7 +89,8 @@ class LogisticDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.logistic.cdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``21 * numel(x)`` (composite: z(2)+exp(-z)(17)+
+        1+ez(1)+1/denom(1), FMA=2, weight 1.0).
 
         Examples
         --------
@@ -94,7 +100,7 @@ class LogisticDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.logistic.cdf(x), 3)
         array([0.269, 0.5  , 0.731])
         """
-        return self._deduct_and_call("cdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("cdf", 21, x, loc=loc, scale=scale)
 
     def ppf(self, q, loc=0, scale=1):
         """Evaluate the percent-point function.
@@ -116,7 +122,8 @@ class LogisticDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.logistic.ppf(q, loc, scale)``.
-        FLOP cost: ``1 * numel(q)``.
+        FLOP cost: ``28 * numel(q)`` (composite: 1-q(1)+q/(1-q)(1)+log(16)+
+        loc+scale*(2)+3 where(8), FMA=2, weight 1.0).
 
         Examples
         --------
@@ -126,7 +133,7 @@ class LogisticDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.logistic.ppf(q), 3)
         array([-1.099,  0.   ,  1.099])
         """
-        return self._deduct_and_call("ppf", 1, q, loc=loc, scale=scale)
+        return self._deduct_and_call("ppf", 28, q, loc=loc, scale=scale)
 
     def _compute_pdf(self, x, loc=0, scale=1):
         z = (x - loc) / scale

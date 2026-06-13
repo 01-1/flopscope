@@ -460,7 +460,7 @@
       "slug": "argwhere",
       "status": "supported",
       "summary": "Find the indices of array elements that are non-zero, grouped by element.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -943,7 +943,7 @@
       "slug": "bmat",
       "status": "supported",
       "summary": "Build a matrix object from a string, nested sequence, or array.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -1174,7 +1174,7 @@
       "slug": "compress",
       "status": "supported",
       "summary": "Return selected slices of an array along given axis.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -1615,7 +1615,7 @@
       "slug": "diag",
       "status": "supported",
       "summary": "Extract a diagonal or construct a diagonal array.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -1699,7 +1699,7 @@
       "slug": "diagonal",
       "status": "supported",
       "summary": "Return specified diagonals.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -2812,7 +2812,7 @@
       "slug": "fromiter",
       "status": "supported",
       "summary": "Create a new 1-dimensional array from an iterable object.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -4849,7 +4849,7 @@
       "slug": "mask_indices",
       "status": "supported",
       "summary": "Return the indices to access (n, n) arrays, given a masking function.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -10729,7 +10729,7 @@
       "slug": "take_along_axis",
       "status": "supported",
       "summary": "Take values from the input array by matching 1d index and data slices.",
-      "weight": 1.0
+      "weight": 4.0
     },
     {
       "area": "core",

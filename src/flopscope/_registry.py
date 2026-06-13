@@ -1111,9 +1111,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "N-D complex FFT. Cost: 5*N*ceil(log2(N)), N=prod(s) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
     },
     "fft.fftfreq": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy.fft",
-        "notes": "FFT sample frequencies. No arithmetic; returns index array.",
+        "notes": "FFT sample frequencies; cost = n (index grid scaled by 1/(n*d)).",
     },
     "fft.fftshift": {
         "category": "free",
@@ -1176,9 +1176,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "2-D real FFT. Cost: 5*(N//2)*ceil(log2(N)), N=prod(s) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
     },
     "fft.rfftfreq": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy.fft",
-        "notes": "Real FFT sample frequencies. No arithmetic; returns index array.",
+        "notes": "Real FFT sample frequencies; cost = n//2+1 (index grid scaled by 1/(n*d)).",
     },
     "fft.rfftn": {
         "category": "counted_custom",
@@ -2071,6 +2071,11 @@ REGISTRY: dict[str, dict] = {
         "module": "numpy.random",
         "notes": "Sampling; cost = numel(output).",
     },
+    "random.random_integers": {
+        "category": "blacklisted",
+        "module": "numpy.random",
+        "notes": "Deprecated numpy alias; intentionally unsupported (raises AttributeError).",
+    },
     "random.logseries": {
         "category": "counted_custom",
         "module": "numpy.random",
@@ -2142,11 +2147,6 @@ REGISTRY: dict[str, dict] = {
         "notes": "Sampling; cost = numel(output).",
     },
     "random.random": {
-        "category": "counted_custom",
-        "module": "numpy.random",
-        "notes": "Sampling; cost = numel(output).",
-    },
-    "random.random_integers": {
         "category": "counted_custom",
         "module": "numpy.random",
         "notes": "Sampling; cost = numel(output).",
@@ -2476,7 +2476,7 @@ REGISTRY: dict[str, dict] = {
     "random.Generator.uniform": {
         "category": "counted_random_method",
         "module": "numpy.random",
-        "cost_formula": "numel(output)",
+        "cost_formula": "uniform",
         "notes": "Uniform distribution; cost = numel(output).",
     },
     "random.Generator.vonmises": {
@@ -2766,7 +2766,7 @@ REGISTRY: dict[str, dict] = {
     "random.RandomState.uniform": {
         "category": "counted_random_method",
         "module": "numpy.random",
-        "cost_formula": "numel(output)",
+        "cost_formula": "uniform",
         "notes": "Legacy uniform sampler; cost = numel(output).",
     },
     "random.RandomState.vonmises": {

@@ -397,11 +397,24 @@ class TestIntersect1d:
             assert numpy.array_equal(intersect1d(ar1, ar2), numpy.intersect1d(ar1, ar2))
 
     def test_cost(self):
+        # Default assume_unique=False: numpy unique()-sorts both inputs first,
+        # so honest cost = sort_cost(n) + sort_cost(m) + sort_cost(n+m).
         ar1 = numpy.array([1, 2, 3, 4])
         ar2 = numpy.array([3, 4, 5, 6])
-        expected = _set_op_expected_cost(ar1, ar2)
+        n, m = ar1.size, ar2.size
+        expected = sort_cost(n) + sort_cost(m) + sort_cost(n + m)
         with BudgetContext(flop_budget=10**6) as budget:
             intersect1d(ar1, ar2)
+            assert budget.flops_used == expected
+
+    def test_cost_assume_unique(self):
+        # assume_unique=True: no pre-sorting, only sort_cost(n+m).
+        ar1 = numpy.array([1, 2, 3, 4])
+        ar2 = numpy.array([3, 4, 5, 6])
+        n, m = ar1.size, ar2.size
+        expected = sort_cost(n + m)
+        with BudgetContext(flop_budget=10**6) as budget:
+            intersect1d(ar1, ar2, assume_unique=True)
             assert budget.flops_used == expected
 
 

@@ -12,6 +12,7 @@ import numpy as np
 
 import flopscope as f
 import flopscope.numpy as fnp
+from flopscope._flops import svd_cost
 from flopscope._weights import load_weights, reset_weights
 
 
@@ -161,8 +162,10 @@ def test_roots_composes_eigvals():
 
 def test_poly_2d_inherits_new_eigvals_constant():
     M = fnp.asarray(np.random.rand(50, 50))
-    # poly 2-D = 2*n^2 + eigvals_cost(n) = 5000 + 10*125000
-    assert cost(lambda: fnp.poly(M)) == 2 * 50 * 50 + 10 * 50**3
+    # poly 2-D = poly_cost(n) + eigvals_cost(n)
+    # poly_cost(50) = (3*50^2+50)//2 = 7550//2 = 3775  (was 2*50^2=5000)
+    # eigvals_cost(50) = 10*50^3 = 1250000
+    assert cost(lambda: fnp.poly(M)) == (3 * 50 * 50 + 50) // 2 + 10 * 50**3
 
 
 # ---------------- Task 5: multivariate_normal ----------------
@@ -171,13 +174,16 @@ def test_poly_2d_inherits_new_eigvals_constant():
 def test_multivariate_normal_bills_decomposition_and_transform():
     d, N = 50, 100
     mean, cov = np.zeros(d), np.eye(d)
-    expected = d**3 // 3 + 2 * N * d * d + 16 * N * d  # 41666+500000+80000
+    # factorization = svd_cost(d,d,with_vectors=True) = 26*d^3 = 3250000
+    # transform = 2*N*d^2 = 500000; draws = 16*N*d = 80000
+    expected = svd_cost(d, d, with_vectors=True) + 2 * N * d * d + 16 * N * d
     assert cost(lambda: fnp.random.multivariate_normal(mean, cov, size=N)) == expected
 
 
 def test_multivariate_normal_default_size_is_one_sample():
     d = 30
-    expected = d**3 // 3 + 2 * d * d + 16 * d
+    # N=1 (size=None default); factorization = 26*d^3
+    expected = svd_cost(d, d, with_vectors=True) + 2 * d * d + 16 * d
     assert (
         cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d))) == expected
     )
@@ -186,7 +192,8 @@ def test_multivariate_normal_default_size_is_one_sample():
 def test_multivariate_normal_packaged_weight_is_unity():
     load_weights()
     d = 30
-    expected = d**3 // 3 + 2 * d * d + 16 * d
+    # Weight for this composite op must stay 1.0 so charged == flop_cost
+    expected = svd_cost(d, d, with_vectors=True) + 2 * d * d + 16 * d
     assert (
         cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d))) == expected
     )
@@ -194,7 +201,7 @@ def test_multivariate_normal_packaged_weight_is_unity():
 
 def test_generator_and_randomstate_mvn_match_module_path():
     d, N = 50, 100
-    expected = d**3 // 3 + 2 * N * d * d + 16 * N * d
+    expected = svd_cost(d, d, with_vectors=True) + 2 * N * d * d + 16 * N * d
 
     # default_rng construction costs 0 FLOPs, so build inside cost() is fine.
     def gen():
@@ -211,7 +218,8 @@ def test_generator_and_randomstate_mvn_match_module_path():
 
 def test_mvn_tuple_size_parity_across_paths():
     d = 20
-    expected = d**3 // 3 + 2 * 20 * d * d + 16 * 20 * d  # N = 4*5 = 20
+    # N = 4*5 = 20; factorization = 26*d^3
+    expected = svd_cost(d, d, with_vectors=True) + 2 * 20 * d * d + 16 * 20 * d
     mean, cov = np.zeros(d), np.eye(d)
     assert (
         cost(lambda: fnp.random.multivariate_normal(mean, cov, size=(4, 5))) == expected
@@ -225,6 +233,35 @@ def test_mvn_tuple_size_parity_across_paths():
 
     assert cost(gen) == expected
     assert cost(rs) == expected
+
+
+# ---------------- Task 5: intersect1d pre-sort fix ----------------
+
+
+def test_intersect1d_sorts_both_inputs():
+    from flopscope._flops import sort_cost
+
+    a = fnp.asarray(np.random.rand(1000))
+    b = fnp.asarray(np.random.rand(500))
+    assert cost(lambda: fnp.intersect1d(a, b)) == sort_cost(1000) + sort_cost(
+        500
+    ) + sort_cost(1500)
+    assert cost(lambda: fnp.intersect1d(a, b, assume_unique=True)) == sort_cost(1500)
+
+
+# ---------------- Task 5: mvn SVD factorization ----------------
+
+
+def test_mvn_factorization_is_svd():
+    from flopscope._flops import svd_cost
+
+    d, N = 50, 100
+    fac = svd_cost(d, d, with_vectors=True)
+    expected = fac + 2 * N * d * d + 16 * N * d
+    assert (
+        cost(lambda: fnp.random.multivariate_normal(np.zeros(d), np.eye(d), size=N))
+        == expected
+    )
 
 
 # ---------------- norm-family batch dims ----------------
@@ -1174,3 +1211,297 @@ def test_choice_replace_false_with_p_uses_sort_cost():
     assert cost(lambda: fnp.random.choice(n, size=5, replace=False, p=p)) == sort_cost(
         n
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 1: stats composite family (13 ops) — PR fix/cost-model-gaps
+# Each op: cost_per_elem moved from 1 to K; weight 16.0 → 1.0.
+# K derived from structural FMA=2 count (transcendental = 16 FLOPs).
+# ---------------------------------------------------------------------------
+
+
+def test_stats_expon_pdf_composite():
+    """expon.pdf: z=(x-loc)/scale(2) + exp(-z)(17) + /scale(1) + where(2) = 22/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.random.rand(1000) * 3.0)
+        assert cost(lambda: fstats.expon.pdf(x)) == 22 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_expon_cdf_composite():
+    """expon.cdf: z=(x-loc)/scale(2) + exp(-z)(17) + 1-exp(1) + where(2) = 22/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.random.rand(1000) * 3.0)
+        assert cost(lambda: fstats.expon.cdf(x)) == 22 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_expon_ppf_composite():
+    """expon.ppf: loc-scale*log1p(-q)(19) + 3 where/cmp/and(8) = 27/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        q = fnp.asarray(np.random.rand(1000) * 0.98 + 0.01)
+        assert cost(lambda: fstats.expon.ppf(q)) == 27 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_cauchy_cdf_composite():
+    """cauchy.cdf: z(2) + arctan(16) + /pi(1) + 0.5+(1) = 20/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+        assert cost(lambda: fstats.cauchy.cdf(x)) == 20 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_cauchy_ppf_composite():
+    """cauchy.ppf: q-0.5(1)+pi*(1)+tan(16)+loc+scale*(2)+3 where(8) = 28/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        q = fnp.asarray(np.random.rand(1000) * 0.98 + 0.01)
+        assert cost(lambda: fstats.cauchy.ppf(q)) == 28 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_logistic_pdf_composite():
+    """logistic.pdf: z(2)+exp(-z)(17)+(1+ez)(1)+sq(1)+scale*(1)+ez/denom(1) = 23/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+        assert cost(lambda: fstats.logistic.pdf(x)) == 23 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_logistic_cdf_composite():
+    """logistic.cdf: z(2)+exp(-z)(17)+1+ez(1)+1/denom(1) = 21/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+        assert cost(lambda: fstats.logistic.cdf(x)) == 21 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_logistic_ppf_composite():
+    """logistic.ppf: 1-q(1)+q/...(1)+log(16)+scale*(1)+loc+(1)+3 where(8) = 28/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        q = fnp.asarray(np.random.rand(1000) * 0.98 + 0.01)
+        assert cost(lambda: fstats.logistic.ppf(q)) == 28 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_laplace_pdf_composite():
+    """laplace.pdf: |x-loc|(3)+exp(-z)(17)+/(2*scale)(2) = 22/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.linspace(-3.0, 3.0, 1000))
+        assert cost(lambda: fstats.laplace.pdf(x)) == 22 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_truncnorm_pdf_composite():
+    """truncnorm.pdf: z(2)+std_norm_pdf(z)(20)+phi_denom(scalar)+div(1)+bounds(4) = 28/elem, weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.random.rand(1000) * 0.6 + 0.2)
+        assert cost(lambda: fstats.truncnorm.pdf(x, -1.0, 1.0)) == 28 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_truncnorm_cdf_composite():
+    """truncnorm.cdf: z(2)+std_norm_cdf(z)(46)+result(3)+2 where(4) = 51/elem (α=50.6), weight 1.0."""
+    load_weights()
+    try:
+        import flopscope.stats as fstats
+
+        x = fnp.asarray(np.random.rand(1000) * 0.6 + 0.2)
+        assert cost(lambda: fstats.truncnorm.cdf(x, -1.0, 1.0)) == 51 * 1000
+    finally:
+        reset_weights()
+
+
+def test_stats_composite_family_packaged_weight_unity():
+    """With packaged weights loaded, all 13 composite constants hold (weight=1.0)."""
+    load_weights()
+    import flopscope.stats as fstats
+
+    x = fnp.asarray(np.random.rand(100) * 3.0)
+    q = fnp.asarray(np.random.rand(100) * 0.98 + 0.01)
+    xl = fnp.asarray(np.linspace(-3.0, 3.0, 100))
+    xt = fnp.asarray(np.random.rand(100) * 0.6 + 0.2)
+
+    assert cost(lambda: fstats.expon.pdf(x)) == 22 * 100
+    assert cost(lambda: fstats.expon.cdf(x)) == 22 * 100
+    assert cost(lambda: fstats.expon.ppf(q)) == 27 * 100
+    assert cost(lambda: fstats.cauchy.cdf(xl)) == 20 * 100
+    assert cost(lambda: fstats.cauchy.ppf(q)) == 28 * 100
+    assert cost(lambda: fstats.logistic.pdf(xl)) == 23 * 100
+    assert cost(lambda: fstats.logistic.cdf(xl)) == 21 * 100
+    assert cost(lambda: fstats.logistic.ppf(q)) == 28 * 100
+    assert cost(lambda: fstats.laplace.pdf(xl)) == 22 * 100
+    assert cost(lambda: fstats.truncnorm.pdf(xt, -1.0, 1.0)) == 28 * 100
+    assert cost(lambda: fstats.truncnorm.cdf(xt, -1.0, 1.0)) == 51 * 100
+
+
+# ---------------- Task 2: fft freq grids + random samplers ----------------
+
+
+def test_fftfreq_bills_grid():
+    assert cost(lambda: fnp.fft.fftfreq(1000)) == 1000
+    assert cost(lambda: fnp.fft.rfftfreq(1000)) == 1000 // 2 + 1
+
+
+def test_random_uniform_bills_affine():
+    assert cost(lambda: fnp.random.uniform(2.0, 5.0, size=1000)) == 3 * 1000
+    assert cost(lambda: fnp.random.random(1000)) == 1000
+
+
+# ---------------- Task 3: diag/diagonal view-vs-copy + gather-tier consistency ----------------
+
+# Pre-built arrays (outside BudgetContext — no double-billing)
+_A100 = fnp.asarray(np.random.rand(100, 100))
+_v50 = fnp.asarray(np.arange(50.0))
+_idx100 = fnp.asarray(np.zeros((100, 1), dtype=int))
+_z100 = fnp.asarray(np.random.rand(100) > 0.5)
+_A_bmat = fnp.asarray(np.ones((2, 2)))
+_cond100 = fnp.asarray(np.ones(100, dtype=bool))  # all True → output is (100,100)
+_A100_compress = fnp.asarray(np.random.rand(100, 100))
+_bits800 = fnp.asarray(np.ones(800, dtype=np.uint8))
+
+
+def test_diag_diagonal_view_vs_copy():
+    """diagonal is a numpy view → 0 FLOPs; diag is a copy → min(m,n) or n^2."""
+    # numpy.diagonal returns a read-only VIEW → 0 FLOPs
+    assert cost(lambda: fnp.diagonal(_A100)) == 0
+    assert cost(lambda: fnp.linalg.diagonal(_A100)) == 0
+    # diag extract (2-D input): copies min(m,n) elements → min(100,100)=100 at w=1.0
+    assert cost(lambda: fnp.diag(_A100)) == 100
+    # diag construct (1-D input): materialises n^2 output → 50^2=2500 at w=1.0
+    assert cost(lambda: fnp.diag(_v50)) == 2500
+
+
+def test_gather_tier_consistency():
+    """take_along_axis weight→4.0; argwhere/bmat/fromiter weight→1.0."""
+    load_weights()
+    try:
+        # take_along_axis: numel(output)=100, weight=4.0 → 400
+        assert cost(lambda: fnp.take_along_axis(_A100, _idx100, axis=1)) == 4 * 100
+        # argwhere: numel(input)=100, weight 4→1 → 100
+        assert cost(lambda: fnp.argwhere(_z100)) == 100
+        # bmat: 2x2 blocks in 2x2 layout → 4x4=16, weight 4→1 → 16
+        assert cost(lambda: fnp.bmat([[_A_bmat, _A_bmat], [_A_bmat, _A_bmat]])) == 16
+        # fromiter: numel(result)=100, weight 16→1 → 100
+        assert cost(lambda: fnp.fromiter(range(100), dtype=float)) == 100
+    finally:
+        reset_weights()
+
+
+def test_compress_formula():
+    """compress: len(condition) + 4*numel(output); condition=100, all True → output=(100,100)."""
+    # condition all-True: all 100 rows selected → output shape (100,100), numel=10000
+    # formula: len(cond) + 4*numel(output) = 100 + 4*10000 = 40100
+    # weight after fix = 1.0; conftest resets weights → charged == flop_cost
+    cond50 = fnp.asarray(np.ones(100, dtype=bool))
+    expected = 100 + 4 * (100 * 100)
+    assert cost(lambda: fnp.compress(cond50, _A100_compress, axis=0)) == expected
+
+
+def test_packbits_formula():
+    """packbits: numel(input) bits processed; 800-element input → 800."""
+    # weight after fix = 1.0; conftest resets → charged == flop_cost = 800
+    assert cost(lambda: fnp.packbits(_bits800)) == 800
+
+
+def test_mask_indices_formula():
+    """mask_indices: 2*n^2 + 8*k; n=50, triu → k=1275 pairs."""
+    # np.triu of 50x50: upper triangle = 50*51//2 = 1275 index pairs
+    # formula: 2*50^2 + 8*1275 = 5000 + 10200 = 15200; weight=1.0 after fix
+    n = 50
+    k = n * (n + 1) // 2  # 1275
+    expected = 2 * n * n + 8 * k  # 15200
+    assert cost(lambda: fnp.mask_indices(n, np.triu)) == expected
+
+
+# ---------------------------------------------------------------------------
+# Task 4: _pointwise + _polynomial cost fixes (6 ops)
+# ---------------------------------------------------------------------------
+
+
+def test_cross_2d_three_per_output():
+    """cross: 2-D z-only path charges 3/pair (not 6/pair); 3-vec unchanged."""
+    a = fnp.asarray(np.random.rand(100, 2))
+    b = fnp.asarray(np.random.rand(100, 2))
+    # z-only: output shape (100,), numel=100; 3*100=300 (was 3*200=600)
+    assert cost(lambda: fnp.cross(a, b)) == 3 * 100
+    a3 = fnp.asarray(np.random.rand(100, 3))
+    b3 = fnp.asarray(np.random.rand(100, 3))
+    # 3-vec: output shape (100,3), numel=300; 3*300=900 (unchanged)
+    assert cost(lambda: fnp.cross(a3, b3)) == 3 * (100 * 3)
+
+
+def test_convolve_mode_aware():
+    """convolve: per-mode cost via _correlate_cost; same/valid under-billed before fix."""
+    a = fnp.asarray(np.random.rand(100))
+    v = fnp.asarray(np.random.rand(50))
+    # full: same formula as before (2*n*m - n - m = 19750 for n=200,m=50 old test; here n=100,m=50)
+    assert cost(lambda: fnp.convolve(a, v, mode="full")) == 2 * 100 * 50 - 100 - 50
+    # valid: must be strictly less than the old mode-blind formula
+    assert cost(lambda: fnp.convolve(a, v, mode="valid")) < 2 * 100 * 50 - 100 - 50
+
+
+def test_cov_corrcoef_centering():
+    """cov: 2*f^2*s + 2*f*s (Gram + centering); corrcoef: + 2*f^2 + f (normalization)."""
+    X = fnp.asarray(np.random.rand(5, 100))
+    assert cost(lambda: fnp.cov(X)) == 2 * 5 * 5 * 100 + 2 * 5 * 100
+    assert (
+        cost(lambda: fnp.corrcoef(X)) == (2 * 5 * 5 * 100 + 2 * 5 * 100) + 2 * 5 * 5 + 5
+    )
+
+
+def test_unwrap_passes():
+    """unwrap: 13 one-FLOP ufunc passes per element
+    (diff, +period/2, mod, -period/2, ==low, >0, &, select, sub, abs, <discont, select, cumsum)
+    plus final add of correction to p: total 13 passes on N-1 elements, charged as 13*N.
+    """
+    v = fnp.asarray(np.random.rand(1000))
+    assert cost(lambda: fnp.unwrap(v)) == 13 * 1000
+
+
+def test_poly_1d_exact_convolution():
+    """poly (1-D from roots): (3*n^2+n)//2 FLOPs (exact iterated-convolution cost)."""
+    r = fnp.asarray(np.random.rand(100))
+    assert (
+        cost(lambda: fnp.poly(r)) == (3 * 100 * 100 + 100) // 2
+    )  # was 2*100*100=20000

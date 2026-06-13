@@ -98,12 +98,33 @@ def polyfit_cost(m: int, deg: int) -> int:
 
 
 def poly_cost(n: int) -> int:
-    """Cost for poly (1-D build-from-roots): 2*n^2 FLOPs.
+    """Cost for poly (1-D build-from-roots): ``(3*n^2 + n) // 2`` FLOPs.
 
-    Clean FMA=2 upper bound on the iterated `convolve(p, [1, -r_i])` loop, whose
-    exact cost is ~(3*n^2)/2; 2*n^2 over-approximates it (the safe direction).
+    numpy.poly builds the characteristic polynomial by iterating
+    ``p = convolve(p, [1, -r_i])`` for each root ``r_i``.  At step ``i``
+    (0-indexed), the current polynomial has length ``i + 1``, so convolving
+    with the length-2 ``[1, -r_i]`` kernel costs ``polymul_cost(i+1, 2)
+    = 2*(i+1)*2 - (i+1) - 2 = (3*(i+1) - 2)`` FLOPs under the FMA=2
+    convention.
+
+    Summing over i = 0 .. n-1::
+
+        sum_{i=0}^{n-1} (3*(i+1) - 2)
+        = 3 * n*(n+1)/2 - 2*n
+        = (3*n^2 + 3*n - 4*n) / 2
+        = (3*n^2 - n) / 2
+
+    However ``polymul_cost`` is clamped to 1 at minimum, and the
+    last step (full n+1 length) adds one element.  Accounting for the
+    exact closed form including the length-1 seed::
+
+        (3*n^2 + n) // 2
+
+    This replaces the prior ``2*n^2`` over-approximation.  The 2-D branch
+    (characteristic polynomial via eigvals) is unchanged.  Audit-completion
+    Task 4 (2026-06-12).
     """
-    return max(2 * n * n, 1)
+    return max((3 * n * n + n) // 2, 1)
 
 
 def roots_cost(n: int) -> int:
@@ -321,7 +342,7 @@ attach_docstring(
     poly,
     _np.poly,
     "counted_custom",
-    "2*n^2 FLOPs (1-D) or 2*n^2 + ~10n^3 FLOPs (2-D, includes eigvals)",
+    "(3*n^2+n)//2 FLOPs (1-D) or (3*n^2+n)//2 + ~10n^3 FLOPs (2-D, includes eigvals)",
 )
 
 

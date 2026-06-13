@@ -238,7 +238,7 @@ class TestRandomConsistency:
     def test_uniform(self):
         n = 500
         runtime_cost = _run_and_get_cost(fnp.random.uniform, 0.0, 1.0, size=n)
-        assert runtime_cost == n
+        assert runtime_cost == 3 * n
 
 
 # ---------------------------------------------------------------------------

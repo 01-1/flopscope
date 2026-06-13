@@ -318,8 +318,31 @@ randn = _counted_dims_sampler(_npr.randn, "random.randn")
 # ---------------------------------------------------------------------------
 
 normal = _counted_sampler(_npr.normal, "random.normal")
-uniform = _counted_sampler(_npr.uniform, "random.uniform")
 standard_normal = _counted_sampler(_npr.standard_normal, "random.standard_normal")
+
+
+@_counted_wrapper
+def uniform(low=0.0, high=1.0, size=None):
+    """Counted version of ``numpy.random.uniform``. Cost: 3*numel(output).
+
+    Beyond the per-element draw (numel), uniform applies the affine map
+    ``low + (high - low) * U`` per element — one multiply + one add (FMA=2) —
+    so the honest cost is ``3 * numel(output)``.
+    """
+    budget = require_budget()
+    result = _npr.uniform(low, high, size)
+    n = _builtins.max(result.size, 1) if isinstance(result, _np.ndarray) else 1
+    with budget.deduct(
+        "random.uniform", flop_cost=3 * n, subscripts=None, shapes=((n,),)
+    ):
+        pass  # numpy already executed
+    return result
+
+
+try:
+    uniform.__signature__ = _inspect.signature(_npr.uniform)  # pyright: ignore[reportFunctionMemberAccess]
+except (ValueError, TypeError):
+    pass
 standard_exponential = _counted_sampler(
     _npr.standard_exponential, "random.standard_exponential"
 )
@@ -358,8 +381,9 @@ multinomial = _counted_sampler(_npr.multinomial, "random.multinomial")
 
 def multivariate_normal_cost(N: int, d: int) -> int:
     """FLOP cost of N draws from a d-dim Gaussian: covariance factorization
-    (d^3/3, Cholesky-class) + affine transform (2*N*d^2) + N*d standard-normal
-    draws at the transcendental rate (16/draw, matching random.normal's tier).
+    (svd_cost(d,d,with_vectors=True)=26*d^3, numpy default method='svd') +
+    affine transform (2*N*d^2) + N*d standard-normal draws at the
+    transcendental rate (16/draw, matching random.normal's tier).
     Composite op => tier factors folded into flop_cost; weight stays 1.0.
     """
     from flopscope.numpy.random._cost_formulas import multivariate_normal_flops
@@ -371,9 +395,12 @@ def multivariate_normal_cost(N: int, d: int) -> int:
 def multivariate_normal(mean, cov, size=None, check_valid="warn", tol=1e-8):
     """Counted version of ``numpy.random.multivariate_normal``.
 
-    Cost: d^3//3 + 2*N*d^2 + 16*N*d at weight 1.0, where d = len(mean) and
-    N = size (or 1 when size is None). Composite op: the transcendental-tier
-    factor for the N*d standard-normal draws is folded into flop_cost.
+    Cost: svd_cost(d,d,with_vectors=True) + 2*N*d^2 + 16*N*d at weight 1.0,
+    where d = len(mean) and N = size (or 1 when size is None).
+    The SVD factorization (26*d^3) models numpy's default method='svd' which
+    calls np.linalg.svd(cov) on the d×d covariance matrix. Composite op: the
+    transcendental-tier factor for the N*d standard-normal draws is folded
+    into flop_cost.
     """
     budget = require_budget()
     mean_arr = _np.asarray(mean)
