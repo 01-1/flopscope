@@ -274,6 +274,31 @@ for the three-leg derivation.
 | `linalg.svdvals` | `2ab² + 2b³` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD Σ only (dgesdd values, no vectors) | `_decompositions.py:svdvals_cost` |
 | `roots` | `10n³`, `n = len(p)−1` | DERIVED: companion-matrix eigvals (delegates to eigvals_cost) | `_polynomial.py`; note: uses raw `len(p)−1`, not stripped zero-padded length |
 
+#### Top-k (truncated) SVD
+
+`linalg.svd(..., k=)` and `linalg.svdvals(..., k=)` accept a top-k parameter.
+For `1 ≤ k < min(m, n)` the billed cost is
+
+    min(4·m·n·k, economy)
+
+where `economy` is the full thin/values-only cost above. `4·m·n·k` is the
+verified leading-order cost (FMA=2, Θ(mnk)) of a rank-k randomized SVD
+(Halko–Martinsson–Tropp; two unavoidable passes over A). It is billed as the
+**standard truncated-algorithm cost of the operation** — consistent with how
+this model bills the textbook matmul cost (`2mnk−mn`) rather than literal BLAS
+work — even though the reference implementation computes the full economy SVD
+and slices (results stay exact). Unlike the full case, **values-only is not
+leading-order cheaper** for top-k. `k = min(m, n)` (all components) bills the
+full economy cost, and the `full_matrices` full-U premium applies only to the
+full decomposition (`k is None`); so a complete decomposition can never be
+obtained below full price. Invalid `k` (`< 1` or `> min(m, n)`) raises
+`ValueError`.
+
+**Accepted residual:** because `4mnk < 6ab²+20b³` for all `k ≤ min(m, n)`, the
+truncated rate applies up to `k = min(m, n) − 1`, so a caller can obtain up to
+`min(m, n) − 1` exact singular vectors at the truncated rate. The guard ensures
+they can never obtain **all** `min(m, n)` components below full price.
+
 Per-matrix cost is multiplied by the batch dimension product.  Constants
 marked "provisional": iteration counts are input-dependent and the cubic
 constant is the standard textbook estimate.
