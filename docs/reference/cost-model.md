@@ -21,7 +21,8 @@ differ from the declared tier — see [empirical-weights.md](empirical-weights.m
 1. **[Billing model & design principles](#billing-model--design-principles)** — the one equation and *why* it is split into `flop_cost` and `weight`.
 2. **[Non-exploitability](#non-exploitability)** — the invariants that keep billing honest, and the test that enforces each.
 3. **[Cost by family](#cost-by-family)** — the rule + evidence + representative ops for the family you care about.
-4. **[Exhaustive per-op reference](#exhaustive-per-op-reference)** — drill into `ops.json` for one op's exact formula.
+4. **[Calibration & reproducibility](#calibration--reproducibility)** — how the constants and weights are derived, and how to reproduce any billed number yourself.
+5. **[Exhaustive per-op reference](#exhaustive-per-op-reference)** — drill into `ops.json` for one op's exact formula.
 
 **Completeness guarantee:** every billed operation is classified in the registry and
 appears in `ops.json` with a `cost_formula`; `tests/test_cost_model_coverage.py`
@@ -565,12 +566,12 @@ Comparison = 1 FLOP convention; weight 1.0.
 it touches. A pure copy/scatter with no per-element arithmetic bills `numel(output)`
 at **weight 1.0** (`pad`, `repeat`, `resize`, `dstack`, and the rows below);
 gather/scatter-*by-index* bills at the **gather tier, weight 4.0** (`take_along_axis`,
-`put`, `put_along_axis`). A materializer that also computes per-element values carries
+`put`, `put_along_axis`). A materializer that also computes per-element *values* carries
 that arithmetic in `flop_cost`, so it is **not** a flat `numel(output)` — e.g. `vander`
-bills `N(N−2)` (the non-trivial power columns) and `diagflat` bills
-`numel(output) + numel(input)`. This rule plus [`ops.json`](#exhaustive-per-op-reference)
-(exact per-op formula) covers every copy/gather op, including ones with no row here
-(`trim_zeros`, `fill_diagonal`, `unstack`, …).
+bills `N(N−2)` (only the non-trivial power columns; the constant and linear columns are
+free). This rule plus [`ops.json`](#exhaustive-per-op-reference) (exact per-op formula)
+covers every copy/gather op, including ones with no row here (`diagflat`, `trim_zeros`,
+`fill_diagonal`, `unstack`, …).
 
 The table lists the ops with a noted exception or a distinct formula:
 
@@ -613,7 +614,7 @@ result the wrapper materializes (numpy runs the callback itself).
 |---|---|---|
 | `apply_along_axis`, `apply_over_axes` | `numel(output)` | `_counting_ops.py` |
 | `fromfunction` | `numel(output)` | `_free_ops.py` |
-| `piecewise` | `(len(condlist) + 1) × numel(output)` (one condition-select pass per branch, plus the default) | `_counting_ops.py` |
+| `piecewise` | `numel(output)` (the op bills its assembled result; each condition you pass in `condlist` is billed separately as its own comparison op) | `_counting_ops.py` |
 
 ---
 
