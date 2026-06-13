@@ -157,16 +157,25 @@ Source: `src/flopscope/_pointwise.py`; reduction accumulation model in
 **Family rule** (DERIVED, G&VL 4e §1.1.11):
 
 ```
-flop_cost = (K − 1) × M_unique + M_unique
-           = (2K − 1) × M_unique
+flop_cost = K × M_unique        (multiplies: K per output cell)
+          + (K − 1) × M_unique  (adds: K−1 per output cell)
+          = (2K − 1) × M_unique
 ```
 
 where `K` = product of contracted-axis dimensions, `M_unique` = number of
 output cells actually computed (equals `prod(output dims)` for non-aliased
 inputs; reduced to the unique-orbit count when the output has symmetry, e.g.
-`A @ A` or `outer(v, v)`).
+`A @ A` or `outer(v, v)`). The engine (`einsum_cost`) computes the equivalent
+whole-expression form `(K − 1) × M_unique + α_unique`, where `α_unique` is the
+number of unique (output + contracted) index combinations — equal to
+`K × M_unique` for a single clean contraction, but more general for
+multi-index / broadcast einsums.
 
-For a plain `(m, k) @ (k, n)` matmul: `flop_cost = 2mkn − mn`.
+For a plain `(m, k) @ (k, n)` matmul: `flop_cost = 2mkn − mn` (`K = k`,
+`M_unique = mn`). Batched/stacked matmul multiplies this by the batch size, and
+aliased or symmetric operands (`A @ A`) reduce `M_unique` below `prod(output)`.
+The closed forms in the table below are the values this one engine produces per
+op — not separately-maintained constants.
 
 Multi-operand einsum (`k ≥ 3`) walks the `opt_einsum` optimal binary path and
 sums per-step costs.
