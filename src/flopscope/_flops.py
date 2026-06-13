@@ -218,15 +218,21 @@ def svd_cost(
 def matmul_cost(m: int, k: int, n: int) -> int:
     """FLOP cost of a single 2D matmul ``(m, k) @ (k, n) -> (m, n)``.
 
-    Formula: ``2 * m * k * n - m * n`` (FMA=2 textbook: multiplies and adds
-    counted separately, with accumulator off-by-one), matching what
-    ``fnp.matmul`` charges per 2D call via the
-    einsum machinery (``_resolve_cost_and_output_symmetry`` on the
-    canonical subscripts ``ij,jk->ik``).
+    Delegates to :func:`einsum_cost` on the canonical matmul subscripts
+    ``ij,jk->ik`` so this helper is, by construction, the *same* number
+    ``fnp.matmul`` charges per 2D call — both go through the one einsum cost
+    engine. This keeps the whole linalg contraction family on a single source
+    of truth: the compound formulas that call ``matmul_cost`` (``pinv_cost``,
+    ``lstsq_cost``, ``matrix_power_cost``, and ``linalg.multi_dot``) track the
+    einsum matmul convention automatically, with no duplicated ``2mkn - mn``
+    constant left to drift.
 
-    Used by ``pinv_cost``, ``lstsq_cost``, and ``matrix_power_cost``
-    so those compound formulas track ``fnp.matmul`` automatically if the
-    matmul accounting convention ever changes again.
+    The returned value equals ``2 * m * k * n - m * n`` (FMA=2 textbook:
+    multiplies and adds counted separately, accumulator off-by-one);
+    ``einsum_cost`` is used as a cheap per-step closed form rather than
+    re-deriving that constant here. The ``max(..., 1)`` clamp is kept because
+    ``einsum_cost`` returns the unclamped value (which is 0 or negative for
+    degenerate/empty dims).
 
     Parameters
     ----------
@@ -238,7 +244,7 @@ def matmul_cost(m: int, k: int, n: int) -> int:
     int
         Estimated FLOP count, clamped to at least 1.
     """
-    return max(2 * m * k * n - m * n, 1)
+    return max(einsum_cost("ij,jk->ik", [(m, k), (k, n)]), 1)
 
 
 def _ceil_log2(n: int) -> int:
