@@ -4801,6 +4801,11 @@ def main():
         "--verify", action="store_true", help="Verify coverage only (no generation)"
     )
     parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Regenerate ops.json to a temp dir and fail if the committed file differs (no write).",
+    )
+    parser.add_argument(
         "--workers",
         type=int,
         default=1,
@@ -4814,6 +4819,24 @@ def main():
     if args.verify:
         ok = verify_coverage(registry)
         sys.exit(0 if ok else 1)
+
+    if args.check:
+        import tempfile
+
+        records = build_operation_doc_records(registry, workers=max(1, args.workers))
+        committed_path = WEBSITE / "public" / "ops.json"
+        committed = committed_path.read_text() if committed_path.exists() else ""
+        with tempfile.TemporaryDirectory() as tmp:
+            write_operation_doc_artifacts(records, Path(tmp))
+            regenerated = (Path(tmp) / "public" / "ops.json").read_text()
+        if regenerated != committed:
+            print(
+                f"ERROR: {committed_path} is out of sync with the registry.\n"
+                "Run: uv run python scripts/generate_api_docs.py"
+            )
+            sys.exit(1)
+        print("ops.json is in sync with the registry.")
+        sys.exit(0)
 
     print("Generating API reference data...")
     worker_count = max(1, args.workers)
