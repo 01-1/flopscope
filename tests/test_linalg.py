@@ -75,6 +75,13 @@ def test_svd_k_too_large():
             svd(numpy.ones((3, 5)), k=10)
 
 
+def test_svd_rejects_nonpositive_k():
+    with BudgetContext(flop_budget=10**6):
+        for bad_k in (0, -1):
+            with pytest.raises(ValueError, match="k"):
+                svd(numpy.ones((4, 3)), k=bad_k)
+
+
 def test_svd_outside_context():
     # Operations now auto-activate the global default budget instead of raising
     U, S, Vt = svd(numpy.ones((3, 3)))

@@ -46,8 +46,9 @@ def svd(
     values only (compute_uv=False):         2*a*b^2 + 2*b^3 per matrix
     with thin U/V (full_matrices=False):    6*a*b^2 + 20*b^3 per matrix
     with full U (full_matrices=True, m!=n): 4*a^2*b + 22*b^3 per matrix
-    where a = max(m, n), b = min(m, n). ``k`` does not reduce the cost
-    (LAPACK computes the full decomposition regardless).
+    where a = max(m, n), b = min(m, n). Top-k (1 <= k < min(m, n)) bills
+    min(4*m*n*k, economy) — the verified randomized-SVD truncated cost;
+    results stay exact (numpy economy SVD, sliced). See cost-model.md.
     Constants confirmed by the 2026-06 evidence audit; see
     docs/reference/cost-model.md.
 
@@ -83,9 +84,9 @@ def svd(
     if a.ndim < 2:
         raise ValueError(f"svd requires a 2D (or batched) array, got shape {a.shape}")
     m, n = a.shape[-2], a.shape[-1]
-    if k is not None and k > min(m, n):
+    if k is not None and min(m, n) > 0 and not (1 <= k <= min(m, n)):
         raise ValueError(
-            f"k={k} exceeds min(m, n)={min(m, n)} for array shape {a.shape}"
+            f"k must satisfy 1 <= k <= min(m, n) = {min(m, n)}, got k={k}"
         )
     batch = _batch_size(a.shape)
     cost = (

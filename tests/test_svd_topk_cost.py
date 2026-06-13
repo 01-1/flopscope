@@ -71,3 +71,12 @@ def test_full_decomposition_unchanged():
     assert svd_cost(100, 50, None) == 750_000  # values-only
     assert svd_cost(10, 5, None, with_vectors=True, full_matrices=True) == 4750  # full U
     assert svd_cost(10, 5, None, with_vectors=True, full_matrices=False) == 4000  # thin
+
+
+def test_values_only_cheaper_at_cap_region():
+    # Near the economy cap, values-only (capped at 2ab^2+2b^3) can be cheaper
+    # than with-vectors (capped at 6ab^2+20b^3); the caps differ. Intentional.
+    # m=10,n=5,k=4: wv=False -> min(800, 750)=750 ; wv=True -> min(800, 4000)=800.
+    assert svd_cost(10, 5, 4, with_vectors=False) == 750
+    assert svd_cost(10, 5, 4, with_vectors=True) == 800
+    assert svd_cost(10, 5, 4, with_vectors=False) < svd_cost(10, 5, 4, with_vectors=True)
