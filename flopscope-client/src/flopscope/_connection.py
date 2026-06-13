@@ -7,6 +7,7 @@ import time
 
 import zmq
 
+from flopscope._dispatch import dispatch_span
 from flopscope._protocol import decode_response
 from flopscope.errors import raise_from_response
 
@@ -121,33 +122,34 @@ class Connection:
         """
         from flopscope.errors import FlopscopeServerError
 
-        sock = self._ensure_connected()
-        self._ensure_handshaked()
+        with dispatch_span():
+            sock = self._ensure_connected()
+            self._ensure_handshaked()
 
-        t0 = time.monotonic_ns()
-        try:
-            sock.send(raw_request)
-            raw_response: bytes = sock.recv()
-        except zmq.Again as err:
-            # Socket is in a bad state after timeout — reset it
-            self._reset_socket()
-            raise FlopscopeServerError(
-                "server timeout: no response within timeout period"
-            ) from err
-        t1 = time.monotonic_ns()
+            t0 = time.monotonic_ns()
+            try:
+                sock.send(raw_request)
+                raw_response: bytes = sock.recv()
+            except zmq.Again as err:
+                # Socket is in a bad state after timeout — reset it
+                self._reset_socket()
+                raise FlopscopeServerError(
+                    "server timeout: no response within timeout period"
+                ) from err
+            t1 = time.monotonic_ns()
 
-        response = decode_response(raw_response)
-        response["_round_trip_ns"] = t1 - t0
-        response["_request_bytes"] = len(raw_request)
-        response["_response_bytes"] = len(raw_response)
+            response = decode_response(raw_response)
+            response["_round_trip_ns"] = t1 - t0
+            response["_request_bytes"] = len(raw_request)
+            response["_response_bytes"] = len(raw_response)
 
-        if response.get("status") == "error":
-            raise_from_response(
-                response.get("error_type", "FlopscopeServerError"),
-                response.get("message", ""),
-            )
+            if response.get("status") == "error":
+                raise_from_response(
+                    response.get("error_type", "FlopscopeServerError"),
+                    response.get("message", ""),
+                )
 
-        return response
+            return response
 
     def _reset_socket(self) -> None:
         """Close and discard the socket so it will be recreated on next use."""

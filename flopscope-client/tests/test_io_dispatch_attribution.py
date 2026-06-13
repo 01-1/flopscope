@@ -54,3 +54,38 @@ def test_array_ingress_is_dispatch_not_residual(monkeypatch):
     grew = dispatch.total_dispatch_ns() - before
 
     assert grew >= _DELAY * 1e9 * 0.5
+
+
+def test_send_recv_self_times_transport_as_dispatch(monkeypatch):
+    """Connection.send_recv must attribute its own transport to dispatch, so even
+    an UNDECORATED caller never bills the round-trip to residual (structural floor)."""
+    import msgpack
+
+    from flopscope._connection import Connection
+
+    ok = msgpack.packb(
+        {"status": "ok", "result": {"id": "a0", "shape": [2, 2], "dtype": "float64"}},
+        use_bin_type=True,
+    )
+
+    class _FakeSock:
+        def send(self, data):  # noqa: ARG002
+            pass
+
+        def recv(self):
+            time.sleep(_DELAY)
+            return ok
+
+    conn = Connection()
+    monkeypatch.setattr(conn, "_ensure_connected", lambda: _FakeSock())
+    monkeypatch.setattr(conn, "_ensure_handshaked", lambda: None)
+
+    dispatch.reset_dispatch()
+    before = dispatch.total_dispatch_ns()
+    resp = conn.send_recv(b"ignored-request")
+    grew = dispatch.total_dispatch_ns() - before
+
+    assert resp["result"]["id"] == "a0"
+    assert grew >= _DELAY * 1e9 * 0.5, (
+        "send_recv transport not self-timed into dispatch"
+    )
