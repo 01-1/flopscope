@@ -33,6 +33,10 @@ API_NAME_ALIASES = {
     "concat": "concatenate",
     "deg2rad": "radians",
     "rad2deg": "degrees",
+    # row_stack is a deprecated alias of vstack; the generated API reference lists
+    # the canonical vstack (matching load_alias_map in generate_api_docs.py), so the
+    # weighted row_stack resolves through it.
+    "row_stack": "vstack",
 }
 
 # Ensure benchmarks package is importable.
