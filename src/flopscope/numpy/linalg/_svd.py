@@ -87,13 +87,9 @@ def svd(
         raise ValueError(
             f"k={k} exceeds min(m, n)={min(m, n)} for array shape {a.shape}"
         )
-    effective_k = k if k is not None else min(m, n)
-    # When k is given we always use thin (economy) decomposition, so the
-    # effective full_matrices flag for cost is False in that case.
-    eff_full = full_matrices and (k is None)
     batch = _batch_size(a.shape)
     cost = (
-        svd_cost(m, n, effective_k, with_vectors=compute_uv, full_matrices=eff_full)
+        svd_cost(m, n, k, with_vectors=compute_uv, full_matrices=full_matrices)
         * batch
         if not _has_zero_dim(a.shape)
         else 0

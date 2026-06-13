@@ -185,30 +185,34 @@ def svd_cost(
 ) -> int:
     """FLOP cost of an SVD (FMA=2, leading order).
 
-    values only (with_vectors=False):
-        2*a*b^2 + 2*b^3   (a = max(m,n), b = min(m,n))
+    Full decomposition (``k is None``), with a = max(m, n), b = min(m, n):
+        values only (with_vectors=False):        2*a*b^2 + 2*b^3
+        thin U, V (full_matrices=False):         6*a*b^2 + 20*b^3
+        full U (full_matrices=True and m != n):  4*a^2*b + 22*b^3
+    Constants from the 2026-06 evidence audit (LAPACK dgesdd + G&VL 4e §8.6);
+    see docs/reference/cost-model.md.
 
-    with thin U, V (full_matrices=False or m==n):
-        6*a*b^2 + 20*b^3  (LAPACK dgesdd thin path; G&VL 4e §8.6)
-
-    with full U (full_matrices=True and m != n):
-        4*a^2*b + 22*b^3  (forming full U dominates; LAPACK dgesdd,
-                           G&VL 4e §8.6)
-
-    Constants confirmed by the 2026-06 evidence audit: LAPACK driver
-    op-counts (dgesdd) + runtime scaling + G&VL citation; see
-    docs/reference/cost-model.md.
-
-    ``k`` is accepted for API compatibility but does not reduce the cost:
-    LAPACK computes the full decomposition regardless of how many singular
-    values the caller keeps.
+    Top-k truncated SVD (``1 <= k < min(m, n)``):
+        min(4*m*n*k, economy)
+    ``4*m*n*k`` is the verified leading-order cost of a rank-k randomized SVD
+    (Halko-Martinsson-Tropp; two passes over A, Theta(m*n*k)). flopscope bills
+    this standard truncated-algorithm cost even though the reference
+    implementation computes the full economy SVD and slices — it bills the
+    textbook cost of the operation (like matmul), not literal BLAS work.
+    Values-only is NOT leading-order cheaper for the truncated case (unlike the
+    full case). ``k >= min(m, n)`` bills the economy cost; the full_matrices
+    full-U premium applies only to the full decomposition (``k is None``).
+    See docs/reference/cost-model.md.
     """
     a, b = max(m, n), min(m, n)
-    if with_vectors:
-        if full_matrices and m != n:
+    economy = 6 * a * b * b + 20 * b**3 if with_vectors else 2 * a * b * b + 2 * b**3
+    if k is None:
+        if with_vectors and full_matrices and m != n:
             return max(4 * a * a * b + 22 * b**3, 1)
-        return max(6 * a * b * b + 20 * b**3, 1)
-    return max(2 * a * b * b + 2 * b**3, 1)
+        return max(economy, 1)
+    if k >= b:
+        return max(economy, 1)
+    return max(min(4 * m * n * k, economy), 1)
 
 
 def matmul_cost(m: int, k: int, n: int) -> int:
