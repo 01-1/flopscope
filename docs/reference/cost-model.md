@@ -1,23 +1,52 @@
 # Cost model reference
 
+> **Start here.** This is the cost model's conceptual and audit reference. Read it
+> to understand *how* billing works and to satisfy yourself that it is correct and
+> non-gameable — you do **not** need to read every operation. The exhaustive,
+> generated per-op list (every op with its `cost_formula` and `weight`) lives in
+> [`ops.json`](#exhaustive-per-op-reference) and the website API pages; this doc
+> explains the model by **family rule** so you can reason about a whole class at once.
+
 flopscope bills compute as:
 
 ```
 charged = int(flop_cost × weight)
 ```
 
-`flop_cost` is the entire analytical FLOP count for a call (shape-dependent).
-`weight` is a per-element tier factor that converts analytical FLOPs to an
-equivalent billing unit.  The two concerns are kept separate: `flop_cost`
-carries all shape constants; `weight` carries only the per-element tier.
+For hardware calibration — how weights are measured and where empirical values
+differ from the declared tier — see [empirical-weights.md](empirical-weights.md).
 
-For hardware calibration — how weights are measured and what empirical
-values differ from the declared tier — see
-[docs/reference/empirical-weights.md](empirical-weights.md).
+## How to read this
+
+1. **[Billing model & design principles](#billing-model--design-principles)** — the one equation and *why* it is split into `flop_cost` and `weight`.
+2. **[Non-exploitability](#non-exploitability)** — the invariants that keep billing honest, and the test that enforces each.
+3. **[Cost by family](#cost-by-family)** — the rule + evidence + representative ops for the family you care about.
+4. **[Exhaustive per-op reference](#exhaustive-per-op-reference)** — drill into `ops.json` for one op's exact formula.
+
+**Completeness guarantee:** every billed operation is classified in the registry and
+appears in `ops.json` with a `cost_formula`; `tests/test_cost_model_coverage.py`
+enforces both that, and that every op-class (`ops.json` *area*) is covered by a family
+rule below. So nothing billed is undocumented, even where this doc summarizes by rule.
 
 ---
 
-## Conventions (declared layer)
+## Billing model & design principles
+
+Every operation is charged `charged = int(flop_cost × weight)`.
+
+**Two layers, on purpose.** `flop_cost` carries *all* shape- and algorithm-dependent
+cost (the operation count); `weight` is only a per-element hardware **tier**
+(calibrated — see [Calibration & reproducibility](#calibration--reproducibility)). The
+discipline that makes the model composable and non-gameable: **an algorithm constant
+never hides in a weight** — if a cost depends on a matrix dimension or a loop length it
+lives in `flop_cost`, never in the weight. (Enforced by `tests/test_weight_tier_policy.py`.)
+
+**We bill the textbook standard-algorithm cost, not literal BLAS.** `matmul` is
+`2mnk − mn` regardless of what the underlying BLAS does; top-k SVD is billed as the
+standard truncated-algorithm cost. This keeps billing deterministic,
+hardware-independent, and composable.
+
+The rest of this section defines the conventions these principles rest on.
 
 ### FMA=2
 
@@ -73,13 +102,6 @@ kernels, norms with SVD), all per-element factors are folded into `flop_cost`
 and the active weight is set to 1.0.  This avoids double-counting with the
 tier factor.
 
-### Weight tier policy
-
-The tier assignments are CI-enforced: `tests/test_weight_tier_policy.py`
-asserts that every registered op's active weight belongs to one of the
-declared tiers (0.0, 1.0, 2.0, 4.0, 8.0, 16.0) and that the tier matches
-the op's family classification.
-
 ### NumPy 2.x ufunc aliases
 
 NumPy 2.x introduced `acos`, `acosh`, `asin`, `asinh`, `atan`, `atanh`,
@@ -91,10 +113,40 @@ commit `7f0b0a18`.
 
 ---
 
-## Per-family tables
+## Non-exploitability
 
-The families below cover the 602 registered ops.  Where an entire family
-shares one formula the rule is stated once; only exceptions are tabulated.
+The cost model meters compute so a participant cannot do expensive real work while
+being billed cheaply. The two threats are **under-count** (an op billed below its
+honest cost) and **substitution arbitrage** (routing the same work through a
+cheaper-billed but equivalent op). The model defends against both with invariants,
+each backed by a CI-enforced test you can open and read:
+
+| Invariant | What it guarantees | Enforced by |
+|---|---|---|
+| **Honest cost** | each `flop_cost` is the real standard-algorithm op count, with every shape/algorithm constant inside `flop_cost` | per-op evidence in [§Cost by family](#cost-by-family); `test_cost_constant_unification.py`, `test_cost_formula_vs_code.py` |
+| **Weight-tier policy** | every active weight ∈ `{0, 1, 4, 8, 16}`; arithmetic ops are 0 or 1; **no algorithm constant in a weight** | `test_weight_tier_policy.py` |
+| **No substitution arbitrage** | a bit-identical alias cannot bill cheaper than its canonical (e.g. `acos` *is* `arccos` — the 16× ufunc-alias fix); equivalent contractions (`dot`/`inner`/`matmul`/`einsum`) share one cost engine | `test_ufunc_alias_parity.py`, `test_random_weight_aliasing.py`; the shared einsum engine ([§Contraction](#contraction-einsum-family)) |
+| **No cheap in-op path** | top-k `svd(k=)` cannot yield a *full* decomposition below full price (the `min(4mnk, economy)` cap + `k ≥ min → full` guard); invalid `k` (`< 1` or `> min(m, n)`) is rejected before any billing | `test_svd_topk_cost.py` (cap / guard / monotonicity); `test_linalg.py` (invalid-`k` `ValueError`) |
+| **Free-tier discipline** | only genuine view / metadata / no-arithmetic ops carry weight 0 | `test_weight_tier_policy.py` + the registry's free-op classification |
+| **End-to-end billing** | production `flop_cost × weight` is pinned per tier `{0,1,4,8,16}` (catches a silent weight regression) | `test_production_weight_billing.py` |
+
+An auditor can read this table top-to-bottom and, for each claim, open the named test
+to see exactly what guarantees it. The first two rows are the load-bearing ones: honest
+`flop_cost` defeats under-count, and the weight-tier policy (no constant in a weight)
+defeats the family of arbitrage exploits where a high-constant op is re-tiered cheaply.
+
+---
+
+## Cost by family
+
+Each family below is one **rule** + its **evidence/citation** + **representative ops**.
+The rule is the part to audit; the per-op tables are kept where each op carries a
+*distinct* cited constant (linalg, FFT, polynomial, stats, window, random) because
+those constants are the evidence — and because `ops.json`'s generated `cost_formula`
+is coarse for many composite ops (it records `per-operation` where the real formula is
+shape-dependent). For families whose members all share one rule (copy/gather, views),
+only representatives are listed and the full set is a filter in
+[`ops.json`](#exhaustive-per-op-reference).
 
 ---
 
@@ -285,7 +337,7 @@ matrices charge 0.
 
 These ops use LAPACK drivers that iterate until convergence; counts are
 leading-order estimates with confirmed-2026-06 citations.  All use
-**weight 1.0**.  See the [Evidence appendix](#evidence-appendix-iterative-linalg-constants)
+**weight 1.0**.  See [Calibration & reproducibility](#calibration--reproducibility)
 for the three-leg derivation.
 
 | Op | flop_cost (per matrix) | basis | source |
@@ -509,9 +561,18 @@ Comparison = 1 FLOP convention; weight 1.0.
 
 ### Copy and gather
 
-Operations that materialize or scatter memory — no arithmetic, but billed
-for the elements touched.  All use **weight 1.0** unless noted (weight 4.0
-for gather-tier scatter ops).
+**Family rule:** an op that *materializes or scatters* memory bills for the elements
+it touches. A pure copy/scatter with no per-element arithmetic bills `numel(output)`
+at **weight 1.0** (`pad`, `repeat`, `resize`, `dstack`, and the rows below);
+gather/scatter-*by-index* bills at the **gather tier, weight 4.0** (`take_along_axis`,
+`put`, `put_along_axis`). A materializer that also computes per-element values carries
+that arithmetic in `flop_cost`, so it is **not** a flat `numel(output)` — e.g. `vander`
+bills `N(N−2)` (the non-trivial power columns) and `diagflat` bills
+`numel(output) + numel(input)`. This rule plus [`ops.json`](#exhaustive-per-op-reference)
+(exact per-op formula) covers every copy/gather op, including ones with no row here
+(`trim_zeros`, `fill_diagonal`, `unstack`, …).
+
+The table lists the ops with a noted exception or a distinct formula:
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
@@ -539,6 +600,23 @@ for gather-tier scatter ops).
 
 ---
 
+### Functional / higher-order
+
+Operations that apply a user-supplied callable across an array. flopscope bills the
+result the wrapper materializes (numpy runs the callback itself).
+
+> **Submission caveat:** these run a Python callback *in-process* and raise
+> `RemoteCallbackError` on the client/server backend used for AIcrowd submissions, so
+> they cannot appear in submitted code — their cost matters only for local runs.
+
+| Op | flop_cost | source |
+|---|---|---|
+| `apply_along_axis`, `apply_over_axes` | `numel(output)` | `_counting_ops.py` |
+| `fromfunction` | `numel(output)` | `_free_ops.py` |
+| `piecewise` | `(len(condlist) + 1) × numel(output)` (one condition-select pass per branch, plus the default) | `_counting_ops.py` |
+
+---
+
 ### View / free (weight 0.0)
 
 **Family rule**: operations that return a view, re-interpret memory, or
@@ -557,7 +635,16 @@ Source: `src/flopscope/_free_ops.py`.
 
 ---
 
-## Evidence appendix: iterative linalg constants
+## Calibration & reproducibility
+
+How the two layers are pinned down. `flop_cost` **constants** are derived from
+standard-algorithm counts and confirmed by the three-leg evidence below (LAPACK
+driver counts + runtime scaling + textbook citation). `weight` **tiers** are
+calibrated by EC2 micro-benchmark — methodology and measured values in
+[empirical-weights.md](empirical-weights.md). The recipe at the end lets you
+reproduce any billed number yourself.
+
+### Evidence: iterative linalg constants
 
 The constants `eig=25n³`, `eigvals=10n³`, `eigh=9n³`, `eigvalsh=4n³/3`,
 `svd-thin=6ab²+20b³`, `svd-full=4a²b+22b³`, `svdvals=2ab²+2b³` were
@@ -653,4 +740,51 @@ Raw timings (median of 5 runs, float64, `numpy.random.default_rng(42)`):
 | `qr` | 2(2mn²−2n³/3) | supports | G&VL §5.2 / LAWN 41 | keep |
 | `inv` | 2n³ | high (implied ~0.7–1.0n³) | G&VL §3.4 | overcharges; retained |
 | `det` | 2n³/3 | supports | G&VL §3.2 LU only | keep |
+
+### Verify any op yourself
+
+1. **Measure billed cost.** Build tracked inputs *outside* the budget (array creation
+   itself bills `numel` under unit weights), then measure only the op:
+
+   ```python
+   import numpy as np, flopscope.numpy as fnp
+   from flopscope import BudgetContext
+   from flopscope._weights import reset_weights, load_weights
+
+   a = fnp.asarray(np.random.default_rng(0).standard_normal(100))  # built outside the budget
+   with BudgetContext(flop_budget=10**12, quiet=True) as b:
+       fnp.exp(a)
+   print(b.flops_used)
+   ```
+
+2. **Raw `flop_cost` vs production billing.** The number above is under whatever weights
+   are loaded. `reset_weights()` gives unit weights (so `flops_used == flop_cost`, the
+   shape cost in this doc's tables); `load_weights()` loads the packaged production table
+   (so `flops_used == flop_cost × weight`, what a participant is charged).
+3. **Cross-check `ops.json`.** That op's `cost_formula × weight` must equal what you
+   measured. For composite ops where `ops.json` records `per-operation`, the family
+   table above gives the closed form.
+
+---
+
+## Exhaustive per-op reference
+
+The complete, per-op cost data lives in **`website/public/ops.json`** — one record per
+operation with `name`, `module`, `area`, `category`, `weight`, `cost_formula`,
+`cost_formula_latex`, `notes`, and `summary`. It is **generated** from the registry +
+weight tables by `scripts/generate_api_docs.py` and powers the website's API pages.
+
+- **Find an op:** filter `ops.json` by `name`, or browse the website API pages.
+- **Filter a family:** by `area` (`core` / `fft` / `linalg` / `random` / `stats`) or `module`.
+- **It can't drift:** CI runs `scripts/generate_api_docs.py --check`, which regenerates
+  `ops.json` to a temp dir and fails if the committed file differs. Every billed op is
+  present (aliases resolve transitively to their canonical), enforced by
+  `tests/test_cost_model_coverage.py`.
+
+> **Granularity note.** `ops.json` is exhaustive in *coverage* — every op, with its
+> weight and a formula string — but its `cost_formula` is **coarse for many composite
+> `counted_custom` ops**, recording `per-operation` / `varies` where the real cost is
+> shape-dependent. For those, the closed form and its derivation live in the family
+> tables above. Treat `ops.json` as the complete index and this document as the precise
+> reference; the completeness test ties them together.
 
