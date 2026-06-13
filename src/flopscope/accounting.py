@@ -194,6 +194,7 @@ True
     "linalg.svd": """\
 >>> import flopscope as flops
 >>> cost = flops.accounting.svd_cost(128, 64)
+>>> cost_topk = flops.accounting.svd_cost(128, 64, k=8)  # min(4*128*64*8, economy)
 >>> isinstance(cost, int)
 True
 """,
