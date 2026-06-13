@@ -16,5 +16,7 @@ def test_ops_json_in_sync_with_registry():
     )
     assert result.returncode == 0, (
         "website/public/ops.json is out of sync with the registry. "
-        "Run: uv run python scripts/generate_api_docs.py\n" + result.stdout + result.stderr
+        "Run: uv run python scripts/generate_api_docs.py\n"
+        + result.stdout
+        + result.stderr
     )
