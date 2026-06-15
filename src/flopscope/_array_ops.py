@@ -1150,7 +1150,7 @@ def isinf(x: ArrayLike, **kwargs: Any) -> FlopscopeArray:
 attach_docstring(isinf, _np.isinf, "free", "0 FLOPs")
 
 # ---------------------------------------------------------------------------
-# New free ops
+# Additional array ops
 # ---------------------------------------------------------------------------
 
 

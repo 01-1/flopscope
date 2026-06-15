@@ -70,7 +70,7 @@ from flopscope._errstate import (  # noqa: F401
     seterr,
 )
 
-# --- Free ops ---
+# --- Array ops (creation / manipulation / indexing; mix of free and charged) ---
 from flopscope._array_ops import (  # noqa: F401
     append,
     arange,
