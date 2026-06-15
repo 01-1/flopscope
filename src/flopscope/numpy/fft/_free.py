@@ -70,7 +70,9 @@ def fftshift(x: ArrayLike, axes: int | Sequence[int] | None = None) -> Flopscope
     """Shift zero-frequency component to center. Cost: 0 FLOPs."""
     budget = require_budget()
     x_arr = _np.asarray(x)
-    with budget.deduct("fft.fftshift", flop_cost=0, subscripts=None, shapes=(x_arr.shape,)):
+    with budget.deduct(
+        "fft.fftshift", flop_cost=0, subscripts=None, shapes=(x_arr.shape,)
+    ):
         result = _call_numpy(_np.fft.fftshift, _to_base_ndarray(x), axes=axes)
     return result  # type: ignore[reportReturnType]
 
@@ -83,7 +85,9 @@ def ifftshift(x: ArrayLike, axes: int | Sequence[int] | None = None) -> Flopscop
     """Inverse of fftshift. Cost: 0 FLOPs."""
     budget = require_budget()
     x_arr = _np.asarray(x)
-    with budget.deduct("fft.ifftshift", flop_cost=0, subscripts=None, shapes=(x_arr.shape,)):
+    with budget.deduct(
+        "fft.ifftshift", flop_cost=0, subscripts=None, shapes=(x_arr.shape,)
+    ):
         result = _call_numpy(_np.fft.ifftshift, _to_base_ndarray(x), axes=axes)
     return result  # type: ignore[reportReturnType]
 

@@ -291,7 +291,9 @@ def zeros_like(
     """Return array of zeros with same shape. Wraps ``numpy.zeros_like``. Cost: 0 FLOPs."""
     budget = require_budget()
     base = _to_base_ndarray(a)
-    with budget.deduct("zeros_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)):
+    with budget.deduct(
+        "zeros_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)
+    ):
         result = _call_numpy(_np.zeros_like, base, dtype=dtype, **kwargs)
     propagated_symmetry = None
     if isinstance(a, SymmetricTensor):
@@ -318,7 +320,9 @@ def ones_like(
     """Return array of ones with same shape. Wraps ``numpy.ones_like``. Cost: 0 FLOPs."""
     budget = require_budget()
     base = _to_base_ndarray(a)
-    with budget.deduct("ones_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)):
+    with budget.deduct(
+        "ones_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)
+    ):
         result = _call_numpy(_np.ones_like, base, dtype=dtype, **kwargs)
     propagated_symmetry = None
     if isinstance(a, SymmetricTensor):
@@ -393,7 +397,9 @@ def empty_like(
     """Return uninitialized array with same shape. Wraps ``numpy.empty_like``. Cost: 0 FLOPs."""
     budget = require_budget()
     base = _to_base_ndarray(a)
-    with budget.deduct("empty_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)):
+    with budget.deduct(
+        "empty_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)
+    ):
         result = _call_numpy(_np.empty_like, base, dtype=dtype, **kwargs)
     # Uninitialized memory is not a constant fill — do NOT infer symmetry.
     return _asplainflopscope(result)
@@ -460,7 +466,9 @@ def transpose(
     budget = require_budget()
     a_arr = _np.asarray(a)
     in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
-    with budget.deduct("transpose", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+    with budget.deduct(
+        "transpose", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)
+    ):
         result = _call_numpy(_np.transpose, a_arr, axes=axes)
     out_group = _st.transport_transpose(in_group, ndim=a_arr.ndim, axes=axes)
     # transpose never genuinely drops (axis perm always preserves S_n etc.).
@@ -787,7 +795,9 @@ def expand_dims(a: ArrayLike, axis) -> FlopscopeArray:
     budget = require_budget()
     a_arr = _np.asarray(a)
     in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
-    with budget.deduct("expand_dims", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+    with budget.deduct(
+        "expand_dims", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)
+    ):
         result = _call_numpy(_np.expand_dims, a_arr, axis=axis)
     out_group = _st.transport_expand_dims(
         in_group,
@@ -878,7 +888,9 @@ def where(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(where, _np.where, "counted_custom", "numel(cond) FLOPs (1-arg); 0 FLOPs (3-arg)")
+attach_docstring(
+    where, _np.where, "counted_custom", "numel(cond) FLOPs (1-arg); 0 FLOPs (3-arg)"
+)
 
 
 @_counted_wrapper
@@ -1169,7 +1181,9 @@ def astype(
     budget = require_budget()
     x_arr = _np.asarray(x)
     cost = x_arr.size if _cast_changes_values(x_arr.dtype, dtype) else 0
-    with budget.deduct("astype", flop_cost=cost, subscripts=None, shapes=(x_arr.shape,)):
+    with budget.deduct(
+        "astype", flop_cost=cost, subscripts=None, shapes=(x_arr.shape,)
+    ):
         result = _call_numpy(
             _np.astype, _to_base_ndarray(x), dtype, copy=copy, device=device
         )
@@ -1199,7 +1213,9 @@ def _astype_counted(
     budget = require_budget()
     arr_np = _np.asarray(arr)
     cost = arr_np.size if _cast_changes_values(arr_np.dtype, dtype) else 0
-    with budget.deduct("astype", flop_cost=cost, subscripts=None, shapes=(arr_np.shape,)):
+    with budget.deduct(
+        "astype", flop_cost=cost, subscripts=None, shapes=(arr_np.shape,)
+    ):
         result = _call_numpy(
             _np.ndarray.astype,
             _to_base_ndarray(arr),
@@ -1309,9 +1325,7 @@ def append(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(
-    append, _np.append, "free", "0 FLOPs"
-)
+attach_docstring(append, _np.append, "free", "0 FLOPs")
 
 
 @_counted_wrapper
@@ -1368,7 +1382,9 @@ def asarray_chkfinite(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray
     return result  # type: ignore[return-value]
 
 
-attach_docstring(asarray_chkfinite, _np.asarray_chkfinite, "counted_custom", "numel(output) FLOPs")
+attach_docstring(
+    asarray_chkfinite, _np.asarray_chkfinite, "counted_custom", "numel(output) FLOPs"
+)
 
 
 @_counted_wrapper
@@ -1381,7 +1397,9 @@ def atleast_1d(
     def _one(a):
         a_arr = _np.asarray(a)
         in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
-        with budget.deduct("atleast_1d", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        with budget.deduct(
+            "atleast_1d", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)
+        ):
             result = _call_numpy(_np.atleast_1d, a_arr)
         out_group = _st.transport_atleast_1d(in_group, input_shape=a_arr.shape)
         if in_group is not None and out_group is None:
@@ -1415,7 +1433,9 @@ def atleast_2d(
     def _one(a):
         a_arr = _np.asarray(a)
         in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
-        with budget.deduct("atleast_2d", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        with budget.deduct(
+            "atleast_2d", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)
+        ):
             result = _call_numpy(_np.atleast_2d, a_arr)
         out_group = _st.transport_atleast_2d(in_group, input_shape=a_arr.shape)
         if in_group is not None and out_group is None:
@@ -1449,7 +1469,9 @@ def atleast_3d(
     def _one(a):
         a_arr = _np.asarray(a)
         in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
-        with budget.deduct("atleast_3d", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        with budget.deduct(
+            "atleast_3d", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)
+        ):
             result = _call_numpy(_np.atleast_3d, a_arr)
         out_group = _st.transport_atleast_3d(in_group, input_shape=a_arr.shape)
         if in_group is not None and out_group is None:
@@ -1647,9 +1669,7 @@ def column_stack(tup: Sequence[ArrayLike]) -> FlopscopeArray:
     return _asplainflopscope(result)  # type: ignore[return-value]
 
 
-attach_docstring(
-    column_stack, _np.column_stack, "free", "0 FLOPs"
-)
+attach_docstring(column_stack, _np.column_stack, "free", "0 FLOPs")
 
 
 def common_type(*args, **kwargs):
@@ -2000,7 +2020,9 @@ def fromfunction(*args, **kwargs):
     return result
 
 
-attach_docstring(fromfunction, _np.fromfunction, "counted_custom", "numel(output) FLOPs")
+attach_docstring(
+    fromfunction, _np.fromfunction, "counted_custom", "numel(output) FLOPs"
+)
 
 
 @_counted_wrapper

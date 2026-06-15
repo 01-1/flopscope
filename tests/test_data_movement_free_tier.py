@@ -2,6 +2,7 @@
 
 See .aicrowd/superpowers/specs/2026-06-15-data-movement-free-tier-design.md.
 """
+
 import pytest
 
 import flopscope as flops
@@ -11,13 +12,46 @@ from flopscope._weights import get_weight, load_weights, reset_weights
 
 # Ops that must bill 0 FLOPs under production weights (data movement / select).
 FREE_DATA_MOVEMENT_OPS = [
-    "hstack", "vstack", "column_stack", "dstack", "concatenate", "stack",
-    "block", "bmat", "tile", "repeat", "resize", "pad", "roll", "tril",
-    "triu", "insert", "append", "delete", "copyto", "diag", "diagflat",
-    "meshgrid", "fromiter", "compress", "full", "full_like", "take",
-    "take_along_axis", "put", "put_along_axis", "choose", "place", "putmask",
-    "select", "extract", "fill_diagonal", "trim_zeros", "unstack",
-    "concat", "ix_",
+    "hstack",
+    "vstack",
+    "column_stack",
+    "dstack",
+    "concatenate",
+    "stack",
+    "block",
+    "bmat",
+    "tile",
+    "repeat",
+    "resize",
+    "pad",
+    "roll",
+    "tril",
+    "triu",
+    "insert",
+    "append",
+    "delete",
+    "copyto",
+    "diag",
+    "diagflat",
+    "meshgrid",
+    "fromiter",
+    "compress",
+    "full",
+    "full_like",
+    "take",
+    "take_along_axis",
+    "put",
+    "put_along_axis",
+    "choose",
+    "place",
+    "putmask",
+    "select",
+    "extract",
+    "fill_diagonal",
+    "trim_zeros",
+    "unstack",
+    "concat",
+    "ix_",
 ]
 
 
@@ -157,15 +191,19 @@ def test_where_three_arg_is_free():
 
 def test_where_predicate_still_charged(production_weights):
     """where(a > 0.5): the comparison is charged; the select is free."""
+
     def call():
         a = fnp.asarray([i / 100 for i in range(100)])
         return fnp.where(a > 0.5)
+
     with flops.BudgetContext(flop_budget=10**9, quiet=True) as ctx:
         n0 = len(ctx.op_log)
         call()
         names = [r.op_name for r in ctx.op_log[n0:]]
     assert "greater" in names  # predicate charged
-    assert get_weight("where") == 1.0  # 1-arg where charged at weight 1.0 (numel), not 4.0
+    assert (
+        get_weight("where") == 1.0
+    )  # 1-arg where charged at weight 1.0 (numel), not 4.0
 
 
 def test_nonzero_method_matches_function():
@@ -196,9 +234,9 @@ def _flop_cost(call):
 @pytest.mark.parametrize(
     "dtype, changes_values",
     [
-        (bool, True),        # !=0 test
-        ("int64", True),     # float->int truncation
-        ("float32", True),   # narrowing (round)
+        (bool, True),  # !=0 test
+        ("int64", True),  # float->int truncation
+        ("float32", True),  # narrowing (round)
         ("float64", False),  # width cast (lossless) - stays free
     ],
 )

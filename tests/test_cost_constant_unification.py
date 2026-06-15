@@ -593,8 +593,7 @@ def test_put_bills_numel_indices():
         load_weights()
         assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 0
         assert (
-            cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap"))
-            == 0
+            cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap")) == 0
         )
     finally:
         reset_weights()
