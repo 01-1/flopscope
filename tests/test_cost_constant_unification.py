@@ -1491,12 +1491,12 @@ def test_cov_corrcoef_centering():
 
 
 def test_unwrap_passes():
-    """unwrap: 13 one-FLOP ufunc passes per element
-    (diff, +period/2, mod, -period/2, ==low, >0, &, select, sub, abs, <discont, select, cumsum)
-    plus final add of correction to p: total 13 passes on N-1 elements, charged as 13*N.
+    """unwrap: 11 one-FLOP ufunc passes per element
+    (diff, +period/2, mod, -period/2, ==low, >0, &, sub, abs, <discont, cumsum)
+    Two 3-arg where (select) passes are now free (weight=1.0→free), charged as 11*N.
     """
     v = fnp.asarray(np.random.rand(1000))
-    assert cost(lambda: fnp.unwrap(v)) == 13 * 1000
+    assert cost(lambda: fnp.unwrap(v)) == 11 * 1000
 
 
 def test_poly_1d_exact_convolution():

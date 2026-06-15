@@ -11177,7 +11177,7 @@
     "unpackbits": 1.0,
     "unstack": 1.0,
     "vstack": 1.0,
-    "where": 4.0,
+    "where": 1.0,
     "array_split": 0.0,
     "asarray": 0.0,
     "astype": 0.0,
