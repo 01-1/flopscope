@@ -291,7 +291,7 @@ def zeros_like(
     """Return array of zeros with same shape. Wraps ``numpy.zeros_like``. Cost: 0 FLOPs."""
     budget = require_budget()
     base = _to_base_ndarray(a)
-    with budget.deduct("zeros_like", flop_cost=0, subscripts=None, shapes=(base.shape,)):
+    with budget.deduct("zeros_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)):
         result = _call_numpy(_np.zeros_like, base, dtype=dtype, **kwargs)
     propagated_symmetry = None
     if isinstance(a, SymmetricTensor):
@@ -318,7 +318,7 @@ def ones_like(
     """Return array of ones with same shape. Wraps ``numpy.ones_like``. Cost: 0 FLOPs."""
     budget = require_budget()
     base = _to_base_ndarray(a)
-    with budget.deduct("ones_like", flop_cost=0, subscripts=None, shapes=(base.shape,)):
+    with budget.deduct("ones_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)):
         result = _call_numpy(_np.ones_like, base, dtype=dtype, **kwargs)
     propagated_symmetry = None
     if isinstance(a, SymmetricTensor):
@@ -392,7 +392,7 @@ def empty_like(
     """Return uninitialized array with same shape. Wraps ``numpy.empty_like``. Cost: 0 FLOPs."""
     budget = require_budget()
     base = _to_base_ndarray(a)
-    with budget.deduct("empty_like", flop_cost=0, subscripts=None, shapes=(base.shape,)):
+    with budget.deduct("empty_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)):
         result = _call_numpy(_np.empty_like, base, dtype=dtype, **kwargs)
     return _wrap_constant_fill(result)
 
