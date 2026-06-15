@@ -921,7 +921,7 @@
   "schema_version": 1,
   "slug": "arange",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L237",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L238",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.arange.html"
   }
 }

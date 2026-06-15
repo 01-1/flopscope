@@ -1,0 +1,98 @@
+"""Cost-model tests for boundary/padding ops under the data-movement free-tier.
+
+``pad`` is free for pure data-movement modes (constant/edge/empty/wrap and
+reflect/symmetric with reflect_type='even') but must bill a real analytic cost
+for value-computing modes (maximum/minimum/mean/median/linear_ramp and
+reflect/symmetric with reflect_type='odd'), and reject ``mode=<callable>``.
+"""
+
+import numpy as np
+import pytest
+
+import flopscope.numpy as fnp
+
+
+def billed(fn):
+    from flopscope import BudgetContext
+
+    with BudgetContext(flop_budget=10**15, quiet=True) as b:
+        fn()
+    return int(b.flops_used)
+
+
+def test_pad_constant_free():
+    a = fnp.asarray(np.zeros(100))
+    assert billed(lambda: fnp.pad(a, (1, 1), mode="constant")) == 0
+
+
+def test_pad_even_reflect_free():
+    a = fnp.asarray(np.arange(10.0))
+    assert billed(lambda: fnp.pad(a, (1, 1), mode="reflect")) == 0
+
+
+def test_pad_mean_1d_charged():
+    a = fnp.asarray(np.arange(10.0))
+    # full-axis stat, both sides padded -> dedup: 10 reduce + 1 divide = 11
+    assert billed(lambda: fnp.pad(a, (2, 3), mode="mean")) == 11
+
+
+def test_pad_maximum_2d_charged():
+    a = fnp.asarray(np.arange(20.0).reshape(4, 5))
+    # axis0 (1,1): cross=5, sl=4 -> 20 ; axis1 (0,2): cross=4, sl=5 -> 20 ; total 40
+    assert billed(lambda: fnp.pad(a, ((1, 1), (0, 2)), mode="maximum")) == 40
+
+
+def test_pad_median_charged():
+    a = fnp.asarray(np.arange(1000.0))
+    assert billed(lambda: fnp.pad(a, (1, 1), mode="median")) == 1000
+
+
+def test_pad_linear_ramp_charged():
+    a = fnp.asarray(np.zeros(100))
+    assert (
+        billed(lambda: fnp.pad(a, (0, 50), mode="linear_ramp", end_values=5.0)) == 100
+    )
+
+
+def test_pad_odd_reflect_charged():
+    a = fnp.asarray(np.arange(10.0))
+    assert billed(lambda: fnp.pad(a, (1, 1), mode="reflect", reflect_type="odd")) == 4
+
+
+def test_pad_callable_rejected():
+    a = fnp.asarray(np.arange(10.0))
+    with pytest.raises(ValueError, match="callable"):
+        fnp.pad(a, (1, 1), mode=lambda *args, **kw: None)
+
+
+def test_pad_mean_asymmetric_stat_length():
+    a = fnp.asarray(np.arange(10.0))
+    # both sides padded, stat_length (3,4) not full-axis -> no dedup:
+    # reduce 3+4=7, +2 divides = 9
+    assert billed(lambda: fnp.pad(a, (1, 1), mode="mean", stat_length=(3, 4))) == 9
+
+
+def test_pad_one_sided_only_charges_padded_side():
+    a = fnp.asarray(np.arange(10.0))
+    # pad after only, stat_length=2 -> charge only the after side: cross(1)*2 = 2
+    # (numpy also computes a discarded before-stat; we intentionally do not bill it)
+    assert billed(lambda: fnp.pad(a, (0, 3), mode="maximum", stat_length=2)) == 2
+
+
+def test_pad_2d_mean_charged():
+    a = fnp.asarray(np.arange(20.0).reshape(4, 5))
+    # axis0 (1,1) full-axis dedup: 5*4 reduce + 5 divides = 25
+    # axis1 (1,1) full-axis dedup: 4*5 reduce + 4 divides = 24 ; total 49
+    assert billed(lambda: fnp.pad(a, ((1, 1), (1, 1)), mode="mean")) == 49
+
+
+def test_pad_zero_width_free():
+    a = fnp.asarray(np.arange(10.0))
+    assert billed(lambda: fnp.pad(a, (0, 0), mode="maximum")) == 0
+
+
+def test_pad_constant_malformed_pad_width_raises_numpy_error():
+    a = fnp.asarray(np.arange(10.0))
+    # free mode must surface numpy's ValueError (not an IndexError from cost calc)
+    with pytest.raises(ValueError):
+        fnp.pad(a, ((1, 2), (3, 4)), mode="constant")

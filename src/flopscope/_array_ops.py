@@ -10,6 +10,7 @@ route through ``budget.deduct(..., flop_cost=0)`` so their time is accounted.
 from __future__ import annotations
 
 import inspect as _inspect
+import math as _math
 from collections.abc import Sequence
 from functools import lru_cache
 from typing import Any
@@ -1020,18 +1021,111 @@ def roll(
 attach_docstring(roll, _np.roll, "free", "0 FLOPs")
 
 
+_PAD_FREE_MODES = frozenset({"constant", "edge", "empty", "wrap"})
+_PAD_STAT_MODES = frozenset({"maximum", "minimum", "mean", "median"})
+
+
+def _pad_pairs(value, ndim):
+    """Normalize int / (b, a) / ((b, a), ...) into a list of (before, after) per axis."""
+    arr = _np.asarray(value)
+    if arr.ndim == 0:
+        v = int(arr)
+        return [(v, v)] * ndim
+    if arr.shape == (1,):
+        v = int(arr[0])
+        return [(v, v)] * ndim
+    if arr.shape == (2,):
+        return [(int(arr[0]), int(arr[1]))] * ndim
+    if arr.shape == (1, 2):
+        return [(int(arr[0, 0]), int(arr[0, 1]))] * ndim
+    return [(int(arr[i, 0]), int(arr[i, 1])) for i in range(ndim)]
+
+
+def _pad_flop_cost(in_shape, pad_width, mode, kwargs):
+    """flop_cost for np.pad: 0 for movement modes; reduction/affine for value modes."""
+    ndim = len(in_shape)
+    # Movement modes short-circuit BEFORE normalizing pad_width, so a malformed
+    # pad_width surfaces numpy's own clean ValueError (not an IndexError from
+    # _pad_pairs) for these modes.
+    if mode in _PAD_FREE_MODES:
+        return 0
+    if mode in ("reflect", "symmetric") and kwargs.get("reflect_type", "even") != "odd":
+        return 0
+    numel_in = _math.prod(in_shape) if ndim else 1
+    pad_pairs = _pad_pairs(pad_width, ndim)
+    numel_out = (
+        _math.prod(s + b + a for s, (b, a) in zip(in_shape, pad_pairs, strict=False))
+        if ndim
+        else 1
+    )
+    if mode in ("reflect", "symmetric"):  # reflect_type == "odd" (even handled above)
+        return 2 * (numel_out - numel_in)
+    if mode == "linear_ramp":
+        return 2 * (numel_out - numel_in)
+    if mode in _PAD_STAT_MODES:
+        stat_length = kwargs.get("stat_length", None)
+        if stat_length is None:
+            stat_pairs = [(in_shape[i], in_shape[i]) for i in range(ndim)]
+        else:
+            stat_pairs = _pad_pairs(stat_length, ndim)
+        cost = 0
+        for i in range(ndim):
+            before, after = pad_pairs[i]
+            axis_len = in_shape[i]
+            if (before == 0 and after == 0) or axis_len == 0:
+                continue
+            cross = numel_in // axis_len
+            sl_b = min(stat_pairs[i][0], axis_len)
+            sl_a = min(stat_pairs[i][1], axis_len)
+            # Charge only the PADDED sides (the stats actually placed in the
+            # output). numpy also computes a stat for an unpadded side but discards
+            # it (placed into a width-0 region, unreadable), so billing it would
+            # over-charge for work the caller gets no value from.
+            stats = []
+            if before > 0:
+                stats.append(sl_b)
+            if after > 0:
+                stats.append(sl_a)
+            # A full-axis stat is identical for both sides -> numpy computes it once.
+            if before > 0 and after > 0 and sl_b == axis_len and sl_a == axis_len:
+                stats = [axis_len]
+            cost += cross * sum(stats)
+            if mode == "mean":
+                cost += cross * len(stats)  # one divide per stat output cell
+        return cost
+    return 0  # unknown string mode: let numpy raise its own ValueError
+
+
 @_counted_wrapper
-def pad(array: ArrayLike, pad_width: Any, **kwargs: Any) -> FlopscopeArray:
-    """Pad an array. Cost: numel(output)."""
+def pad(
+    array: ArrayLike, pad_width: Any, mode: Any = "constant", **kwargs: Any
+) -> FlopscopeArray:
+    """Pad an array. Cost: 0 for data-movement modes (constant/edge/empty/wrap/
+    reflect/symmetric with reflect_type='even'); reduction cost for
+    maximum/minimum/mean/median; 2*(numel_out-numel_in) for linear_ramp and for
+    reflect/symmetric with reflect_type='odd'. mode=<callable> is unsupported."""
+    if callable(mode):
+        raise ValueError(
+            "flopscope: pad(mode=<callable>) is not supported under FLOP metering "
+            "(arbitrary uncounted compute). Use a string mode, or compute the padding "
+            "values with counted ops and pad with mode='constant', constant_values=..."
+        )
     budget = require_budget()
     _warn_if_symmetric(array, "pad")
-    with budget.deduct_after("pad", subscripts=None, shapes=()) as _op:
-        result = _call_numpy(_np.pad, _to_base_ndarray(array), pad_width, **kwargs)
-        _op.set_cost(result.size if hasattr(result, "size") else 1)
+    cost = _pad_flop_cost(_np.asarray(array).shape, pad_width, mode, kwargs)
+    with budget.deduct("pad", flop_cost=cost, subscripts=None, shapes=()):
+        result = _call_numpy(
+            _np.pad, _to_base_ndarray(array), pad_width, mode=mode, **kwargs
+        )
     return result  # type: ignore[return-value]
 
 
-attach_docstring(pad, _np.pad, "free", "0 FLOPs")
+attach_docstring(
+    pad,
+    _np.pad,
+    "counted_custom",
+    "0 for movement modes; reduction/affine for value modes",
+)
 
 
 @_counted_wrapper

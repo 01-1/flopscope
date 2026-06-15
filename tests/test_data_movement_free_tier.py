@@ -23,7 +23,6 @@ FREE_DATA_MOVEMENT_OPS = [
     "tile",
     "repeat",
     "resize",
-    "pad",
     "roll",
     "tril",
     "triu",

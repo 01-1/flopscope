@@ -274,7 +274,7 @@
     "ones_like": 0.0,
     "outer": 1.0,
     "packbits": 1.0,
-    "pad": 0.0,
+    "pad": 1.0,
     "partition": 1.0,
     "percentile": 1.0,
     "permute_dims": 0.0,

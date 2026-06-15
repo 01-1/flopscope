@@ -1243,17 +1243,17 @@
     "flopscope_ref": "fnp.pad",
     "module": "numpy",
     "name": "pad",
-    "notes": "Pad array. Cost: numel(output).",
+    "notes": "Pad array. Cost: 0 for data-movement modes; reduction cost (maximum/minimum/mean/median) or 2*(numel_out-numel_in) (linear_ramp, reflect_type='odd') for value-computing modes; mode=<callable> raises.",
     "numpy_ref": "np.pad",
     "signature": "fnp.pad(array, pad_width, mode='constant', **kwargs)",
     "status": "supported",
     "summary": "Pad an array.",
-    "weight": 0.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "pad",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1023",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1087",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_arraypad_impl.py#L545"
   }
 }
