@@ -8,9 +8,10 @@ tests inject fakes so they need no server (and no numpy — the client is numpy-
 import struct
 import time
 
-import flopscope as fnp
 import flopscope._connection as conn_mod
 import flopscope._dispatch as dispatch
+
+import flopscope as fnp
 from flopscope import _codec
 
 _DELAY = 0.03  # 30 ms simulated transfer/compute per round-trip
@@ -60,7 +61,6 @@ def test_send_recv_self_times_transport_as_dispatch(monkeypatch):
     """Connection.send_recv must attribute its own transport to dispatch, so even
     an UNDECORATED caller never bills the round-trip to residual (structural floor)."""
     import msgpack
-
     from flopscope._connection import Connection
 
     ok = msgpack.packb(

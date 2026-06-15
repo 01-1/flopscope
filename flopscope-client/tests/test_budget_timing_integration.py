@@ -227,8 +227,12 @@ def test_every_op_family_increments_dispatch():
         _grew(lambda: fl.einsum("ij,jk->ik", a, b))  # einsum() special-case
         with tempfile.TemporaryDirectory() as _tmpdir:
             npy_path = os.path.join(_tmpdir, "state.npy")
-            _grew(lambda: fl.save(npy_path, a))  # save: _fetch_data egress + local write
-            _grew(lambda: fl.load(npy_path))  # load: local parse + create_from_data ingress
+            _grew(
+                lambda: fl.save(npy_path, a)
+            )  # save: _fetch_data egress + local write
+            _grew(
+                lambda: fl.load(npy_path)
+            )  # load: local parse + create_from_data ingress
         # fl.flops.einsum_cost / fl.flops.svd_cost are @timed_dispatch but send
         # "flops.einsum_cost" / "flops.svd_cost" to the server — neither op is
         # in the server whitelist (flopscope._registry.REGISTRY has no "flops.*"
@@ -282,8 +286,9 @@ def test_flops_used_refreshed_on_close_without_summary():
 def test_connection_setup_is_overhead_not_residual():
     """First-op connection setup + version handshake must land in overhead, not
     the participant's billed residual. Locks the absorption Layer 1 guarantees."""
-    import flopscope as fl
     from flopscope._connection import reset_connection
+
+    import flopscope as fl
 
     # The _reset_client autouse fixture already clears the connection; this is left
     # explicit so the intent (cold connect+handshake inside the context) is obvious.
