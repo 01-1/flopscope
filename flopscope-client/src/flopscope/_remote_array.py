@@ -460,7 +460,12 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
 
     def __setitem__(self, key, value):
         raise TypeError(
-            "flopscope arrays are immutable. Cannot assign to array elements."
+            "flopscope arrays are immutable, so item assignment (arr[i] = ...) "
+            "and indexed in-place updates (arr[i] += ...) are not supported. "
+            "Build the result functionally instead: collect the pieces in a "
+            "list and combine them with fnp.stack(...) / fnp.concatenate(...), "
+            "or use a whole-array update (arr = arr + x). See "
+            "https://aicrowd.github.io/flopscope/docs/getting-started/competition/#immutable-arrays"
         )
 
     # -- operator overloads (dispatch to server) ----------------------------
