@@ -556,7 +556,7 @@ Comparison = 1 FLOP convention; weight 1.0.
 | `cross` | `3 × numel(output)` (2 muls + 1 sub per output scalar; 3-vec path preserves last dim, 2-D z-only drops last dim) | DERIVED: FMA=2, 3 FLOPs per output element | `_pointwise.py:cross` |
 | `cov` | `2f²s + 2fs` (f = features, s = samples) | DERIVED: Gram term `f²` dot products of length `s` (2f²s) + centering pass `fs` elements × 2 FLOPs | `_pointwise.py:_cov_cost` |
 | `corrcoef` | `2f²s + 2fs + 2f² + f` | DERIVED: cov_cost + normalization (f² divides at weight 2.0 + f sqrts) | `_pointwise.py:_corrcoef_cost` |
-| `unwrap` | `13 × numel(input)` | DERIVED: 13 elementwise ufunc passes (diff, mod, cmp×2, bitwise, select×2, sub, abs, cmp, select, cumsum); prior value was 7 | `_unwrap.py:unwrap_cost` |
+| `unwrap` | `11 × numel(input)` | DERIVED: 11 charged passes (diff, mod, cmp×2, bitwise, sub, abs, cmp, cumsum); 2 select passes (steps 8/12) are 3-arg where = free; prior value was 13 | `_unwrap.py:unwrap_cost` |
 
 ---
 

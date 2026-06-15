@@ -850,16 +850,25 @@ def where(
     x: ArrayLike | None = None,
     y: ArrayLike | None = None,
 ) -> FlopscopeArray | tuple[FlopscopeArray, ...]:
-    """Return elements chosen from *x* or *y*. Cost: numel(input)."""
+    """Return elements chosen from *x*/*y*, or indices where *condition* holds.
+
+    Cost: 3-arg select is free (selection by a given mask). 1-arg form
+    (``where(condition)`` == ``nonzero``) derives indices by testing values,
+    so it is charged ``numel`` at the comparison tier (weight 1.0).
+    """
     budget = require_budget()
     cond_arr = _np.asarray(condition)
-    cost = cond_arr.size
-    with budget.deduct(
-        "where", flop_cost=cost, subscripts=None, shapes=(cond_arr.shape,)
-    ):
-        if x is None and y is None:
+    if x is None and y is None:
+        # 1-arg: equivalent to nonzero -> charged numel.
+        with budget.deduct(
+            "where", flop_cost=cond_arr.size, subscripts=None, shapes=(cond_arr.shape,)
+        ):
             result = _call_numpy(_np.where, _to_base_ndarray(condition))
-        else:
+    else:
+        # 3-arg: pure selection by a given mask -> free (still time-accounted).
+        with budget.deduct(
+            "where", flop_cost=0, subscripts=None, shapes=(cond_arr.shape,)
+        ):
             result = _call_numpy(
                 _np.where,
                 _to_base_ndarray(condition),

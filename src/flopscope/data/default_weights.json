@@ -454,7 +454,7 @@
     "vecmat": 1.0,
     "vsplit": 0.0,
     "vstack": 0.0,
-    "where": 4.0,
+    "where": 1.0,
     "zeros": 0.0,
     "zeros_like": 0.0
   }

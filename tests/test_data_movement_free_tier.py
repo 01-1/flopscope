@@ -128,3 +128,40 @@ def test_empty_and_tri_are_not_falsely_symmetric():
     # Contrast: genuine constant fills still infer symmetry (unchanged).
     assert isinstance(fnp.zeros((3, 3)), SymmetricTensor)
     assert isinstance(fnp.ones((3, 3)), SymmetricTensor)
+
+
+def test_where_one_arg_is_charged_like_nonzero():
+    """1-arg where derives indices by testing values -> charged numel (unit weights)."""
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as ctx:
+        mask = fnp.asarray([True, False, True, False] * 25)  # 100 elems, prebuilt
+        n0 = len(ctx.op_log)
+        fnp.where(mask)
+        new = ctx.op_log[n0:]
+    assert len(new) == 1 and new[0].op_name == "where"
+    assert new[0].flop_cost == 100  # numel, unit weight
+
+
+def test_where_three_arg_is_free():
+    """3-arg where selects by a given mask -> 0 FLOPs (unit weights)."""
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as ctx:
+        mask = fnp.asarray([True, False] * 50)
+        x = fnp.asarray([1.0] * 100)
+        y = fnp.asarray([0.0] * 100)
+        n0 = len(ctx.op_log)
+        fnp.where(mask, x, y)
+        new = ctx.op_log[n0:]
+    assert len(new) == 1 and new[0].op_name == "where"
+    assert new[0].flop_cost == 0
+
+
+def test_where_predicate_still_charged(production_weights):
+    """where(a > 0.5): the comparison is charged; the select is free."""
+    def call():
+        a = fnp.asarray([i / 100 for i in range(100)])
+        return fnp.where(a > 0.5)
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as ctx:
+        n0 = len(ctx.op_log)
+        call()
+        names = [r.op_name for r in ctx.op_log[n0:]]
+    assert "greater" in names  # predicate charged
+    assert get_weight("where") == 1.0  # 1-arg where charged at weight 1.0 (numel), not 4.0
