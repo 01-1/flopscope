@@ -878,7 +878,7 @@ def where(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(where, _np.where, "free", "0 FLOPs")
+attach_docstring(where, _np.where, "counted_custom", "numel(cond) FLOPs (1-arg); 0 FLOPs (3-arg)")
 
 
 @_counted_wrapper
@@ -1246,7 +1246,7 @@ def isnan(x: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(isnan, _np.isnan, "free", "0 FLOPs")
+attach_docstring(isnan, _np.isnan, "counted_custom", "numel(input) FLOPs")
 
 
 @_counted_wrapper
@@ -1262,7 +1262,7 @@ def isfinite(x: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(isfinite, _np.isfinite, "free", "0 FLOPs")
+attach_docstring(isfinite, _np.isfinite, "counted_custom", "numel(input) FLOPs")
 
 
 @_counted_wrapper
@@ -1276,7 +1276,7 @@ def isinf(x: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(isinf, _np.isinf, "free", "0 FLOPs")
+attach_docstring(isinf, _np.isinf, "counted_custom", "numel(input) FLOPs")
 
 # ---------------------------------------------------------------------------
 # Additional array ops
@@ -1330,7 +1330,7 @@ def argwhere(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(argwhere, _np.argwhere, "free", "0 FLOPs")
+attach_docstring(argwhere, _np.argwhere, "counted_custom", "numel(input) FLOPs")
 
 
 @_counted_wrapper
@@ -1368,7 +1368,7 @@ def asarray_chkfinite(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray
     return result  # type: ignore[return-value]
 
 
-attach_docstring(asarray_chkfinite, _np.asarray_chkfinite, "free", "0 FLOPs")
+attach_docstring(asarray_chkfinite, _np.asarray_chkfinite, "counted_custom", "numel(output) FLOPs")
 
 
 @_counted_wrapper
@@ -1484,7 +1484,7 @@ def base_repr(*args, **kwargs):
     return result
 
 
-attach_docstring(base_repr, _np.base_repr, "free", "0 FLOPs")
+attach_docstring(base_repr, _np.base_repr, "counted_custom", "len(result) FLOPs")
 
 
 @_counted_wrapper
@@ -1498,7 +1498,7 @@ def binary_repr(*args, **kwargs):
     return result
 
 
-attach_docstring(binary_repr, _np.binary_repr, "free", "0 FLOPs")
+attach_docstring(binary_repr, _np.binary_repr, "counted_custom", "len(result) FLOPs")
 
 
 @_counted_wrapper
@@ -1715,7 +1715,7 @@ def concat(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(concat, _np.concat, "free", "0 FLOPs")
+attach_docstring(concat, _np.concat, "counted_custom", "numel(output) FLOPs")
 
 
 @_counted_wrapper
@@ -1910,7 +1910,7 @@ def flatnonzero(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(flatnonzero, _np.flatnonzero, "free", "0 FLOPs")
+attach_docstring(flatnonzero, _np.flatnonzero, "counted_custom", "numel(input) FLOPs")
 
 
 @_counted_wrapper
@@ -1985,7 +1985,7 @@ def fromfile(*args, **kwargs):
     return result
 
 
-attach_docstring(fromfile, _np.fromfile, "free", "0 FLOPs")
+attach_docstring(fromfile, _np.fromfile, "counted_custom", "numel(output) FLOPs")
 
 
 @_counted_wrapper
@@ -2000,7 +2000,7 @@ def fromfunction(*args, **kwargs):
     return result
 
 
-attach_docstring(fromfunction, _np.fromfunction, "free", "0 FLOPs")
+attach_docstring(fromfunction, _np.fromfunction, "counted_custom", "numel(output) FLOPs")
 
 
 @_counted_wrapper
@@ -2033,7 +2033,7 @@ def fromregex(*args, **kwargs):
     return result
 
 
-attach_docstring(fromregex, _np.fromregex, "free", "0 FLOPs")
+attach_docstring(fromregex, _np.fromregex, "counted_custom", "numel(output) FLOPs")
 
 
 @_counted_wrapper
@@ -2047,7 +2047,7 @@ def fromstring(*args, **kwargs):
     return result
 
 
-attach_docstring(fromstring, _np.fromstring, "free", "0 FLOPs")
+attach_docstring(fromstring, _np.fromstring, "counted_custom", "numel(output) FLOPs")
 
 
 @_counted_wrapper
@@ -2129,7 +2129,7 @@ def isin(
     )
 
 
-attach_docstring(isin, _np.isin, "free", "0 FLOPs")
+attach_docstring(isin, _np.isin, "counted_custom", "(n+m)*ceil(log2(n+m)) FLOPs")
 
 
 def isscalar(*args, **kwargs):
@@ -2168,7 +2168,7 @@ def ix_(*args: ArrayLike, **kwargs: Any) -> tuple[FlopscopeArray, ...]:
     return result
 
 
-attach_docstring(ix_, _np.ix_, "free", "0 FLOPs")
+attach_docstring(ix_, _np.ix_, "counted_custom", "sum of output array sizes FLOPs")
 
 
 @_counted_wrapper
@@ -2194,7 +2194,7 @@ def mask_indices(*args, **kwargs):
     return result
 
 
-attach_docstring(mask_indices, _np.mask_indices, "free", "0 FLOPs")
+attach_docstring(mask_indices, _np.mask_indices, "counted_custom", "2*n^2 + 8*k FLOPs")
 
 
 def matrix_transpose(x: ArrayLike) -> FlopscopeArray:
@@ -2266,7 +2266,7 @@ def nonzero(a: ArrayLike, *args: Any, **kwargs: Any) -> tuple[FlopscopeArray, ..
     return result  # type: ignore[return-value]
 
 
-attach_docstring(nonzero, _np.nonzero, "free", "0 FLOPs")
+attach_docstring(nonzero, _np.nonzero, "counted_custom", "numel(input) FLOPs")
 
 
 @_counted_wrapper
@@ -2285,7 +2285,7 @@ def packbits(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(packbits, _np.packbits, "free", "0 FLOPs")
+attach_docstring(packbits, _np.packbits, "counted_custom", "numel(input) FLOPs")
 
 
 def permute_dims(*args, **kwargs):
@@ -2713,7 +2713,7 @@ def unpackbits(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(unpackbits, _np.unpackbits, "free", "0 FLOPs")
+attach_docstring(unpackbits, _np.unpackbits, "counted_custom", "numel(output) FLOPs")
 
 
 def unravel_index(*args, **kwargs):

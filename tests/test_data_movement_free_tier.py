@@ -7,7 +7,7 @@ import pytest
 import flopscope as flops
 import flopscope.numpy as fnp
 from flopscope._symmetric import SymmetricTensor
-from flopscope._weights import get_weight, load_weights
+from flopscope._weights import get_weight, load_weights, reset_weights
 
 # Ops that must bill 0 FLOPs under production weights (data movement / select).
 FREE_DATA_MOVEMENT_OPS = [
@@ -224,3 +224,34 @@ def test_astype_method_honors_casting_kwarg():
     a = fnp.asarray([1.0, 2.0, 3.0])  # float64
     with pytest.raises(TypeError):
         a.astype("float32", casting="safe")  # f64->f32 is unsafe
+
+
+# ---------------------------------------------------------------------------
+# Task 7: per-op docstring labels must match actual billing
+# ---------------------------------------------------------------------------
+import pathlib
+import re
+
+import flopscope._array_ops as _array_ops_mod
+
+
+def test_free_labels_match_actual_weight():
+    """Every op labeled "free"/"0 FLOPs" in _array_ops.py must truly bill 0
+    (weight 0 under production weights). Flags charged ops mislabeled "free"."""
+    load_weights()
+    try:
+        src = pathlib.Path(_array_ops_mod.__file__).read_text()
+        pattern = re.compile(
+            r'attach_docstring\(\s*(\w+)\s*,[^,]+,\s*"free"\s*,\s*"([^"]*)"\s*\)'
+        )
+        mislabeled = [
+            (fn, get_weight(fn), cost)
+            for fn, cost in pattern.findall(src)
+            if get_weight(fn) != 0.0
+        ]
+        assert not mislabeled, (
+            'ops labeled "free" but weight != 0 — relabel to "counted_custom" '
+            f"with the real cost: {mislabeled}"
+        )
+    finally:
+        reset_weights()
