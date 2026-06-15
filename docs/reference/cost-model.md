@@ -278,60 +278,68 @@ Source: `src/flopscope/_pointwise.py`; reduction accumulation model in
 
 ### Contraction (einsum family)
 
-**Family rule** (DERIVED, G&VL 4e §1.1.11):
+Every op in this family is billed by **one shared, symmetry-aware engine**
+(`_resolve_cost_and_output_symmetry` → `einsum_cost`); the closed forms below are
+that engine's output specialised to each op's shapes, not separately maintained
+constants. All rows are DERIVED from Golub & Van Loan 4e §1.1.
+
+**Family rule:**
 
 ```
-flop_cost = K × M_unique        (multiplies: K per output cell)
-          + (K − 1) × M_unique  (adds: K−1 per output cell)
-          = (2K − 1) × M_unique
+flop_cost = (2K − 1) × M
 ```
 
-where `K` = product of contracted-axis dimensions, `M_unique` = number of
-output cells actually computed (equals `prod(output dims)` for non-aliased
-inputs; reduced to the unique-orbit count when the output has symmetry, e.g.
-`A @ A` or `outer(v, v)`). The engine (`einsum_cost`) computes the equivalent
-whole-expression form `(K − 1) × M_unique + α_unique`, where `α_unique` is the
-number of unique (output + contracted) index combinations — equal to
-`K × M_unique` for a single clean contraction, but more general for
-multi-index / broadcast einsums.
+- `(2K − 1)` is one length-`K` dot product: `K` multiplies + `K − 1` adds (FMA=2).
+- `K` = product of the **contracted** (summed) axis dimensions.
+- `M` = number of output cells the engine computes. This is `prod(output dims)`
+  for a generic contraction, but the engine **reduces it to the unique-orbit
+  count when it can prove the output is symmetric** — when operands alias the
+  same array (`outer(v, v)`, `inner(A, A)`) or carry an `as_symmetric` tag. It
+  never invents savings: `A @ A` for a general `A` still costs the full
+  `2n³ − n²`, because `A @ A` is not symmetric.
 
-For a plain `(m, k) @ (k, n)` matmul: `flop_cost = 2mkn − mn` (`K = k`,
-`M_unique = mn`). Batched/stacked matmul multiplies this by the batch size, and
-aliased or symmetric operands (`A @ A`) reduce `M_unique` below `prod(output)`.
-The closed forms in the table below are the values this one engine produces per
-op — not separately-maintained constants.
+| Op | Contraction (`k` = contracted dim) | flop_cost `= (2K − 1) × M` |
+|---|---|---|
+| `matmul`, `linalg.matmul` | `(m,k) · (k,n) → (m,n)` | `2mkn − mn` |
+| `dot` | matrix `(m,k)·(k,n) → (m,n)`; matrix–vector `(m,k)·(k,) → (m,)` | `2mkn − mn`; `m(2k − 1)` |
+| `inner` | `(m,k) · (n,k) → (m,n)` — contracts the **last** axes | `2mkn − mn` |
+| `tensordot`, `linalg.tensordot` | contracts the chosen axes | `(2K − 1) × M` |
+| `outer`, `linalg.outer` | `(m,) · (n,) → (m,n)` — nothing summed, `K = 1` | `mn` |
+| `vdot`, `vecdot`, `linalg.vecdot` | `(N,) · (N,) → scalar` — `M = 1` | `2N − 1` |
+| `matvec`, `vecmat` | matrix·vector / vector·matrix, contracting `k` → length-`m` | `m(2k − 1)` |
+| `kron` | `(a,) ⊗ (b,)` of flattened operands — nothing summed, `K = 1` | `a.size × b.size` |
+| `einsum` | any subscripts | whole-expression accumulation (below) |
 
-Multi-operand einsum (`k ≥ 3`) walks the `opt_einsum` optimal binary path and
-sums per-step costs.
+**Symmetry savings** make `M` drop below `prod(output)` (here `v` is length `n`,
+`A` is `n × n`):
 
-| Op | flop_cost formula | basis | source |
+| Expression | generic `M` | symmetric `M` | flop_cost |
 |---|---|---|---|
-| `matmul`, `linalg.matmul` | `2mkn − mn` | DERIVED | G&VL 4e §1.1.11 |
-| `dot` | `(2K−1)×M_out`; matrix-vector = `m(2k−1)` | DERIVED | G&VL 4e §1.1.11 |
-| `inner` | `(2K−1)×M_unique`; aliased `inner(A,A)` → `n(n+1)/2` output cells | DERIVED | G&VL 4e §1.1.11 |
-| `outer`, `linalg.outer` | `m×n` (K=1, one multiply per output cell) | DERIVED | G&VL 4e §1.1.1 |
-| `tensordot`, `linalg.tensordot` | `(2K−1)×M_out` via einsum subscript path | DERIVED | G&VL 4e §1.1.11 |
-| `vdot`, `vecdot`, `linalg.vecdot` | `2N − 1` | DERIVED | G&VL 4e §1.1.2 |
-| `matvec`, `vecmat` | `m(2k−1)` | DERIVED | G&VL 4e §1.1.8 |
-| `einsum` | whole-expression accumulation; k≥3 binary path | DERIVED | G&VL 4e §1.1.11; `_accumulation/_cost.py` |
-| `kron` | `a.size × b.size` (outer product, no contraction) | DERIVED | Kronecker product definition; FMA=2 |
-| `linalg.matrix_power` | `(⌊log₂ k⌋ + popcount(k) − 1) × matmul_cost(n,n,n)` | DERIVED | Knuth TAOCP §4.6.3 × G&VL 4e §1.1.11 |
-| `linalg.multi_dot` | sum of optimal-chain matmul costs (CLRS §15.2); each step uses `matmul_cost(m,k,n)` = `2mkn − mn` | DERIVED | G&VL 4e §1.1.11; `_compound.py:multi_dot_cost` |
+| `outer(v, v)` | `n²` | `n(n+1)/2` | `n(n+1)/2` |
+| `inner(A, A)` | `n²` | `n(n+1)/2` | `(2n − 1) · n(n+1)/2` |
 
-All contraction ops use **weight 1.0** (the shape constants capture everything).
-Source: `src/flopscope/_accumulation/`, `src/flopscope/_flops.py`.
+`einsum` runs the accumulation directly as `(K − 1)·M + α`, where `α` is the
+number of unique (output + contracted) index combinations — equal to `K·M` for a
+single clean contraction, but more general for multi-index or broadcast
+subscripts. A multi-operand einsum (`≥ 3` operands) walks the `opt_einsum`
+optimal binary path and sums per-step costs. Batched/stacked variants of any row
+above multiply the closed form by the batch size.
 
-All contraction ops — `matmul`, `dot`, `inner`, `outer`, `tensordot`, `vdot`,
-`vecdot`, `matvec`, `vecmat`, and `einsum` itself — compute cost through one
-shared einsum accumulation engine (`_resolve_cost_and_output_symmetry` /
-`einsum_cost`): a single FMA=2, symmetry-aware source of truth.  The compound
-linalg ops (`linalg.multi_dot`, `linalg.matrix_power`, `linalg.pinv`,
-`linalg.lstsq`) use the `matmul_cost(m,k,n)` helper, which delegates to
-`einsum_cost('ij,jk->ik', …)`, so it is identical to a 2-D matmul by
-construction — no duplicated `2mkn−mn` constant.  `kron` is the sole
-exception: as a pure Kronecker (outer) product with no contraction, its cost
-is exactly `a.size × b.size`, which equals the einsum cost of an outer product,
-so it uses that closed form directly.
+**Compound linalg** ops are *chains* of matmuls, billed as the sum of their steps
+through the `matmul_cost(m, k, n)` helper — which itself delegates to
+`einsum_cost('ij,jk->ik', …)`, so each step equals a 2-D matmul by construction
+(no duplicated `2mkn − mn` constant to drift). `linalg.pinv` and `linalg.lstsq`
+build on the same helper.
+
+| Op | flop_cost | basis |
+|---|---|---|
+| `linalg.matrix_power` | `(⌊log₂ k⌋ + popcount(k) − 1) × matmul_cost(n, n, n)` | repeated squaring, Knuth TAOCP §4.6.3 |
+| `linalg.multi_dot` | sum of optimal-chain matmul costs; each step `2mkn − mn` | optimal chain order, CLRS §15.2 |
+
+All contraction ops use **weight 1.0** — the shape formulas already carry the
+full FMA=2 cost. Source: `_pointwise.py` (op wrappers), `_einsum.py`
+(`_resolve_cost_and_output_symmetry`), `_flops.py` (`einsum_cost`,
+`matmul_cost`), `_accumulation/` (accumulation model).
 
 ---
 
