@@ -9,6 +9,11 @@ from __future__ import annotations
 
 from flopscope._registry import BLACKLISTED, get_category
 
+try:
+    from flopscope._server_only_data import SERVER_ONLY
+except ImportError:  # pragma: no cover - pre-sync safety
+    SERVER_ONLY = frozenset()
+
 
 def make_module_getattr(module_prefix: str, module_label: str):
     """Return a ``__getattr__`` suitable for assignment at module scope.
@@ -47,6 +52,13 @@ def make_module_getattr(module_prefix: str, module_label: str):
                 f"Category: {category}."
             )
         else:
+            if qualified in SERVER_ONLY:
+                raise AttributeError(
+                    f"'{module_label}.{name}' is a flopscope server-side / "
+                    f"analysis API and is not available in the flopscope client. "
+                    f"It is only usable when running flopscope in-process (the "
+                    f"starter kit), not on the remote grader."
+                )
             raise AttributeError(f"module '{module_label}' has no attribute '{name}'")
 
     return __getattr__
