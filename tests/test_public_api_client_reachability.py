@@ -268,6 +268,32 @@ def _get_server_only() -> frozenset[str]:
 
 
 # ---------------------------------------------------------------------------
+# Classification helpers
+# ---------------------------------------------------------------------------
+
+
+def _unclassified(
+    surface: dict[str, bool],
+    blacklisted: frozenset[str],
+    server_only: frozenset[str],
+) -> list[str]:
+    """Return names that are not client-reachable, not blacklisted, not
+    SERVER_ONLY, and not in _KNOWN_FOLLOWUP — i.e. unclassified gaps.
+
+    Both the main guard test and the guard self-check call this function so
+    that the classification logic lives in exactly one place.
+    """
+    return [
+        name
+        for name, reachable in sorted(surface.items())
+        if not reachable
+        and name not in blacklisted
+        and name not in server_only
+        and name not in _KNOWN_FOLLOWUP
+    ]
+
+
+# ---------------------------------------------------------------------------
 # The guard test
 # ---------------------------------------------------------------------------
 
@@ -288,14 +314,7 @@ def test_every_documented_name_is_classified():
     blacklisted = _get_blacklisted()
     server_only = _get_server_only()
 
-    unclassified = [
-        name
-        for name, reachable in sorted(reachability.items())
-        if not reachable
-        and name not in blacklisted
-        and name not in server_only
-        and name not in _KNOWN_FOLLOWUP
-    ]
+    unclassified = _unclassified(reachability, blacklisted, server_only)
 
     assert unclassified == [], (
         "The following documented public-API names are neither client-reachable "
@@ -334,4 +353,36 @@ def test_known_followup_names_are_actually_absent():
     assert became_reachable == [], (
         "_KNOWN_FOLLOWUP entries that are now classified (remove them from "
         "_KNOWN_FOLLOWUP):\n" + "\n".join(f"  {n}" for n in became_reachable)
+    )
+
+
+def test_guard_flags_an_unclassified_name():
+    """Negative self-check: the guard's _unclassified() helper must flag a
+    synthetic name that is none of tier A / B / C / _KNOWN_FOLLOWUP.
+
+    This proves the detection logic is live — a future refactor that
+    accidentally neuters the guard (e.g. by always returning an empty list)
+    will cause THIS test to fail rather than silently passing everything.
+
+    The fake name is chosen to be provably absent from every classification
+    tier so the test is deterministic and does not rely on any real op name.
+    """
+    FAKE = "definitely_not_a_real_flopscope_symbol_xyz"
+
+    # Build a minimal surface that contains only the fake name, marked as
+    # not-reachable on the client.
+    fake_surface: dict[str, bool] = {FAKE: False}
+
+    # The fake name must not accidentally land in any real classification set.
+    blacklisted = _get_blacklisted()
+    server_only = _get_server_only()
+    assert FAKE not in blacklisted, f"{FAKE!r} unexpectedly in blacklisted"
+    assert FAKE not in server_only, f"{FAKE!r} unexpectedly in SERVER_ONLY"
+    assert FAKE not in _KNOWN_FOLLOWUP, f"{FAKE!r} unexpectedly in _KNOWN_FOLLOWUP"
+
+    # The shared helper must flag the fake name as unclassified.
+    gaps = _unclassified(fake_surface, blacklisted, server_only)
+    assert FAKE in gaps, (
+        f"_unclassified() did not flag {FAKE!r} — the guard's detection logic "
+        "appears to be broken (it should have returned this name as an unclassified gap)."
     )
