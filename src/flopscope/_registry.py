@@ -3202,6 +3202,57 @@ REGISTRY: dict[str, dict] = {
         "module": "numpy",
         "notes": "Format floating point scalar as scientific notation. Not supported.",
     },
+    # blacklisted — iterators / global state / dtype-info
+    "ndindex": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Index iterator; not a remote-compute value op.",
+    },
+    "nditer": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Array iterator; not a remote-compute value op.",
+    },
+    "ndenumerate": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Index/value iterator; not a remote-compute value op.",
+    },
+    "broadcast": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Broadcast iterator object; not a remote-compute value op.",
+    },
+    "errstate": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Floating-point error-state context manager; global state, not remote.",
+    },
+    "printoptions": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Print-options context manager; global display state, not remote.",
+    },
+    "get_printoptions": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Read global print options; display state, not remote.",
+    },
+    "set_printoptions": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Set global print options; display state, not remote.",
+    },
+    "finfo": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Float dtype-info object; introspection, not a remote-compute value op.",
+    },
+    "iinfo": {
+        "category": "blacklisted",
+        "module": "numpy",
+        "notes": "Integer dtype-info object; introspection, not a remote-compute value op.",
+    },
     "unwrap": {
         "category": "counted_custom",
         "module": "flopscope._unwrap",

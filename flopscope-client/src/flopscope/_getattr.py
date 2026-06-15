@@ -34,11 +34,11 @@ def make_module_getattr(module_prefix: str, module_label: str):
 
         if category == BLACKLISTED:
             raise AttributeError(
-                f"'{module_label}.{name}' is intentionally not supported "
-                f"in flopscope. This function is blacklisted because it "
-                f"involves I/O, string formatting, or system-level "
-                f"operations that are not meaningful in a remote-compute "
-                f"environment."
+                f"'{module_label}.{name}' is not supported in the flopscope "
+                f"client. It is intentionally excluded (I/O, string formatting, "
+                f"iterators, global state, dtype introspection, or other "
+                f"operations that aren't meaningful in a remote-compute "
+                f"environment)."
             )
         elif category is not None:
             raise AttributeError(

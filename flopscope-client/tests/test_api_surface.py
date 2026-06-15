@@ -260,7 +260,7 @@ class TestGetattr:
         assert callable(we.savez_compressed)
 
     def test_blacklisted_top_level_still_raises(self):
-        with pytest.raises(AttributeError, match="intentionally not supported"):
+        with pytest.raises(AttributeError, match="intentionally excluded"):
             _ = we.savetxt
 
     def test_unknown_top_level(self):
