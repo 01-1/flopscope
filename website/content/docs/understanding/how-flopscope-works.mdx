@@ -18,7 +18,7 @@ Under the hood, flopscope re-exports wrapped versions of NumPy functions. The `f
 
 - **`_pointwise.py`** -- unary and binary elementwise operations (`exp`, `add`, `multiply`, etc.)
 - **`_einsum.py`** -- the `einsum` and `einsum_path` functions with symmetry-aware path optimization
-- **`_free_ops.py`** -- zero-cost operations (`zeros`, `reshape`, `transpose`, `copy`, etc.)
+- **`_array_ops.py`** -- zero-cost operations (`zeros`, `reshape`, `transpose`, `copy`, etc.)
 - **`_counting_ops.py`** -- operations that look free but involve genuine computation (`trace`, `histogram`, etc.)
 - **`_sorting_ops.py`** -- sorting, searching, and set operations
 - **Submodules** -- `flopscope.numpy.linalg`, `flopscope.numpy.fft`, `flopscope.numpy.random`, `flopscope.stats`

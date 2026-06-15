@@ -67,7 +67,7 @@ _REBOUND: dict[str, object] = {}
 _FLOPSCOPE_MODULES_WITH_NP = [
     "flopscope._ndarray",
     "flopscope._pointwise",
-    "flopscope._free_ops",
+    "flopscope._array_ops",
     "flopscope._sorting_ops",
     "flopscope._counting_ops",
     "flopscope._einsum",

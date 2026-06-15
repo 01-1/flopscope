@@ -71,7 +71,7 @@ from flopscope._errstate import (  # noqa: F401
 )
 
 # --- Free ops ---
-from flopscope._free_ops import (  # noqa: F401
+from flopscope._array_ops import (  # noqa: F401
     append,
     arange,
     argwhere,

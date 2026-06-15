@@ -108,7 +108,7 @@ def test_load_weights_use_packaged_default_explicitly():
     )
 
 
-def test_packaged_free_ops_have_zero_weight():
+def test_packaged_array_ops_have_zero_weight():
     load_weights(use_packaged_default=True)
     assert get_weight("empty") == 0.0
     assert get_weight("reshape") == 0.0

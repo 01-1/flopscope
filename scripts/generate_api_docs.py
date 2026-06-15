@@ -108,7 +108,7 @@ def load_registry() -> dict[str, dict]:
 #
 # Existing pages (not generated):
 #   counted-ops.md  → ::: flopscope._pointwise, ::: flopscope._einsum.einsum
-#   free-ops.md     → ::: flopscope._free_ops
+#   free-ops.md     → ::: flopscope._array_ops
 #
 # Generated pages:
 GENERATED_PAGES: dict[str, dict] = {

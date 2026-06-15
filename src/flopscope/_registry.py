@@ -1186,7 +1186,7 @@ REGISTRY: dict[str, dict] = {
         "notes": "N-D real FFT. Cost: 5*(N//2)*ceil(log2(N)), N=prod(s) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
     },
     # ------------------------------------------------------------------
-    # free — implemented in _free_ops.py
+    # free — implemented in _array_ops.py
     # ------------------------------------------------------------------
     "array": {
         "category": "counted_custom",

@@ -89,7 +89,7 @@ def test_existing_counted_reduction_ops():
         assert REGISTRY[name]["category"] == "counted_reduction"
 
 
-def test_existing_free_ops():
+def test_existing_array_ops():
     # Some former free ops are now counted_custom (budget deduction added)
     still_free = [
         "zeros",

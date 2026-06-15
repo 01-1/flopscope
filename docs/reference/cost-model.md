@@ -268,15 +268,15 @@ so it uses that closed form directly.
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
-| `arange` | `2 × numel(output)` | DERIVED: `start + i×step` per element = 1 mul + 1 add (FMA=2) | `_free_ops.py`; numpy arraytypes.c.src |
-| `linspace` | `2 × numel(output)` (handles broadcast start/stop and `retstep=True`) | DERIVED: same affine model as arange | `_free_ops.py`; commit 790d19af + retstep fix |
-| `geomspace` | `numel(output)` (weight **16.0**) → billed `16 × numel(output)` | DERIVED: flop_cost = numel(output); transcendental weight 16.0 (log + exp path) | `_free_ops.py` |
-| `logspace` | `numel(output)` (weight **16.0**) → billed `16 × numel(output)` | DERIVED: same transcendental path as geomspace | `_free_ops.py` |
-| `zeros`, `ones`, `full`, `zeros_like`, `ones_like`, `full_like`, `eye`, `identity`, `empty`, `empty_like` | 0 (allocation, no arithmetic) | DECLARED free/metadata | `_free_ops.py` |
-| `meshgrid` | dense: `len(xi) × prod(sizes)`; sparse (`sparse=True`): `sum(sizes)`; `copy=False` views: 1 | DECLARED: numel of materialized output grids | `_free_ops.py` |
+| `arange` | `2 × numel(output)` | DERIVED: `start + i×step` per element = 1 mul + 1 add (FMA=2) | `_array_ops.py`; numpy arraytypes.c.src |
+| `linspace` | `2 × numel(output)` (handles broadcast start/stop and `retstep=True`) | DERIVED: same affine model as arange | `_array_ops.py`; commit 790d19af + retstep fix |
+| `geomspace` | `numel(output)` (weight **16.0**) → billed `16 × numel(output)` | DERIVED: flop_cost = numel(output); transcendental weight 16.0 (log + exp path) | `_array_ops.py` |
+| `logspace` | `numel(output)` (weight **16.0**) → billed `16 × numel(output)` | DERIVED: same transcendental path as geomspace | `_array_ops.py` |
+| `zeros`, `ones`, `full`, `zeros_like`, `ones_like`, `full_like`, `eye`, `identity`, `empty`, `empty_like` | 0 (allocation, no arithmetic) | DECLARED free/metadata | `_array_ops.py` |
+| `meshgrid` | dense: `len(xi) × prod(sizes)`; sparse (`sparse=True`): `sum(sizes)`; `copy=False` views: 1 | DECLARED: numel of materialized output grids | `_array_ops.py` |
 
 Weight: **1.0** for `arange` and `linspace`; **16.0** for `geomspace` and
-`logspace` (transcendental path).  Source: `src/flopscope/_free_ops.py`.
+`logspace` (transcendental path).  Source: `src/flopscope/_array_ops.py`.
 
 ---
 
@@ -522,7 +522,7 @@ Source: `src/flopscope/_window.py`.
 | `histogram_bin_edges` | `n` (= `max(n, 1)`) for integer bins; string estimator bins: same formula as `histogram` string path | DECLARED: integer bins charge one comparison per element (no log₂ factor); estimator resolves bin count at call time | `_counting_ops.py` |
 | `trapezoid`, `trapz` | `4 × numel(y)` | DERIVED: `(d·(y₁+y₂)/2).sum()` ≈ 3 elementwise ops + sum-reduce per point, charged as a clean 4/point upper bound | `_pointwise.py`; fixed in this branch |
 
-Source: `src/flopscope/_counting_ops.py`, `src/flopscope/_free_ops.py`.
+Source: `src/flopscope/_counting_ops.py`, `src/flopscope/_array_ops.py`.
 
 ---
 
@@ -577,27 +577,27 @@ The table lists the ops with a noted exception or a distinct formula:
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
-| `diag` (extract, 2-D input) | `min(m, n)` | DECLARED: copies the `min(m,n)` diagonal elements | `_free_ops.py` |
-| `diag` (construct, 1-D input) | `numel(output)` = `(n + \|k\|)²` | DECLARED: constructs diagonal matrix of that size | `_free_ops.py` |
-| `diagonal` | 0 (view) | DECLARED: `numpy.diagonal` returns a read-only view | `_free_ops.py` |
-| `argwhere` | `numel(input)` (weight 1.0) | DECLARED: == transpose(nonzero); nonzero is weight 1.0 | `_free_ops.py` |
-| `bmat` | `numel(output)` (weight 1.0) | DECLARED: block-matrix concatenation copy | `_free_ops.py` |
-| `fromiter` | `numel(output)` (weight 1.0) | DECLARED: iterates and fills output buffer | `_free_ops.py` |
-| `compress` | `len(condition) + 4 × numel(output)` (weight 1.0) | DECLARED: condition scan + gather; mirrors `extract` | `_free_ops.py` |
-| `packbits` | `numel(input)` (weight 1.0) | DECLARED: per-bit test+shift; symmetric with `unpackbits` | `_free_ops.py` |
-| `mask_indices` | `2n² + 8k` (weight 1.0, `k` = number of selected index pairs) | DECLARED: n² mask scan + 8 ops per index pair gathered | `_free_ops.py` |
-| `take_along_axis` | `numel(output)` (weight 4.0, gather tier) | DECLARED: gather-tier; identical to `take` | `_free_ops.py` |
-| `insert` | `numel(output)` | DECLARED: np.insert allocates and copies arr + values | `_free_ops.py` |
-| `append` | `numel(output)` = arr.size + values.size | DECLARED: np.append = concatenate | `_free_ops.py` |
-| `delete` | `numel(output)` | DECLARED: surviving elements copied | `_free_ops.py` |
-| `copyto` | elements written (numel(dst) when `where=True`; count_nonzero(broadcast(where)) otherwise) | DECLARED | `_free_ops.py` |
-| `hstack` | `numel(output)` | DECLARED: allocates horizontally | `_free_ops.py` |
-| `column_stack` | `numel(output)` | DECLARED: allocates as 2-D column array | `_free_ops.py` |
-| `row_stack` | `numel(output)` (alias for vstack) | DECLARED | `_free_ops.py` |
-| `tril`, `triu` | `numel(output)` | DECLARED: numpy returns a copy | `_free_ops.py` |
-| `roll` | `numel(output)` | DECLARED: cyclic copy | `_free_ops.py` |
-| `put` | `numel(indices)` (weight **4.0**, gather tier) → billed `4 × numel(indices)` | DECLARED: scatter-write at gather tier; mode-independent | `_free_ops.py` |
-| `put_along_axis` | `(numel(arr) / arr.shape[axis]) × indices.shape[axis]`; `numel(indices)` when `axis=None` | DECLARED gather-tier (weight 4.0) | `_free_ops.py` |
+| `diag` (extract, 2-D input) | `min(m, n)` | DECLARED: copies the `min(m,n)` diagonal elements | `_array_ops.py` |
+| `diag` (construct, 1-D input) | `numel(output)` = `(n + \|k\|)²` | DECLARED: constructs diagonal matrix of that size | `_array_ops.py` |
+| `diagonal` | 0 (view) | DECLARED: `numpy.diagonal` returns a read-only view | `_array_ops.py` |
+| `argwhere` | `numel(input)` (weight 1.0) | DECLARED: == transpose(nonzero); nonzero is weight 1.0 | `_array_ops.py` |
+| `bmat` | `numel(output)` (weight 1.0) | DECLARED: block-matrix concatenation copy | `_array_ops.py` |
+| `fromiter` | `numel(output)` (weight 1.0) | DECLARED: iterates and fills output buffer | `_array_ops.py` |
+| `compress` | `len(condition) + 4 × numel(output)` (weight 1.0) | DECLARED: condition scan + gather; mirrors `extract` | `_array_ops.py` |
+| `packbits` | `numel(input)` (weight 1.0) | DECLARED: per-bit test+shift; symmetric with `unpackbits` | `_array_ops.py` |
+| `mask_indices` | `2n² + 8k` (weight 1.0, `k` = number of selected index pairs) | DECLARED: n² mask scan + 8 ops per index pair gathered | `_array_ops.py` |
+| `take_along_axis` | `numel(output)` (weight 4.0, gather tier) | DECLARED: gather-tier; identical to `take` | `_array_ops.py` |
+| `insert` | `numel(output)` | DECLARED: np.insert allocates and copies arr + values | `_array_ops.py` |
+| `append` | `numel(output)` = arr.size + values.size | DECLARED: np.append = concatenate | `_array_ops.py` |
+| `delete` | `numel(output)` | DECLARED: surviving elements copied | `_array_ops.py` |
+| `copyto` | elements written (numel(dst) when `where=True`; count_nonzero(broadcast(where)) otherwise) | DECLARED | `_array_ops.py` |
+| `hstack` | `numel(output)` | DECLARED: allocates horizontally | `_array_ops.py` |
+| `column_stack` | `numel(output)` | DECLARED: allocates as 2-D column array | `_array_ops.py` |
+| `row_stack` | `numel(output)` (alias for vstack) | DECLARED | `_array_ops.py` |
+| `tril`, `triu` | `numel(output)` | DECLARED: numpy returns a copy | `_array_ops.py` |
+| `roll` | `numel(output)` | DECLARED: cyclic copy | `_array_ops.py` |
+| `put` | `numel(indices)` (weight **4.0**, gather tier) → billed `4 × numel(indices)` | DECLARED: scatter-write at gather tier; mode-independent | `_array_ops.py` |
+| `put_along_axis` | `(numel(arr) / arr.shape[axis]) × indices.shape[axis]`; `numel(indices)` when `axis=None` | DECLARED gather-tier (weight 4.0) | `_array_ops.py` |
 
 ---
 
@@ -613,7 +613,7 @@ result the wrapper materializes (numpy runs the callback itself).
 | Op | flop_cost | source |
 |---|---|---|
 | `apply_along_axis`, `apply_over_axes` | `numel(output)` | `_counting_ops.py` |
-| `fromfunction` | `numel(output)` | `_free_ops.py` |
+| `fromfunction` | `numel(output)` | `_array_ops.py` |
 | `piecewise` | `numel(output)` (the op bills its assembled result; each condition you pass in `condlist` is billed separately as its own comparison op) | `_counting_ops.py` |
 
 ---
@@ -632,7 +632,7 @@ Includes: `reshape`, `ravel`, `flatten`, `transpose`, `squeeze`,
 `fft.fftshift`, `fft.ifftshift`,
 `isscalar`, `isfortran`, `ndim` attribute.
 
-Source: `src/flopscope/_free_ops.py`.
+Source: `src/flopscope/_array_ops.py`.
 
 ---
 

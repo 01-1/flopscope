@@ -1,8 +1,10 @@
-"""Zero-FLOP wrappers around NumPy tensor creation and manipulation.
+"""NumPy array creation, manipulation, and indexing wrappers.
 
-Every function in this module delegates directly to the corresponding
-NumPy function and costs **0 FLOPs**, so they work both inside and
-outside a :class:`~flopscope._budget.BudgetContext`.
+Wraps NumPy's array-creation, shape-manipulation, and indexing routines.
+Per-op FLOP cost is set by the registry / weights table, NOT by this module:
+many ops here are billed (e.g. ``arange``, ``linspace``, ``nonzero``, ``isnan``),
+while data-movement and constant-init ops are free (weight 0). Free ops still
+route through ``budget.deduct(..., flop_cost=0)`` so their time is accounted.
 """
 
 from __future__ import annotations

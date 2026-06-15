@@ -55,7 +55,7 @@ def _me():
     numpy ops live under flopscope.numpy in the JAX-style public API
     (top-level flopscope exposes only primitives like BudgetContext).
     Defer the import until first use to break the import cycle:
-    flopscope.numpy → flopscope._free_ops/etc. → this module.
+    flopscope.numpy → flopscope._array_ops/etc. → this module.
     """
     import flopscope.numpy as _fnp
 
