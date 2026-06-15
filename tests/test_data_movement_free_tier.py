@@ -34,3 +34,48 @@ def production_weights(monkeypatch):
 @pytest.mark.parametrize("op", FREE_DATA_MOVEMENT_OPS)
 def test_data_movement_op_is_weight_zero(production_weights, op):
     assert get_weight(op) == 0.0, f"{op} should be free (weight 0.0)"
+
+
+def _mk1d():
+    return fnp.asarray([float(i) for i in range(100)])
+
+
+def _mk2d():
+    return fnp.asarray([float(i) for i in range(100)]).reshape(10, 10)
+
+
+# (build, call): build runs BEFORE n0 so ONLY the op under test is measured.
+# (After migration, building inputs via reshape would itself add a record, so
+# shaped inputs are constructed outside the measured region.)
+VIEW_OPS_126 = {
+    "reshape": (_mk1d, lambda a: fnp.reshape(a, (10, 10))),
+    "transpose": (_mk2d, lambda a: fnp.transpose(a)),
+    "swapaxes": (_mk2d, lambda a: fnp.swapaxes(a, 0, 1)),
+    "moveaxis": (_mk2d, lambda a: fnp.moveaxis(a, 0, 1)),
+    "squeeze": (lambda: _mk1d().reshape(1, 100), lambda a: fnp.squeeze(a)),
+    "expand_dims": (_mk1d, lambda a: fnp.expand_dims(a, 0)),
+    "copy": (_mk1d, lambda a: fnp.copy(a)),
+    "flip": (_mk1d, lambda a: fnp.flip(a)),
+    "fliplr": (_mk2d, lambda a: fnp.fliplr(a)),
+    "flipud": (_mk2d, lambda a: fnp.flipud(a)),
+    "rot90": (_mk2d, lambda a: fnp.rot90(a)),
+    "atleast_1d": (_mk1d, lambda a: fnp.atleast_1d(a)),
+    "atleast_2d": (_mk1d, lambda a: fnp.atleast_2d(a)),
+    "atleast_3d": (_mk1d, lambda a: fnp.atleast_3d(a)),
+    "fft.fftshift": (_mk1d, lambda a: fnp.fft.fftshift(a)),
+    "fft.ifftshift": (_mk1d, lambda a: fnp.fft.ifftshift(a)),
+    "hsplit": (_mk2d, lambda a: fnp.hsplit(a, 2)),
+}
+
+
+@pytest.mark.parametrize("name", sorted(VIEW_OPS_126))
+def test_view_op_is_time_accounted(name):
+    """#126: free view ops route through deduct -> >=1 op-log record, all 0 FLOPs."""
+    build, call = VIEW_OPS_126[name]
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as ctx:
+        a = build()
+        n0 = len(ctx.op_log)
+        call(a)
+        new = ctx.op_log[n0:]
+    assert len(new) >= 1, f"{name}: no op-log record (still bypasses deduct)"
+    assert all(r.flop_cost == 0 for r in new), f"{name}: free op billed nonzero FLOPs"

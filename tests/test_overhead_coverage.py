@@ -66,6 +66,10 @@ def test_every_wrapper_with_budget_deduct_is_decorated():
                 # is a closure builder, not itself a counted wrapper.
                 "_counted_variance",
                 "_counted_mean",
+                # Inner per-element helper inside atleast_1d/2d/3d — the outer
+                # function carries @_counted_wrapper; _one is a closure that
+                # issues one deduct per variadic argument.
+                "_one",
             ):
                 continue
             if not _has_counted_wrapper_decorator(fn):

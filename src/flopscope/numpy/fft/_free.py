@@ -65,17 +65,27 @@ attach_docstring(
 )
 
 
+@_counted_wrapper
 def fftshift(x: ArrayLike, axes: int | Sequence[int] | None = None) -> FlopscopeArray:
     """Shift zero-frequency component to center. Cost: 0 FLOPs."""
-    return _np.fft.fftshift(_to_base_ndarray(x), axes=axes)  # type: ignore[reportReturnType]
+    budget = require_budget()
+    x_arr = _np.asarray(x)
+    with budget.deduct("fft.fftshift", flop_cost=0, subscripts=None, shapes=(x_arr.shape,)):
+        result = _call_numpy(_np.fft.fftshift, _to_base_ndarray(x), axes=axes)
+    return result  # type: ignore[reportReturnType]
 
 
 attach_docstring(fftshift, _np.fft.fftshift, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def ifftshift(x: ArrayLike, axes: int | Sequence[int] | None = None) -> FlopscopeArray:
     """Inverse of fftshift. Cost: 0 FLOPs."""
-    return _np.fft.ifftshift(_to_base_ndarray(x), axes=axes)  # type: ignore[reportReturnType]
+    budget = require_budget()
+    x_arr = _np.asarray(x)
+    with budget.deduct("fft.ifftshift", flop_cost=0, subscripts=None, shapes=(x_arr.shape,)):
+        result = _call_numpy(_np.fft.ifftshift, _to_base_ndarray(x), axes=axes)
+    return result  # type: ignore[reportReturnType]
 
 
 attach_docstring(ifftshift, _np.fft.ifftshift, "free", "0 FLOPs")

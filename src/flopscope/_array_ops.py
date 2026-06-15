@@ -388,11 +388,14 @@ attach_docstring(identity, _np.identity, "free", "0 FLOPs")
 # ---------------------------------------------------------------------------
 
 
+@_counted_wrapper
 def reshape(a: ArrayLike, /, *args: Any, **kwargs: Any) -> FlopscopeArray:
     """Reshape an array. Wraps ``numpy.reshape``. Cost: 0 FLOPs."""
+    budget = require_budget()
     a_arr = _np.asarray(a)
-    result = _np.reshape(a_arr, *args, **kwargs)
     in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
+    with budget.deduct("reshape", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.reshape, a_arr, *args, **kwargs)
     out_group = _st.transport_reshape(
         in_group,
         input_shape=a_arr.shape,
@@ -415,14 +418,17 @@ def reshape(a: ArrayLike, /, *args: Any, **kwargs: Any) -> FlopscopeArray:
 attach_docstring(reshape, _np.reshape, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def transpose(
     a: ArrayLike,
     axes: Sequence[int] | None = None,
 ) -> FlopscopeArray:
     """Permute array dimensions. Wraps ``numpy.transpose``. Cost: 0 FLOPs."""
+    budget = require_budget()
     a_arr = _np.asarray(a)
-    result = _np.transpose(a_arr, axes=axes)
     in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
+    with budget.deduct("transpose", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.transpose, a_arr, axes=axes)
     out_group = _st.transport_transpose(in_group, ndim=a_arr.ndim, axes=axes)
     # transpose never genuinely drops (axis perm always preserves S_n etc.).
     if out_group is not None:
@@ -433,11 +439,14 @@ def transpose(
 attach_docstring(transpose, _np.transpose, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def swapaxes(a: ArrayLike, axis1: int, axis2: int) -> FlopscopeArray:
     """Swap two axes. Wraps ``numpy.swapaxes``. Cost: 0 FLOPs."""
+    budget = require_budget()
     a_arr = _np.asarray(a)
-    result = _np.swapaxes(a_arr, axis1, axis2)
     in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
+    with budget.deduct("swapaxes", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.swapaxes, a_arr, axis1, axis2)
     out_group = _st.transport_swapaxes(
         in_group,
         ndim=a_arr.ndim,
@@ -452,15 +461,18 @@ def swapaxes(a: ArrayLike, axis1: int, axis2: int) -> FlopscopeArray:
 attach_docstring(swapaxes, _np.swapaxes, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def moveaxis(
     a: ArrayLike,
     source,
     destination,
 ) -> FlopscopeArray:
     """Move axes to new positions. Wraps ``numpy.moveaxis``. Cost: 0 FLOPs."""
+    budget = require_budget()
     a_arr = _np.asarray(a)
-    result = _np.moveaxis(a_arr, source, destination)
     in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
+    with budget.deduct("moveaxis", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.moveaxis, a_arr, source, destination)
     out_group = _st.transport_moveaxis(
         in_group,
         ndim=a_arr.ndim,
@@ -646,15 +658,18 @@ def split(
 attach_docstring(split, _np.split, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def hsplit(
     ary: ArrayLike,
     indices_or_sections: int | Sequence[int],
 ) -> list[FlopscopeArray]:
     """Split array horizontally. Wraps ``numpy.hsplit``. Cost: 0 FLOPs."""
+    budget = require_budget()
     ary_arr = _np.asarray(ary)
     in_group = ary.symmetry if isinstance(ary, SymmetricTensor) else None
     out_group = _st.transport_hsplit(in_group, input_shape=ary_arr.shape)
-    raw_pieces = _np.hsplit(ary_arr, indices_or_sections)
+    with budget.deduct("hsplit", flop_cost=0, subscripts=None, shapes=(ary_arr.shape,)):
+        raw_pieces = _call_numpy(_np.hsplit, ary_arr, indices_or_sections)
     if in_group is not None and out_group is None:
         _warn_symmetry_loss(
             lost_dims=[
@@ -704,14 +719,17 @@ def vsplit(
 attach_docstring(vsplit, _np.vsplit, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def squeeze(
     a: ArrayLike,
     axis: int | tuple[int, ...] | None = None,
 ) -> FlopscopeArray:
     """Remove length-1 axes. Wraps ``numpy.squeeze``. Cost: 0 FLOPs."""
+    budget = require_budget()
     a_arr = _np.asarray(a)
-    result = _np.squeeze(a_arr, axis=axis)
     in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
+    with budget.deduct("squeeze", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.squeeze, a_arr, axis=axis)
     out_group = _st.transport_squeeze(in_group, input_shape=a_arr.shape, axis=axis)
     if in_group is not None and out_group is None:
         _warn_symmetry_loss(
@@ -730,11 +748,14 @@ def squeeze(
 attach_docstring(squeeze, _np.squeeze, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def expand_dims(a: ArrayLike, axis) -> FlopscopeArray:
     """Insert a new axis. Wraps ``numpy.expand_dims``. Cost: 0 FLOPs."""
+    budget = require_budget()
     a_arr = _np.asarray(a)
-    result = _np.expand_dims(a_arr, axis=axis)
     in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
+    with budget.deduct("expand_dims", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.expand_dims, a_arr, axis=axis)
     out_group = _st.transport_expand_dims(
         in_group,
         input_ndim=a_arr.ndim,
@@ -775,9 +796,13 @@ def ravel(a: ArrayLike, **kwargs: Any) -> FlopscopeArray:
 attach_docstring(ravel, _np.ravel, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def copy(a: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     """Return copy of array. Wraps ``numpy.copy``. Cost: 0 FLOPs."""
-    result = _np.copy(_np.asarray(a), **kwargs)
+    budget = require_budget()
+    a_arr = _np.asarray(a)
+    with budget.deduct("copy", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.copy, a_arr, **kwargs)
     if isinstance(a, SymmetricTensor):
         return wrap_with_symmetry(result, a.symmetry)  # type: ignore[return-value]
     return result  # type: ignore[return-value]
@@ -877,14 +902,17 @@ def repeat(
 attach_docstring(repeat, _np.repeat, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def flip(
     m: ArrayLike,
     axis: int | tuple[int, ...] | None = None,
 ) -> FlopscopeArray:
     """Reverse order of elements. Wraps ``numpy.flip``. Cost: 0 FLOPs."""
+    budget = require_budget()
     a_arr = _np.asarray(m)
-    result = _np.flip(a_arr, axis=axis)
     in_group = m.symmetry if isinstance(m, SymmetricTensor) else None
+    with budget.deduct("flip", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.flip, a_arr, axis=axis)
     out_group = _st.transport_flip(
         in_group,
         ndim=a_arr.ndim,
@@ -1242,15 +1270,18 @@ def asarray_chkfinite(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray
 attach_docstring(asarray_chkfinite, _np.asarray_chkfinite, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def atleast_1d(
     *arys: ArrayLike,
 ) -> FlopscopeArray | tuple[FlopscopeArray, ...]:
     """Convert to 1-D or higher. Wraps ``numpy.atleast_1d``. Cost: 0 FLOPs."""
+    budget = require_budget()
 
     def _one(a):
         a_arr = _np.asarray(a)
-        result = _np.atleast_1d(a_arr)
         in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
+        with budget.deduct("atleast_1d", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+            result = _call_numpy(_np.atleast_1d, a_arr)
         out_group = _st.transport_atleast_1d(in_group, input_shape=a_arr.shape)
         if in_group is not None and out_group is None:
             _warn_symmetry_loss(
@@ -1273,15 +1304,18 @@ def atleast_1d(
 attach_docstring(atleast_1d, _np.atleast_1d, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def atleast_2d(
     *arys: ArrayLike,
 ) -> FlopscopeArray | tuple[FlopscopeArray, ...]:
     """Convert to 2-D or higher. Wraps ``numpy.atleast_2d``. Cost: 0 FLOPs."""
+    budget = require_budget()
 
     def _one(a):
         a_arr = _np.asarray(a)
-        result = _np.atleast_2d(a_arr)
         in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
+        with budget.deduct("atleast_2d", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+            result = _call_numpy(_np.atleast_2d, a_arr)
         out_group = _st.transport_atleast_2d(in_group, input_shape=a_arr.shape)
         if in_group is not None and out_group is None:
             _warn_symmetry_loss(
@@ -1304,15 +1338,18 @@ def atleast_2d(
 attach_docstring(atleast_2d, _np.atleast_2d, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def atleast_3d(
     *arys: ArrayLike,
 ) -> FlopscopeArray | tuple[FlopscopeArray, ...]:
     """Convert to 3-D or higher. Wraps ``numpy.atleast_3d``. Cost: 0 FLOPs."""
+    budget = require_budget()
 
     def _one(a):
         a_arr = _np.asarray(a)
-        result = _np.atleast_3d(a_arr)
         in_group = a.symmetry if isinstance(a, SymmetricTensor) else None
+        with budget.deduct("atleast_3d", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+            result = _call_numpy(_np.atleast_3d, a_arr)
         out_group = _st.transport_atleast_3d(in_group, input_shape=a_arr.shape)
         if in_group is not None and out_group is None:
             _warn_symmetry_loss(
@@ -1775,21 +1812,29 @@ def flatnonzero(a: ArrayLike, *args: Any, **kwargs: Any) -> FlopscopeArray:
 attach_docstring(flatnonzero, _np.flatnonzero, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def fliplr(*args, **kwargs):
     """Reverse elements along axis 1. Wraps ``numpy.fliplr``. Cost: 0 FLOPs."""
+    budget = require_budget()
     _warn_if_symmetric(args[0], "fliplr")
-    stripped_args = _to_base_ndarray_tree(args)
-    return _np.fliplr(*stripped_args, **kwargs)
+    a_arr = _np.asarray(args[0])
+    with budget.deduct("fliplr", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.fliplr, *_to_base_ndarray_tree(args), **kwargs)
+    return result
 
 
 attach_docstring(fliplr, _np.fliplr, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def flipud(*args, **kwargs):
     """Reverse elements along axis 0. Wraps ``numpy.flipud``. Cost: 0 FLOPs."""
+    budget = require_budget()
     _warn_if_symmetric(args[0], "flipud")
-    stripped_args = _to_base_ndarray_tree(args)
-    return _np.flipud(*stripped_args, **kwargs)
+    a_arr = _np.asarray(args[0])
+    with budget.deduct("flipud", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.flipud, *_to_base_ndarray_tree(args), **kwargs)
+    return result
 
 
 attach_docstring(flipud, _np.flipud, "free", "0 FLOPs")
@@ -2353,10 +2398,14 @@ def rollaxis(*args, **kwargs):
 attach_docstring(rollaxis, _np.rollaxis, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def rot90(*args, **kwargs):
     """Rotate array 90 degrees. Wraps ``numpy.rot90``. Cost: 0 FLOPs."""
-    stripped_args = _to_base_ndarray_tree(args)
-    return _np.rot90(*stripped_args, **kwargs)
+    budget = require_budget()
+    a_arr = _np.asarray(args[0])
+    with budget.deduct("rot90", flop_cost=0, subscripts=None, shapes=(a_arr.shape,)):
+        result = _call_numpy(_np.rot90, *_to_base_ndarray_tree(args), **kwargs)
+    return result
 
 
 attach_docstring(rot90, _np.rot90, "free", "0 FLOPs")
