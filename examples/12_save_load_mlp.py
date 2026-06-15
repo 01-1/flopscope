@@ -51,4 +51,15 @@ with flops.BudgetContext(flop_budget=10_000_000) as budget:
     after = restored(x)
     print("restored sizes:", restored.sizes)
     print("outputs identical after save/load:", before.tolist() == after.tolist())
+
+    # Accumulating across inputs: flopscope arrays are immutable, so in-place
+    # item assignment is not supported --
+    #   totals[i] += restored(xi)   # TypeError: flopscope arrays are immutable
+    # Collect per-step results in a Python list and fnp.stack(...) them once;
+    # whole-array ops (sum, divide) are fine.
+    batch = [fnp.random.randn(8) for _ in range(4)]
+    stacked = fnp.stack([restored(xi) for xi in batch])  # (4, 4) immutable array
+    mean_out = fnp.sum(stacked, axis=0) / len(batch)
+    print("mean output over batch:", mean_out.tolist())
+
     print(budget.summary())

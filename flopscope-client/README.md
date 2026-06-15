@@ -48,6 +48,17 @@ with flops.BudgetContext(flop_budget=1_000_000):
 
 On the first request, the client performs a version handshake with the server. A version mismatch raises `ConnectionError` with both versions in the error message — keep `flopscope-server` and `flopscope-client` on the same release.
 
+## Differences from NumPy
+
+The API mirrors NumPy, with one semantic difference worth knowing up front: **flopscope arrays are immutable** (like [JAX](https://docs.jax.dev/en/latest/notebooks/Common_Gotchas_in_JAX.html#in-place-updates)). Item assignment and indexed in-place updates raise `TypeError`:
+
+```python
+arr[i] = value      # TypeError: flopscope arrays are immutable
+arr[i] += value     # same error — desugars to arr[i] = arr[i] + value
+```
+
+Build results functionally instead — collect the pieces in a list and `fnp.stack(...)` them, or use a whole-array update (`arr = arr + x`, which rebinds rather than mutates). See the [Immutable arrays](https://aicrowd.github.io/flopscope/docs/getting-started/competition/#immutable-arrays) guide for the accumulation recipe.
+
 ## When to choose this over the main `flopscope` install
 
 | Scenario | Install |

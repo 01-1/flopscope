@@ -456,6 +456,24 @@ class TestFix6SetitemError:
         with pytest.raises(TypeError, match="immutable"):
             arr[0:2] = [1, 2]
 
+    def test_setitem_error_is_actionable(self):
+        """The immutable error must tell participants HOW to fix it.
+
+        A sandboxed participant only ever sees this as a traceback, so the
+        message must carry problem + cause + fix + docs link (the Elm/Rust
+        three-tier model) rather than a dead end. Guards against regressing
+        back to a bare "cannot assign" message.
+        """
+        from flopscope._remote_array import RemoteArray
+
+        arr = RemoteArray(handle_id="a0", shape=(3,), dtype="float64")
+        with pytest.raises(TypeError) as exc:
+            arr[0] = 5
+        msg = str(exc.value)
+        assert "immutable" in msg  # names the cause
+        assert "fnp.stack" in msg  # points to the functional alternative
+        assert "http" in msg  # links to the docs
+
 
 # =========================================================================
 # Fix 8: ZMQ socket reset after timeout

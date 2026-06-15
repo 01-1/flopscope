@@ -104,6 +104,8 @@ flops.budget_summary()  # 6,231,041 FLOPs
 
 Blocked operations (I/O, config, and system calls) raise a helpful `AttributeError` with a link to the docs.
 
+flopscope arrays are **immutable** (like JAX): item assignment such as `arr[i] = ...` or `arr[i] += ...` raises `TypeError`. Build results functionally instead — collect the pieces and `fnp.stack(...)` them, or use a whole-array update (`arr = arr + x`). See the [Immutable arrays](https://aicrowd.github.io/flopscope/docs/getting-started/competition/#immutable-arrays) guide.
+
 ## Quick Start
 
 ### Installation
