@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from flopscope._budget import _counted_wrapper
 from flopscope._ndarray import FlopscopeArray, _asplainflopscope
 from flopscope._perm_group import SymmetryGroup
 from flopscope._symmetry_utils import (
@@ -16,6 +17,7 @@ from flopscope._symmetry_utils import (
     restrict_group_to_axes,
     validate_symmetry_group,
 )
+from flopscope._validation import require_budget
 from flopscope.errors import SymmetryError
 
 # ---------------------------------------------------------------------------
@@ -95,6 +97,7 @@ def _check_generators(array, group, *, atol: float = 1e-6, rtol: float = 1e-5) -
     return True
 
 
+@_counted_wrapper
 def symmetrize(
     data: np.ndarray,
     *,
@@ -127,20 +130,15 @@ def symmetrize(
 
     Notes
     -----
-    ``symmetrize`` performs exact Reynolds averaging internally and then delegates
-    to :func:`as_symmetric` so the result participates in downstream symmetry
-    tracking and validation in the usual way.
+    ``symmetrize`` performs exact Reynolds averaging internally, billing
+    ``(|G| + 1) * numel(data)`` FLOPs:
 
-    Estimated FLOP cost is approximately:
+    - ``|G|`` transposed add passes over ``numel`` elements
+    - one final scaling pass (divide by ``|G|``)
 
-    ``|G| * n_elem + n_elem`` for projection, plus validation from
-    ``as_symmetric``:
+    Internal validation runs but is NOT billed (decision D1).
 
-    - ``|G|`` transposed add passes over ``n_elem`` elements
-    - one final scaling pass
-    - symmetry checks inside validation
-
-    where ``|G|`` is the group order and ``n_elem = data.size``.
+    where ``|G|`` is the group order and ``numel = data.size``.
 
     The canonical pattern for generating random data with symmetry is:
 
@@ -151,27 +149,25 @@ def symmetrize(
     >>> import flopscope as flops
     >>> import flopscope.numpy as fnp
     >>> data = fnp.random.randn(4, 4)
-    >>> S = flops.symmetrize(data, flops.SymmetryGroup.symmetric(axes=(0, 1)))
+    >>> S = flops.symmetrize(data, symmetry=flops.SymmetryGroup.symmetric(axes=(0, 1)))
     >>> S.is_symmetric((0, 1))
     True
     """
     array = np.asarray(data)
-    group = _resolve_symmetry_argument(
-        array,
-        symmetry=symmetry,
-    )
+    group = _resolve_symmetry_argument(array, symmetry=symmetry)
     assert group is not None  # required=True raises if symmetry is None
     validate_symmetry_group(group, ndim=array.ndim, shape=array.shape)
-    group_axes = group.axes if group.axes is not None else tuple(range(group.degree))
-    symmetrized = np.zeros_like(array, dtype=np.result_type(array, np.float64))
-
-    for g in group.elements():
-        perm = list(range(array.ndim))
-        for local_idx, tensor_axis in enumerate(group_axes):
-            perm[tensor_axis] = group_axes[g.array_form[local_idx]]
-        symmetrized = symmetrized + np.transpose(array, perm)
-
-    return as_symmetric(symmetrized / group.order(), symmetry=group)
+    n = array.size
+    cost = max((group.order() + 1) * n, 1)
+    budget = require_budget()
+    with budget.deduct(
+        "symmetrize", flop_cost=cost, subscripts=None, shapes=(array.shape,)
+    ):
+        projected = _project_core(array, group)
+        # D1: internal validation runs but is NOT billed — build the tensor
+        # directly rather than calling the (later-counted) as_symmetric.
+        validate_symmetry_groups(projected, [group])
+        return SymmetricTensor(projected, symmetry=group)
 
 
 def validate_symmetry_groups(data: np.ndarray, groups: list) -> None:
