@@ -165,3 +165,15 @@ def test_where_predicate_still_charged(production_weights):
         names = [r.op_name for r in ctx.op_log[n0:]]
     assert "greater" in names  # predicate charged
     assert get_weight("where") == 1.0  # 1-arg where charged at weight 1.0 (numel), not 4.0
+
+
+def test_nonzero_method_matches_function():
+    """a.nonzero() must charge the same as fnp.nonzero(a) (numel)."""
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as ctx:
+        a = fnp.asarray([float(i - 50) for i in range(100)])
+        n0 = len(ctx.op_log)
+        a.nonzero()
+        method_records = ctx.op_log[n0:]
+    assert len(method_records) == 1, "a.nonzero() produced no op-log record"
+    assert method_records[0].op_name == "nonzero"
+    assert method_records[0].flop_cost == 100  # numel, unit weight

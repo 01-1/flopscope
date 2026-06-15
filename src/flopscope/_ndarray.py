@@ -659,6 +659,9 @@ class FlopscopeArray(_np.ndarray):
         # ndarray.compress(condition) -> np.compress(condition, arr)
         return _me().compress(condition, self, *args, **kwargs)
 
+    def nonzero(self, *args: Any, **kwargs: Any) -> tuple[FlopscopeArray, ...]:  # type: ignore[override]
+        return _me().nonzero(self, *args, **kwargs)
+
     # In-place sort/partition: NumPy mutates self and returns None.
     # Charge FLOPs through me.sort/partition, then copy result into self.
     # Guard against in-place mutation that would silently break symmetry.
