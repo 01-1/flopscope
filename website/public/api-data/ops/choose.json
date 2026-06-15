@@ -965,7 +965,7 @@
     "signature": "fnp.choose(a, choices, out=None, mode='raise')",
     "status": "supported",
     "summary": "Construct an array from an index array and a list of arrays to choose from.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "choose",

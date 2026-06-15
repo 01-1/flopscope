@@ -354,7 +354,7 @@
     "signature": "fnp.copyto(dst, src, casting='same_kind', where=True)",
     "status": "supported",
     "summary": "Copies values from one array to another, broadcasting as necessary.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "copyto",

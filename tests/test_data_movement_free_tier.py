@@ -256,3 +256,26 @@ def test_free_labels_match_actual_weight():
         )
     finally:
         reset_weights()
+
+
+def test_counted_custom_labels_match_actual_weight():
+    """Every op labeled "counted_custom" in _array_ops.py must have weight != 0
+    (free ops mislabeled as counted would falsely charge budget). Reverse of
+    test_free_labels_match_actual_weight."""
+    load_weights()
+    try:
+        src = pathlib.Path(_array_ops_mod.__file__).read_text()
+        pattern = re.compile(
+            r'attach_docstring\(\s*(\w+)\s*,[^,]+,\s*"counted_custom"\s*,\s*"([^"]*)"\s*\)'
+        )
+        mislabeled = [
+            (fn, get_weight(fn), cost)
+            for fn, cost in pattern.findall(src)
+            if get_weight(fn) == 0.0
+        ]
+        assert not mislabeled, (
+            'ops labeled "counted_custom" but weight == 0.0 — relabel to "free"/"0 FLOPs": '
+            f"{mislabeled}"
+        )
+    finally:
+        reset_weights()

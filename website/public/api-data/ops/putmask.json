@@ -400,7 +400,7 @@
     "signature": "fnp.putmask(a: 'ArrayLike', mask: 'ArrayLike', values: 'ArrayLike', *args: 'Any', **kwargs: 'Any') -> 'None'",
     "status": "supported",
     "summary": "Changes elements of an array based on conditional and input values.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "putmask",

@@ -762,7 +762,7 @@
     "signature": "fnp.meshgrid(*xi, copy=True, sparse=False, indexing='xy')",
     "status": "supported",
     "summary": "Return a tuple of coordinate matrices from coordinate vectors.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "meshgrid",

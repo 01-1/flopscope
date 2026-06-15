@@ -501,5 +501,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "",
-  "weight": 4.0
+  "weight": 0.0
 }

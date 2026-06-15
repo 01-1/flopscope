@@ -553,7 +553,7 @@ def concatenate(
     return _asplainflopscope(result)  # type: ignore[return-value]
 
 
-attach_docstring(concatenate, _np.concatenate, "counted_custom", "numel(output) FLOPs")
+attach_docstring(concatenate, _np.concatenate, "free", "0 FLOPs")
 
 
 @_counted_wrapper
@@ -650,7 +650,7 @@ def hstack(tup: Sequence[ArrayLike]) -> FlopscopeArray:
     return _asplainflopscope(result)  # type: ignore[return-value]
 
 
-attach_docstring(hstack, _np.hstack, "counted_custom", "numel(output) FLOPs")
+attach_docstring(hstack, _np.hstack, "free", "0 FLOPs")
 
 
 @_counted_wrapper
@@ -1005,7 +1005,7 @@ def roll(
     return _asplainflopscope(result)  # type: ignore[return-value]
 
 
-attach_docstring(roll, _np.roll, "counted_custom", "numel(output) FLOPs")
+attach_docstring(roll, _np.roll, "free", "0 FLOPs")
 
 
 @_counted_wrapper
@@ -1033,7 +1033,7 @@ def triu(m: ArrayLike, k: int = 0) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(triu, _np.triu, "counted_custom", "numel(output) FLOPs")
+attach_docstring(triu, _np.triu, "free", "0 FLOPs")
 
 
 @_counted_wrapper
@@ -1047,7 +1047,7 @@ def tril(m: ArrayLike, k: int = 0) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(tril, _np.tril, "counted_custom", "numel(output) FLOPs")
+attach_docstring(tril, _np.tril, "free", "0 FLOPs")
 
 
 @_counted_wrapper
@@ -1310,7 +1310,7 @@ def append(
 
 
 attach_docstring(
-    append, _np.append, "counted_custom", "numel(output) = arr.size + values.size FLOPs"
+    append, _np.append, "free", "0 FLOPs"
 )
 
 
@@ -1648,7 +1648,7 @@ def column_stack(tup: Sequence[ArrayLike]) -> FlopscopeArray:
 
 
 attach_docstring(
-    column_stack, _np.column_stack, "counted_custom", "numel(output) FLOPs"
+    column_stack, _np.column_stack, "free", "0 FLOPs"
 )
 
 
@@ -1742,7 +1742,7 @@ def copyto(dst, src, casting="same_kind", where=True):
     return result
 
 
-attach_docstring(copyto, _np.copyto, "counted_custom", "num elements written FLOPs")
+attach_docstring(copyto, _np.copyto, "free", "0 FLOPs")
 
 
 @_counted_wrapper
@@ -1763,7 +1763,7 @@ def delete(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(delete, _np.delete, "counted_custom", "numel(output) FLOPs")
+attach_docstring(delete, _np.delete, "free", "0 FLOPs")
 
 
 def diag_indices(*args, **kwargs):
@@ -2095,7 +2095,7 @@ def insert(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(insert, _np.insert, "counted_custom", "numel(output) FLOPs")
+attach_docstring(insert, _np.insert, "free", "0 FLOPs")
 
 
 def isdtype(*args, **kwargs):
@@ -2364,7 +2364,7 @@ def put(
     return result
 
 
-attach_docstring(put, _np.put, "counted_custom", "numel(indices) FLOPs")
+attach_docstring(put, _np.put, "free", "0 FLOPs")
 
 
 @_counted_wrapper

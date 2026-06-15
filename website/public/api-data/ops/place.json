@@ -382,7 +382,7 @@
     "signature": "fnp.place(arr: 'ArrayLike', mask: 'ArrayLike', vals: 'ArrayLike', *args: 'Any', **kwargs: 'Any') -> 'None'",
     "status": "supported",
     "summary": "Change elements of an array based on conditional and input values.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "place",

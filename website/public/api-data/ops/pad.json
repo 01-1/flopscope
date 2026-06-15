@@ -1248,7 +1248,7 @@
     "signature": "fnp.pad(array, pad_width, mode='constant', **kwargs)",
     "status": "supported",
     "summary": "Pad an array.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "pad",

@@ -662,7 +662,7 @@ compute cost.  The predicate and the selection are the *same* step here — unli
 
 | Expression | Charge | Reasoning |
 |---|---|---|
-| `where(a > 0.5)` | pay `greater` = `numel(a)` for the predicate; the `where` (select) is free | predicate tests values (charged separately); selection by given mask is logistics |
+| `where(a > 0.5, x, y)` | pay `greater` = `numel(a)` for the predicate; the `where` (select) is free | predicate tests values (charged separately); selection by given mask is logistics |
 | `nonzero(a)` | charged `numel(a)` | derives the selector by testing `!=0` — value-test is its compute |
 | `arange(n)` | charged `2×numel` | computes `start + i·step` per element (1 mul + 1 add) |
 | `meshgrid(x, y)` | free | replicates `x`,`y` into grids; no per-element arithmetic |

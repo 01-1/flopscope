@@ -452,7 +452,7 @@
     "signature": "fnp.select(condlist: 'Sequence[ArrayLike]', choicelist: 'Sequence[ArrayLike]', default: 'Any' = 0) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Return an array drawn from elements in choicelist, depending on conditions.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "select",

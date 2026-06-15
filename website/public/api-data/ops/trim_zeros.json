@@ -333,7 +333,7 @@
     "signature": "fnp.trim_zeros(filt, trim='fb', axis=None)",
     "status": "supported",
     "summary": "Remove values along a dimension which are zero along all other.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "trim_zeros",

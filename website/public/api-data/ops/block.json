@@ -927,7 +927,7 @@
     "signature": "fnp.block(arrays)",
     "status": "supported",
     "summary": "Assemble an nd-array from nested lists of blocks.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "block",

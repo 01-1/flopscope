@@ -283,7 +283,7 @@
     "signature": "fnp.repeat(a: 'ArrayLike', repeats: 'int | ArrayLike', axis: 'int | None' = None) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Repeat each element of an array after themselves",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "repeat",

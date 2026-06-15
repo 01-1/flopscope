@@ -582,7 +582,7 @@
     "signature": "fnp.take_along_axis(arr, indices, axis)",
     "status": "supported",
     "summary": "Take values from the input array by matching 1d index and data slices.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "take_along_axis",

@@ -267,7 +267,7 @@
     "signature": "fnp.diagflat(v: 'ArrayLike', k: 'int' = 0) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Create a two-dimensional array with the flattened input as a diagonal.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "diagflat",

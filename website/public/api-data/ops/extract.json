@@ -430,7 +430,7 @@
     "signature": "fnp.extract(condition, arr)",
     "status": "supported",
     "summary": "Return the elements of an array that satisfy some condition.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "extract",

@@ -327,7 +327,7 @@
     "signature": "fnp.bmat(obj, ldict=None, gdict=None)",
     "status": "supported",
     "summary": "Build a matrix object from a string, nested sequence, or array.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "bmat",

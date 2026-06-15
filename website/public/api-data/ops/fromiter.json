@@ -337,7 +337,7 @@
     "signature": "fnp.fromiter(*args, **kwargs)",
     "status": "supported",
     "summary": "Create a new 1-dimensional array from an iterable object.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "fromiter",

@@ -604,7 +604,7 @@
     "signature": "fnp.fill_diagonal(a: 'ArrayLike', val: 'Any', wrap: 'bool' = False, **kwargs: 'Any') -> 'None'",
     "status": "supported",
     "summary": "Fill the main diagonal of the given array of any dimensionality.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "fill_diagonal",

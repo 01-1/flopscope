@@ -436,7 +436,7 @@
     "signature": "fnp.tile(A: 'ArrayLike', reps: 'int | Sequence[int]') -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Construct an array by repeating A the number of times given by reps.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "tile",

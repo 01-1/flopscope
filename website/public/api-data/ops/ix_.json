@@ -326,7 +326,7 @@
     "signature": "fnp.ix_(*args)",
     "status": "supported",
     "summary": "Construct an open mesh from multiple sequences.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "ix_",

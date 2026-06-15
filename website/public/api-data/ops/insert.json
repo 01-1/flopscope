@@ -797,7 +797,7 @@
     "signature": "fnp.insert(arr, obj, values, axis=None)",
     "status": "supported",
     "summary": "Insert values along the given axis before the given indices.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "insert",

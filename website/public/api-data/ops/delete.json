@@ -483,7 +483,7 @@
     "signature": "fnp.delete(arr, obj, axis=None)",
     "status": "supported",
     "summary": "Return a new array with sub-arrays along an axis deleted. For a one dimensional array, this returns those entries not returned by `arr[obj]`.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "delete",

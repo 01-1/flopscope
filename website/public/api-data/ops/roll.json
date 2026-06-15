@@ -408,7 +408,7 @@
     "signature": "fnp.roll(a: 'ArrayLike', shift: 'int | Sequence[int]', axis: 'int | Sequence[int] | None' = None) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Roll array elements along a given axis.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "roll",

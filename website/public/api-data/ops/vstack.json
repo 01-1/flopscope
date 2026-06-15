@@ -480,7 +480,7 @@
     "signature": "fnp.vstack(tup, *, dtype=None, casting='same_kind')",
     "status": "supported",
     "summary": "Stack arrays in sequence vertically (row wise).",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "vstack",

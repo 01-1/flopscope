@@ -531,7 +531,7 @@
     "signature": "fnp.full_like(a, fill_value, dtype=None, order='K', subok=True, shape=None, *, device=None)",
     "status": "supported",
     "summary": "Return a full array with the same shape and type as a given array.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "full_like",

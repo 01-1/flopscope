@@ -432,7 +432,7 @@
     "signature": "fnp.unstack(x, /, *, axis=0)",
     "status": "supported",
     "summary": "Split an array into a sequence of arrays along the given axis.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "unstack",

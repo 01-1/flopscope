@@ -470,7 +470,7 @@
     "signature": "fnp.compress(condition, a, axis=None, out=None)",
     "status": "supported",
     "summary": "Return selected slices of an array along given axis.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "compress",

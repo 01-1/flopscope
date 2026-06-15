@@ -593,7 +593,7 @@
     "signature": "fnp.append(arr, values, axis=None)",
     "status": "supported",
     "summary": "Append values to the end of an array.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "append",

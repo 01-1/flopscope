@@ -404,7 +404,7 @@
     "signature": "fnp.put_along_axis(arr: 'ArrayLike', indices: 'ArrayLike', values: 'ArrayLike', axis: 'int | None', *args: 'Any', **kwargs: 'Any') -> 'None'",
     "status": "supported",
     "summary": "Put values into the destination array by matching 1d index and data slices.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "put_along_axis",
