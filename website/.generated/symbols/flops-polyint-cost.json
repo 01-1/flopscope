@@ -12,13 +12,27 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Cost for polyint: n FLOPs (n = len of coeffs)."
+              "text": "Cost for polyint: m*n + m*(m-1)//2 FLOPs."
             }
           ],
           "type": "paragraph"
         }
       ],
       "title": "Summary"
+    },
+    {
+      "blocks": [
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "numpy recurses m times; pass j divides n+j coefficients, so total cost\n= sum_{j=0}^{m-1} (n+j) = m*n + m*(m-1)//2."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
     },
     {
       "blocks": [
@@ -44,6 +58,44 @@
                 }
               ],
               "name": "n",
+              "type": "field_list"
+            },
+            {
+              "body_blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "Number of rows in the input matrix. Defaults to "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "1"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "data_type": "int, optional",
+              "inline": [
+                {
+                  "kind": "text",
+                  "text": "Number of rows in the input matrix. Defaults to "
+                },
+                {
+                  "kind": "code",
+                  "text": "1"
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ],
+              "name": "m",
               "type": "field_list"
             }
           ],
@@ -135,10 +187,10 @@
       "title": "Budget Planning & Debugging"
     }
   ],
-  "signature": "flops.flops.polyint_cost(n: 'int') -> 'int'",
+  "signature": "flops.flops.polyint_cost(n: 'int', m: 'int' = 1) -> 'int'",
   "slug": "flops-polyint-cost",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L45",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L61",
   "status_note": "",
-  "summary": "Cost for polyint: n FLOPs (n = len of coeffs).",
+  "summary": "Cost for polyint: m*n + m*(m-1)//2 FLOPs.",
   "upstream_source_url": ""
 }

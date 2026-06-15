@@ -212,11 +212,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(q)"
+                "text": "83 * numel(q)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: Acklam rational ndtri + Newton polish with erf+exp, weight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -267,7 +267,7 @@
     "flopscope_ref": "flops.stats.norm.ppf",
     "module": "flopscope.stats",
     "name": "stats.norm.ppf",
-    "notes": "Normal PPF (inverse CDF); cost = numel(input).",
+    "notes": "Normal PPF (inverse CDF); composite: 83 FLOPs/elem (Acklam rational ndtri + Newton polish with erf+exp), weight 1.0.",
     "numpy_ref": "scipy.stats.norm.ppf",
     "signature": "flops.stats.norm.ppf(q, loc=0, scale=1)",
     "status": "supported",
@@ -277,7 +277,7 @@
   "schema_version": 1,
   "slug": "stats-norm-ppf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_norm.py#L103",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_norm.py#L104",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.norm.html"
   }
 }

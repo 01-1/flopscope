@@ -212,11 +212,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(q)"
+                "text": "28 * numel(q)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: q-0.5(1) + pi*(1) +\ntan(16) + loc+scale*(2) + 3 where(8), FMA=2, weight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -277,7 +277,7 @@
   "schema_version": 1,
   "slug": "stats-cauchy-ppf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_cauchy.py#L98",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_cauchy.py#L105",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.cauchy.html"
   }
 }

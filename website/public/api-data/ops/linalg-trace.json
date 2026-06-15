@@ -366,7 +366,7 @@
     "flopscope_ref": "fnp.linalg.trace",
     "module": "numpy.linalg",
     "name": "linalg.trace",
-    "notes": "Matrix trace. Cost: n (sum of diagonal elements).",
+    "notes": "Matrix trace. Cost: min(m,n) \u00d7 batch (diagonal sum per matrix).",
     "numpy_ref": "np.linalg.trace",
     "signature": "fnp.linalg.trace(x: 'ArrayLike', /, *, offset: 'int' = 0, dtype: 'Any' = None) -> 'FlopscopeArray'",
     "status": "supported",

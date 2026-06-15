@@ -20,6 +20,7 @@ import pytest
 import flopscope as f
 import flopscope.numpy as fnp
 import flopscope.stats as fst
+from flopscope._flops import sort_cost
 from flopscope._registry import REGISTRY
 
 # ---------------------------------------------------------------------------
@@ -86,6 +87,18 @@ _u100 = fnp.asarray(_rng.uniform(0.01, 0.99, 100))
 # where inputs (condition must be pre-computed; v100>0 inside a lambda charges numel)
 _zeros100 = fnp.asarray(np.zeros(100))
 _v100_pos = fnp.asarray(np.asarray(_v100) > 0)  # bool mask, built outside BudgetContext
+
+# Copy / gather / view ops
+_sq10_2d = fnp.asarray(
+    _rng.standard_normal((10, 10))
+)  # 2-D: diag extract → min(10,10)=10
+_v5_1d = fnp.asarray(_rng.standard_normal(5))  # 1-D: diag construct → (5+0)^2=25 output
+_sq3a = fnp.asarray(_rng.standard_normal((3, 3)))
+_sq3b = fnp.asarray(_rng.standard_normal((3, 3)))
+_idx10x3 = fnp.asarray(np.random.default_rng(7).integers(0, 10, (10, 3)))
+_cond5 = fnp.asarray(np.array([True, False, True, True, False]))
+_v5_float = fnp.asarray(np.array([1.0, 2.0, 3.0, 4.0, 5.0]))
+_v8_bits = fnp.asarray(np.array([1, 0, 1, 1, 0, 0, 1, 0], dtype=np.uint8))
 
 # ---------------------------------------------------------------------------
 # COVERED_ELSEWHERE: ops with exact cost assertions in other test files.
@@ -193,10 +206,18 @@ OP_EXPECTATIONS: dict[str, tuple] = {
     # Formula: 5 * N * ceil(log2(N)) for complex transforms
     # rfft / rfftn / rfft2: use N//2 (real half-spectrum)
     # irfft2 / irfftn: use n_out//2 * sum_axis(ceil(log2(si)))
-    # ihfft: uses hfft_cost(n) = 5*n*ceil(log2(n)) (same as hfft)
+    # ihfft: uses rfft_cost(n) = 5*(n//2)*ceil(log2(n)) — numpy ihfft = conj(rfft(a,n))
     "fft.fft": (
         lambda: fnp.fft.fft(_x64c),
         5 * 64 * int(math.ceil(math.log2(64))),  # 1920
+    ),
+    "fft.fftfreq": (
+        lambda: fnp.fft.fftfreq(64),
+        64,  # index grid scaled by 1/(n*d)
+    ),
+    "fft.rfftfreq": (
+        lambda: fnp.fft.rfftfreq(64),
+        64 // 2 + 1,
     ),
     "fft.ifft": (
         lambda: fnp.fft.ifft(_x64c),
@@ -245,15 +266,15 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         lambda: fnp.fft.irfftn(_x444c),
         5 * (4 * 4 * 6 // 2) * (2 + 2 + int(math.ceil(math.log2(6)))),  # 1680
     ),
-    # hfft: n_out = 2*(n-1) = 126 for input len 64; 5*n_out*ceil(log2(n_out))
+    # hfft: numpy hfft(a,n) = irfft(conj(a),n); n_out=126 for input len 64; rfft_cost=5*(n//2)*ceil(log2(n))
     "fft.hfft": (
         lambda: fnp.fft.hfft(_x64r),
-        5 * 126 * int(math.ceil(math.log2(126))),  # 4410
+        5 * (126 // 2) * int(math.ceil(math.log2(126))),  # 2205
     ),
-    # ihfft uses hfft_cost(n) = 5*n*ceil(log2(n)), NOT rfft_cost
+    # ihfft: numpy ihfft = conj(rfft(a,n)); uses rfft_cost(n) = 5*(n//2)*ceil(log2(n))
     "fft.ihfft": (
         lambda: fnp.fft.ihfft(_x64r),
-        5 * 64 * int(math.ceil(math.log2(64))),  # 1920
+        5 * (64 // 2) * int(math.ceil(math.log2(64))),  # 960
     ),
     # ---- Contraction (einsum family) --------------------------------------
     "matmul": (
@@ -340,9 +361,12 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         lambda: fnp.union1d(_range100a, _range100b),
         200 * int(math.ceil(math.log2(200))),  # 1600
     ),
+    # intersect1d default (assume_unique=False): numpy unique()-sorts both
+    # inputs first, so cost = sort_cost(n) + sort_cost(m) + sort_cost(n+m).
+    # n=m=100: 700 + 700 + 1600 = 3000
     "intersect1d": (
         lambda: fnp.intersect1d(_range100a, _range100b),
-        200 * int(math.ceil(math.log2(200))),
+        sort_cost(100) + sort_cost(100) + sort_cost(200),
     ),
     "setdiff1d": (
         lambda: fnp.setdiff1d(_range100a, _range100b),
@@ -398,9 +422,9 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         max(4, 5),  # 5
     ),
     "polyder": (
-        # polyder_cost(p) = max(len(p), 1) = 11 for len-11 input
+        # polyder_cost(n=11, m=1): t=min(1,10)=1; cost=1*11 - 1*2//2 = 10
         lambda: fnp.polyder(_p11),
-        11,
+        10,
     ),
     "polyint": (
         lambda: fnp.polyint(_p11),
@@ -417,17 +441,30 @@ OP_EXPECTATIONS: dict[str, tuple] = {
         10 * 9**3,  # 7290
     ),
     # ---- Window (flop_cost at weight=1.0) ---------------------------------
-    "bartlett": (lambda: fnp.bartlett(50), 50),  # 1 op/sample
-    "blackman": (lambda: fnp.blackman(50), 3 * 50),  # 3 cosine terms
+    "bartlett": (
+        lambda: fnp.bartlett(50),
+        4 * 50,
+    ),  # compare+div+add+select per sample (FMA=2)
+    "blackman": (
+        lambda: fnp.blackman(50),
+        40 * 50,
+    ),  # 2 cosine evals @16 + 8 arith per sample
     "hamming": (lambda: fnp.hamming(50), 2 * 50),  # 1 mul + 1 cos
     "hanning": (lambda: fnp.hanning(50), 2 * 50),
-    "kaiser": (lambda: fnp.kaiser(50, 14), 3 * 50),  # Bessel I₀ proxy
+    "kaiser": (lambda: fnp.kaiser(50, 14), 23 * 50),  # Bessel I0 @16 + 7 arith (FMA=2)
     # ---- Stats (fixed per-elem constants at weight=1.0) -------------------
     "stats.norm.pdf": (lambda: fst.norm.pdf(_v100), 27 * 100),
     "stats.norm.cdf": (lambda: fst.norm.cdf(_v100), 48 * 100),
     "stats.norm.ppf": (lambda: fst.norm.ppf(_u100), 83 * 100),
     "stats.lognorm.ppf": (lambda: fst.lognorm.ppf(_u100, 0.5), 106 * 100),
     "stats.truncnorm.ppf": (lambda: fst.truncnorm.ppf(_u100, -2, 2), 81 * 100),
+    # audit-2 gap fixes (fix/cost-model-gaps):
+    "stats.laplace.cdf": (lambda: fst.laplace.cdf(_v100), 40 * 100),
+    "stats.laplace.ppf": (lambda: fst.laplace.ppf(_u100), 51 * 100),
+    "stats.lognorm.pdf": (lambda: fst.lognorm.pdf(_u100, 0.5), 62 * 100),
+    "stats.lognorm.cdf": (lambda: fst.lognorm.cdf(_v100, 0.5), 70 * 100),
+    "stats.uniform.cdf": (lambda: fst.uniform.cdf(_u100), 4 * 100),
+    "stats.cauchy.pdf": (lambda: fst.cauchy.pdf(_v100), 6 * 100),
     # ---- Selected reductions (not all reduction ops; family rule covers the rest) --
     # trapz: same formula as trapezoid (4*numel)
     "trapz": (lambda: fnp.trapz(_v100), 4 * 100),
@@ -445,17 +482,41 @@ OP_EXPECTATIONS: dict[str, tuple] = {
     "ediff1d": (lambda: fnp.ediff1d(_v100), 99),
     "gradient": (lambda: fnp.gradient(_v100), 2 * 100 - 4),  # 196
     # ---- Miscellaneous counted_custom -------------------------------------
-    "clip": (lambda: fnp.clip(_v100, -1.0, 1.0), 100),
+    # clip: 2 bounds → 2 compare-selects/elem → 2*numel(output); old pin was 1*numel
+    "clip": (lambda: fnp.clip(_v100, -1.0, 1.0), 200),
     # where: cond.size = 100; use pre-computed bool condition
     # where: cond.size = 100; condition is a pre-computed bool (not charged inside lambda)
     "where": (lambda: fnp.where(_v100_pos, _v100, _zeros100), 100),
     "tile": (lambda: fnp.tile(_v100, 3), 300),
     "repeat": (lambda: fnp.repeat(_v100, 3), 300),
-    "corrcoef": (lambda: fnp.corrcoef(_sq10), 2000),  # 2*n^3
-    "cov": (lambda: fnp.cov(_sq10), 2000),
+    "corrcoef": (
+        lambda: fnp.corrcoef(_sq10),
+        2410,
+    ),  # 2*f^2*s+2*f*s+2*f^2+f; f=s=10 -> 2000+200+200+10
+    "cov": (lambda: fnp.cov(_sq10), 2200),  # 2*f^2*s+2*f*s; f=s=10 -> 2000+200
     "linalg.trace": (lambda: fnp.linalg.trace(_sq10), 10),
     "trace": (lambda: fnp.trace(_sq10), 10),
     "linalg.cross": (lambda: fnp.linalg.cross(_a3, _b3), 3 * 3),
+    # ---- Copy / gather / view ops (audit-completion pins) ------------------
+    # diag extract: 2-D (10,10) → min(10,10)=10
+    "diag": (lambda: fnp.diag(_sq10_2d), 10),
+    # diagonal: returns a view → 0 FLOPs
+    "diagonal": (lambda: fnp.diagonal(_sq10_2d), 0),
+    # take_along_axis: gather tier weight 4.0; conftest resets weights → flop_cost = numel(output) = 30
+    # (billing = weight * flop_cost = 4.0 * 30 = 120 in production; 1.0 * 30 = 30 here)
+    "take_along_axis": (lambda: fnp.take_along_axis(_sq10_2d, _idx10x3, axis=1), 30),
+    # argwhere: numel(input) at weight 1.0; _v100_pos is pre-built bool (100 elems)
+    "argwhere": (lambda: fnp.argwhere(_v100_pos), 100),
+    # bmat: numel(output) of 6×6 block matrix = 36
+    "bmat": (lambda: fnp.bmat([[_sq3a, _sq3b], [_sq3a, _sq3b]]), 36),
+    # fromiter: 10 elements
+    "fromiter": (lambda: fnp.fromiter(range(10), float), 10),
+    # compress: len(cond)=5 + 4*numel(out)=4*3=12 → 17
+    "compress": (lambda: fnp.compress(_cond5, _v5_float), 17),
+    # packbits: numel(input)=8
+    "packbits": (lambda: fnp.packbits(_v8_bits), 8),
+    # unwrap: 13 * numel(input) = 13 * 100
+    "unwrap": (lambda: fnp.unwrap(_v100), 13 * 100),
 }
 
 # ---------------------------------------------------------------------------
@@ -468,13 +529,13 @@ DEFERRED: dict[str, str] = {
     "random.randn": "random_sampler family; flop_cost=numel; weight=16.0",
     "random.normal": "random_sampler family; flop_cost=numel; weight=16.0",
     "random.standard_normal": "random_sampler family; flop_cost=numel; weight=16.0",
-    "random.uniform": "random_sampler family; flop_cost=numel; weight=1.0",
+    "random.uniform": "random_sampler affine map; flop_cost=3*numel (draw + low+(high-low)*U); weight=1.0; probed in test_family_defaults_random_sampler",
     "random.random": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.random_sample": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.ranf": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.sample": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.randint": "random_sampler family; flop_cost=numel; weight=1.0",
-    "random.random_integers": "random_sampler family; flop_cost=numel; weight=1.0",
+    "random.random_integers": "blacklisted; deprecated alias; intentionally unsupported (raises AttributeError)",
     "random.exponential": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.poisson": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.binomial": "random_sampler family; flop_cost=numel; weight=1.0",
@@ -493,7 +554,7 @@ DEFERRED: dict[str, str] = {
     "random.lognormal": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.logseries": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.multinomial": "random_sampler family; flop_cost=numel; weight=1.0",
-    "random.multivariate_normal": "composite: d^3//3 + 2Nd^2 + 16Nd",
+    "random.multivariate_normal": "composite: svd_cost(d,d,with_vectors=True) + 2Nd^2 + 16Nd",
     "random.negative_binomial": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.noncentral_chisquare": "random_sampler family; flop_cost=numel; weight=1.0",
     "random.noncentral_f": "random_sampler family; flop_cost=numel; weight=1.0",
@@ -535,7 +596,7 @@ DEFERRED: dict[str, str] = {
     "random.Generator.logseries": "Generator family; numel",
     "random.Generator.multinomial": "Generator family; numel",
     "random.Generator.multivariate_hypergeometric": "Generator family; numel",
-    "random.Generator.multivariate_normal": "composite d^3//3+2Nd^2+16Nd",
+    "random.Generator.multivariate_normal": "composite svd_cost(d,d,with_vectors=True)+2Nd^2+16Nd",
     "random.Generator.negative_binomial": "Generator family; numel",
     "random.Generator.noncentral_chisquare": "Generator family; numel",
     "random.Generator.noncentral_f": "Generator family; numel",
@@ -579,7 +640,7 @@ DEFERRED: dict[str, str] = {
     "random.RandomState.lognormal": "RandomState family; numel",
     "random.RandomState.logseries": "RandomState family; numel",
     "random.RandomState.multinomial": "RandomState family; numel",
-    "random.RandomState.multivariate_normal": "composite formula",
+    "random.RandomState.multivariate_normal": "composite svd_cost(d,d,with_vectors=True)+2Nd^2+16Nd",
     "random.RandomState.negative_binomial": "RandomState family; numel",
     "random.RandomState.noncentral_chisquare": "RandomState family; numel",
     "random.RandomState.noncentral_f": "RandomState family; numel",
@@ -612,43 +673,47 @@ DEFERRED: dict[str, str] = {
     "random.RandomState.seed": "free_random_method — state setter",
     "random.RandomState.set_state": "free_random_method — state setter",
     # ---- Stats ops ---------------------------------------------------------
-    "stats.lognorm.pdf": "gap under review: declared 16/elem; honest ~43; see cost-model.md",
-    "stats.lognorm.cdf": "gap under review: declared 16/elem; honest ~40; see cost-model.md",
-    "stats.laplace.cdf": "gap under review: declared 16/elem; honest ~40; see cost-model.md",
-    "stats.laplace.ppf": "gap under review: declared 16/elem; honest ~46; see cost-model.md",
-    "stats.uniform.cdf": "gap under review: declared 1/elem; honest ~4; see cost-model.md",
-    "stats.uniform.pdf": "simple pass-through; numel*1",
-    "stats.uniform.ppf": "simple pass-through; numel*1",
-    "stats.expon.pdf": "simple; numel*1",
-    "stats.expon.cdf": "simple; numel*1",
-    "stats.expon.ppf": "simple; numel*1",
-    "stats.cauchy.pdf": "simple; numel*1",
-    "stats.cauchy.cdf": "simple; numel*1",
-    "stats.cauchy.ppf": "simple; numel*1",
-    "stats.logistic.pdf": "simple; numel*1",
-    "stats.logistic.cdf": "simple; numel*1",
-    "stats.logistic.ppf": "simple; numel*1",
-    "stats.laplace.pdf": "simple; numel*1",
-    "stats.truncnorm.pdf": "simple; numel*1",
-    "stats.truncnorm.cdf": "simple; numel*1",
+    # All composite kernels, weight 1.0; exact values read from _deduct_and_call() args.
+    # Pinned in OP_EXPECTATIONS: norm.pdf=27, norm.cdf=48, norm.ppf=83,
+    #   lognorm.ppf=106, lognorm.pdf=62, lognorm.cdf=70, truncnorm.ppf=81,
+    #   laplace.cdf=40, laplace.ppf=51, uniform.cdf=4, cauchy.pdf=6.
+    # DEFERRED (not probed individually; formula documented in cost-model.md):
+    "stats.uniform.pdf": "composite; 1 FLOP/elem (trivial range-check only); weight 1.0",
+    "stats.uniform.ppf": "composite; 1 FLOP/elem; weight 1.0",
+    "stats.expon.pdf": "composite; 22 FLOPs/elem (z+exp+where); weight 1.0",
+    "stats.expon.cdf": "composite; 22 FLOPs/elem (z+exp+where); weight 1.0",
+    "stats.expon.ppf": "composite; 27 FLOPs/elem (log1p+where); weight 1.0",
+    "stats.cauchy.cdf": "composite; 20 FLOPs/elem (z+arctan+arith); weight 1.0",
+    "stats.cauchy.ppf": "composite; 28 FLOPs/elem (tan+loc/scale+where); weight 1.0",
+    "stats.logistic.pdf": "composite; 23 FLOPs/elem (z+exp+arith); weight 1.0",
+    "stats.logistic.cdf": "composite; 21 FLOPs/elem (z+exp+arith); weight 1.0",
+    "stats.logistic.ppf": "composite; 28 FLOPs/elem (log+loc/scale+where); weight 1.0",
+    "stats.laplace.pdf": "composite; 22 FLOPs/elem (abs+exp+scale); weight 1.0",
+    "stats.truncnorm.pdf": "composite; 28 FLOPs/elem (norm.pdf+cdf-norm); weight 1.0",
+    "stats.truncnorm.cdf": "composite; 51 FLOPs/elem (affine+norm.cdf+selects); weight 1.0",
     # ---- counted_custom: copy / gather / scatter / structure ops ----------
     "array": "numel(input); plain copy",
     "full": "numel; scalar broadcast",
     "full_like": "numel; trivial",
-    "diag": "len(diagonal); selection only",
+    "diag": "pinned in OP_EXPECTATIONS (extract path; construct path = numel(output))",
     "concatenate": "numel(output); trivial copy",
     "concat": "numel(output); numpy 2.x alias for concatenate",
     "stack": "numel(output); trivial copy",
     "vstack": "numel(output); trivial copy",
     "dstack": "numel(output); trivial copy",
     "block": "numel(output); trivial copy",
-    "bmat": "numel(output); trivial copy",
-    "roll": "known gap: registered counted_custom but charges 0 FLOPs",
+    "bmat": "pinned in OP_EXPECTATIONS (numel(output) weight 1.0)",
+    "roll": "numel(output); materializing copy",
+    "hstack": "numel(output); materializing copy",
+    "column_stack": "numel(output); materializing copy (1-D to 2-D columns)",
+    "row_stack": "numel(output); alias for vstack",
+    "tril": "numel(output); masked-select copy; weight 1.0",
+    "triu": "numel(output); masked-select copy; weight 1.0",
     "einsum_path": "path planning only; returns list+string, no numeric FLOPs",
     "histogram_bin_edges": "numel(a); bin-edge computation",
     "pad": "numel(output); pad fill",
     "resize": "numel(output)",
-    "meshgrid": "numel(output) per array",
+    "meshgrid": "numel(output) per array; sparse=True bills sum(input lengths); copy=False bills 1",
     "indices": "numel(dense output)",
     "isnan": "numel(input); element comparison",
     "isinf": "numel(input)",
@@ -659,36 +724,36 @@ DEFERRED: dict[str, str] = {
     "asarray_chkfinite": "numel(input); finite check",
     "nonzero": "numel(input)",
     "flatnonzero": "numel(input)",
-    "argwhere": "numel(input) at weight 4.0",
+    "argwhere": "pinned in OP_EXPECTATIONS (numel(input) weight 1.0)",
     "select": "numel(output) gather tier",
     "piecewise": "numel(input); local_callback",
     "apply_along_axis": "numel(output); local_callback",
     "apply_over_axes": "numel(output); local_callback",
     "fromfunction": "numel(output); local_callback",
-    "fromiter": "numel(output); local_callback",
-    "diagonal": "len(diagonal); delegates to numpy view",
-    "linalg.diagonal": "delegates to fnp.diagonal; charges len(diagonal)",
+    "fromiter": "pinned in OP_EXPECTATIONS (numel(output) weight 1.0)",
+    "diagonal": "pinned in OP_EXPECTATIONS (view; 0 FLOPs)",
+    "linalg.diagonal": "delegates to fnp.diagonal; 0 FLOPs (view)",
     "take": "numel(output) gather",
-    "take_along_axis": "numel(output)",
+    "take_along_axis": "pinned in OP_EXPECTATIONS (numel(output) weight 4.0 gather tier)",
     "choose": "numel(output) gather tier",
-    "compress": "numel(input) gather",
+    "compress": "pinned in OP_EXPECTATIONS (len(cond)+4*numel(out) weight 1.0)",
     "extract": "numel(input) gather",
     "place": "numel(input) scatter",
-    "put": "numel(input)",
-    "put_along_axis": "numel(input)",
+    "put": "numel(indices) scatter at gather tier",
+    "put_along_axis": "elements scattered; gather tier weight 4.0",
     "putmask": "numel(input) scatter",
-    "delete": "num deleted elements",
-    "insert": "numel(values)",
-    "append": "numel(values)",
-    "copyto": "num copied",
+    "delete": "numel(output); surviving elements copied",
+    "insert": "numel(output); materializing copy",
+    "append": "numel(output) = arr.size + values.size; concatenate family",
+    "copyto": "numel(dst), or popcount of broadcast where mask",
     "trim_zeros": "num trimmed",
     "ix_": "numel(output)",
-    "mask_indices": "numel(output)",
+    "mask_indices": "2*n^2 + 8*k; weight 1.0 (mask scan + gather index pairs)",
     "diagflat": "len(v)",
     "fill_diagonal": "min(m,n)",
-    "packbits": "(n+7)//8",
+    "packbits": "pinned in OP_EXPECTATIONS (numel(input) weight 1.0)",
     "unpackbits": "8*n",
-    "unwrap": "numel(input); diff+conditional",
+    "unwrap": "pinned in OP_EXPECTATIONS (13*numel(input) weight 1.0)",
     "unstack": "numel(output); NumPy 2.1+",
     "unique_all": "n*ceil(log2(n)); unique family",
     "unique_counts": "n*ceil(log2(n)); unique family",
@@ -703,7 +768,7 @@ DEFERRED: dict[str, str] = {
     "linalg.matrix_power": "pinned in OP_EXPECTATIONS",
     "linalg.multi_dot": "COVERED_ELSEWHERE (_FMA)",
     "linalg.matmul": "pinned in OP_EXPECTATIONS",
-    "linalg.cross": "delegates to fnp.cross; COVERED_ELSEWHERE (_FMA)",
+    "linalg.cross": "pinned in OP_EXPECTATIONS (delegates to fnp.cross; 3*numel(output))",
     "in1d": "same model as isin; deprecated (removed in numpy >=2.4)",
     "correlate": "same model as convolve; COVERED_ELSEWHERE (_FMA)",
     "cov": "pinned in OP_EXPECTATIONS",
@@ -711,6 +776,7 @@ DEFERRED: dict[str, str] = {
     "sort_complex": "pinned in OP_EXPECTATIONS",
     "linalg.trace": "pinned in OP_EXPECTATIONS",
     "trace": "pinned in OP_EXPECTATIONS",
+    # ---- newly re-registered from blacklist (audit-2 fix): no billing change --
 }
 
 
@@ -778,7 +844,6 @@ def test_family_defaults_free():
     assert _cost(lambda: fnp.empty(100)) == 0
     assert _cost(lambda: fnp.zeros_like(v)) == 0
     assert _cost(lambda: fnp.ones_like(v)) == 0
-    assert _cost(lambda: fnp.fft.fftfreq(64)) == 0
     assert _cost(lambda: fnp.fft.fftshift(v)) == 0
     assert _cost(lambda: fnp.fft.ifftshift(v)) == 0
     assert _cost(lambda: fnp.linalg.matrix_transpose(sq)) == 0
@@ -789,7 +854,9 @@ def test_family_defaults_random_sampler():
     import flopscope.numpy.random as fnpr
 
     assert _cost(lambda: fnpr.rand(100)) == 100
-    assert _cost(lambda: fnpr.uniform(0.0, 1.0, 100)) == 100
+    assert (
+        _cost(lambda: fnpr.uniform(0.0, 1.0, 100)) == 3 * 100
+    )  # affine exception (draw + low+(high-low)*U)
     assert _cost(lambda: fnpr.random(100)) == 100
     assert _cost(lambda: fnpr.randint(0, 100, 100)) == 100
     assert _cost(lambda: fnpr.exponential(1.0, 100)) == 100

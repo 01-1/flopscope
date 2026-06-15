@@ -43,7 +43,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.numpy.random.sample",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L371",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/random/__init__.py#L446",
   "href": "/docs/api/numpy/random/sample/",
   "import_path": "flopscope.numpy.random.sample",
   "is_operation_cost_leaf": true,

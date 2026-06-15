@@ -735,7 +735,7 @@
     "href": "/docs/api/numpy/random/generator/dirichlet/",
     "label": "fnp.random.Generator.dirichlet"
   },
-  "notes": "numel(output) if replace else sort_cost(n).",
+  "notes": "numel(output) if replace; n (Fisher-Yates/Floyd <= O(n)) if replace=False and p is None; sort_cost(n) conservative floor if replace=False with p.",
   "notes_sections": [
     "Setting user-specified probabilities through ``p`` uses a more general but less efficient sampler than the default. The general sampler produces a different sample than the optimized sampler even if each element of ``p`` is 1 / len(a).",
     "``p`` must sum to 1 when cast to ``float64``. To ensure this, you may wish to normalize using ``p = p / flops.sum(p, dtype=float)``.",

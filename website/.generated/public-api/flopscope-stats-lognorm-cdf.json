@@ -219,11 +219,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "70 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: log + erf rational approx\n+ arithmetic, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -283,7 +283,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.stats.lognorm.cdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_lognorm.py#L74",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_lognorm.py#L80",
   "href": "/docs/api/stats/lognorm/cdf/",
   "import_path": "flopscope.stats.lognorm.cdf",
   "is_operation_cost_leaf": true,
@@ -294,7 +294,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.lognorm.cdf(x, s, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.lognorm.cdf(x, s, loc, scale)``. FLOP cost: ``70 * numel(x)`` (composite: log + erf rational approx + arithmetic, weight 1.0)."
   ],
   "numpy_ref": "",
   "operation": null,

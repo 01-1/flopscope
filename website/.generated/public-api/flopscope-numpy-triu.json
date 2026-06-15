@@ -204,11 +204,11 @@
   ],
   "canonical_name": "flopscope.numpy.triu",
   "canonical_path": "/docs/api/numpy/triu/",
-  "category": "free",
-  "cost_formula": "0",
-  "cost_formula_latex": "$0$",
+  "category": "counted_custom",
+  "cost_formula": "per-operation",
+  "cost_formula_latex": "varies",
   "display_name": "flopscope.numpy.triu",
-  "display_type": "free",
+  "display_type": "custom",
   "doc_coverage": {
     "raw_blocks": [],
     "unresolved_references": [],
@@ -221,7 +221,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.triu",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L925",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L953",
   "href": "/docs/api/numpy/triu/",
   "import_path": "flopscope.numpy.triu",
   "is_operation_cost_leaf": true,
@@ -233,15 +233,15 @@
     "href": "/docs/api/numpy/triu-indices/",
     "label": "fnp.triu_indices"
   },
-  "notes": "Upper triangle of array.",
+  "notes": "Upper triangle of array. Cost: numel(output) (masked-select copy).",
   "notes_sections": [],
   "numpy_ref": "np.triu",
   "operation": {
     "blocked": false,
-    "category": "free",
-    "cost_formula": "0",
-    "cost_formula_latex": "$0$",
-    "free": true,
+    "category": "counted_custom",
+    "cost_formula": "per-operation",
+    "cost_formula_latex": "varies",
+    "free": false,
     "name": "triu"
   },
   "parameters": [],
@@ -278,5 +278,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_twodim_base_impl.py#L497",
-  "weight": 0.0
+  "weight": 1.0
 }

@@ -419,7 +419,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.vector_norm",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L291",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L323",
   "href": "/docs/api/numpy/linalg/vector-norm/",
   "import_path": "flopscope.numpy.linalg.vector_norm",
   "is_operation_cost_leaf": true,
@@ -431,7 +431,7 @@
     "href": "/docs/api/numpy/linspace/",
     "label": "fnp.linspace"
   },
-  "notes": "Vector norm. Cost: numel (or 2*numel for general p-norm).",
+  "notes": "Vector norm. Cost: 2*numel(effective_shape) \u00d7 batch groups (non-reduced dims); axis=None \u2192 1 group.",
   "notes_sections": [],
   "numpy_ref": "np.linalg.vector_norm",
   "operation": {

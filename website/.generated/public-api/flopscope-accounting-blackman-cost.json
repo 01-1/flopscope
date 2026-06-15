@@ -118,7 +118,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Three cosine terms per sample."
+              "text": "numpy's blackman: 0.42 + 0.5*cos(pi*n/(M-1)) + 0.08*cos(2*pi*n/(M-1)) \u2014 exactly\ntwo cosine evals per element. Weight 1.0 (constant in flop_cost per composite-kernel tier policy)."
             }
           ],
           "type": "paragraph"
@@ -140,7 +140,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.blackman_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L46",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L47",
   "href": "/docs/api/accounting/blackman-cost/",
   "import_path": "flopscope.accounting.blackman_cost",
   "is_operation_cost_leaf": false,
@@ -152,7 +152,7 @@
   "notes": "",
   "notes_sections": [
     "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
-    "Three cosine terms per sample."
+    "numpy's blackman: 0.42 + 0.5*cos(pi*n/(M-1)) + 0.08*cos(2*pi*n/(M-1)) \u2014 exactly two cosine evals per element. Weight 1.0 (constant in flop_cost per composite-kernel tier policy)."
   ],
   "numpy_ref": "",
   "operation": null,

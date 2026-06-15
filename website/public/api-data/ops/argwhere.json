@@ -272,12 +272,12 @@
     "signature": "fnp.argwhere(a)",
     "status": "supported",
     "summary": "Find the indices of array elements that are non-zero, grouped by element.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "argwhere",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1137",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1186",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/numeric.py#L591"
   }
 }

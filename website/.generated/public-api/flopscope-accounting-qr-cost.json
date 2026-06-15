@@ -10,13 +10,27 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Weighted FLOP cost of QR decomposition."
+              "text": "Weighted FLOP cost of QR decomposition (Householder, FMA=2)."
             }
           ],
           "type": "paragraph"
         }
       ],
       "title": "Summary"
+    },
+    {
+      "blocks": [
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "Factorization (dgeqrf): 2*m*n*k - 2*k^3/3, k = min(m, n)\n(G&VL 4e \u00a75.2). Modes \"reduced\"/\"complete\" additionally form Q\nexplicitly (dorgqr), modeled as the same count again. Modes\n\"r\"/\"raw\" bill the factorization only."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
     },
     {
       "blocks": [
@@ -64,6 +78,66 @@
                 }
               ],
               "name": "n",
+              "type": "field_list"
+            },
+            {
+              "body_blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "Argument forwarded to the analytical "
+                    },
+                    {
+                      "external_url": "",
+                      "href": "/docs/api/numpy/linalg/qr/",
+                      "kind": "link",
+                      "target": "linalg.qr",
+                      "text": "linalg.qr"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " cost formula. Defaults to "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "'reduced'"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "data_type": "str, optional",
+              "inline": [
+                {
+                  "kind": "text",
+                  "text": "Argument forwarded to the analytical "
+                },
+                {
+                  "external_url": "",
+                  "href": "/docs/api/numpy/linalg/qr/",
+                  "kind": "link",
+                  "target": "linalg.qr",
+                  "text": "linalg.qr"
+                },
+                {
+                  "kind": "text",
+                  "text": " cost formula. Defaults to "
+                },
+                {
+                  "kind": "code",
+                  "text": "'reduced'"
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ],
+              "name": "mode",
               "type": "field_list"
             }
           ],
@@ -135,15 +209,6 @@
             }
           ],
           "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "text",
-              "text": "Simplified cubic cost model for QR decomposition."
-            }
-          ],
-          "type": "paragraph"
         }
       ],
       "title": "Notes"
@@ -173,8 +238,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
-    "Simplified cubic cost model for QR decomposition."
+    "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions."
   ],
   "numpy_ref": "",
   "operation": null,
@@ -192,6 +256,13 @@
       ],
       "name": "n",
       "type": "int"
+    },
+    {
+      "body": [
+        "Argument forwarded to the analytical ``linalg.qr`` cost formula. Defaults to ``'reduced'``."
+      ],
+      "name": "mode",
+      "type": "str, optional"
     }
   ],
   "previous": null,
@@ -206,9 +277,9 @@
   ],
   "schema_version": 1,
   "see_also": [],
-  "signature": "flopscope.accounting.qr_cost(m: 'int', n: 'int') -> 'int'",
+  "signature": "flopscope.accounting.qr_cost(m: 'int', n: 'int', mode: 'str' = 'reduced') -> 'int'",
   "slug": "flopscope-accounting-qr-cost",
-  "summary": "Weighted FLOP cost of QR decomposition.",
+  "summary": "Weighted FLOP cost of QR decomposition (Householder, FMA=2).",
   "upstream_source_url": "",
   "weight": 1.0
 }

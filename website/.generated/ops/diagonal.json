@@ -773,7 +773,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.diagonal",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L943",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L981",
   "href": "/docs/api/numpy/diagonal/",
   "legacy_href": "/docs/api/ops/diagonal/",
   "module": "numpy",
@@ -897,5 +897,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/fromnumeric.py#L1695",
-  "weight": 1.0
+  "weight": 0.0
 }

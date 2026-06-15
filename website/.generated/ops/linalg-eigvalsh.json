@@ -424,7 +424,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.eigvalsh",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L280",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L300",
   "href": "/docs/api/numpy/linalg/eigvalsh/",
   "legacy_href": "/docs/api/ops/linalg-eigvalsh/",
   "module": "numpy.linalg",
@@ -433,7 +433,7 @@
     "href": "/docs/api/numpy/linalg/inv/",
     "label": "fnp.linalg.inv"
   },
-  "notes": "Symmetric eigenvalues. Cost: $n^3$.",
+  "notes": "Symmetric eigenvalues. Cost: ~$\\frac{4}{3}n^3$ (tridiagonalization, values only; G&VL 4e \u00a78.3). Confirmed by the 2026-06 evidence audit.",
   "notes_sections": [
     "Broadcasting rules apply, see the `flops.linalg` documentation for details.",
     "The eigenvalues are computed using LAPACK routines ``_syevd``, ``_heevd``."

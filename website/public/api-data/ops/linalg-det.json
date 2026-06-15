@@ -267,7 +267,7 @@
     "flopscope_ref": "fnp.linalg.det",
     "module": "numpy.linalg",
     "name": "linalg.det",
-    "notes": "Determinant. Cost: $n^3$.",
+    "notes": "Determinant. Cost: $\\frac{2}{3}n^3 + n$.",
     "numpy_ref": "np.linalg.det",
     "signature": "fnp.linalg.det(a: 'ArrayLike') -> 'FlopscopeArray'",
     "status": "supported",

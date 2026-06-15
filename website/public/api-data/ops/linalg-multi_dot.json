@@ -334,7 +334,7 @@
     "flopscope_ref": "fnp.linalg.multi_dot",
     "module": "numpy.linalg",
     "name": "linalg.multi_dot",
-    "notes": "Chain matmul. Cost: sum of optimal chain matmul costs (CLRS \u00a715.2).",
+    "notes": "Chain matmul. Cost: sum of optimal chain matmul_cost steps (CLRS \u00a715.2); each step = 2mkn - mn.",
     "numpy_ref": "np.linalg.multi_dot",
     "signature": "fnp.linalg.multi_dot(arrays: 'Sequence[ArrayLike]', *, out: 'ArrayLike | None' = None) -> 'FlopscopeArray'",
     "status": "supported",
@@ -344,7 +344,7 @@
   "schema_version": 1,
   "slug": "linalg-multi_dot",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_compound.py#L71",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_compound.py#L77",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/linalg/_linalg.py#L2841"
   }
 }

@@ -256,11 +256,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(q)"
+              "text": "81 * numel(q)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: erf + ndtri rational approx + arithmetic, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -322,7 +322,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.truncnorm.ppf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L124",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L131",
   "href": "/docs/api/stats/truncnorm/ppf/",
   "import_path": "flops.stats.truncnorm.ppf",
   "is_operation_cost_leaf": false,
@@ -334,9 +334,9 @@
     "href": "/docs/api/stats/uniform/cdf/",
     "label": "flops.stats.uniform.cdf"
   },
-  "notes": "Truncated normal PPF; cost = numel(input).",
+  "notes": "Truncated normal PPF; composite: 81 FLOPs/elem (erf + ndtri rational approx + arithmetic), weight 1.0.",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.truncnorm.ppf(q, a, b, loc, scale)``. FLOP cost: ``1 * numel(q)``."
+    "Equivalent to ``scipy.stats.truncnorm.ppf(q, a, b, loc, scale)``. FLOP cost: ``81 * numel(q)`` (composite: erf + ndtri rational approx + arithmetic, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.truncnorm.ppf",
   "operation": {

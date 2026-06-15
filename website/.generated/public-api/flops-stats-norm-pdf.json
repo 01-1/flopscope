@@ -196,11 +196,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "27 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: exp + arithmetic, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -262,7 +262,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.norm.pdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_norm.py#L39",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_norm.py#L40",
   "href": "/docs/api/stats/norm/pdf/",
   "import_path": "flops.stats.norm.pdf",
   "is_operation_cost_leaf": false,
@@ -274,9 +274,9 @@
     "href": "/docs/api/stats/norm/ppf/",
     "label": "flops.stats.norm.ppf"
   },
-  "notes": "Normal PDF; cost = numel(input).",
+  "notes": "Normal PDF; composite: 27 FLOPs/elem (exp + arithmetic), weight 1.0.",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.norm.pdf(x, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.norm.pdf(x, loc, scale)``. FLOP cost: ``27 * numel(x)`` (composite: exp + arithmetic, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.norm.pdf",
   "operation": {

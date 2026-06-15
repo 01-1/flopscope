@@ -185,44 +185,54 @@ def svd_cost(
 ) -> int:
     """FLOP cost of an SVD (FMA=2, leading order).
 
-    values only (with_vectors=False):
-        2*a*b^2 + 2*b^3   (a = max(m,n), b = min(m,n))
+    Full decomposition (``k is None``), with a = max(m, n), b = min(m, n):
+        values only (with_vectors=False):        2*a*b^2 + 2*b^3
+        thin U, V (full_matrices=False):         6*a*b^2 + 20*b^3
+        full U (full_matrices=True and m != n):  4*a^2*b + 22*b^3
+    Constants from the 2026-06 evidence audit (LAPACK dgesdd + G&VL 4e §8.6);
+    see docs/reference/cost-model.md.
 
-    with thin U, V (full_matrices=False or m==n):
-        6*a*b^2 + 20*b^3  (LAPACK dgesdd thin path; G&VL 4e §8.6)
-
-    with full U (full_matrices=True and m != n):
-        4*a^2*b + 22*b^3  (forming full U dominates; LAPACK dgesdd,
-                           G&VL 4e §8.6)
-
-    Constants confirmed by the 2026-06 evidence audit: LAPACK driver
-    op-counts (dgesdd) + runtime scaling + G&VL citation; see
-    docs/reference/cost-model.md.
-
-    ``k`` is accepted for API compatibility but does not reduce the cost:
-    LAPACK computes the full decomposition regardless of how many singular
-    values the caller keeps.
+    Top-k truncated SVD (``1 <= k < min(m, n)``):
+        min(4*m*n*k, economy)
+    ``4*m*n*k`` is the verified leading-order cost of a rank-k randomized SVD
+    (Halko-Martinsson-Tropp; two passes over A, Theta(m*n*k)). flopscope bills
+    this standard truncated-algorithm cost even though the reference
+    implementation computes the full economy SVD and slices — it bills the
+    textbook cost of the operation (like matmul), not literal BLAS work.
+    Values-only is NOT leading-order cheaper for the truncated case (unlike the
+    full case). ``k >= min(m, n)`` bills the economy cost; the full_matrices
+    full-U premium applies only to the full decomposition (``k is None``).
+    See docs/reference/cost-model.md.
     """
     a, b = max(m, n), min(m, n)
-    if with_vectors:
-        if full_matrices and m != n:
+    economy = 6 * a * b * b + 20 * b**3 if with_vectors else 2 * a * b * b + 2 * b**3
+    if k is None:
+        if with_vectors and full_matrices and m != n:
             return max(4 * a * a * b + 22 * b**3, 1)
-        return max(6 * a * b * b + 20 * b**3, 1)
-    return max(2 * a * b * b + 2 * b**3, 1)
+        return max(economy, 1)
+    if k >= b:
+        return max(economy, 1)
+    return max(min(4 * m * n * k, economy), 1)
 
 
 def matmul_cost(m: int, k: int, n: int) -> int:
     """FLOP cost of a single 2D matmul ``(m, k) @ (k, n) -> (m, n)``.
 
-    Formula: ``2 * m * k * n - m * n`` (FMA=2 textbook: multiplies and adds
-    counted separately, with accumulator off-by-one), matching what
-    ``fnp.matmul`` charges per 2D call via the
-    einsum machinery (``_resolve_cost_and_output_symmetry`` on the
-    canonical subscripts ``ij,jk->ik``).
+    Delegates to :func:`einsum_cost` on the canonical matmul subscripts
+    ``ij,jk->ik`` so this helper is, by construction, the *same* number
+    ``fnp.matmul`` charges per 2D call — both go through the one einsum cost
+    engine. This keeps the whole linalg contraction family on a single source
+    of truth: the compound formulas that call ``matmul_cost`` (``pinv_cost``,
+    ``lstsq_cost``, ``matrix_power_cost``, and ``linalg.multi_dot``) track the
+    einsum matmul convention automatically, with no duplicated ``2mkn - mn``
+    constant left to drift.
 
-    Used by ``pinv_cost``, ``lstsq_cost``, and ``matrix_power_cost``
-    so those compound formulas track ``fnp.matmul`` automatically if the
-    matmul accounting convention ever changes again.
+    The returned value equals ``2 * m * k * n - m * n`` (FMA=2 textbook:
+    multiplies and adds counted separately, accumulator off-by-one);
+    ``einsum_cost`` is used as a cheap per-step closed form rather than
+    re-deriving that constant here. The ``max(..., 1)`` clamp is kept because
+    ``einsum_cost`` returns the unclamped value (which is 0 or negative for
+    degenerate/empty dims).
 
     Parameters
     ----------
@@ -234,7 +244,7 @@ def matmul_cost(m: int, k: int, n: int) -> int:
     int
         Estimated FLOP count, clamped to at least 1.
     """
-    return max(2 * m * k * n - m * n, 1)
+    return max(einsum_cost("ij,jk->ik", [(m, k), (k, n)]), 1)
 
 
 def _ceil_log2(n: int) -> int:

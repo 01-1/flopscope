@@ -92,14 +92,16 @@ class TestAllclose:
         b = numpy.random.randn(100)
         with BudgetContext(flop_budget=10**6) as budget:
             allclose(a, b)
-        assert budget.flops_used == 100
+        # 7*numel - 1: 6/elem tolerance core + all-reduce
+        assert budget.flops_used == 7 * 100 - 1
 
     def test_cost_minimum_one(self):
         a = numpy.array([1.0])
         b = numpy.array([1.0])
         with BudgetContext(flop_budget=10**6) as budget:
             allclose(a, b)
-        assert budget.flops_used == 1
+        # 7*1 - 1 = 6 (numel=1)
+        assert budget.flops_used == 6
 
 
 # ---------------------------------------------------------------------------
@@ -179,11 +181,17 @@ class TestHistogram:
         assert budget.flops_used == 400
 
     def test_cost_string_bins(self):
-        # bins="auto" → cost = n = 100
+        # bins="auto" → cost = n*(2 + estimator + ceil_log2(resolved_bins))
+        # "auto" estimator cost = 1 (percentile), must be >= int-path equivalent
+        import math
+
         a = numpy.random.randn(100)
+        n = 100
+        nb = len(numpy.histogram_bin_edges(a, "auto")) - 1
+        expected = n * (2 + 1 + math.ceil(math.log2(max(nb, 1))))
         with BudgetContext(flop_budget=10**6) as budget:
             histogram(a, bins="auto")
-        assert budget.flops_used == 100
+        assert budget.flops_used == expected
 
     def test_cost_array_bins(self):
         # array bins of length 11 → binary search: n * ceil(log2(11)) = 100 * 4 = 400

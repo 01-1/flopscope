@@ -257,11 +257,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(q)"
+              "text": "81 * numel(q)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: erf + ndtri rational approx + arithmetic, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -321,7 +321,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.stats.truncnorm.ppf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L124",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L131",
   "href": "/docs/api/stats/truncnorm/ppf/",
   "import_path": "flopscope.stats.truncnorm.ppf",
   "is_operation_cost_leaf": true,
@@ -332,7 +332,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.truncnorm.ppf(q, a, b, loc, scale)``. FLOP cost: ``1 * numel(q)``."
+    "Equivalent to ``scipy.stats.truncnorm.ppf(q, a, b, loc, scale)``. FLOP cost: ``81 * numel(q)`` (composite: erf + ndtri rational approx + arithmetic, weight 1.0)."
   ],
   "numpy_ref": "",
   "operation": null,

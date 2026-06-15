@@ -393,7 +393,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.kaiser",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L162",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L170",
   "href": "/docs/api/numpy/kaiser/",
   "import_path": "flopscope.numpy.kaiser",
   "is_operation_cost_leaf": true,
@@ -405,7 +405,7 @@
     "href": "/docs/api/numpy/kron/",
     "label": "fnp.kron"
   },
-  "notes": "Kaiser window. Cost: 3*n (Bessel function eval per sample).",
+  "notes": "Kaiser window. Cost: 23*n (per sample: 1 Bessel I0 at transcendental tier 16 + 7 arithmetic FLOPs, FMA=2).",
   "notes_sections": [
     "The Kaiser window is defined as",
     ".. math::  w(n) = I_0\\left( \\beta \\sqrt{1-\\frac{4n^2}{(M-1)^2}} \\right)/I_0(\\beta)",

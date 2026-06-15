@@ -911,7 +911,7 @@
     "flopscope_ref": "fnp.arange",
     "module": "numpy",
     "name": "arange",
-    "notes": "Return evenly spaced values in given interval. Cost: numel(output).",
+    "notes": "Return evenly spaced values in given interval. Cost: 2*numel(output).",
     "numpy_ref": "np.arange",
     "signature": "fnp.arange(*args: 'Any', **kwargs: 'Any') -> 'FlopscopeArray'",
     "status": "supported",
@@ -921,7 +921,7 @@
   "schema_version": 1,
   "slug": "arange",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L221",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L224",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.arange.html"
   }
 }

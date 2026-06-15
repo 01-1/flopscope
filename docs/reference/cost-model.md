@@ -1,23 +1,53 @@
 # Cost model reference
 
+> **Start here.** This is the cost model's conceptual and audit reference. Read it
+> to understand *how* billing works and to satisfy yourself that it is correct and
+> non-gameable — you do **not** need to read every operation. The exhaustive,
+> generated per-op list (every op with its `cost_formula` and `weight`) lives in
+> [`ops.json`](#exhaustive-per-op-reference) and the website API pages; this doc
+> explains the model by **family rule** so you can reason about a whole class at once.
+
 flopscope bills compute as:
 
 ```
 charged = int(flop_cost × weight)
 ```
 
-`flop_cost` is the entire analytical FLOP count for a call (shape-dependent).
-`weight` is a per-element tier factor that converts analytical FLOPs to an
-equivalent billing unit.  The two concerns are kept separate: `flop_cost`
-carries all shape constants; `weight` carries only the per-element tier.
+For hardware calibration — how weights are measured and where empirical values
+differ from the declared tier — see [empirical-weights.md](empirical-weights.md).
 
-For hardware calibration — how weights are measured and what empirical
-values differ from the declared tier — see
-[docs/reference/empirical-weights.md](empirical-weights.md).
+## How to read this
+
+1. **[Billing model & design principles](#billing-model--design-principles)** — the one equation and *why* it is split into `flop_cost` and `weight`.
+2. **[Non-exploitability](#non-exploitability)** — the invariants that keep billing honest, and the test that enforces each.
+3. **[Cost by family](#cost-by-family)** — the rule + evidence + representative ops for the family you care about.
+4. **[Calibration & reproducibility](#calibration--reproducibility)** — how the constants and weights are derived, and how to reproduce any billed number yourself.
+5. **[Exhaustive per-op reference](#exhaustive-per-op-reference)** — drill into `ops.json` for one op's exact formula.
+
+**Completeness guarantee:** every billed operation is classified in the registry and
+appears in `ops.json` with a `cost_formula`; `tests/test_cost_model_coverage.py`
+enforces both that, and that every op-class (`ops.json` *area*) is covered by a family
+rule below. So nothing billed is undocumented, even where this doc summarizes by rule.
 
 ---
 
-## Conventions (declared layer)
+## Billing model & design principles
+
+Every operation is charged `charged = int(flop_cost × weight)`.
+
+**Two layers, on purpose.** `flop_cost` carries *all* shape- and algorithm-dependent
+cost (the operation count); `weight` is only a per-element hardware **tier**
+(calibrated — see [Calibration & reproducibility](#calibration--reproducibility)). The
+discipline that makes the model composable and non-gameable: **an algorithm constant
+never hides in a weight** — if a cost depends on a matrix dimension or a loop length it
+lives in `flop_cost`, never in the weight. (Enforced by `tests/test_weight_tier_policy.py`.)
+
+**We bill the textbook standard-algorithm cost, not literal BLAS.** `matmul` is
+`2mnk − mn` regardless of what the underlying BLAS does; top-k SVD is billed as the
+standard truncated-algorithm cost. This keeps billing deterministic,
+hardware-independent, and composable.
+
+The rest of this section defines the conventions these principles rest on.
 
 ### FMA=2
 
@@ -50,7 +80,8 @@ arctan2, hypot, logaddexp, logaddexp2) is calibrated into the same tier
 
 ### Half-tier transcendentals (weight 8.0)
 
-Not currently used in the active weight table; reserved for future ops.
+Ops whose per-element work is a single cosine evaluation amortized over a
+cheap window formula (`hamming`, `hanning`) are billed at weight 8.0.
 
 ### Gather tier (weight 4.0)
 
@@ -63,8 +94,7 @@ The weight reflects the non-trivial branch or index computation per element.
 Operations that return a view of existing memory, or that inspect metadata
 without touching element values, are billed 0.  Examples: reshape, ravel,
 flatten, transpose, diagonal (as a view), squeeze, broadcast_to, astype (no
-copy), fftshift/ifftshift, fftfreq/rfftfreq, linalg.diagonal,
-linalg.matrix_transpose.
+copy), fftshift/ifftshift, linalg.diagonal, linalg.matrix_transpose.
 
 ### Composite ops (weight 1.0 with heterogeneous flop_cost)
 
@@ -72,13 +102,6 @@ When an operation mixes sub-tiers internally (e.g. random samplers, stats
 kernels, norms with SVD), all per-element factors are folded into `flop_cost`
 and the active weight is set to 1.0.  This avoids double-counting with the
 tier factor.
-
-### Weight tier policy
-
-The tier assignments are CI-enforced: `tests/test_weight_tier_policy.py`
-asserts that every registered op's active weight belongs to one of the
-declared tiers (0.0, 1.0, 2.0, 4.0, 8.0, 16.0) and that the tier matches
-the op's family classification.
 
 ### NumPy 2.x ufunc aliases
 
@@ -91,10 +114,40 @@ commit `7f0b0a18`.
 
 ---
 
-## Per-family tables
+## Non-exploitability
 
-The families below cover the 602 registered ops.  Where an entire family
-shares one formula the rule is stated once; only exceptions are tabulated.
+The cost model meters compute so a participant cannot do expensive real work while
+being billed cheaply. The two threats are **under-count** (an op billed below its
+honest cost) and **substitution arbitrage** (routing the same work through a
+cheaper-billed but equivalent op). The model defends against both with invariants,
+each backed by a CI-enforced test you can open and read:
+
+| Invariant | What it guarantees | Enforced by |
+|---|---|---|
+| **Honest cost** | each `flop_cost` is the real standard-algorithm op count, with every shape/algorithm constant inside `flop_cost` | per-op evidence in [§Cost by family](#cost-by-family); `test_cost_constant_unification.py`, `test_cost_formula_vs_code.py` |
+| **Weight-tier policy** | every active weight ∈ `{0, 1, 4, 8, 16}`; arithmetic ops are 0 or 1; **no algorithm constant in a weight** | `test_weight_tier_policy.py` |
+| **No substitution arbitrage** | a bit-identical alias cannot bill cheaper than its canonical (e.g. `acos` *is* `arccos` — the 16× ufunc-alias fix); equivalent contractions (`dot`/`inner`/`matmul`/`einsum`) share one cost engine | `test_ufunc_alias_parity.py`, `test_random_weight_aliasing.py`; the shared einsum engine ([§Contraction](#contraction-einsum-family)) |
+| **No cheap in-op path** | top-k `svd(k=)` cannot yield a *full* decomposition below full price (the `min(4mnk, economy)` cap + `k ≥ min → full` guard); invalid `k` (`< 1` or `> min(m, n)`) is rejected before any billing | `test_svd_topk_cost.py` (cap / guard / monotonicity); `test_linalg.py` (invalid-`k` `ValueError`) |
+| **Free-tier discipline** | only genuine view / metadata / no-arithmetic ops carry weight 0 | `test_weight_tier_policy.py` + the registry's free-op classification |
+| **End-to-end billing** | production `flop_cost × weight` is pinned per tier `{0,1,4,8,16}` (catches a silent weight regression) | `test_production_weight_billing.py` |
+
+An auditor can read this table top-to-bottom and, for each claim, open the named test
+to see exactly what guarantees it. The first two rows are the load-bearing ones: honest
+`flop_cost` defeats under-count, and the weight-tier policy (no constant in a weight)
+defeats the family of arbitrage exploits where a high-constant op is re-tiered cheaply.
+
+---
+
+## Cost by family
+
+Each family below is one **rule** + its **evidence/citation** + **representative ops**.
+The rule is the part to audit; the per-op tables are kept where each op carries a
+*distinct* cited constant (linalg, FFT, polynomial, stats, window, random) because
+those constants are the evidence — and because `ops.json`'s generated `cost_formula`
+is coarse for many composite ops (it records `per-operation` where the real formula is
+shape-dependent). For families whose members all share one rule (copy/gather, views),
+only representatives are listed and the full set is a filter in
+[`ops.json`](#exhaustive-per-op-reference).
 
 ---
 
@@ -135,16 +188,17 @@ plus the per-output subtract, and `mean`/`average` add the per-output divide.
 
 | Op | flop_cost | weight | basis |
 |---|---|---|---|
-| `sum`, `prod`, `max`, `min`, `any`, `all`, `cumsum`, `cumprod`, `nansum`, `nanmax`, `nanmin`, `nanprod`, `nancumsum`, `nancumprod`, `cumulative_sum`, `cumulative_prod` | numel(input) − numel(output) | 1.0 | DECLARED reduction skeleton (one add per consumed element) |
+| `sum`, `prod`, `max`, `min`, `any`, `all`, `nansum`, `nanmax`, `nanmin`, `nanprod` | numel(input) − numel(output) | 1.0 | DECLARED reduction skeleton (one add or compare per consumed element) |
+| `cumsum`, `cumprod`, `nancumsum`, `nancumprod`, `cumulative_sum`, `cumulative_prod` | numel(input) − num_output_slices (= n−1 for a full 1-D scan; product of non-reduced dims otherwise) | 1.0 | DECLARED: scan accumulation; output shape = input shape so the generic `numel(in)−numel(out)` formula evaluates to 0 — these use the correct per-slice count instead |
 | `mean`, `average` (unweighted) | numel(input) | 1.0 | DERIVED: reduction (numel−M) + M divides |
-| `average(weights=)` | numel − M + 2·numel + M | 1.0 | DERIVED: a·w pass + a·w sum + w sum + M divides |
+| `average(weights=)` | `3·numel − M`, M = num output slices (1 for full reduction) | 1.0 | DERIVED: a·w multiply pass (numel) + a·w sum (numel−M) + weight sum (numel−M) + M divides |
 | `std`, `var`, `nanstd`, `nanvar` | ≈ 4 × numel(input) (std: + M sqrt) | 1.0 | DERIVED four-pass: mean-sum, centre, square, var-sum (exact: 2·numel + 2·(numel−M) + 2M) |
-| `argmax`, `argmin` | numel(input) | 1.0 | DECLARED scan |
+| `argmax`, `argmin` | numel(input) − num_output_slices (= n−1 for full 1-D; reduction_cost model) | 1.0 | DECLARED scan: same orbit model as reduction family |
 | `median`, `nanmedian` | axis length per output slice | 1.0 | DECLARED; partition (introselect) per output |
 | `percentile`, `nanpercentile`, `quantile`, `nanquantile` | axis length per output slice | 1.0 | DECLARED; partition (introselect) per output |
 | `ptp` | 2 × numel(input) − numel(output) | 1.0 | DERIVED: max pass + min pass + M subtracts (2·(numel−M)+M) |
-| `count_nonzero` | numel(input) − numel(output) | 1.0 | DECLARED comparison scan |
-| `nanmean` | numel(input) − numel(output) | 1.0 | factory skeleton; the missing per-output divide is a known gap (see appendix) |
+| `count_nonzero` | numel(input) | 1.0 | DECLARED comparison scan (every element tested regardless of axis) |
+| `nanmean` | numel(input) | 1.0 | DERIVED: reduction (numel−M) + M divides; billed identically to mean |
 
 Source: `src/flopscope/_pointwise.py`; reduction accumulation model in
 `src/flopscope/_accumulation/`.
@@ -156,16 +210,25 @@ Source: `src/flopscope/_pointwise.py`; reduction accumulation model in
 **Family rule** (DERIVED, G&VL 4e §1.1.11):
 
 ```
-flop_cost = (K − 1) × M_unique + M_unique
-           = (2K − 1) × M_unique
+flop_cost = K × M_unique        (multiplies: K per output cell)
+          + (K − 1) × M_unique  (adds: K−1 per output cell)
+          = (2K − 1) × M_unique
 ```
 
 where `K` = product of contracted-axis dimensions, `M_unique` = number of
 output cells actually computed (equals `prod(output dims)` for non-aliased
 inputs; reduced to the unique-orbit count when the output has symmetry, e.g.
-`A @ A` or `outer(v, v)`).
+`A @ A` or `outer(v, v)`). The engine (`einsum_cost`) computes the equivalent
+whole-expression form `(K − 1) × M_unique + α_unique`, where `α_unique` is the
+number of unique (output + contracted) index combinations — equal to
+`K × M_unique` for a single clean contraction, but more general for
+multi-index / broadcast einsums.
 
-For a plain `(m, k) @ (k, n)` matmul: `flop_cost = 2mkn − mn`.
+For a plain `(m, k) @ (k, n)` matmul: `flop_cost = 2mkn − mn` (`K = k`,
+`M_unique = mn`). Batched/stacked matmul multiplies this by the batch size, and
+aliased or symmetric operands (`A @ A`) reduce `M_unique` below `prod(output)`.
+The closed forms in the table below are the values this one engine produces per
+op — not separately-maintained constants.
 
 Multi-operand einsum (`k ≥ 3`) walks the `opt_einsum` optimal binary path and
 sums per-step costs.
@@ -182,10 +245,22 @@ sums per-step costs.
 | `einsum` | whole-expression accumulation; k≥3 binary path | DERIVED | G&VL 4e §1.1.11; `_accumulation/_cost.py` |
 | `kron` | `a.size × b.size` (outer product, no contraction) | DERIVED | Kronecker product definition; FMA=2 |
 | `linalg.matrix_power` | `(⌊log₂ k⌋ + popcount(k) − 1) × matmul_cost(n,n,n)` | DERIVED | Knuth TAOCP §4.6.3 × G&VL 4e §1.1.11 |
-| `linalg.multi_dot` | sum of optimal-chain matmul costs (CLRS §15.2) | DERIVED | G&VL 4e §1.1.11; note: each step uses `2mnk` (missing `−mn` vs `matmul_cost`) |
+| `linalg.multi_dot` | sum of optimal-chain matmul costs (CLRS §15.2); each step uses `matmul_cost(m,k,n)` = `2mkn − mn` | DERIVED | G&VL 4e §1.1.11; `_compound.py:multi_dot_cost` |
 
 All contraction ops use **weight 1.0** (the shape constants capture everything).
 Source: `src/flopscope/_accumulation/`, `src/flopscope/_flops.py`.
+
+All contraction ops — `matmul`, `dot`, `inner`, `outer`, `tensordot`, `vdot`,
+`vecdot`, `matvec`, `vecmat`, and `einsum` itself — compute cost through one
+shared einsum accumulation engine (`_resolve_cost_and_output_symmetry` /
+`einsum_cost`): a single FMA=2, symmetry-aware source of truth.  The compound
+linalg ops (`linalg.multi_dot`, `linalg.matrix_power`, `linalg.pinv`,
+`linalg.lstsq`) use the `matmul_cost(m,k,n)` helper, which delegates to
+`einsum_cost('ij,jk->ik', …)`, so it is identical to a 2-D matmul by
+construction — no duplicated `2mkn−mn` constant.  `kron` is the sole
+exception: as a pure Kronecker (outer) product with no contraction, its cost
+is exactly `a.size × b.size`, which equals the einsum cost of an outer product,
+so it uses that closed form directly.
 
 ---
 
@@ -195,12 +270,13 @@ Source: `src/flopscope/_accumulation/`, `src/flopscope/_flops.py`.
 |---|---|---|---|
 | `arange` | `2 × numel(output)` | DERIVED: `start + i×step` per element = 1 mul + 1 add (FMA=2) | `_free_ops.py`; numpy arraytypes.c.src |
 | `linspace` | `2 × numel(output)` (handles broadcast start/stop and `retstep=True`) | DERIVED: same affine model as arange | `_free_ops.py`; commit 790d19af + retstep fix |
-| `geomspace` | `2 × num × B + 6B` where `B` = product of broadcast batch dims | DERIVED: log + linspace + exp per-batch per-point | `_free_ops.py` |
-| `logspace` | same as geomspace | DERIVED | `_free_ops.py` |
+| `geomspace` | `numel(output)` (weight **16.0**) → billed `16 × numel(output)` | DERIVED: flop_cost = numel(output); transcendental weight 16.0 (log + exp path) | `_free_ops.py` |
+| `logspace` | `numel(output)` (weight **16.0**) → billed `16 × numel(output)` | DERIVED: same transcendental path as geomspace | `_free_ops.py` |
 | `zeros`, `ones`, `full`, `zeros_like`, `ones_like`, `full_like`, `eye`, `identity`, `empty`, `empty_like` | 0 (allocation, no arithmetic) | DECLARED free/metadata | `_free_ops.py` |
-| `meshgrid` | 0 per array (view or copy — no arithmetic; copies billed at numel if `copy=True`) | DECLARED | `_free_ops.py` |
+| `meshgrid` | dense: `len(xi) × prod(sizes)`; sparse (`sparse=True`): `sum(sizes)`; `copy=False` views: 1 | DECLARED: numel of materialized output grids | `_free_ops.py` |
 
-Weight: **1.0** for all counted generators.  Source: `src/flopscope/_free_ops.py`.
+Weight: **1.0** for `arange` and `linspace`; **16.0** for `geomspace` and
+`logspace` (transcendental path).  Source: `src/flopscope/_free_ops.py`.
 
 ---
 
@@ -210,13 +286,15 @@ Weight: **1.0** for all counted generators.  Source: `src/flopscope/_free_ops.py
 
 | Op | flop_cost | basis |
 |---|---|---|
-| `sort`, `argsort`, `unique`, `unique_counts`, `unique_inverse`, `unique_values` | `num_slices × n × ⌈log₂ n⌉` | DECLARED comparison sort (n = axis length) |
-| `lexsort` | `k × n × ⌈log₂ n⌉` (k = number of keys, n = sequence length) | DECLARED; note: does not multiply by num_slices for multi-dim arrays (known gap) |
+| `sort`, `argsort` | `num_slices × n × ⌈log₂ n⌉` | DECLARED comparison sort (n = axis length) |
+| `unique`, `unique_counts`, `unique_inverse`, `unique_values`, `unique_all` | `n × ⌈log₂ n⌉` (axis=None); `num_slices × shape[axis] × ⌈log₂ shape[axis]⌉` (axis=k) | DECLARED sort-based; axis-aware per-slice |
+| `lexsort` | `k × n × ⌈log₂ n⌉` (k = number of keys, n = sequence length) | DECLARED |
 | `partition`, `argpartition` | `num_slices × n × len(kth)` | DECLARED quickselect O(n) expected |
 | `searchsorted` | `m × ⌈log₂ n⌉` (m = queries, n = sorted size) | DECLARED binary search |
-| `sort_complex` | `a.size × ⌈log₂(a.size)⌉` on flattened size (note: per-last-axis model of `sort` not applied; known gap) | DECLARED |
-| `in1d`, `isin` | `(n + m) × ⌈log₂(n + m)⌉` | DECLARED sort-based model (small-ar2 masked-loop path not separately modeled) |
-| `intersect1d`, `setdiff1d`, `setxor1d`, `union1d` | `(n + m) × ⌈log₂(n + m)⌉` | DECLARED |
+| `sort_complex` | `num_slices × n × ⌈log₂ n⌉`, `n = a.shape[-1]`, `num_slices = a.size // n` (sorts last axis; equals flat formula only for 1-D) | DECLARED |
+| `in1d`, `isin` | `(n + m) × ⌈log₂(n + m)⌉` (sort path); `max(sort_cost(n+m), 2nm)` when numpy's masked-loop path triggers (small integer ar2) | DECLARED algo-aware |
+| `intersect1d` | `sort_cost(n) + sort_cost(m) + sort_cost(n+m)` (default `assume_unique=False`); `sort_cost(n+m)` when `assume_unique=True` | DECLARED: numpy calls `unique()` on both inputs when `assume_unique` is falsy |
+| `setdiff1d`, `setxor1d`, `union1d` | `(n + m) × ⌈log₂(n + m)⌉` | DECLARED |
 
 All sort/select ops use **weight 1.0**; comparison = 1 FLOP convention.
 Source: `src/flopscope/_sorting_ops.py`, `src/flopscope/_flops.py` (`sort_cost`, `search_cost`).
@@ -236,18 +314,22 @@ matrices charge 0.
 | `linalg.qr` (r/raw) | `2mnk − 2k³/3` | DERIVED: factorization only | `_decompositions.py:qr_cost` |
 | `linalg.solve` | `2n³/3 + 2n²×nrhs` | DERIVED: G&VL 4e §3.2 (dgesv = dgetrf + dgetrs) | `_solvers.py:solve_cost` |
 | `linalg.inv` | `2n³` | DERIVED: G&VL 4e §3.4 (dgetrf + dgetri ≈ 2n³) | `_solvers.py:inv_cost` |
-| `linalg.det`, `linalg.slogdet` | `2n³/3 + n` | DERIVED: G&VL 4e §3.2 LU (dgetrf) + diagonal product/log-sum | `_properties.py:det_cost` |
+| `linalg.det` | `2n³/3 + n` | DERIVED: G&VL 4e §3.2 LU (dgetrf) + diagonal product | `_properties.py:det_cost` |
+| `linalg.slogdet` | `2n³/3 + 18n` | DERIVED: LU (dgetrf) + sum of log\|diag\| (abs + 16/elem log + reduce) | `_properties.py:slogdet_cost` |
 | `linalg.norm` (fro/L1/Linf) | `2 × numel(effective_shape) × n_groups` | DERIVED: FMA=2 square+accumulate or abs+accumulate | `_properties.py:norm_cost` |
-| `linalg.norm` (ord=2, nuc) | `4 × m × n × min(m,n) × n_groups` | DERIVED: via SVD (4× baked in) | `_properties.py:norm_cost` |
-| `linalg.vector_norm` | `2 × numel(effective_shape) × n_groups` (all ord) | DERIVED: FMA=2; note: general fractional ord undercounts (known gap) | `_properties.py:vector_norm_cost` |
+| `linalg.norm` (ord=2, nuc) | `(2ab² + 2b³) × n_groups`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: values-only SVD cost per group | `_properties.py:norm_cost` |
+| `linalg.vector_norm` | `2 × numel(effective_shape) × n_groups` (standard ord); `(18 × numel + 16) × n_groups` (general fractional p-norm: abs + pow per element) | DERIVED: FMA=2 | `_properties.py:vector_norm_cost` |
 | `linalg.matrix_norm` | same as `linalg.norm` | DERIVED | `_properties.py` |
-| `linalg.trace` | `n = min(m,n)` | DERIVED: n−1 diagonal adds; note: batch multiply missing (known gap) | `_properties.py:trace_cost` |
+| `linalg.trace` | `min(m,n) × batch` | DERIVED: n−1 diagonal adds, batch-multiplied | `_properties.py:trace_cost` |
 | `linalg.tensorinv` | `2n³`, `n = prod(shape[:ind])` | DERIVED: G&VL 4e §3.4 via inv | `_solvers.py:tensorinv_cost` |
 | `linalg.tensorsolve` | `2n³/3 + 2n²`, `n = prod(shape[ind:])` | DERIVED: G&VL 4e §3.2 via solve | `_solvers.py:tensorsolve_cost` |
-| `linalg.cond`, `linalg.matrix_rank` | `4 × m × n × min(m,n)` (via SVD) | DERIVED | `_properties.py` |
-| `linalg.pinv`, `linalg.lstsq` | `m × n × min(m,n)` | DERIVED: LAPACK dgelsd / SVD path; G&VL 4e §5.5 | `_solvers.py` |
-| `linalg.cross` | `6 × n` (delegates to `fnp.cross`) | DERIVED | `_aliases.py` |
-| `linalg.outer`, `linalg.tensordot`, `linalg.vecdot`, `linalg.matmul`, `linalg.multi_dot`, `linalg.matrix_power` | delegates to `fnp.*` | DERIVED | `_compound.py`, `_aliases.py` |
+| `linalg.matrix_rank` | `2ab² + 2b³ + min(m,n)`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: values-only SVD + `min(m,n)` threshold comparisons | `_properties.py:matrix_rank_cost` |
+| `linalg.cond` | `2ab² + 2b³ + 1` for `ord∈{None,2,−2}` (values-only SVD + 1 divide); `2k³ + 4mn + 1`, `k=min(m,n)` for other ords (inv-based) | DERIVED | `_properties.py:cond_cost` |
+| `linalg.pinv` | `6ab² + 20b³ + min(m,n) + n·min(m,n) + matmul\_cost(n, min(m,n), m)`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: thin SVD (with vectors) + threshold + diagonal scale + reconstruction matmul; G&VL 4e §5.5 | `_solvers.py:pinv_cost` |
+| `linalg.lstsq` | `6ab² + 20b³ + matmul\_cost(k,m,c) + k·c + matmul\_cost(n,k,c)`, `k=min(m,n)`, `c=#rhs cols` | DERIVED: thin SVD (with vectors) + U^T b + divide by s + reconstruction; G&VL 4e §5.5 | `_solvers.py:lstsq_cost` |
+| `linalg.cross` | `3 × numel(output)` (delegates to `fnp.cross`) | DERIVED | `_aliases.py` |
+| `linalg.multi_dot` | optimal chain matmul cost (CLRS §15.2); each step uses `matmul_cost(m,k,n)` = `2mkn − mn` | DERIVED | `_compound.py:multi_dot_cost` |
+| `linalg.outer`, `linalg.tensordot`, `linalg.vecdot`, `linalg.matmul`, `linalg.matrix_power` | delegates to `fnp.*` | DERIVED | `_compound.py`, `_aliases.py` |
 | `linalg.diagonal`, `linalg.matrix_transpose` | 0 (view) | DECLARED free | `_aliases.py` |
 
 ---
@@ -256,7 +338,7 @@ matrices charge 0.
 
 These ops use LAPACK drivers that iterate until convergence; counts are
 leading-order estimates with confirmed-2026-06 citations.  All use
-**weight 1.0**.  See the [Evidence appendix](#evidence-appendix-iterative-linalg-constants)
+**weight 1.0**.  See [Calibration & reproducibility](#calibration--reproducibility)
 for the three-leg derivation.
 
 | Op | flop_cost (per matrix) | basis | source |
@@ -268,7 +350,32 @@ for the three-leg derivation.
 | `linalg.svd` (thin, full_matrices=False or square) | `6ab² + 20b³`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD Σ+U₁+V (dgesdd thin path) | `_svd.py:svd_cost` |
 | `linalg.svd` (full, full_matrices=True and m≠n) | `4a²b + 22b³` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD full U (forming full m×m U dominates) | `_svd.py:svd_cost` |
 | `linalg.svdvals` | `2ab² + 2b³` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD Σ only (dgesdd values, no vectors) | `_decompositions.py:svdvals_cost` |
-| `roots` | `10n³`, `n = len(p)−1` | DERIVED: companion-matrix eigvals (delegates to eigvals_cost) | `_polynomial.py`; note: uses raw `len(p)−1`, not stripped zero-padded length |
+| `roots` | `10n³`, `n` = stripped companion dimension (leading and trailing zero coefficients removed before companion matrix is built) | DERIVED: companion-matrix eigvals (delegates to eigvals_cost on trimmed degree) | `_polynomial.py`; consistent with polynomial-table `roots` row |
+
+#### Top-k (truncated) SVD
+
+`linalg.svd(..., k=)` and `linalg.svdvals(..., k=)` accept a top-k parameter.
+For `1 ≤ k < min(m, n)` the billed cost is
+
+    min(4·m·n·k, economy)
+
+where `economy` is the full thin/values-only cost above. `4·m·n·k` is the
+verified leading-order cost (FMA=2, Θ(mnk)) of a rank-k randomized SVD
+(Halko–Martinsson–Tropp; two unavoidable passes over A). It is billed as the
+**standard truncated-algorithm cost of the operation** — consistent with how
+this model bills the textbook matmul cost (`2mnk−mn`) rather than literal BLAS
+work — even though the reference implementation computes the full economy SVD
+and slices (results stay exact). Unlike the full case, **values-only is not
+leading-order cheaper** for top-k. `k = min(m, n)` (all components) bills the
+full economy cost, and the `full_matrices` full-U premium applies only to the
+full decomposition (`k is None`); so a complete decomposition can never be
+obtained below full price. Invalid `k` (`< 1` or `> min(m, n)`) raises
+`ValueError`.
+
+**Accepted residual:** because `4mnk < 6ab²+20b³` for all `k ≤ min(m, n)`, the
+truncated rate applies up to `k = min(m, n) − 1`, so a caller can obtain up to
+`min(m, n) − 1` exact singular vectors at the truncated rate. The guard ensures
+they can never obtain **all** `min(m, n)` components below full price.
 
 Per-matrix cost is multiplied by the batch dimension product.  Constants
 marked "provisional": iteration counts are input-dependent and the cubic
@@ -283,11 +390,15 @@ Fourier Transform_, 1992 §1.4, Cooley-Tukey radix-2):
 
 | Op | flop_cost | basis |
 |---|---|---|
-| `fft.fft`, `fft.ifft`, `fft.fft2`, `fft.ifft2`, `fft.fftn`, `fft.ifftn` | `5 × N × ⌈log₂ N⌉`, `N = prod(transform dims)` | DERIVED: Van Loan 1992 §1.4; 5 real ops per butterfly |
-| `fft.rfft`, `fft.irfft`, `fft.rfft2`, `fft.irfft2`, `fft.rfftn`, `fft.irfftn` | `5 × (N/2) × ⌈log₂ N⌉` | DERIVED: real-input / real-output half-spectrum |
-| `fft.hfft` | `5 × n_out × ⌈log₂ n_out⌉` | DERIVED (current); note: suspected 2× overcount vs honest `rfft_cost(n_out)` — unverified |
-| `fft.ihfft` | `5 × (n/2) × ⌈log₂ n⌉` | DERIVED (current); same suspected gap as hfft — unverified |
-| `fft.fftfreq`, `fft.rfftfreq`, `fft.fftshift`, `fft.ifftshift` | 0 | DECLARED free/metadata |
+| `fft.fft`, `fft.ifft` | `5 × N × ⌈log₂ N⌉`, `N` = transform length | DERIVED: Van Loan 1992 §1.4; 5 real ops per butterfly |
+| `fft.fft2`, `fft.ifft2`, `fft.fftn`, `fft.ifftn` | `5 × N × Σᵢ⌈log₂ dᵢ⌉`, `N = prod(transform dims)`, `dᵢ` = individual axis lengths | DERIVED: Van Loan 1992 §1.4; sum of per-axis log₂ terms (coincides with `5N⌈log₂N⌉` only when all axes are the same power of 2) |
+| `fft.rfft`, `fft.irfft` | `5 × (N/2) × ⌈log₂ N⌉` | DERIVED: real-input / real-output half-spectrum |
+| `fft.rfft2`, `fft.irfft2`, `fft.rfftn`, `fft.irfftn` | `5 × (N/2) × Σᵢ⌈log₂ dᵢ⌉` (real half-spectrum) | DERIVED: Van Loan 1992 §1.4; half-spectrum with per-axis log₂ sum |
+| `fft.hfft` | `5 × (n_out/2) × ⌈log₂ n_out⌉` | DERIVED: hfft = irfft(conj(a)) — conjugate-symmetry halves the work (Van Loan 1992 §1.4) |
+| `fft.ihfft` | `5 × (n/2) × ⌈log₂ n⌉` | DERIVED: same `hfft_cost(n)` formula |
+| `fft.fftfreq` | `n` (index grid scaled by `1/(n*d)` — one divide per output element) | DECLARED: `n` divides |
+| `fft.rfftfreq` | `n//2 + 1` (real-spectrum grid has `n//2 + 1` elements) | DECLARED: `n//2 + 1` divides |
+| `fft.fftshift`, `fft.ifftshift` | 0 | DECLARED free/metadata |
 
 All counted FFT ops use **weight 1.0**.  Source: `src/flopscope/numpy/fft/_transforms.py`.
 
@@ -298,11 +409,14 @@ All counted FFT ops use **weight 1.0**.  Source: `src/flopscope/numpy/fft/_trans
 | Op | flop_cost | basis | source |
 |---|---|---|---|
 | `polyval` | `2 × deg × points` (Horner: 1 mul + 1 add per coefficient per point, FMA=2) | DERIVED | `_polynomial.py` |
-| `polyfit` | `2 × m × n × min(m,n)` (via least-squares SVD) | DERIVED | `_polynomial.py` |
-| `polyadd`, `polysub` | `min(len_a, len_b)` | DERIVED | `_polynomial.py` |
-| `polymul`, `convolve` (1-D full mode) | `2nm − n − m` (direct conv, FMA=2) | DERIVED; note: always charged at full-mode cost regardless of `mode=` argument (known gap) | `_polynomial.py` |
-| `polyder`, `polyint` | `n` | DERIVED | `_polynomial.py` |
-| `roots` | see linalg iterative table above | — | — |
+| `polyfit` | `2 × m × (deg+1)²` (Vandermonde least-squares estimate) | DERIVED: Vandermonde matrix construction + normal-equations cost; NOT an SVD path | `_polynomial.py` |
+| `polyadd`, `polysub` | `max(len_a, len_b)` (= `max(n1, n2, 1)`) | DERIVED: output length equals the longer polynomial | `_polynomial.py` |
+| `polymul` | `2nm − n − m` (direct conv, FMA=2) | DERIVED | `_polynomial.py` |
+| `convolve` | `full`: `2nm − n − m`; `valid`: `(2·min−1)·(max−min+1)`; `same`: exact dot-length sum per numpy C layout | DERIVED per-mode | `_pointwise.py:convolve` |
+| `poly` (1-D, build from roots) | `(3n² + n) // 2`, `n = len(roots)` (iterative convolution with length-2 kernel per root; FMA=2) | DERIVED | `_polynomial.py:poly_cost` |
+| `polyder` | `t × n − t(t+1)/2`, `t = min(m, n−1)` (order-aware; one multiply per surviving coefficient per derivative step) | DERIVED | `_polynomial.py:polyder_cost` |
+| `polyint` | `m × n + m(m−1)/2` (order-aware; m passes each dividing n+j coefficients) | DERIVED | `_polynomial.py:polyint_cost` |
+| `roots` | `10n³`, `n = stripped companion dimension` (zero-leading/trailing coefficients stripped before companion matrix is built) | DERIVED: delegates to `eigvals_cost` on trimmed degree | `_polynomial.py:roots_cost` |
 
 Source: `src/flopscope/_polynomial.py`.
 
@@ -311,22 +425,39 @@ Source: `src/flopscope/_polynomial.py`.
 ### Random (module-level, Generator, RandomState)
 
 Random ops are composite: the generation kernel cost and any setup cost
-(PRNG state update, rejection sampling) are folded into `flop_cost` at
-**weight 1.0**.
+(PRNG state update, rejection sampling) are folded into `flop_cost`; the
+weight tier **varies** by distribution family.  Billed cost = `flop_cost ×
+weight`.
+
+Weight tiers:
+
+- **weight 1.0** — uniform/integer/structural draws: `rand`, `random`,
+  `random_sample`, `ranf`, `sample`, `uniform`, `randint`, `integers`,
+  `choice`, `shuffle`, `permutation`, `multivariate_normal`.
+- **weight 16.0** — transcendental samplers (every continuous/transformed
+  distribution): `normal`, `standard_normal`, `randn`, `exponential`,
+  `standard_exponential`, `poisson`, `binomial`, `geometric`,
+  `hypergeometric`, `negative_binomial`, `multinomial`, `beta`, `dirichlet`,
+  `f`, `gamma`, `gumbel`, `laplace`, `logistic`, `lognormal`, `logseries`,
+  `pareto`, `power`, `rayleigh`, `standard_cauchy`, `standard_gamma`,
+  `standard_t`, `triangular`, `vonmises`, `wald`, `weibull`, `zipf`, and all
+  their Generator / RandomState counterparts.
 
 | Op / family | flop_cost | basis | source |
 |---|---|---|---|
-| `random.rand`, `random.uniform`, `random.random`, `random.random_sample`, `random.ranf`, `random.sample` | `numel(output)` | DECLARED: 1 FLOP per uniform draw | `_cost_formulas.py` |
-| `random.randn`, `random.standard_normal`, `random.normal` | `6 × numel(output)` | DECLARED: Box-Muller / ziggurat ≈6 ops/sample (Devroye, _Non-Uniform Random Variate Generation_, 1986, §IV.4) | `_cost_formulas.py` |
+| `random.rand`, `random.random`, `random.random_sample`, `random.ranf`, `random.sample` | `numel(output)` | DECLARED: 1 FLOP per uniform draw | `_cost_formulas.py` |
+| `random.uniform` | `3 × numel(output)` | DERIVED: affine map `low + (high − low) × U` = 1 sub + 1 mul + 1 add per element (FMA=2, three ops) | `_cost_formulas.py` |
+| `random.randn`, `random.standard_normal`, `random.normal` | `numel(output)` (weight **16.0**) → billed `16 × numel` | DECLARED: flop_cost = numel(output); transcendental weight 16.0 from `default_weights.json` | `_cost_formulas.py` |
 | `random.randint`, `random.integers` | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=True, p=None) | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=True, p≠None) | `numel(output) + 3n + m×⌈log₂ n⌉` (n=population, m=size) | DERIVED: cumsum + normalize + searchsorted | `_cost_formulas.py`; confirmed issue audit |
-| `random.choice` (replace=False) | `sort_cost(n) = n × ⌈log₂ n⌉` | DECLARED (note: Fisher-Yates O(n) would be cheaper — unverified gap) | `_cost_formulas.py` |
+| `random.choice` (replace=False, p=None) | `n` (Fisher-Yates O(n): conservative ceiling on tail-shuffle / Floyd's algorithm) | DECLARED | `_cost_formulas.py` |
+| `random.choice` (replace=False, p≠None) | `sort_cost(n) = n × ⌈log₂ n⌉` (data-dependent rejection loop with weights) | DECLARED | `_cost_formulas.py` |
 | `random.shuffle`, `random.permutation` | `numel(input)` | DECLARED: Fisher-Yates O(n) | `_cost_formulas.py` |
-| `random.exponential` | `numel(output)` | DECLARED | `_cost_formulas.py` |
-| `random.poisson`, `random.binomial`, `random.geometric`, `random.hypergeometric`, `random.negative_binomial`, `random.multinomial` | `numel(output)` | DECLARED | `_cost_formulas.py` |
-| `random.multivariate_normal` | `d³/3 + 2×N×d² + 16×N×d` (N=size, d=dims) | DERIVED composite: Cholesky factorization + affine transform + transcendental draw; note: numpy's default is SVD not Cholesky — factorization term undercounts by ≈30× for large d when default method used (known gap) | `_cost_formulas.py` |
-| `random.beta`, `random.dirichlet`, `random.f`, `random.gamma`, `random.gumbel`, `random.laplace`, `random.logistic`, `random.lognormal`, `random.logseries`, `random.pareto`, `random.power`, `random.rayleigh`, `random.standard_cauchy`, `random.standard_exponential`, `random.standard_gamma`, `random.standard_t`, `random.triangular`, `random.vonmises`, `random.wald`, `random.weibull`, `random.zipf` | `numel(output)` (with transcendental weight or composite constant, per distribution) | DECLARED / DERIVED | `_cost_formulas.py` |
+| `random.exponential` | `numel(output)` (weight **16.0**) → billed `16 × numel` | DECLARED: transcendental weight 16.0 | `_cost_formulas.py` |
+| `random.poisson`, `random.binomial`, `random.geometric`, `random.hypergeometric`, `random.negative_binomial`, `random.multinomial` | `numel(output)` (weight **16.0**) → billed `16 × numel` | DECLARED: transcendental weight 16.0 | `_cost_formulas.py` |
+| `random.multivariate_normal` | `26d³ + 2Nd² + 16Nd` (d=dims, N=size) | DERIVED composite: SVD factorization of covariance (`svd_cost(d,d,with_vectors=True)` = `6d·d² + 20d³` = `26d³`) + affine transform (`2Nd²`) + N·d transcendental normal draws (`16Nd`) | `_cost_formulas.py` |
+| `random.beta`, `random.dirichlet`, `random.f`, `random.gamma`, `random.gumbel`, `random.laplace`, `random.logistic`, `random.lognormal`, `random.logseries`, `random.pareto`, `random.power`, `random.rayleigh`, `random.standard_cauchy`, `random.standard_exponential`, `random.standard_gamma`, `random.standard_t`, `random.triangular`, `random.vonmises`, `random.wald`, `random.weibull`, `random.zipf` | `numel(output)` (weight **16.0**) → `16 × numel` | DECLARED: flop_cost = numel(output); transcendental weight 16.0 for all continuous/transformed distributions | `_cost_formulas.py` |
 
 Source: `src/flopscope/numpy/random/_cost_formulas.py`.
 
@@ -338,16 +469,29 @@ Stats ops are composite (weight 1.0; all per-element factors in `flop_cost`).
 
 | Op | flop_cost (per element) | basis |
 |---|---|---|
-| `stats.norm.ppf` | 83 | DERIVED composite: Acklam degree-5 rational + Newton step (erf + pdf + correction) + affine; measured 83.05 FP-instr/elem (empirical-weights.md); confirmed issue audit |
-| `stats.norm.pdf` | ≈27 | DERIVED: exp + affine normalization |
-| `stats.norm.cdf` | ≈48 | DERIVED: erf + affine |
-| `stats.truncnorm.ppf` | 81 | DERIVED composite (affine + rational + Newton with erf+exp); calibration 82.52; confirmed issue audit |
-| `stats.lognorm.ppf` | 106 | DERIVED composite (ndtri + outer exp); calibration 106.35; confirmed issue audit |
-| `stats.lognorm.pdf` | current: 16 (unverified — gap under review, see below) | |
-| `stats.lognorm.cdf` | current: 16 (unverified — gap under review) | |
-| `stats.laplace.cdf` | current: 16 (unverified — gap under review) | |
-| `stats.laplace.ppf` | current: 16 (unverified — gap under review) | |
-| `stats.uniform.cdf` | current: 1 (unverified — gap under review) | |
+| `stats.norm.pdf` | 27 | DERIVED: exp(17) + affine normalization(10); composite, weight 1.0 |
+| `stats.norm.cdf` | 48 | DERIVED: erf rational approx(45) + affine(3); composite, weight 1.0 |
+| `stats.norm.ppf` | 83 | DERIVED composite: Acklam degree-5 rational + Newton step (erf + pdf + correction) + affine; empirical-weights.md 83.05 FP-instr/elem |
+| `stats.expon.pdf` | 22 | DERIVED: z=(x−loc)/scale(2) + exp(−z)(17) + /scale(1) + where(2); weight 1.0 |
+| `stats.expon.cdf` | 22 | DERIVED: z(2) + exp(−z)(17) + 1−exp(1) + where(2); weight 1.0 |
+| `stats.expon.ppf` | 27 | DERIVED: loc−scale·log1p(−q)(19) + 3 where/cmp/and(8); weight 1.0 |
+| `stats.cauchy.pdf` | 6 | DERIVED pure-arithmetic: z=(x−loc)/scale; 1/(π·scale·(1+z²)) = 6 FLOPs/elem; weight 1.0 |
+| `stats.cauchy.cdf` | 20 | DERIVED: z(2) + arctan(16) + /π(1) + 0.5+(1); weight 1.0 |
+| `stats.cauchy.ppf` | 28 | DERIVED: q−0.5(1) + π·(1) + tan(16) + loc+scale·(2) + 3 where(8); weight 1.0 |
+| `stats.logistic.pdf` | 23 | DERIVED: z(2) + exp(−z)(17) + (1+ez)(1) + sq(1) + scale·(1) + div(1); weight 1.0 |
+| `stats.logistic.cdf` | 21 | DERIVED: z(2) + exp(−z)(17) + 1+ez(1) + 1/denom(1); weight 1.0 |
+| `stats.logistic.ppf` | 28 | DERIVED: 1−q(1) + q/(1−q)(1) + log(16) + loc+scale·(2) + 3 where(8); weight 1.0 |
+| `stats.laplace.pdf` | 22 | DERIVED: \|x−loc\|(3) + exp(−z)(17) + /(2·scale)(2); weight 1.0 |
+| `stats.laplace.cdf` | 40 | DERIVED composite: two eager exp branches + arithmetic/select; weight 1.0 |
+| `stats.laplace.ppf` | 51 | DERIVED composite: two eager log branches + edge selects; weight 1.0 |
+| `stats.truncnorm.pdf` | 28 | DERIVED composite: norm.pdf + cdf normalization; weight 1.0 |
+| `stats.truncnorm.cdf` | 51 | DERIVED composite: affine + norm.cdf + boundary selects; weight 1.0 |
+| `stats.truncnorm.ppf` | 81 | DERIVED composite: affine + rational + Newton with erf+exp; weight 1.0 |
+| `stats.lognorm.pdf` | 62 | DERIVED composite: log + exp + arithmetic per element; weight 1.0 |
+| `stats.lognorm.cdf` | 70 | DERIVED composite: log + erf rational approx + arithmetic; weight 1.0 |
+| `stats.lognorm.ppf` | 106 | DERIVED composite: ndtri + exp; weight 1.0 |
+| `stats.uniform.pdf` | 1 | DECLARED: 1 FLOP/elem |
+| `stats.uniform.cdf` | 4 | DERIVED: sub + div + 2 clip compare/selects; weight 1.0 |
 
 Source: `src/flopscope/stats/`.
 
@@ -357,11 +501,11 @@ Source: `src/flopscope/stats/`.
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
-| `bartlett` | `n` | DECLARED: 1 linear eval/sample (div+add+select, conservative single branch) | `_window.py:bartlett_cost` |
-| `blackman` | `3n` (at weight 16.0 → `48n` charged) | DECLARED: three cosine term count (note: honest is 2 cosine evals, not 3 — unverified gap) | `_window.py:blackman_cost` |
-| `hamming` | `2n` (weight 1.0) | DECLARED: 1 mul + 1 add per sample (FMA=2) | `_window.py:hamming_cost` |
-| `hanning` | `2n` (weight 1.0) | DECLARED: 1 mul + 1 add per sample (FMA=2) | `_window.py:hanning_cost` |
-| `kaiser` | `3n` (at weight 16.0 → `48n` charged) | DECLARED: Bessel I₀ per sample (note: composite honest ≈23n in-system — unverified gap) | `_window.py:kaiser_cost` |
+| `bartlett` | `4n` (weight 1.0) | DERIVED: compare + divide + add + select per sample (FMA=2, 4 ops/sample) | `_window.py:bartlett_cost` |
+| `blackman` | `40n` (weight 1.0) | DERIVED composite: 2 cosine evals at transcendental rate (16/elem each) + 8 mul/div/add per sample; all folded into flop_cost | `_window.py:blackman_cost` |
+| `hamming` | `2n` (weight 8.0) | DECLARED: cosine eval per sample at the half-transcendental tier | `_window.py:hamming_cost` |
+| `hanning` | `2n` (weight 8.0) | DECLARED: cosine eval per sample at the half-transcendental tier | `_window.py:hanning_cost` |
+| `kaiser` | `23n` (weight 1.0) | DERIVED composite: 1 Bessel I₀ eval at transcendental tier (16/elem) + 7 scalar FLOPs per sample; folded into flop_cost | `_window.py:kaiser_cost` |
 
 Source: `src/flopscope/_window.py`.
 
@@ -371,11 +515,11 @@ Source: `src/flopscope/_window.py`.
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
-| `interp` | `numel(xp) + m × ⌈log₂(numel(xp))⌉` (search + interpolate) | DERIVED | `_counting_ops.py` |
-| `histogram` (integer bins) | `n × ⌈log₂(bins)⌉ + n` (binning pass + sort-based bin-edge search) | DERIVED | `_counting_ops.py` |
-| `histogram` (string bins, e.g. `'auto'`) | `n` (flat scan only; estimator sort not charged — known gap) | DECLARED | `_counting_ops.py` |
-| `histogram2d`, `histogramdd` | similar to `histogram`; string-bins gap same | DERIVED / DECLARED | `_counting_ops.py` |
-| `histogram_bin_edges` | `n` | DECLARED; note: crashes with FlopscopeArray `bins=` argument (known gap) | `_counting_ops.py` |
+| `interp` | `3m + m × ⌈log₂(numel(xp))⌉`, `m = numel(x)` (interpolation arithmetic + binary search per query) | DERIVED | `_counting_ops.py` |
+| `histogram` (integer bins) | `n × ⌈log₂(bins)⌉` (binary-search binning pass only) | DERIVED | `_counting_ops.py` |
+| `histogram` (string bins, e.g. `'auto'`) | `n × (2 + estimator_cost + ⌈log₂ resolved_bins⌉)` (deferred: resolved after the call; estimator costs: sturges/sqrt/rice=0, fd/auto=+1n, scott=+4n, doane=+6n, stone=+max(100,√n)n) | DERIVED | `_counting_ops.py` |
+| `histogram2d`, `histogramdd` | same as `histogram` per axis | DERIVED | `_counting_ops.py` |
+| `histogram_bin_edges` | `n` (= `max(n, 1)`) for integer bins; string estimator bins: same formula as `histogram` string path | DECLARED: integer bins charge one comparison per element (no log₂ factor); estimator resolves bin count at call time | `_counting_ops.py` |
 | `trapezoid`, `trapz` | `4 × numel(y)` | DERIVED: `(d·(y₁+y₂)/2).sum()` ≈ 3 elementwise ops + sum-reduce per point, charged as a clean 4/point upper bound | `_pointwise.py`; fixed in this branch |
 
 Source: `src/flopscope/_counting_ops.py`, `src/flopscope/_free_ops.py`.
@@ -388,20 +532,89 @@ Source: `src/flopscope/_counting_ops.py`, `src/flopscope/_free_ops.py`.
 |---|---|---|
 | `unique`, `unique_all`, `unique_counts`, `unique_inverse`, `unique_values` | `n × ⌈log₂ n⌉` | DECLARED sort-based |
 | `in1d`, `isin` | `(n+m) × ⌈log₂(n+m)⌉` | DECLARED sort-based |
-| `intersect1d`, `setdiff1d`, `setxor1d`, `union1d` | `(n+m) × ⌈log₂(n+m)⌉` | DECLARED sort-based |
+| `intersect1d` | `sort_cost(n) + sort_cost(m) + sort_cost(n+m)` (default); `sort_cost(n+m)` when `assume_unique=True` | DECLARED: pre-sorts both inputs when `assume_unique` is falsy |
+| `setdiff1d`, `setxor1d`, `union1d` | `(n+m) × ⌈log₂(n+m)⌉` | DECLARED sort-based |
 | `searchsorted` | `m × ⌈log₂ n⌉` | DECLARED binary search |
 
 Comparison = 1 FLOP convention; weight 1.0.
 
 ---
 
-### Counting (diff, ediff1d, count_nonzero)
+### Counting (diff, ediff1d, clip, allclose, isclose, count_nonzero, trace)
 
 | Op | flop_cost | basis | source |
 |---|---|---|---|
-| `count_nonzero` | `numel(input) − numel(output)` (reduction skeleton; comparison pass undercharged on axis reductions — unverified gap) | DECLARED | `_pointwise.py` |
-| `diff` | `prod(a.shape[:ax]) × (n×L − n×(n+1)/2) × prod(a.shape[ax+1:])`, `L = a.shape[ax]` | DERIVED: `n` passes of `L−k` subtractions; prepend/append padding not folded into L (known gap) | `_pointwise.py` |
-| `ediff1d` | `ary.size − 1 + size(to_begin) + size(to_end)` | DECLARED; note: to_begin/to_end do zero arithmetic — `+extra` term is an overcount (unverified gap) | `_pointwise.py` |
+| `clip` | `max(n_bounds, 1) × numel(output)` (1 compare-select per bound; n_bounds=0,1,2; floor of 1 ensures materialising copy is not free) | DERIVED | `_pointwise.py` |
+| `count_nonzero` | `numel(input)` (every element tested regardless of axis; comparison-scan model) | DECLARED | `_pointwise.py` |
+| `diff` | `prod(a.shape[:ax]) × (n×L − n×(n+1)/2) × prod(a.shape[ax+1:])`, `L = a.shape[ax]` | DERIVED: `n` passes of `L−k` subtractions | `_pointwise.py` |
+| `ediff1d` | `ary.size − 1 + size(to_begin) + size(to_end)` | DECLARED | `_pointwise.py` |
+| `gradient` | base: `sum_ax 2·S·(L−2)/L`; each coord-array axis adds a spacing surcharge (uniform: `+3(L−1)`; non-uniform: `+3S(L−2)/L + 10(L−2) + 3(L−1) + 4S/L`) | DERIVED | `_pointwise.py:gradient` |
+| `allclose` | `7·numel(broadcast) − 1` (6 FLOPs/elem tolerance core + numel−1 all-reduce) | DERIVED | `_counting_ops.py` |
+| `isclose` | `6·numel(broadcast)` (sub + 2·abs + mul + add + cmp per element) | DECLARED | `_pointwise.py` |
+| `trace` (numpy.trace) | `min(ax1, ax2) × n_traces` where `n_traces = size / (shape[ax1] × shape[ax2])` (batch-multiplied) | DERIVED | `_counting_ops.py:trace` |
+| `correlate` | mode-aware: `full` = `2nm−n−m+1`; `valid` = `(2·min−1)·(max−min+1)`; `same` = exact dot-length sum per numpy C layout | DERIVED per-mode | `_pointwise.py:_correlate_cost` |
+| `cross` | `3 × numel(output)` (2 muls + 1 sub per output scalar; 3-vec path preserves last dim, 2-D z-only drops last dim) | DERIVED: FMA=2, 3 FLOPs per output element | `_pointwise.py:cross` |
+| `cov` | `2f²s + 2fs` (f = features, s = samples) | DERIVED: Gram term `f²` dot products of length `s` (2f²s) + centering pass `fs` elements × 2 FLOPs | `_pointwise.py:_cov_cost` |
+| `corrcoef` | `2f²s + 2fs + 2f² + f` | DERIVED: cov_cost + normalization (f² divides at weight 2.0 + f sqrts) | `_pointwise.py:_corrcoef_cost` |
+| `unwrap` | `13 × numel(input)` | DERIVED: 13 elementwise ufunc passes (diff, mod, cmp×2, bitwise, select×2, sub, abs, cmp, select, cumsum); prior value was 7 | `_unwrap.py:unwrap_cost` |
+
+---
+
+### Copy and gather
+
+**Family rule:** an op that *materializes or scatters* memory bills for the elements
+it touches. A pure copy/scatter with no per-element arithmetic bills `numel(output)`
+at **weight 1.0** (`pad`, `repeat`, `resize`, `dstack`, and the rows below);
+gather/scatter-*by-index* bills at the **gather tier, weight 4.0** (`take_along_axis`,
+`put`, `put_along_axis`). A materializer that also computes per-element *values* carries
+that arithmetic in `flop_cost`, so it is **not** a flat `numel(output)` — e.g. `vander`
+bills `N(N−2)` (only the non-trivial power columns; the constant and linear columns are
+free). This rule plus [`ops.json`](#exhaustive-per-op-reference) (exact per-op formula)
+covers every copy/gather op, including ones with no row here (`diagflat`, `trim_zeros`,
+`fill_diagonal`, `unstack`, …).
+
+The table lists the ops with a noted exception or a distinct formula:
+
+| Op | flop_cost | basis | source |
+|---|---|---|---|
+| `diag` (extract, 2-D input) | `min(m, n)` | DECLARED: copies the `min(m,n)` diagonal elements | `_free_ops.py` |
+| `diag` (construct, 1-D input) | `numel(output)` = `(n + \|k\|)²` | DECLARED: constructs diagonal matrix of that size | `_free_ops.py` |
+| `diagonal` | 0 (view) | DECLARED: `numpy.diagonal` returns a read-only view | `_free_ops.py` |
+| `argwhere` | `numel(input)` (weight 1.0) | DECLARED: == transpose(nonzero); nonzero is weight 1.0 | `_free_ops.py` |
+| `bmat` | `numel(output)` (weight 1.0) | DECLARED: block-matrix concatenation copy | `_free_ops.py` |
+| `fromiter` | `numel(output)` (weight 1.0) | DECLARED: iterates and fills output buffer | `_free_ops.py` |
+| `compress` | `len(condition) + 4 × numel(output)` (weight 1.0) | DECLARED: condition scan + gather; mirrors `extract` | `_free_ops.py` |
+| `packbits` | `numel(input)` (weight 1.0) | DECLARED: per-bit test+shift; symmetric with `unpackbits` | `_free_ops.py` |
+| `mask_indices` | `2n² + 8k` (weight 1.0, `k` = number of selected index pairs) | DECLARED: n² mask scan + 8 ops per index pair gathered | `_free_ops.py` |
+| `take_along_axis` | `numel(output)` (weight 4.0, gather tier) | DECLARED: gather-tier; identical to `take` | `_free_ops.py` |
+| `insert` | `numel(output)` | DECLARED: np.insert allocates and copies arr + values | `_free_ops.py` |
+| `append` | `numel(output)` = arr.size + values.size | DECLARED: np.append = concatenate | `_free_ops.py` |
+| `delete` | `numel(output)` | DECLARED: surviving elements copied | `_free_ops.py` |
+| `copyto` | elements written (numel(dst) when `where=True`; count_nonzero(broadcast(where)) otherwise) | DECLARED | `_free_ops.py` |
+| `hstack` | `numel(output)` | DECLARED: allocates horizontally | `_free_ops.py` |
+| `column_stack` | `numel(output)` | DECLARED: allocates as 2-D column array | `_free_ops.py` |
+| `row_stack` | `numel(output)` (alias for vstack) | DECLARED | `_free_ops.py` |
+| `tril`, `triu` | `numel(output)` | DECLARED: numpy returns a copy | `_free_ops.py` |
+| `roll` | `numel(output)` | DECLARED: cyclic copy | `_free_ops.py` |
+| `put` | `numel(indices)` (weight **4.0**, gather tier) → billed `4 × numel(indices)` | DECLARED: scatter-write at gather tier; mode-independent | `_free_ops.py` |
+| `put_along_axis` | `(numel(arr) / arr.shape[axis]) × indices.shape[axis]`; `numel(indices)` when `axis=None` | DECLARED gather-tier (weight 4.0) | `_free_ops.py` |
+
+---
+
+### Functional / higher-order
+
+Operations that apply a user-supplied callable across an array. flopscope bills the
+result the wrapper materializes (numpy runs the callback itself).
+
+> **Submission caveat:** these run a Python callback *in-process* and raise
+> `RemoteCallbackError` on the client/server backend used for AIcrowd submissions, so
+> they cannot appear in submitted code — their cost matters only for local runs.
+
+| Op | flop_cost | source |
+|---|---|---|
+| `apply_along_axis`, `apply_over_axes` | `numel(output)` | `_counting_ops.py` |
+| `fromfunction` | `numel(output)` | `_free_ops.py` |
+| `piecewise` | `numel(output)` (the op bills its assembled result; each condition you pass in `condlist` is billed separately as its own comparison op) | `_counting_ops.py` |
 
 ---
 
@@ -413,18 +626,26 @@ inspect metadata without touching element values charge 0 FLOPs.
 Includes: `reshape`, `ravel`, `flatten`, `transpose`, `squeeze`,
 `expand_dims`, `broadcast_to`, `atleast_1d/2d/3d`, `asarray` (no copy),
 `asfortranarray`, `ascontiguousarray`, `astype` (no copy), `view`,
-`diagonal` (view path), `diag` (view path), `squeeze`, `moveaxis`, `swapaxes`,
+`diagonal` (view), `squeeze`, `moveaxis`, `swapaxes`,
 `ndim`, `shape`, `size`, `nbytes`, `itemsize`, `dtype`, `flags`, `base`,
 `data`, `ctypes`, `strides`, `T`, `linalg.diagonal`, `linalg.matrix_transpose`,
-`fft.fftfreq`, `fft.rfftfreq`, `fft.fftshift`, `fft.ifftshift`,
-`iscomplexobj`/`isrealobj` (dtype predicate, O(1); overcounted in current
-implementation — unverified gap), `isscalar`, `isfortran`, `ndim` attribute.
+`fft.fftshift`, `fft.ifftshift`,
+`isscalar`, `isfortran`, `ndim` attribute.
 
 Source: `src/flopscope/_free_ops.py`.
 
 ---
 
-## Evidence appendix: iterative linalg constants
+## Calibration & reproducibility
+
+How the two layers are pinned down. `flop_cost` **constants** are derived from
+standard-algorithm counts and confirmed by the three-leg evidence below (LAPACK
+driver counts + runtime scaling + textbook citation). `weight` **tiers** are
+calibrated by EC2 micro-benchmark — methodology and measured values in
+[empirical-weights.md](empirical-weights.md). The recipe at the end lets you
+reproduce any billed number yourself.
+
+### Evidence: iterative linalg constants
 
 The constants `eig=25n³`, `eigvals=10n³`, `eigh=9n³`, `eigvalsh=4n³/3`,
 `svd-thin=6ab²+20b³`, `svd-full=4a²b+22b³`, `svdvals=2ab²+2b³` were
@@ -521,79 +742,54 @@ Raw timings (median of 5 runs, float64, `numpy.random.default_rng(42)`):
 | `inv` | 2n³ | high (implied ~0.7–1.0n³) | G&VL §3.4 | overcharges; retained |
 | `det` | 2n³/3 | supports | G&VL §3.2 LU only | keep |
 
+### Verify any op yourself
+
+1. **Measure billed cost.** Build tracked inputs *outside* the budget (array creation
+   itself bills `numel` under unit weights), then measure only the op:
+
+   ```python
+   import numpy as np, flopscope.numpy as fnp
+   from flopscope import BudgetContext
+   from flopscope._weights import reset_weights, load_weights
+
+   a = fnp.asarray(np.random.default_rng(0).standard_normal(100))  # built outside the budget
+   with BudgetContext(flop_budget=10**12, quiet=True) as b:
+       fnp.exp(a)
+   print(b.flops_used)
+   ```
+
+2. **Raw `flop_cost` vs production billing.** The number above is under whatever weights
+   are loaded. `reset_weights()` gives unit weights (so `flops_used == flop_cost`, the
+   shape cost in this doc's tables); `load_weights()` loads the packaged production table
+   (so `flops_used == flop_cost × weight`, what a participant is charged).
+3. **Cross-check `ops.json`.** That op's `cost_formula × weight` must equal what you
+   measured. For composite ops where `ops.json` records `per-operation`, the family
+   table above gives the closed form.
+
 ---
 
-## Known gaps under review
+## Exhaustive per-op reference
 
-The following findings were identified by the 2026-06 audit and await full
-adversarial verification.  Current billing is shown as stated; the suspected
-issue is noted.  These are not confirmed bugs — they are open items.
+The complete, per-op cost data lives in **`website/public/ops.json`** — one record per
+operation with `name`, `module`, `area`, `category`, `weight`, `cost_formula`,
+`cost_formula_latex`, `notes`, and `summary`. It is **generated** from the registry +
+weight tables by `scripts/generate_api_docs.py` and powers the website's API pages.
 
-**View-free family (copy ops billed 0)**
+- **Find an op:** filter `ops.json` by `name`, or browse the website API pages.
+- **Filter a family:** by `area` (`core` / `fft` / `linalg` / `random` / `stats`) or `module`.
+- **It can't drift:** CI runs `scripts/generate_api_docs.py --check`, which regenerates
+  `ops.json` to a temp dir and fails if the committed file's **cost-model fields**
+  differ (`weight`, `cost_formula`, `category`, `notes`, …). The `summary` field is
+  sourced from the installed numpy's docstrings and is allowed to vary across the
+  numpy-version matrix, so it is excluded from the check — which means the gate also
+  proves the cost model is numpy-version-independent. Every billed op is present
+  (aliases resolve transitively to their canonical), enforced by
+  `tests/test_cost_model_coverage.py`.
 
-| Op | current formula | suspected issue |
-|---|---|---|
-| `hstack` | 0 (view_free) | np.hstack allocates; should charge numel(output) like vstack/concatenate |
-| `column_stack` | 0 (view_free) | same allocation pattern as vstack |
-| `row_stack` | 0 (view_free) | alias of vstack, which charges numel(output); internal contradiction |
-| `tril`, `triu` | 0 (view_free) | np.tril/triu return copies (base is None); equivalent `where` is charged |
-| `roll` | 0 (despite registry declaring counted_custom numel(output)) | counted op charging 0; `@_counted_wrapper` missing |
+> **Granularity note.** `ops.json` is exhaustive in *coverage* — every op, with its
+> weight and a formula string — but its `cost_formula` is **coarse for many composite
+> `counted_custom` ops**, recording `per-operation` / `varies` where the real cost is
+> shape-dependent. For those, the closed form and its derivation live in the family
+> tables above. Treat `ops.json` as the complete index and this document as the precise
+> reference; the completeness test ties them together.
 
-**Stats family (minor undercount)**
-
-| Op | current formula | suspected issue |
-|---|---|---|
-| `stats.lognorm.pdf` | 16/elem | kernel: log + exp per elem ≈43 FLOPs; calibration alpha 62.3 |
-| `stats.lognorm.cdf` | 16/elem | kernel: log + erf ≈40 FLOPs; calibration alpha 70.3 |
-| `stats.laplace.cdf` | 16/elem | two eager exp branches ≈40 FLOPs; calibration alpha 49.3 |
-| `stats.laplace.ppf` | 16/elem | two log branches ≈46 FLOPs; calibration alpha 71.3 |
-| `stats.uniform.cdf` | 1/elem (arithmetic) | clip=(sub+div+2 select)=4 FLOPs; calibration alpha 4.3 |
-
-**FFT (suspected overcounts)**
-
-| Op | current formula | suspected issue |
-|---|---|---|
-| `fft.hfft` | `5×n_out×⌈log₂ n_out⌉` | numpy implements hfft as irfft(conj(a)): real-output, should cost `5×(n_out/2)×⌈log₂ n_out⌉` (2× overcount) |
-| `fft.ihfft` | `5×(n/2)×⌈log₂ n⌉` (uses hfft_cost; possibly affected by same issue) | suspect same formula error as hfft |
-
-**Convolve / correlate (mode-blind)**
-
-| Op | current formula | suspected issue |
-|---|---|---|
-| `correlate` | `2nm−n−m` (full-mode cost) | charged for every mode; default is `mode='valid'` (~100× overcount on default call for equal-length arrays) |
-| `convolve` | `2nm−n−m+1` (full-mode cost) | same mode-blindness |
-
-**Gather-tier classification**
-
-| Op | current | suspected issue |
-|---|---|---|
-| `argwhere` | `numel(input)` at weight 4.0 | identical scan as `nonzero`/`flatnonzero` which use weight 1.0 (4× overcount) |
-| `fromiter` | `numel(output)` at weight 16.0 | Python-iterator copy; should be weight 1.0 (16× overcount) |
-
-**Linalg minor**
-
-| Op | current | suspected issue |
-|---|---|---|
-| `linalg.trace` | `min(m,n)` — no batch multiply | stacked `(B,m,n)` billed at single-matrix cost (B× undercount) |
-| `linalg.vector_norm` (fractional ord) | `2×numel` flat | general p-norm uses pow (≈16/elem); undercount ≈9× for non-standard ord |
-| `random.multivariate_normal` | d³/3 factorization (Cholesky) | numpy default is SVD (≈10d³); ≈30× undercount of factorization term for large d |
-| `random.choice` (replace=False) | sort_cost(n) | algorithm is Fisher-Yates O(n), not O(n log n) |
-
-**Other counting gaps**
-
-| Op | current | suspected issue |
-|---|---|---|
-| `count_nonzero` (axis) | reduction skeleton (numel−M) | comparison pass is numel regardless of axis; 2× undercount for short reduce axes |
-| `ediff1d` (to_begin/to_end) | `ary.size−1 + size(to_begin) + size(to_end)` | padding is pure copy (no arithmetic); `+extra` term is an overcount |
-| `diff` (prepend/append) | uses original `a.shape[ax]` | prepend/append extend the differenced axis; extra subtractions not counted |
-| `histogram` (string bins) | flat `n` | estimator resolution involves a sort O(n log n); not charged |
-| `isin`, `in1d` (small ar2) | sort model `(n+m)log(n+m)` | numpy uses masked-loop O(nm) when len(ar2) < 10×len(ar1)^0.145 |
-| `allclose` | `numel(broadcast)` at 1.0 | underlying isclose does 5 FLOPs/elem (sub+abs+mul+add+cmp) |
-| `clip` | `numel` | clip = 2 compare-selects; `fnp.minimum(fnp.maximum(...))` charges `2×numel` |
-| `append` | `values.size` | np.append = concatenate; should charge `arr.size + values.size` |
-| `insert` | `4×values.size` | np.insert materializes numel(output); should charge output size |
-| `delete` | `arr.size − result.size` | should charge `numel(output)` (surviving elements copied) |
-
-All items above are identified findings awaiting adversarial verification.
-Current billing amounts are what participants will see until fixes are merged
-and deployed.

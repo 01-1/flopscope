@@ -310,7 +310,7 @@
   "schema_version": 1,
   "slug": "hanning",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L130",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L135",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L3265"
   }
 }

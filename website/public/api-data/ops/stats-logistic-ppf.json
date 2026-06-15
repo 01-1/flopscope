@@ -212,11 +212,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(q)"
+                "text": "28 * numel(q)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: 1-q(1)+q/(1-q)(1)+log(16)+\nloc+scale*(2)+3 where(8), FMA=2, weight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -277,7 +277,7 @@
   "schema_version": 1,
   "slug": "stats-logistic-ppf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_logistic.py#L99",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_logistic.py#L105",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.logistic.html"
   }
 }

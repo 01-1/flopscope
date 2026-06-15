@@ -663,7 +663,7 @@
     "flopscope_ref": "fnp.allclose",
     "module": "numpy",
     "name": "allclose",
-    "notes": "Element-wise tolerance check; cost = numel(a).",
+    "notes": "Element-wise tolerance check; cost = 7*numel(broadcast) - 1 (6/elem tolerance core + all-reduce).",
     "numpy_ref": "np.allclose",
     "signature": "fnp.allclose(a, b, rtol=1e-05, atol=1e-08, equal_nan=False)",
     "status": "supported",
@@ -673,7 +673,7 @@
   "schema_version": 1,
   "slug": "allclose",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_counting_ops.py#L60",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_counting_ops.py#L87",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/numeric.py#L2243"
   }
 }

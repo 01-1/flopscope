@@ -32,7 +32,7 @@ class TestDefaultRngHatch:
         with BudgetContext(flop_budget=10**6, quiet=True) as budget:
             rng = merandom.default_rng(42)
             rng.uniform(0.0, 1.0, size=(8, 8))
-        assert budget.flops_used == 64
+        assert budget.flops_used == 3 * 64
 
 
 class TestRandomStateHatch:

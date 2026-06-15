@@ -12,13 +12,35 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Weighted FLOP cost of solving a linear system Ax = b."
+              "text": "Weighted FLOP cost of solving Ax = b: LU + two triangular solves (FMA=2)."
             }
           ],
           "type": "paragraph"
         }
       ],
       "title": "Summary"
+    },
+    {
+      "blocks": [
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "2n^3/3 (getrf) + 2n^2*nrhs (getrs). G&VL 4e \u00a73.2. "
+            },
+            {
+              "kind": "code",
+              "text": "symmetric"
+            },
+            {
+              "kind": "text",
+              "text": " is\nkept for API compatibility and ignored."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
     },
     {
       "blocks": [
@@ -235,15 +257,6 @@
             }
           ],
           "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "text",
-              "text": "Simplified cubic cost model for linear solve."
-            }
-          ],
-          "type": "paragraph"
         }
       ],
       "title": "Notes"
@@ -272,6 +285,6 @@
   "slug": "flops-solve-cost",
   "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L34",
   "status_note": "",
-  "summary": "Weighted FLOP cost of solving a linear system Ax = b.",
+  "summary": "Weighted FLOP cost of solving Ax = b: LU + two triangular solves (FMA=2).",
   "upstream_source_url": ""
 }

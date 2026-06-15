@@ -10,7 +10,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Weighted FLOP cost of matrix rank."
+              "text": "Weighted FLOP cost of matrix rank: values-only SVD + min(m, n) threshold compares."
             }
           ],
           "type": "paragraph"
@@ -135,15 +135,6 @@
             }
           ],
           "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "text",
-              "text": "Computed via SVD."
-            }
-          ],
-          "type": "paragraph"
         }
       ],
       "title": "Notes"
@@ -162,7 +153,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.matrix_rank_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L471",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L512",
   "href": "/docs/api/accounting/matrix-rank-cost/",
   "import_path": "flopscope.accounting.matrix_rank_cost",
   "is_operation_cost_leaf": false,
@@ -173,8 +164,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
-    "Computed via SVD."
+    "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions."
   ],
   "numpy_ref": "",
   "operation": null,
@@ -208,7 +198,7 @@
   "see_also": [],
   "signature": "flopscope.accounting.matrix_rank_cost(m: 'int', n: 'int') -> 'int'",
   "slug": "flopscope-accounting-matrix-rank-cost",
-  "summary": "Weighted FLOP cost of matrix rank.",
+  "summary": "Weighted FLOP cost of matrix rank: values-only SVD + min(m, n) threshold compares.",
   "upstream_source_url": "",
   "weight": 1.0
 }

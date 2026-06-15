@@ -55,7 +55,7 @@ def test_det_cost_symmetric():
 
 def test_slogdet_cost_symmetric():
     n = 4
-    assert slogdet_cost(n, symmetric=True) == max(2 * n**3 // 3 + n, 1)
+    assert slogdet_cost(n, symmetric=True) == max(2 * n**3 // 3 + 18 * n, 1)
 
 
 def test_norm_cost_1d_ord_none():

@@ -92,12 +92,23 @@ class TestChoiceCost:
         cost = formula((100,), {"size": 20, "replace": True}, result)
         assert cost == 20
 
-    def test_without_replacement_uses_sort_cost(self):
+    def test_without_replacement_uses_n(self):
         from flopscope.numpy.random._cost_formulas import COST_FORMULAS
 
         formula = COST_FORMULAS["choice_cost"]
         result = np.zeros(5)
+        # Fisher-Yates O(n): p=None path charges n, not sort_cost(n).
         cost = formula((16,), {"size": 5, "replace": False}, result)
+        assert cost == 16
+
+    def test_without_replacement_with_p_uses_sort_cost(self):
+        from flopscope.numpy.random._cost_formulas import COST_FORMULAS
+
+        formula = COST_FORMULAS["choice_cost"]
+        result = np.zeros(5)
+        # Data-dependent rejection loop: sort_cost(n) conservative floor.
+        p = np.ones(16) / 16
+        cost = formula((16,), {"size": 5, "replace": False, "p": p}, result)
         assert cost == 16 * _ceil_log2(16)
 
     def test_replace_passed_positionally(self):
@@ -106,8 +117,9 @@ class TestChoiceCost:
         formula = COST_FORMULAS["choice_cost"]
         # Generator.choice signature: choice(a, size, replace, p, axis, shuffle)
         result = np.zeros(5)
+        # replace=False positional, p=None: Fisher-Yates charges n.
         cost = formula((16, 5, False), {}, result)
-        assert cost == 16 * _ceil_log2(16)
+        assert cost == 16
 
 
 class TestRegistry:

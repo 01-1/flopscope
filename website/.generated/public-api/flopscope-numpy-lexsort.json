@@ -719,7 +719,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.lexsort",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_sorting_ops.py#L105",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_sorting_ops.py#L107",
   "href": "/docs/api/numpy/lexsort/",
   "import_path": "flopscope.numpy.lexsort",
   "is_operation_cost_leaf": true,
@@ -731,7 +731,7 @@
     "href": "/docs/api/numpy/linalg/cholesky/",
     "label": "fnp.linalg.cholesky"
   },
-  "notes": "Multi-key sort; cost = k*n*ceil(log2(n)).",
+  "notes": "Multi-key sort; cost = k keys \u00d7 num_slices \u00d7 n\u00b7ceil(log2 n).",
   "notes_sections": [],
   "numpy_ref": "np.lexsort",
   "operation": {

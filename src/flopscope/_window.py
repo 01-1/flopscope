@@ -22,13 +22,14 @@ def bartlett_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: n.
+        Estimated FLOP count: 4n (compare + divide + add + select per sample, FMA=2).
 
     Notes
     -----
-    One linear evaluation per sample.
+    Four ops per sample: compare, divide, add/subtract, select (single branch of
+    numpy where-based evaluation). Weight 1.0 (no transcendental; constant in flop_cost).
     """
-    return max(n, 1)
+    return max(4 * n, 1)
 
 
 @_counted_wrapper
@@ -40,7 +41,7 @@ def bartlett(M: int) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(bartlett, _np.bartlett, "counted_custom", "n FLOPs")
+attach_docstring(bartlett, _np.bartlett, "counted_custom", "4n FLOPs (FMA=2)")
 
 
 def blackman_cost(n: int) -> int:
@@ -54,13 +55,15 @@ def blackman_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: 3n.
+        Estimated FLOP count: 40n (composite: 2 cosine evals at transcendental rate 16
+        + 8 mul/div/add per sample; the 0.42 term is a constant, not a cosine).
 
     Notes
     -----
-    Three cosine terms per sample.
+    numpy's blackman: 0.42 + 0.5*cos(pi*n/(M-1)) + 0.08*cos(2*pi*n/(M-1)) — exactly
+    two cosine evals per element. Weight 1.0 (constant in flop_cost per composite-kernel tier policy).
     """
-    return max(3 * n, 1)
+    return max(40 * n, 1)
 
 
 @_counted_wrapper
@@ -72,7 +75,9 @@ def blackman(M: int) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(blackman, _np.blackman, "counted_custom", "3n FLOPs")
+attach_docstring(
+    blackman, _np.blackman, "counted_custom", "40n FLOPs (2 cos + 8 arith per sample)"
+)
 
 
 def hamming_cost(n: int) -> int:
@@ -150,13 +155,16 @@ def kaiser_cost(n: int) -> int:
     Returns
     -------
     int
-        Estimated FLOP count: 3n.
+        Estimated FLOP count: 23n.
 
     Notes
     -----
-    Bessel function evaluation per sample.
+    Per sample: 1 Bessel I0 eval at the transcendental tier (16) + 7 scalar FLOPs
+    (sub, div, square, rsub, sqrt, mul-by-beta, final div) under FMA=2. Tracks the
+    in-system price of i0 (numel x 16.0); revisit jointly with the pointwise family
+    if i0 is ever re-derived to its Cephes cost. Weight 1.0 (constant in flop_cost).
     """
-    return max(3 * n, 1)
+    return max(23 * n, 1)
 
 
 @_counted_wrapper
@@ -168,7 +176,7 @@ def kaiser(M: int, beta: float) -> FlopscopeArray:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(kaiser, _np.kaiser, "counted_custom", "3n FLOPs")
+attach_docstring(kaiser, _np.kaiser, "counted_custom", "23n FLOPs")
 
 import sys as _sys  # noqa: E402
 

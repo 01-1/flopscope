@@ -374,7 +374,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.put",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2095",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2191",
   "href": "/docs/api/numpy/put/",
   "import_path": "flopscope.numpy.put",
   "is_operation_cost_leaf": true,
@@ -386,7 +386,7 @@
     "href": "/docs/api/numpy/put-along-axis/",
     "label": "fnp.put_along_axis"
   },
-  "notes": "Replace elements at given flat indices. Cost: numel(input).",
+  "notes": "Replace elements at given flat indices. Cost: numel(indices).",
   "notes_sections": [],
   "numpy_ref": "np.put",
   "operation": {
@@ -492,5 +492,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/fromnumeric.py#L513",
-  "weight": 1.0
+  "weight": 4.0
 }

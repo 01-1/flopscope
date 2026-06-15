@@ -196,11 +196,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "48 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: erf rational approx + arithmetic, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -262,7 +262,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.norm.cdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_norm.py#L71",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_norm.py#L72",
   "href": "/docs/api/stats/norm/cdf/",
   "import_path": "flops.stats.norm.cdf",
   "is_operation_cost_leaf": false,
@@ -274,9 +274,9 @@
     "href": "/docs/api/stats/norm/pdf/",
     "label": "flops.stats.norm.pdf"
   },
-  "notes": "Normal CDF; cost = numel(input).",
+  "notes": "Normal CDF; composite: 48 FLOPs/elem (erf rational approx + arithmetic), weight 1.0.",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.norm.cdf(x, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.norm.cdf(x, loc, scale)``. FLOP cost: ``48 * numel(x)`` (composite: erf rational approx + arithmetic, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.norm.cdf",
   "operation": {

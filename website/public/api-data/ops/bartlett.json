@@ -293,7 +293,7 @@
     "flopscope_ref": "fnp.bartlett",
     "module": "flopscope._window",
     "name": "bartlett",
-    "notes": "Bartlett window. Cost: n (one linear eval per sample).",
+    "notes": "Bartlett window. Cost: 4*n (compare + divide + add + select per sample; single branch of numpy where-based evaluation).",
     "numpy_ref": "np.bartlett",
     "signature": "fnp.bartlett(M: 'int') -> 'FlopscopeArray'",
     "status": "supported",
@@ -303,7 +303,7 @@
   "schema_version": 1,
   "slug": "bartlett",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L34",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L35",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L3158"
   }
 }

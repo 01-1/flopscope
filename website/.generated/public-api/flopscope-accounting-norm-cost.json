@@ -220,15 +220,36 @@
                   "inline": [
                     {
                       "kind": "text",
-                      "text": "SVD-based norms (2-norm, nuclear norm): "
+                      "text": "SVD-based norms (2-norm, nuclear norm): values-only SVD cost\n"
                     },
                     {
                       "kind": "code",
-                      "text": "4 * m * n * min(m, n)"
+                      "text": "2*a*b^2 + 2*b^3"
                     },
                     {
                       "kind": "text",
-                      "text": "\n(weight=4 baked in, consistent with linalg.svd weight=4)."
+                      "text": " where a=max(m,n), b=min(m,n)."
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "General-p vector norms (ord not in {None, 0, 1, 2, inf, -inf}):\n"
+                    },
+                    {
+                      "kind": "code",
+                      "text": "18 * numel + 16"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (abs + pow per elem + sum-reduce + root pow)."
                     }
                   ],
                   "type": "paragraph"
@@ -256,7 +277,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.norm_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L171",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L178",
   "href": "/docs/api/accounting/norm-cost/",
   "import_path": "flopscope.accounting.norm_cost",
   "is_operation_cost_leaf": false,
@@ -269,7 +290,7 @@
   "notes_sections": [
     "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
     "Cost depends on the ``ord`` parameter and input dimensionality.",
-    "- Elementwise norms (Frobenius, L1, Linf, etc.): ``2 * numel`` (FMA=2, weight=1 baked in). - SVD-based norms (2-norm, nuclear norm): ``4 * m * n * min(m, n)`` (weight=4 baked in, consistent with linalg.svd weight=4)."
+    "- Elementwise norms (Frobenius, L1, Linf, etc.): ``2 * numel`` (FMA=2, weight=1 baked in). - SVD-based norms (2-norm, nuclear norm): values-only SVD cost ``2*a*b^2 + 2*b^3`` where a=max(m,n), b=min(m,n). - General-p vector norms (ord not in {None, 0, 1, 2, inf, -inf}): ``18 * numel + 16`` (abs + pow per elem + sum-reduce + root pow)."
   ],
   "numpy_ref": "",
   "operation": null,

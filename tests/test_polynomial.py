@@ -116,11 +116,11 @@ def test_polyder_result():
 
 
 def test_polyder_cost():
-    # 4 coeffs -> cost = 4
+    # 4 coeffs, m=1: t=min(1,3)=1; cost=1*4 - 1*2//2 = 3
     p = numpy.array([1.0, 2.0, 3.0, 4.0])
     with BudgetContext(flop_budget=10**6) as budget:
         polyder(p)
-        assert budget.flops_used == 4
+        assert budget.flops_used == 3
 
 
 def test_polyder_no_budget():
@@ -241,6 +241,33 @@ def test_polyfit_no_budget():
     assert len(result) >= 1
 
 
+def test_polyfit_flopscope_array_inputs():
+    # Regression: tracked FlopscopeArray inputs (the eval's normal path) must be
+    # stripped before numpy.polyfit, which internally uses ops that reject the
+    # subclass. Previously raised RuntimeError "WhestArray reached numpy.polyfit".
+    import flopscope.numpy as fnp
+
+    xs = [0.0, 1.0, 2.0, 3.0, 4.0]
+    ys = [0.0, 1.0, 4.0, 9.0, 16.0]
+    # Build the tracked arrays OUTSIDE the budget so only polyfit's own cost is
+    # measured (array *creation* bills numel under the empirical weight tier).
+    xa, ya, w = fnp.asarray(xs), fnp.asarray(ys), fnp.asarray([1.0] * 5)
+    with BudgetContext(flop_budget=10**6) as b_plain:
+        polyfit(numpy.asarray(xs), numpy.asarray(ys), 2)
+        plain_cost = b_plain.flops_used
+    with BudgetContext(flop_budget=10**6) as b_fnp:
+        result = polyfit(xa, ya, 2)
+        fnp_cost = b_fnp.flops_used
+    assert fnp_cost == plain_cost  # stripping tracked inputs adds no billing
+    assert numpy.allclose(numpy.asarray(result), numpy.polyfit(xs, ys, 2), atol=1e-10)
+    # the `w` (weights) kwarg is also a tracked-array param -> must be stripped
+    with BudgetContext(flop_budget=10**6):
+        result_w = polyfit(xa, ya, 2, w=w)
+    assert numpy.allclose(
+        numpy.asarray(result_w), numpy.polyfit(xs, ys, 2, w=[1.0] * 5), atol=1e-10
+    )
+
+
 # ---------------------------------------------------------------------------
 # poly
 # ---------------------------------------------------------------------------
@@ -254,11 +281,11 @@ def test_poly_result():
 
 
 def test_poly_cost():
-    # 4 roots -> cost = 2 * 4^2 = 32 (FMA=2 iterated-convolve upper bound)
+    # 4 roots -> cost = (3*4^2 + 4) // 2 = (48+4)//2 = 26  (was 2*4^2=32)
     zeros = numpy.array([1.0, 2.0, 3.0, 4.0])
     with BudgetContext(flop_budget=10**6) as budget:
         poly(zeros)
-        assert budget.flops_used == 32
+        assert budget.flops_used == 26
 
 
 def test_poly_no_budget():

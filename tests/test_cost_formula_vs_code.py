@@ -150,7 +150,7 @@ def test_unary_numel(name, we):
 
 def test_isclose_numel(we):
     a = numpy.random.rand(10, 10)
-    assert _cost_of(we.isclose, a, a) == 100
+    assert _cost_of(we.isclose, a, a) == 6 * 100  # 6/elem tolerance core
 
 
 def test_isnat_numel(we):
@@ -248,7 +248,8 @@ _REDUCTION_NUMEL = [
     "any",
     "argmax",
     "argmin",
-    "count_nonzero",
+    # count_nonzero is excluded: dedicated wrapper now charges numel(input) axis-independently
+    # (always numel, not numel-1 from skeleton); see test_count_nonzero_bills_numel_axis_independent
     "cumprod",
     "cumsum",
     "max",
@@ -264,11 +265,11 @@ _REDUCTION_NUMEL = [
     "nanmin",
     "nanprod",
     "nansum",
-    "nanmedian",
+    # nanmedian is excluded: Tier-2 cost (num_output_orbits × axis_dim); see test_nanmedian_tier2_full_reduction
     # mean is excluded: it charges +1 divide for the scalar output orbit
+    # nanmean is excluded: billed identically to mean (reduction + M divides); see test_nanmean_matches_mean
     # average is excluded: now matches mean cost (reduction + M divides); see test_average_matches_mean_and_bills_weight_pipeline
     # std/var/nanstd/nanvar are excluded: 4-pass formula; see test_variance_family_cost
-    "nanmean",
 ]
 
 
@@ -315,6 +316,24 @@ def test_median_tier2_cost(we):
     a = numpy.random.rand(10, 10)
     cost = _cost_of(we.median, a)
     assert cost == 100, f"median: expected Tier-2 cost=100, got {cost}"
+
+
+def test_nanmedian_tier2_cost(we):
+    # nanmedian now uses Tier-2 model (same as median): num_output_orbits × axis_dim.
+    # Full reduction of (10,10) dense: axis_dim = prod(shape) = 100, scalar → 1 orbit.
+    # Cost = 1 * 100 = 100.  (Was 99 from _counted_reduction skeleton.)
+    a = numpy.random.rand(10, 10)
+    cost = _cost_of(we.nanmedian, a)
+    assert cost == 100, f"nanmedian: expected Tier-2 cost=100, got {cost}"
+
+
+def test_nanmean_charges_sum_plus_one_divide(we):
+    # nanmean: billed identically to mean (reduction + per-output divide).
+    # Full reduction of (10,10) dense: sum cost = 99, scalar output → 1 divide.
+    # Total = 100. (Was 99 from _counted_reduction skeleton.)
+    a = numpy.random.rand(10, 10)
+    cost = _cost_of(we.nanmean, a)
+    assert cost == 100, f"nanmean: expected sum_cost(99) + 1 divide = 100, got {cost}"
 
 
 def test_percentile_tier2_cost(we):
@@ -550,8 +569,12 @@ class TestLinalgProperties:
         assert _cost_of(we.linalg.det, numpy.random.rand(8, 8)) == 349
 
     def test_slogdet_n3(self, we):
-        # slogdet_cost(8) = 2*8^3//3 + 8 = 341 + 8 = 349
-        assert _cost_of(we.linalg.slogdet, numpy.random.rand(8, 8)) == 349
+        # slogdet_cost(8) = 2*8^3//3 + 18*8 = 341 + 144 = 485
+        # (LU term + n log|diag| calls: abs + 16/elem log + reduce = 18n)
+        assert (
+            _cost_of(we.linalg.slogdet, numpy.random.rand(8, 8))
+            == 2 * 8**3 // 3 + 18 * 8
+        )
 
     def test_cond_mnk(self, we):
         # cond_cost(8,8): values-only SVD(8,8)=2*8*64+2*512=1024+1024=2048, +1=2049
@@ -652,7 +675,8 @@ class TestPolynomial:
         assert _cost_of(we.polysub, numpy.ones(5), numpy.ones(3)) == 5
 
     def test_polyder(self, we):
-        assert _cost_of(we.polyder, numpy.ones(5)) == 5
+        # n=5, m=1: t=min(1,4)=1; cost=1*5 - 1*2//2 = 4
+        assert _cost_of(we.polyder, numpy.ones(5)) == 4
 
     def test_polyint(self, we):
         assert _cost_of(we.polyint, numpy.ones(5)) == 5
@@ -668,7 +692,8 @@ class TestPolynomial:
         assert _cost_of(we.polyfit, x, numpy.random.rand(20), 2) == 360
 
     def test_poly(self, we):
-        assert _cost_of(we.poly, numpy.ones(5)) == 50  # 2 * 5^2 = 50
+        # n=5: (3*25 + 5) // 2 = 80 // 2 = 40  (was 2*25=50)
+        assert _cost_of(we.poly, numpy.ones(5)) == 40
 
     def test_roots(self, we):
         # degree=4 (len=5 -> n=4); eigvals_cost(4)=10*64=640 (PROVISIONAL)
@@ -730,7 +755,6 @@ class TestSetOps:
                 ),
             ),
             "isin",
-            "intersect1d",
             "union1d",
             "setdiff1d",
             "setxor1d",
@@ -743,6 +767,26 @@ class TestSetOps:
         )
         assert cost == 1200, f"{name}: expected 1200, got {cost}"
 
+    def test_intersect1d_cost(self, we):
+        # Default assume_unique=False: numpy unique()-sorts both inputs first.
+        # sort_cost(100) + sort_cost(50) + sort_cost(150) = 700 + 350 + 1200 = 2250
+        from flopscope._flops import sort_cost as _sc
+
+        cost = _cost_of(we.intersect1d, numpy.random.rand(100), numpy.random.rand(50))
+        assert cost == _sc(100) + _sc(50) + _sc(150)
+
+    def test_intersect1d_cost_assume_unique(self, we):
+        # assume_unique=True: only sort_cost(n+m)
+        from flopscope._flops import sort_cost as _sc
+
+        cost = _cost_of(
+            we.intersect1d,
+            numpy.random.rand(100),
+            numpy.random.rand(50),
+            assume_unique=True,
+        )
+        assert cost == _sc(150)
+
 
 # ---------------------------------------------------------------------------
 # Window functions
@@ -750,8 +794,9 @@ class TestSetOps:
 
 
 class TestWindows:
-    def test_bartlett_n(self, we):
-        assert _cost_of(we.bartlett, 20) == 20
+    def test_bartlett_4n(self, we):
+        # Updated: compare+div+add+select per sample (FMA=2); 4 ops/point
+        assert _cost_of(we.bartlett, 20) == 4 * 20
 
     def test_hamming_n(self, we):
         # Updated for FMA=2 unification (spec 2026-05-20): formula doubled n → 2*n.
@@ -761,11 +806,13 @@ class TestWindows:
         # Updated for FMA=2 unification (spec 2026-05-20): formula doubled n → 2*n.
         assert _cost_of(we.hanning, 20) == 40
 
-    def test_blackman_3n(self, we):
-        assert _cost_of(we.blackman, 20) == 60
+    def test_blackman_40n(self, we):
+        # Updated: 2 cos evals @16 + 8 arith per sample; 40 ops/point
+        assert _cost_of(we.blackman, 20) == 40 * 20
 
-    def test_kaiser_3n(self, we):
-        assert _cost_of(we.kaiser, 20, 5.0) == 60
+    def test_kaiser_23n(self, we):
+        # Updated: 1 Bessel I0 @16 + 7 arith per sample; 23 ops/point
+        assert _cost_of(we.kaiser, 20, 5.0) == 23 * 20
 
 
 # ---------------------------------------------------------------------------
@@ -775,11 +822,15 @@ class TestWindows:
 
 class TestStatistics:
     def test_corrcoef_2f2s(self, we):
-        # 3 features, 10 samples → 2*3^2*10 = 180
-        assert _cost_of(we.corrcoef, numpy.random.rand(3, 10)) == 180
+        # 3 features, 10 samples → f=3, s=10
+        # cov: 2*9*10 + 2*3*10 = 180 + 60 = 240
+        # + normalization: 2*9 + 3 = 21
+        # total: 261
+        assert _cost_of(we.corrcoef, numpy.random.rand(3, 10)) == 261
 
     def test_cov_2f2s(self, we):
-        assert _cost_of(we.cov, numpy.random.rand(3, 10)) == 180
+        # 3 features, 10 samples → 2*f^2*s + 2*f*s = 2*9*10 + 2*3*10 = 180 + 60 = 240
+        assert _cost_of(we.cov, numpy.random.rand(3, 10)) == 240
 
     def test_interp_n_log_xp(self, we):
         # 3*10 + 10*ceil(log2(32)) = 30 + 10*5 = 80
@@ -800,14 +851,23 @@ class TestStatistics:
 
 
 class TestFreeOps:
-    def test_append_numel_values(self, we):
-        assert _cost_of(we.append, numpy.array([1, 2, 3]), [4, 5]) == 2
+    def test_append_numel_output(self, we):
+        # np.append = concatenate([arr, values]); bills numel(output) = arr.size + values.size
+        assert (
+            _cost_of(we.append, numpy.array([1, 2, 3]), [4, 5]) == 5
+        )  # was 2 (values.size only)
 
-    def test_delete_num_deleted(self, we):
-        assert _cost_of(we.delete, numpy.array([1, 2, 3, 4, 5]), [0, 2]) == 2
+    def test_delete_numel_output(self, we):
+        # np.delete copies surviving elements; bills numel(output) = arr.size - deleted
+        assert (
+            _cost_of(we.delete, numpy.array([1, 2, 3, 4, 5]), [0, 2]) == 3
+        )  # was 2 (num_deleted)
 
-    def test_insert_numel_values(self, we):
-        assert _cost_of(we.insert, numpy.array([1, 2, 3]), 1, [10, 20]) == 2
+    def test_insert_numel_output(self, we):
+        # np.insert copies all elements; bills numel(output) = arr.size + values.size
+        assert (
+            _cost_of(we.insert, numpy.array([1, 2, 3]), 1, [10, 20]) == 5
+        )  # was 2 (values.size only)
 
     def test_trim_zeros_num_trimmed(self, we):
         assert _cost_of(we.trim_zeros, numpy.array([0, 0, 1, 2, 0, 0])) == 4
@@ -873,7 +933,7 @@ class TestRandom:
         assert _cost_of(we.random.normal, 0, 1, 100) == 100
 
     def test_uniform_positional_size(self, we):
-        assert _cost_of(we.random.uniform, 0, 1, 100) == 100
+        assert _cost_of(we.random.uniform, 0, 1, 100) == 3 * 100
 
     def test_beta_positional_size(self, we):
         assert _cost_of(we.random.beta, 2, 5, 100) == 100
@@ -920,24 +980,32 @@ class TestStats:
         assert _cost_of(flopscope.stats.uniform.pdf, numpy.random.rand(100)) == 100
 
     def test_uniform_cdf(self, we):
-        assert _cost_of(flopscope.stats.uniform.cdf, numpy.random.rand(100)) == 100
+        assert (
+            _cost_of(flopscope.stats.uniform.cdf, numpy.random.rand(100)) == 4 * 100
+        )  # sub+div+2 select
 
     def test_uniform_ppf(self, we):
         assert _cost_of(flopscope.stats.uniform.ppf, numpy.random.rand(100)) == 100
 
     def test_expon_pdf(self, we):
-        assert _cost_of(flopscope.stats.expon.pdf, numpy.random.rand(100)) == 100
+        # old: == 100 (cost_per_elem=1, weight=16.0); now: 22*100 (composite, weight 1.0)
+        assert _cost_of(flopscope.stats.expon.pdf, numpy.random.rand(100)) == 22 * 100
 
     def test_cauchy_pdf(self, we):
-        assert _cost_of(flopscope.stats.cauchy.pdf, numpy.random.rand(100)) == 100
+        assert (
+            _cost_of(flopscope.stats.cauchy.pdf, numpy.random.rand(100)) == 6 * 100
+        )  # pure-arithmetic: 6 FLOPs/elem
 
     def test_logistic_cdf(self, we):
-        assert _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 100
+        # old: == 100 (cost_per_elem=1, weight=16.0); now: 21*100 (composite, weight 1.0)
+        assert (
+            _cost_of(flopscope.stats.logistic.cdf, numpy.random.rand(100)) == 21 * 100
+        )
 
     def test_laplace_ppf(self, we):
         assert (
             _cost_of(flopscope.stats.laplace.ppf, numpy.random.rand(100) * 0.98 + 0.01)
-            == 100
+            == 51 * 100  # composite: two eager log branches + edge selects
         )
 
     def test_lognorm_pdf(self, we):
@@ -947,13 +1015,14 @@ class TestStats:
                 numpy.abs(numpy.random.rand(100)) + 0.1,
                 0.5,
             )
-            == 100
+            == 62 * 100  # composite: log + exp + arithmetic
         )
 
     def test_truncnorm_cdf(self, we):
+        # old: == 100 (cost_per_elem=1, weight=16.0); now: 51*100 (composite, weight 1.0)
         assert (
             _cost_of(flopscope.stats.truncnorm.cdf, numpy.random.rand(100), -2, 2)
-            == 100
+            == 51 * 100
         )
 
     def test_scalar_input(self, we):
@@ -995,7 +1064,7 @@ def test_gradient_cost_pinned(shape, expected, we):
     assert _cost_of(we.gradient, f) == expected
 
 
-@pytest.mark.parametrize("size,expected", [(100, 700), (1000, 7000)])
+@pytest.mark.parametrize("size,expected", [(100, 1300), (1000, 13000)])
 def test_unwrap_cost_pinned(size, expected, we):
     a = we.asarray(numpy.zeros(size))
     assert _cost_of(we.unwrap, a) == expected

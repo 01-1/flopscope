@@ -437,7 +437,7 @@
     "signature": "fnp.diag(v: 'ArrayLike', k: 'int' = 0) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Extract a diagonal or construct a diagonal array.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "diag",

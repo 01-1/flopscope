@@ -647,7 +647,7 @@
     "flopscope_ref": "fnp.linalg.pinv",
     "module": "numpy.linalg",
     "name": "linalg.pinv",
-    "notes": "Pseudoinverse. Cost: m*n*min(m,n) (via SVD).",
+    "notes": "Pseudoinverse. Cost: SVD(with U/V) + min(m,n) + n*min(m,n) + matmul (see pinv_cost).",
     "numpy_ref": "np.linalg.pinv",
     "signature": "fnp.linalg.pinv(a: 'ArrayLike', rcond: 'float | None' = None, hermitian: 'bool' = False, *, rtol: 'float | None' = None) -> 'FlopscopeArray'",
     "status": "supported",
@@ -657,7 +657,7 @@
   "schema_version": 1,
   "slug": "linalg-pinv",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L291",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L303",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/linalg/_linalg.py#L2128"
   }
 }

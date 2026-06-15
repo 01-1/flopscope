@@ -253,7 +253,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.svdvals",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L328",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L339",
   "href": "/docs/api/numpy/linalg/svdvals/",
   "import_path": "flopscope.numpy.linalg.svdvals",
   "is_operation_cost_leaf": true,
@@ -265,7 +265,7 @@
     "href": "/docs/api/numpy/linalg/tensordot/",
     "label": "fnp.linalg.tensordot"
   },
-  "notes": "Singular values only. Cost: m*n*min(m,n) (Golub-Reinsch).",
+  "notes": "Singular values only. Cost: $2ab^2+2b^3$ (values-only SVD; a=max(m,n), b=min(m,n)). Top-k (1<=k<min(m,n)) bills min(4mnk, that cost).",
   "notes_sections": [],
   "numpy_ref": "np.linalg.svdvals",
   "operation": {

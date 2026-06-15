@@ -348,6 +348,15 @@
             }
           ],
           "type": "paragraph"
+        },
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "The SVD term uses with_vectors=True (the reconstruction needs U/V); the\n4.0 linalg weight is gone, so this composed value is exactly what is charged."
+            }
+          ],
+          "type": "paragraph"
         }
       ],
       "title": "Notes"
@@ -374,7 +383,7 @@
   ],
   "signature": "flops.flops.lstsq_cost(m: 'int', n: 'int', b_cols: 'int' = 1, b_ndim: 'int' = 1) -> 'int'",
   "slug": "flops-lstsq-cost",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L152",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L158",
   "status_note": "",
   "summary": "Weighted FLOP cost of least-squares via SVD.",
   "upstream_source_url": ""

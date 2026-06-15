@@ -687,8 +687,8 @@
   },
   "op": {
     "category": "counted_random_method",
-    "cost_formula": "numel(output)",
-    "cost_formula_latex": "$\\text{numel}(\\text{output})$",
+    "cost_formula": "per-method",
+    "cost_formula_latex": "varies",
     "flopscope_ref": "fnp.random.RandomState.uniform",
     "module": "numpy.random",
     "name": "random.RandomState.uniform",

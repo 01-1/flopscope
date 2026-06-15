@@ -120,7 +120,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Simplified cubic cost model for eigendecomposition."
+              "text": "Hessenberg reduction + Francis QR with eigenvector backtransform\n(LAPACK Users' Guide Table 3.13 DGEEV / G&VL 4e \u00a77.5).\nConfirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13\n/ G&VL 4e \u00a77.5, \u00a78.3 + runtime scaling); see docs/reference/cost-model.md."
             }
           ],
           "type": "paragraph"
@@ -150,7 +150,7 @@
   ],
   "signature": "flops.flops.eig_cost(n: 'int') -> 'int'",
   "slug": "flops-eig-cost",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L130",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L128",
   "status_note": "",
   "summary": "Weighted FLOP cost of eigendecomposition.",
   "upstream_source_url": ""

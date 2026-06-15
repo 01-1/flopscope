@@ -331,10 +331,10 @@
   ],
   "canonical_name": "fft.rfftfreq",
   "canonical_path": "numpy/fft/rfftfreq",
-  "category": "free",
-  "cost_formula": "0",
-  "cost_formula_latex": "$0$",
-  "display_type": "free",
+  "category": "counted_custom",
+  "cost_formula": "per-operation",
+  "cost_formula_latex": "varies",
+  "display_type": "custom",
   "doc_coverage": {
     "raw_blocks": [],
     "unresolved_references": [],
@@ -347,7 +347,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.fft.rfftfreq",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L27",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L41",
   "href": "/docs/api/numpy/fft/rfftfreq/",
   "legacy_href": "/docs/api/ops/fft-rfftfreq/",
   "module": "numpy.fft",
@@ -356,7 +356,7 @@
     "href": "/docs/api/numpy/fft/rfftn/",
     "label": "fnp.fft.rfftn"
   },
-  "notes": "Real FFT sample frequencies. No arithmetic; returns index array.",
+  "notes": "Real FFT sample frequencies; cost = n//2+1 (index grid scaled by 1/(n*d)).",
   "notes_sections": [],
   "numpy_ref": "np.fft.rfftfreq",
   "parameters": [

@@ -49,9 +49,11 @@ class TestAnalyticalCost:
         assert _analytical_cost("polysub", 100, 10) == 11
 
     def test_polyder(self):
-        assert _analytical_cost("polyder", 100, 10) == 11  # degree + 1 = len(c)
+        # m=1: t=min(1, 10)=1, cost=degree=10 (n=degree+1=11, cost=1*11-1=10)
+        assert _analytical_cost("polyder", 100, 10) == 10
 
     def test_polyint(self):
+        # m=1: m*n + 0 = degree+1 = 11 (unchanged)
         assert _analytical_cost("polyint", 100, 10) == 11  # degree + 1 = len(c)
 
     def test_poly(self):

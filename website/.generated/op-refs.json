@@ -2204,11 +2204,6 @@
     "href": "/docs/api/numpy/random/random/",
     "label": "fnp.random.random"
   },
-  "random.random_integers": {
-    "canonical_name": "random.random_integers",
-    "href": "/docs/api/numpy/random/random-integers/",
-    "label": "fnp.random.random_integers"
-  },
   "random.random_sample": {
     "canonical_name": "random.random_sample",
     "href": "/docs/api/numpy/random/random-sample/",
@@ -2390,9 +2385,9 @@
     "label": "fnp.rint"
   },
   "row_stack": {
-    "canonical_name": "row_stack",
-    "href": "/docs/api/numpy/row-stack/",
-    "label": "fnp.row_stack"
+    "canonical_name": "vstack",
+    "href": "/docs/api/numpy/vstack/",
+    "label": "fnp.vstack"
   },
   "save": {
     "canonical_name": "save",

@@ -10,7 +10,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Cost for polymul: n1 * n2 FLOPs."
+              "text": "Cost for polymul: 2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2)."
             }
           ],
           "type": "paragraph"
@@ -197,7 +197,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.polymul_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L50",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L83",
   "href": "/docs/api/accounting/polymul-cost/",
   "import_path": "flopscope.accounting.polymul_cost",
   "is_operation_cost_leaf": false,
@@ -242,7 +242,7 @@
   "see_also": [],
   "signature": "flopscope.accounting.polymul_cost(n1: 'int', n2: 'int') -> 'int'",
   "slug": "flopscope-accounting-polymul-cost",
-  "summary": "Cost for polymul: n1 * n2 FLOPs.",
+  "summary": "Cost for polymul: 2*n1*n2 - n1 - n2 FLOPs (convolution, FMA=2).",
   "upstream_source_url": "",
   "weight": 1.0
 }

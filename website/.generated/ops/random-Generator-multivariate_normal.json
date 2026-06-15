@@ -865,8 +865,8 @@
   "canonical_name": "random.Generator.multivariate_normal",
   "canonical_path": "numpy/random/generator/multivariate-normal",
   "category": "counted_random_method",
-  "cost_formula": "numel(output)",
-  "cost_formula_latex": "$\\text{numel}(\\text{output})$",
+  "cost_formula": "per-method",
+  "cost_formula_latex": "varies",
   "display_type": "counted",
   "doc_coverage": {
     "raw_blocks": [
@@ -898,7 +898,7 @@
     "href": "/docs/api/numpy/random/generator/negative-binomial/",
     "label": "fnp.random.Generator.negative_binomial"
   },
-  "notes": "Multivariate normal; cost = numel(output).",
+  "notes": "Composite cost: d^3//3 (Cholesky factorization) + 2*N*d^2 (affine transform) + 16*N*d (N*d standard-normal draws at transcendental tier); weight 1.0.",
   "notes_sections": [
     "The mean is a coordinate in N-dimensional space, which represents the location where samples are most likely to be generated.  This is analogous to the peak of the bell curve for the one-dimensional or univariate normal distribution.",
     "Covariance indicates the level to which two variables vary together. From the multivariate normal distribution, we draw N-dimensional samples, :math:`X = [x_1, x_2, ... x_N]`.  The covariance matrix element :math:`C_{ij}` is the covariance of :math:`x_i` and :math:`x_j`. The element :math:`C_{ii}` is the variance of :math:`x_i` (i.e. its \"spread\").",

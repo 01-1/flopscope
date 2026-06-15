@@ -576,12 +576,12 @@
     "signature": "fnp.mask_indices(n, mask_func, k=0)",
     "status": "supported",
     "summary": "Return the indices to access (n, n) arrays, given a masking function.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "mask_indices",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1942",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2026",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_twodim_base_impl.py#L825"
   }
 }

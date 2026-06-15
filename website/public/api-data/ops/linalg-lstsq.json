@@ -816,7 +816,7 @@
     "flopscope_ref": "fnp.linalg.lstsq",
     "module": "numpy.linalg",
     "name": "linalg.lstsq",
-    "notes": "Least squares. Cost: m*n*min(m,n) (LAPACK gelsd/SVD).",
+    "notes": "Least squares. Cost: SVD(with U/V) + back-substitution matmuls (see lstsq_cost).",
     "numpy_ref": "np.linalg.lstsq",
     "signature": "fnp.linalg.lstsq(a: 'ArrayLike', b: 'ArrayLike', rcond: 'float | None' = None) -> 'tuple[FlopscopeArray, FlopscopeArray, int, FlopscopeArray]'",
     "status": "supported",
@@ -826,7 +826,7 @@
   "schema_version": 1,
   "slug": "linalg-lstsq",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L201",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L210",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/linalg/_linalg.py#L2394"
   }
 }

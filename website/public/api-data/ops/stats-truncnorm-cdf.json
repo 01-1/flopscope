@@ -240,11 +240,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(x)"
+                "text": "51 * numel(x)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: z(2)+std_norm_cdf(46)+\nresult(3)+2 where(4), FMA=2, weight 1.0; calibrated alpha 50.6)."
               }
             ],
             "type": "paragraph"
@@ -305,7 +305,7 @@
   "schema_version": 1,
   "slug": "stats-truncnorm-cdf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L87",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_truncnorm.py#L93",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncnorm.html"
   }
 }

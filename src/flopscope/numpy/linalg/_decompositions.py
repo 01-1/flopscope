@@ -328,7 +328,8 @@ def svdvals_cost(m: int, n: int, k: int | None = None) -> int:
     """FLOP cost of computing singular values (values-only SVD).
 
     Delegates to :func:`flopscope._flops.svd_cost` with ``with_vectors=False``:
-    2*a*b^2 + 2*b^3, a = max(m, n), b = min(m, n). ``k`` does not reduce cost.
+    2*a*b^2 + 2*b^3, a = max(m, n), b = min(m, n). Top-k (1 <= k < min(m, n))
+    bills min(4*m*n*k, that cost).
     """
     from flopscope._flops import svd_cost
 

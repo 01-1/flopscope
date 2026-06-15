@@ -196,11 +196,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "4 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: sub + div + 2 clip\ncompare/selects, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -261,7 +261,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.uniform.cdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L65",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L67",
   "href": "/docs/api/stats/uniform/cdf/",
   "legacy_href": "/docs/api/ops/stats-uniform-cdf/",
   "module": "flopscope.stats",
@@ -270,9 +270,9 @@
     "href": "/docs/api/stats/uniform/pdf/",
     "label": "flops.stats.uniform.pdf"
   },
-  "notes": "Uniform CDF; cost = numel(input).",
+  "notes": "Uniform CDF; cost = 4*numel(input) (composite clip kernel: sub+div+2 select, weight 1.0).",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.uniform.cdf(x, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.uniform.cdf(x, loc, scale)``. FLOP cost: ``4 * numel(x)`` (composite: sub + div + 2 clip compare/selects, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.uniform.cdf",
   "parameters": [

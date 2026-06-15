@@ -643,7 +643,7 @@
     "flopscope_ref": "fnp.linalg.cholesky",
     "module": "numpy.linalg",
     "name": "linalg.cholesky",
-    "notes": "Cholesky decomposition. Cost: $n^3$.",
+    "notes": "Cholesky decomposition. Cost: $n^3/3$.",
     "numpy_ref": "np.linalg.cholesky",
     "signature": "fnp.linalg.cholesky(a: 'ArrayLike', /, *, upper: 'bool' = False) -> 'FlopscopeArray'",
     "status": "supported",

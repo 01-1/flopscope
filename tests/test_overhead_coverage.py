@@ -61,10 +61,11 @@ def test_every_wrapper_with_budget_deduct_is_decorated():
                 "deduct",
                 "_call_numpy",
                 "_einsum_routed_binary",
-                # Factory function — its inner `wrapper` (decorated with
+                # Factory functions — their inner `wrapper` (decorated with
                 # @_counted_wrapper) calls budget.deduct; the outer factory
                 # is a closure builder, not itself a counted wrapper.
                 "_counted_variance",
+                "_counted_mean",
             ):
                 continue
             if not _has_counted_wrapper_decorator(fn):

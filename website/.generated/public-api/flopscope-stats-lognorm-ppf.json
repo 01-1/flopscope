@@ -235,11 +235,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(q)"
+              "text": "106 * numel(q)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: ndtri + exp, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -299,7 +299,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.stats.lognorm.ppf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_lognorm.py#L108",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_lognorm.py#L115",
   "href": "/docs/api/stats/lognorm/ppf/",
   "import_path": "flopscope.stats.lognorm.ppf",
   "is_operation_cost_leaf": true,
@@ -310,7 +310,7 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.lognorm.ppf(q, s, loc, scale)``. FLOP cost: ``1 * numel(q)``."
+    "Equivalent to ``scipy.stats.lognorm.ppf(q, s, loc, scale)``. FLOP cost: ``106 * numel(q)`` (composite: ndtri + exp, weight 1.0)."
   ],
   "numpy_ref": "",
   "operation": null,

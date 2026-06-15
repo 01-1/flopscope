@@ -290,7 +290,7 @@
     "href": "/docs/api/numpy/linalg/diagonal/",
     "label": "fnp.linalg.diagonal"
   },
-  "notes": "Determinant. Cost: $n^3$.",
+  "notes": "Determinant. Cost: $\\frac{2}{3}n^3 + n$.",
   "notes_sections": [
     "Broadcasting rules apply, see the `flops.linalg` documentation for details.",
     "The determinant is computed via LU factorization using the LAPACK routine ``z/dgetrf``."

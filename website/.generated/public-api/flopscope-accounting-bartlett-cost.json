@@ -118,7 +118,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "One linear evaluation per sample."
+              "text": "Four ops per sample: compare, divide, add/subtract, select (single branch of\nnumpy where-based evaluation). Weight 1.0 (no transcendental; constant in flop_cost)."
             }
           ],
           "type": "paragraph"
@@ -152,7 +152,7 @@
   "notes": "",
   "notes_sections": [
     "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
-    "One linear evaluation per sample."
+    "Four ops per sample: compare, divide, add/subtract, select (single branch of numpy where-based evaluation). Weight 1.0 (no transcendental; constant in flop_cost)."
   ],
   "numpy_ref": "",
   "operation": null,

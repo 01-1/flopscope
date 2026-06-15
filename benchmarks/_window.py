@@ -9,19 +9,19 @@ from benchmarks._perf import measure_flops
 WINDOW_OPS: list[str] = ["bartlett", "blackman", "hamming", "hanning", "kaiser"]
 
 _ANALYTICAL_COST: dict[str, int] = {
-    "bartlett": 1,  # multiplied by n
-    "blackman": 3,  # multiplied by n
+    "bartlett": 4,  # multiplied by n; compare+div+add+select per sample (FMA=2)
+    "blackman": 40,  # multiplied by n; 2 cos evals @16 + 8 arith per sample
     "hamming": 1,  # multiplied by n
     "hanning": 1,  # multiplied by n
-    "kaiser": 3,  # multiplied by n
+    "kaiser": 23,  # multiplied by n; Bessel I0 @16 + 7 arith per sample (FMA=2)
 }
 
 _FORMULA_STRINGS: dict[str, str] = {
-    "bartlett": "n",
-    "blackman": "3*n",
+    "bartlett": "4*n",
+    "blackman": "40*n",
     "hamming": "n",
     "hanning": "n",
-    "kaiser": "3*n",
+    "kaiser": "23*n",
 }
 
 

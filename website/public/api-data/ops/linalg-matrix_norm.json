@@ -338,7 +338,7 @@
     "flopscope_ref": "fnp.linalg.matrix_norm",
     "module": "numpy.linalg",
     "name": "linalg.matrix_norm",
-    "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius, m*n*min(m,n) for ord=2.",
+    "notes": "Matrix norm. Cost depends on ord: 2*numel for Frobenius/L1/Linf, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)); \u00d7 batch groups (product of dims except last two).",
     "numpy_ref": "np.linalg.matrix_norm",
     "signature": "fnp.linalg.matrix_norm(x: 'ArrayLike', ord: 'Any' = 'fro', keepdims: 'bool' = False) -> 'FlopscopeArray'",
     "status": "supported",
@@ -348,7 +348,7 @@
   "schema_version": 1,
   "slug": "linalg-matrix_norm",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L365",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L410",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/linalg/_linalg.py#L3418"
   }
 }

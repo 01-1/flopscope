@@ -118,7 +118,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Simplified cubic cost model for symmetric eigenvalue computation."
+              "text": "4n^3/3: tridiagonalization, values only (G&VL 4e \u00a78.3).\nConfirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13\n/ G&VL 4e \u00a77.5, \u00a78.3 + runtime scaling); see docs/reference/cost-model.md."
             }
           ],
           "type": "paragraph"
@@ -140,7 +140,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.eigvalsh_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L260",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L278",
   "href": "/docs/api/accounting/eigvalsh-cost/",
   "import_path": "flopscope.accounting.eigvalsh_cost",
   "is_operation_cost_leaf": false,
@@ -152,7 +152,7 @@
   "notes": "",
   "notes_sections": [
     "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
-    "Simplified cubic cost model for symmetric eigenvalue computation."
+    "4n^3/3: tridiagonalization, values only (G&VL 4e \u00a78.3). Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e \u00a77.5, \u00a78.3 + runtime scaling); see docs/reference/cost-model.md."
   ],
   "numpy_ref": "",
   "operation": null,

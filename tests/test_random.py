@@ -3,7 +3,6 @@
 import numpy
 
 from flopscope._budget import BudgetContext
-from flopscope._flops import _ceil_log2
 from flopscope.numpy import random as merandom
 
 
@@ -47,7 +46,7 @@ class TestUniform:
     def test_cost(self):
         with BudgetContext(flop_budget=10**6, quiet=True) as budget:
             merandom.uniform(0, 1, size=50)
-            assert budget.flops_used == 50
+            assert budget.flops_used == 3 * 50  # draw + affine (low + (high-low)*U)
 
 
 class TestRandint:
@@ -86,7 +85,9 @@ class TestChoiceWithReplacement:
 class TestChoiceWithoutReplacement:
     def test_cost(self):
         n = 16
-        expected = n * _ceil_log2(n)
+        # Fisher-Yates O(n): legacy path is permutation(n)[:size], matches
+        # random.permutation billing (n FLOPs, not sort_cost n*ceil(log2(n))).
+        expected = n
         with BudgetContext(flop_budget=10**6, quiet=True) as budget:
             merandom.choice(n, size=5, replace=False)
             assert budget.flops_used == expected

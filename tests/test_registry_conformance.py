@@ -395,7 +395,6 @@ PENDING_EXAMPLES: frozenset[str] = frozenset(
         "random.poisson",
         "random.power",
         "random.rand",
-        "random.random_integers",
         "random.random_sample",
         "random.ranf",
         "random.rayleigh",

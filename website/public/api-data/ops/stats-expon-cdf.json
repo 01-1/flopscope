@@ -196,11 +196,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(x)"
+                "text": "22 * numel(x)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: z(2) + exp(-z)(17) +\n1-exp(1) + where(2), FMA=2, weight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -261,7 +261,7 @@
   "schema_version": 1,
   "slug": "stats-expon-cdf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_expon.py#L66",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_expon.py#L70",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.expon.html"
   }
 }

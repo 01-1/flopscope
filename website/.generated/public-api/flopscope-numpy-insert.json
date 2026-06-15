@@ -810,7 +810,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.insert",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1842",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1927",
   "href": "/docs/api/numpy/insert/",
   "import_path": "flopscope.numpy.insert",
   "is_operation_cost_leaf": true,
@@ -822,7 +822,7 @@
     "href": "/docs/api/numpy/interp/",
     "label": "fnp.interp"
   },
-  "notes": "Insert values along axis before given indices. Cost: numel(values).",
+  "notes": "Insert values along axis before given indices. Cost: numel(output).",
   "notes_sections": [
     "Note that for higher dimensional inserts ``obj=0`` behaves very different from ``obj=[0]`` just like ``arr[:,0,:] = values`` is different from ``arr[:,[0],:] = values``. This is because of the difference between basic and advanced :ref:`indexing <basics.indexing>`."
   ],
@@ -953,5 +953,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L5456",
-  "weight": 4.0
+  "weight": 1.0
 }

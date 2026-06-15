@@ -385,7 +385,7 @@
     "href": "/docs/api/numpy/linalg/vecdot/",
     "label": "fnp.linalg.vecdot"
   },
-  "notes": "Matrix trace. Cost: n (sum of diagonal elements).",
+  "notes": "Matrix trace. Cost: min(m,n) \u00d7 batch (diagonal sum per matrix).",
   "notes_sections": [],
   "numpy_ref": "np.linalg.trace",
   "parameters": [

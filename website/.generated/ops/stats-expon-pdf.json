@@ -196,11 +196,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "22 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: z=(x-loc)/scale(2) +\nexp(-z)(17) + /scale(1) + where(2), FMA=2, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -261,7 +261,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.expon.pdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_expon.py#L34",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_expon.py#L37",
   "href": "/docs/api/stats/expon/pdf/",
   "legacy_href": "/docs/api/ops/stats-expon-pdf/",
   "module": "flopscope.stats",
@@ -272,7 +272,7 @@
   },
   "notes": "Exponential PDF; cost = numel(input).",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.expon.pdf(x, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.expon.pdf(x, loc, scale)``. FLOP cost: ``22 * numel(x)`` (composite: z=(x-loc)/scale(2) + exp(-z)(17) + /scale(1) + where(2), FMA=2, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.expon.pdf",
   "parameters": [

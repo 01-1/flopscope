@@ -365,7 +365,7 @@
     "flopscope_ref": "fnp.kaiser",
     "module": "flopscope._window",
     "name": "kaiser",
-    "notes": "Kaiser window. Cost: 3*n (Bessel function eval per sample).",
+    "notes": "Kaiser window. Cost: 23*n (per sample: 1 Bessel I0 at transcendental tier 16 + 7 arithmetic FLOPs, FMA=2).",
     "numpy_ref": "np.kaiser",
     "signature": "fnp.kaiser(M: 'int', beta: 'float') -> 'FlopscopeArray'",
     "status": "supported",
@@ -375,7 +375,7 @@
   "schema_version": 1,
   "slug": "kaiser",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L162",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_window.py#L170",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L3617"
   }
 }

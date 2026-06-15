@@ -196,14 +196,27 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(x)"
+                "text": "22 * numel(x)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: "
+              },
+              {
+                "kind": "text",
+                "text": "|"
+              },
+              {
+                "kind": "text",
+                "text": "x-loc|(3) + exp(-z)(17) +\n/(2*scale)(2), FMA=2, weight 1.0)."
               }
             ],
             "type": "paragraph"
+          },
+          {
+            "raw_kind": "system_message",
+            "raw_text": "<string>:1: (WARNING/2) Inline substitution_reference start-string without end-string.",
+            "type": "raw_block"
           }
         ],
         "title": "Notes"
@@ -261,7 +274,7 @@
   "schema_version": 1,
   "slug": "stats-laplace-pdf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_laplace.py#L34",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_laplace.py#L38",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.laplace.html"
   }
 }

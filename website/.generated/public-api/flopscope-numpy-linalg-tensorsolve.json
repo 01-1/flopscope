@@ -424,7 +424,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.tensorsolve",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L353",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L369",
   "href": "/docs/api/numpy/linalg/tensorsolve/",
   "import_path": "flopscope.numpy.linalg.tensorsolve",
   "is_operation_cost_leaf": true,
@@ -436,7 +436,7 @@
     "href": "/docs/api/numpy/linalg/trace/",
     "label": "fnp.linalg.trace"
   },
-  "notes": "Tensor solve. Cost: $n^3$ after reshape (delegates to solve).",
+  "notes": "Tensor solve. Cost: $\\frac{2}{3}n^3 + 2n^2$ after reshape, n=prod(trailing dims) (delegates to solve).",
   "notes_sections": [],
   "numpy_ref": "np.linalg.tensorsolve",
   "operation": {

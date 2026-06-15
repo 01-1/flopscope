@@ -15,6 +15,7 @@ import numpy as _np
 
 from flopscope._flops import _ceil_log2 as _ceil_log2
 from flopscope._flops import sort_cost as _sort_cost
+from flopscope._flops import svd_cost as _svd_cost
 
 
 def _numel_output(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> int:
@@ -124,14 +125,40 @@ def _choice_cost(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> 
             draws = _builtins.max(base, 1)
             base += 3 * n + draws * _ceil_log2(n)
         return base
-    return _sort_cost_formula(args, kwargs, result)
+    # replace=False: extract pop size n
+    a = args[0] if args else kwargs.get("a")
+    if isinstance(a, (int, _np.integer)):
+        n = int(a)
+    elif isinstance(a, _np.ndarray):
+        n = int(a.shape[0]) if a.ndim > 0 else 1
+    elif hasattr(a, "__len__"):
+        n = len(a)  # pyright: ignore[reportArgumentType]  # guarded by hasattr
+    else:
+        n = 1
+    n = _builtins.max(n, 1)
+    if p is None:
+        # Fisher-Yates O(n): legacy RandomState.choice is permutation(pop)[:size];
+        # Generator uses Floyd's/tail-shuffle (<= O(n)); n is a conservative ceiling.
+        return n
+    # Data-dependent rejection loop with weights: sort_cost(n) conservative floor.
+    return _sort_cost(n)
 
 
 def multivariate_normal_flops(N: int, d: int) -> int:
-    """Composite mvn cost: covariance factorization (d^3/3, Cholesky-class)
-    + affine transform (2*N*d^2) + N*d standard-normal draws at the
-    transcendental rate (16/draw). Tier folded into flop_cost; weight 1.0."""
-    return _builtins.max(d**3 // 3 + 2 * N * d * d + 16 * N * d, 1)
+    """Composite mvn cost: covariance factorization (SVD of the d×d covariance,
+    matching numpy's default method='svd' which calls np.linalg.svd(cov) with
+    full U/V) + affine transform (2*N*d^2) + N*d standard-normal draws at the
+    transcendental rate (16/draw). Tier folded into flop_cost; weight 1.0.
+
+    Factorization: svd_cost(d, d, with_vectors=True) = 6*d*d^2 + 20*d^3 = 26*d^3
+    (thin SVD of a square d×d matrix; LAPACK dgesdd path, G&VL 4e §8.6).
+    numpy.random.multivariate_normal (Generator default method='svd',
+    RandomState always SVD, module-level np.random.multivariate_normal) calls
+    np.linalg.svd(cov) on the symmetric d×d covariance matrix.
+    """
+    return _builtins.max(
+        _svd_cost(d, d, with_vectors=True) + 2 * N * d * d + 16 * N * d, 1
+    )
 
 
 def _multivariate_normal_cost(
@@ -144,8 +171,14 @@ def _multivariate_normal_cost(
     return multivariate_normal_flops(n, d)
 
 
+def _uniform_cost(args: tuple[Any, ...], kwargs: dict[str, Any], result: Any) -> int:
+    """uniform draws + affine map ``low + (high-low)*U`` (mul+add) = 3*numel."""
+    return 3 * _numel_output(args, kwargs, result)
+
+
 COST_FORMULAS: dict[str, Callable[[tuple[Any, ...], dict[str, Any], Any], int]] = {
     "numel(output)": _numel_output,
+    "uniform": _uniform_cost,
     "numel(input)": _numel_input,
     "shape[axis]": _shape_axis,
     "length": _length,

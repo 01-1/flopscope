@@ -196,11 +196,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "40 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: two eager exp branches +\narithmetic/select, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -262,7 +262,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.laplace.cdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_laplace.py#L66",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_laplace.py#L71",
   "href": "/docs/api/stats/laplace/cdf/",
   "import_path": "flops.stats.laplace.cdf",
   "is_operation_cost_leaf": false,
@@ -274,9 +274,9 @@
     "href": "/docs/api/stats/laplace/pdf/",
     "label": "flops.stats.laplace.pdf"
   },
-  "notes": "Laplace CDF; cost = numel(input).",
+  "notes": "Laplace CDF; composite: 40 FLOPs/elem (two eager exp branches), weight 1.0.",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.laplace.cdf(x, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.laplace.cdf(x, loc, scale)``. FLOP cost: ``40 * numel(x)`` (composite: two eager exp branches + arithmetic/select, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.laplace.cdf",
   "operation": {

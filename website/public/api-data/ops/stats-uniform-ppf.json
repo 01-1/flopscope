@@ -277,7 +277,7 @@
   "schema_version": 1,
   "slug": "stats-uniform-ppf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L97",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L100",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html"
   }
 }

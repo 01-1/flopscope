@@ -43,8 +43,24 @@ def test_svd_truncated_cost():
     A = numpy.random.randn(10, 5)
     with BudgetContext(flop_budget=10**6) as budget:
         svd(A, k=3)
-        # k forces eff_full=False (economy decomp); thin: 6*10*25+20*125=4000
-        assert budget.flops_used == 4000
+        # top-k truncated cost: min(4*m*n*k, economy) = min(4*10*5*3, 4000) = 600
+        assert budget.flops_used == 600
+
+
+def test_svd_truncated_cost_batched():
+    A = numpy.random.randn(4, 10, 5)  # 4 matrices
+    with BudgetContext(flop_budget=10**6) as budget:
+        svd(A, k=3)
+        # per-matrix 600, x4 batch
+        assert budget.flops_used == 2400
+
+
+def test_svd_truncated_values_only_cost():
+    A = numpy.random.randn(10, 5)
+    with BudgetContext(flop_budget=10**6) as budget:
+        svd(A, k=3, compute_uv=False)
+        # values-only top-k is NOT cheaper than with-vectors: still 4mnk = 600
+        assert budget.flops_used == 600
 
 
 def test_svd_not_2d():
@@ -57,6 +73,13 @@ def test_svd_k_too_large():
     with BudgetContext(flop_budget=10**6):
         with pytest.raises(ValueError, match="k"):
             svd(numpy.ones((3, 5)), k=10)
+
+
+def test_svd_rejects_nonpositive_k():
+    with BudgetContext(flop_budget=10**6):
+        for bad_k in (0, -1):
+            with pytest.raises(ValueError, match="k"):
+                svd(numpy.ones((4, 3)), k=bad_k)
 
 
 def test_svd_outside_context():

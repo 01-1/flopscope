@@ -582,12 +582,12 @@
     "signature": "fnp.take_along_axis(arr, indices, axis)",
     "status": "supported",
     "summary": "Take values from the input array by matching 1d index and data slices.",
-    "weight": 1.0
+    "weight": 4.0
   },
   "schema_version": 1,
   "slug": "take_along_axis",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2337",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2452",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_shape_base_impl.py#L57"
   }
 }

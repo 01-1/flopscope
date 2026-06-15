@@ -413,7 +413,7 @@
     "flopscope_ref": "fnp.linalg.tensorsolve",
     "module": "numpy.linalg",
     "name": "linalg.tensorsolve",
-    "notes": "Tensor solve. Cost: $n^3$ after reshape (delegates to solve).",
+    "notes": "Tensor solve. Cost: $\\frac{2}{3}n^3 + 2n^2$ after reshape, n=prod(trailing dims) (delegates to solve).",
     "numpy_ref": "np.linalg.tensorsolve",
     "signature": "fnp.linalg.tensorsolve(a: 'ArrayLike', b: 'ArrayLike', axes: 'Any' = None) -> 'FlopscopeArray'",
     "status": "supported",
@@ -423,7 +423,7 @@
   "schema_version": 1,
   "slug": "linalg-tensorsolve",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L353",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L369",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/linalg/_linalg.py#L237"
   }
 }

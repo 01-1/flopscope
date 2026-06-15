@@ -4211,16 +4211,6 @@
     "has_flopscope_examples": false,
     "has_inherited_examples": false
   },
-  "random.random_integers": {
-    "coverage_status": "derived",
-    "example_count": 1,
-    "example_source": "derived",
-    "example_sources": [
-      "https://numpy.org/doc/stable/reference/generated/numpy.random.random_integers.html"
-    ],
-    "has_flopscope_examples": false,
-    "has_inherited_examples": true
-  },
   "random.random_sample": {
     "coverage_status": "derived",
     "example_count": 1,
@@ -4543,16 +4533,6 @@
     "example_source": "derived",
     "example_sources": [
       "https://numpy.org/doc/stable/reference/generated/numpy.rot90.html"
-    ],
-    "has_flopscope_examples": false,
-    "has_inherited_examples": true
-  },
-  "row_stack": {
-    "coverage_status": "derived",
-    "example_count": 1,
-    "example_source": "derived",
-    "example_sources": [
-      "https://numpy.org/doc/stable/reference/generated/numpy.row_stack.html"
     ],
     "has_flopscope_examples": false,
     "has_inherited_examples": true

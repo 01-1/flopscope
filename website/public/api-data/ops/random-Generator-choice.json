@@ -716,7 +716,7 @@
     "flopscope_ref": "fnp.random.Generator.choice",
     "module": "numpy.random",
     "name": "random.Generator.choice",
-    "notes": "numel(output) if replace else sort_cost(n).",
+    "notes": "numel(output) if replace; n (Fisher-Yates/Floyd <= O(n)) if replace=False and p is None; sort_cost(n) conservative floor if replace=False with p.",
     "numpy_ref": "np.random.Generator.choice",
     "signature": "fnp.random.Generator.choice(self, a, size=None, replace=True, p=None, axis=0, shuffle=True)",
     "status": "supported",

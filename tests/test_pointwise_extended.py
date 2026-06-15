@@ -187,7 +187,10 @@ def test_correlate():
     v = numpy.array([1.0, 2.0])
     with BudgetContext(flop_budget=10**6) as budget:
         result = ops.correlate(a, v)
-        assert budget.flops_used == 2 * a.size * v.size - a.size - v.size
+        # default mode='valid': honest = (2*min-1)*(max-min+1) = (2*2-1)*(3-2+1) = 3*2 = 6
+        # old formula was mode-blind full: 2*3*2 - 3 - 2 = 7 (overcount on valid default)
+        mn, mx = min(a.size, v.size), max(a.size, v.size)
+        assert budget.flops_used == (2 * mn - 1) * (mx - mn + 1)
 
 
 def test_corrcoef():
@@ -300,7 +303,8 @@ def test_isclose():
     b = numpy.array([1.0, 2.0 + 1e-10, 4.0])
     with BudgetContext(flop_budget=10**6) as budget:
         result = ops.isclose(a, b)
-        assert budget.flops_used == 3
+        # 6/elem tolerance core (sub+2*abs+mul+add+cmp); numel=3
+        assert budget.flops_used == 6 * 3
     assert list(result) == [True, True, False]  # pyright: ignore[reportArgumentType]
 
 

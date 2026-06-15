@@ -261,7 +261,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.stats.uniform.pdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L33",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L35",
   "href": "/docs/api/stats/uniform/pdf/",
   "import_path": "flopscope.stats.uniform.pdf",
   "is_operation_cost_leaf": true,

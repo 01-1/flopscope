@@ -12,13 +12,27 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Cost for roots: $n^3$ FLOPs (companion matrix eigendecomposition, simplified)."
+              "text": "Cost for roots: companion-matrix eigenvalues \u2014 delegates to"
             }
           ],
           "type": "paragraph"
         }
       ],
       "title": "Summary"
+    },
+    {
+      "blocks": [
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "eigvals_cost(n) (~10n^3; building the companion matrix itself is free).\nConfirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13\n/ G&VL 4e \u00a77.5, \u00a78.3 + runtime scaling); see docs/reference/cost-model.md."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
     },
     {
       "blocks": [
@@ -137,8 +151,8 @@
   ],
   "signature": "flops.flops.roots_cost(n: 'int') -> 'int'",
   "slug": "flops-roots-cost",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L70",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L130",
   "status_note": "",
-  "summary": "Cost for roots: $n^3$ FLOPs (companion matrix eigendecomposition, simplified).",
+  "summary": "Cost for roots: companion-matrix eigenvalues \u2014 delegates to",
   "upstream_source_url": ""
 }

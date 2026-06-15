@@ -506,7 +506,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.polyint",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L162",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L232",
   "href": "/docs/api/numpy/polyint/",
   "legacy_href": "/docs/api/ops/polyint/",
   "module": "flopscope._polynomial",
@@ -515,7 +515,7 @@
     "href": "/docs/api/numpy/polymul/",
     "label": "fnp.polymul"
   },
-  "notes": "Integrate polynomial. Cost: n FLOPs.",
+  "notes": "Integrate polynomial. Cost: m*n + m*(m-1)/2 FLOPs (m = integration order).",
   "notes_sections": [],
   "numpy_ref": "np.polyint",
   "parameters": [

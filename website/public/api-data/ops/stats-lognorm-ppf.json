@@ -234,11 +234,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(q)"
+                "text": "106 * numel(q)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (composite: ndtri + exp, weight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -289,7 +289,7 @@
     "flopscope_ref": "flops.stats.lognorm.ppf",
     "module": "flopscope.stats",
     "name": "stats.lognorm.ppf",
-    "notes": "Log-normal PPF; cost = numel(input).",
+    "notes": "Log-normal PPF; composite: 106 FLOPs/elem (ndtri + exp), weight 1.0.",
     "numpy_ref": "scipy.stats.lognorm.ppf",
     "signature": "flops.stats.lognorm.ppf(q, s, loc=0, scale=1)",
     "status": "supported",
@@ -299,7 +299,7 @@
   "schema_version": 1,
   "slug": "stats-lognorm-ppf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_lognorm.py#L108",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_lognorm.py#L115",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html"
   }
 }

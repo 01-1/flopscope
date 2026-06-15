@@ -196,11 +196,11 @@
               },
               {
                 "kind": "code",
-                "text": "1 * numel(x)"
+                "text": "6 * numel(x)"
               },
               {
                 "kind": "text",
-                "text": "."
+                "text": " (pure-arithmetic composite:\nz=(x-loc)/scale; 1/(pi*scale*(1+z^2)) = 6 FLOPs/elem, weight 1.0)."
               }
             ],
             "type": "paragraph"
@@ -251,7 +251,7 @@
     "flopscope_ref": "flops.stats.cauchy.pdf",
     "module": "flopscope.stats",
     "name": "stats.cauchy.pdf",
-    "notes": "Cauchy PDF; cost = numel(input).",
+    "notes": "Cauchy PDF; cost = 6*numel(input) (pure-arithmetic composite, weight 1.0).",
     "numpy_ref": "scipy.stats.cauchy.pdf",
     "signature": "flops.stats.cauchy.pdf(x, loc=0, scale=1)",
     "status": "supported",
@@ -261,7 +261,7 @@
   "schema_version": 1,
   "slug": "stats-cauchy-pdf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_cauchy.py#L34",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_cauchy.py#L39",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.cauchy.html"
   }
 }

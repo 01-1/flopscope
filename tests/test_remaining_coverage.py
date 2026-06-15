@@ -762,13 +762,13 @@ class TestRandomChoice:
     """Cover lines 223-234: choice with replace=False."""
 
     def test_choice_without_replacement(self):
-        from flopscope._flops import sort_cost
         from flopscope.numpy import random as merandom
 
         n = 20
         with BudgetContext(flop_budget=10**6) as budget:
             merandom.choice(n, size=5, replace=False)
-        assert budget.flops_used == sort_cost(n)
+        # Fisher-Yates O(n): legacy path is permutation(n)[:size]; charges n.
+        assert budget.flops_used == n
 
     def test_choice_from_array(self):
         from flopscope.numpy import random as merandom
@@ -912,8 +912,8 @@ class TestLinalgDecompositionsExtended:
         with BudgetContext(flop_budget=10**9) as budget:
             result = svdvals(a, k=2)
         assert len(result) == 2
-        # k does not reduce cost; values-only SVD(6,4): a=6,b=4 -> 2*6*16+2*64=320
-        assert budget.flops_used == 320
+        # top-k discount: min(4mnk, economy) = min(4*6*4*2, 320) = 192
+        assert budget.flops_used == 192
 
     def test_svdvals_invalid_k(self):
         from flopscope.numpy.linalg._decompositions import svdvals

@@ -347,12 +347,12 @@ REGISTRY: dict[str, dict] = {
     "isclose": {
         "category": "counted_unary",
         "module": "numpy",
-        "notes": "Element-wise approximate equality test.",
+        "notes": "Element-wise approximate equality test. Cost: 6*numel(output).",
     },
     "isnat": {
         "category": "blacklisted",
         "module": "numpy",
-        "notes": "Blacklisted per reviewer — datetime ops not in scope.",
+        "notes": "Element-wise test for NaT. Cost: numel(input). Un-blacklisted: comparison tier, benchmarked in SPECIAL_OPS.",
     },
     "isneginf": {
         "category": "counted_unary",
@@ -940,7 +940,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.svd": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Singular value decomposition. Cost: $4a^2b+22b^3$ (full U, full_matrices=True and m!=n), $6ab^2+20b^3$ (thin U/V), or $2ab^2+2b^3$ (values-only); a=max(m,n), b=min(m,n). Confirmed by the 2026-06 evidence audit (LAPACK dgesdd + G&VL 4e §8.6).",
+        "notes": "Singular value decomposition. Cost: $4a^2b+22b^3$ (full U, full_matrices=True and m!=n), $6ab^2+20b^3$ (thin U/V), or $2ab^2+2b^3$ (values-only); a=max(m,n), b=min(m,n). Top-k (1<=k<min(m,n)) bills min(4mnk, economy) (verified randomized-SVD leading cost; see cost-model.md). Confirmed by the 2026-06 evidence audit (LAPACK dgesdd + G&VL 4e §8.6).",
     },
     "linalg.cholesky": {
         "category": "counted_custom",
@@ -1025,7 +1025,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.multi_dot": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Chain matmul. Cost: sum of optimal chain matmul costs (CLRS §15.2).",
+        "notes": "Chain matmul. Cost: sum of optimal chain matmul_cost steps (CLRS §15.2); each step = 2mkn - mn.",
     },
     "linalg.norm": {
         "category": "counted_custom",
@@ -1050,7 +1050,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.slogdet": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Sign + log determinant. Cost: $\\frac{2}{3}n^3 + n$.",
+        "notes": "Sign + log determinant. Cost: $\\frac{2}{3}n^3 + 18n$ (LU + sum of log|diag|).",
     },
     "linalg.solve": {
         "category": "counted_custom",
@@ -1060,7 +1060,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.svdvals": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Singular values only. Cost: $2ab^2+2b^3$ (values-only SVD; a=max(m,n), b=min(m,n)).",
+        "notes": "Singular values only. Cost: $2ab^2+2b^3$ (values-only SVD; a=max(m,n), b=min(m,n)). Top-k (1<=k<min(m,n)) bills min(4mnk, that cost).",
     },
     "linalg.tensordot": {
         "category": "counted_custom",
@@ -1080,7 +1080,7 @@ REGISTRY: dict[str, dict] = {
     "linalg.trace": {
         "category": "counted_custom",
         "module": "numpy.linalg",
-        "notes": "Matrix trace. Cost: n (sum of diagonal elements).",
+        "notes": "Matrix trace. Cost: min(m,n) × batch (diagonal sum per matrix).",
     },
     "linalg.vecdot": {
         "category": "counted_custom",
@@ -1111,9 +1111,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "N-D complex FFT. Cost: 5*N*ceil(log2(N)), N=prod(s) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
     },
     "fft.fftfreq": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy.fft",
-        "notes": "FFT sample frequencies. No arithmetic; returns index array.",
+        "notes": "FFT sample frequencies; cost = n (index grid scaled by 1/(n*d)).",
     },
     "fft.fftshift": {
         "category": "free",
@@ -1123,7 +1123,7 @@ REGISTRY: dict[str, dict] = {
     "fft.hfft": {
         "category": "counted_custom",
         "module": "numpy.fft",
-        "notes": "FFT of Hermitian-symmetric signal. Cost: 5*n_out*ceil(log2(n_out)) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
+        "notes": "FFT of Hermitian-symmetric signal. Cost: 5*(n_out//2)*ceil(log2(n_out)) — numpy implements hfft(a,n) as irfft(conj(a),n) (c2r; Van Loan 1992 §1.4).",
     },
     "fft.ifft": {
         "category": "counted_custom",
@@ -1148,7 +1148,7 @@ REGISTRY: dict[str, dict] = {
     "fft.ihfft": {
         "category": "counted_custom",
         "module": "numpy.fft",
-        "notes": "Inverse FFT of Hermitian signal. Cost: 5*n*ceil(log2(n)) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
+        "notes": "Inverse FFT of Hermitian signal; numpy computes conj(rfft(a,n)). Cost: 5*(n//2)*ceil(log2(n)) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
     },
     "fft.irfft": {
         "category": "counted_custom",
@@ -1176,9 +1176,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "2-D real FFT. Cost: 5*(N//2)*ceil(log2(N)), N=prod(s) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
     },
     "fft.rfftfreq": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy.fft",
-        "notes": "Real FFT sample frequencies. No arithmetic; returns index array.",
+        "notes": "Real FFT sample frequencies; cost = n//2+1 (index grid scaled by 1/(n*d)).",
     },
     "fft.rfftn": {
         "category": "counted_custom",
@@ -1294,9 +1294,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "Stack arrays vertically. Cost: numel(output).",
     },
     "hstack": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Stack arrays horizontally.",
+        "notes": "Stack arrays horizontally. Cost: numel(output).",
     },
     "split": {
         "category": "free",
@@ -1376,7 +1376,7 @@ REGISTRY: dict[str, dict] = {
     "unique": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Sort-based unique; cost = n*ceil(log2(n)).",
+        "notes": "Sort-based unique; cost = n*ceil(log2(n)); with axis=, num_slices*R*ceil(log2(R)) (R = shape[axis], lexicographic row sort).",
     },
     "pad": {
         "category": "counted_custom",
@@ -1384,14 +1384,14 @@ REGISTRY: dict[str, dict] = {
         "notes": "Pad array. Cost: numel(output).",
     },
     "triu": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Upper triangle of array.",
+        "notes": "Upper triangle of array. Cost: numel(output) (masked-select copy).",
     },
     "tril": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Lower triangle of array.",
+        "notes": "Lower triangle of array. Cost: numel(output) (masked-select copy).",
     },
     "diagonal": {
         "category": "counted_custom",
@@ -1401,7 +1401,7 @@ REGISTRY: dict[str, dict] = {
     "trace": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Diagonal sum; cost = min(n,m).",
+        "notes": "Matrix trace. Cost: min(m,n) × batch (diagonal sum per matrix).",
     },
     "broadcast_to": {
         "category": "free",
@@ -1441,7 +1441,7 @@ REGISTRY: dict[str, dict] = {
     "allclose": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Element-wise tolerance check; cost = numel(a).",
+        "notes": "Element-wise tolerance check; cost = 7*numel(broadcast) - 1 (6/elem tolerance core + all-reduce).",
     },
     # Additional free ops
     "rot90": {
@@ -1475,9 +1475,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "View inputs as arrays with at least three dimensions.",
     },
     "column_stack": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Stack 1-D arrays as columns into 2-D array.",
+        "notes": "Stack 1-D arrays as columns into 2-D array. Cost: numel(output).",
     },
     "dstack": {
         "category": "counted_custom",
@@ -1485,9 +1485,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "Stack arrays depth-wise (along third axis). Cost: numel(output).",
     },
     "row_stack": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Stack arrays vertically (alias for vstack).",
+        "notes": "Stack arrays vertically (alias for vstack). Cost: numel(output).",
     },
     "flatnonzero": {
         "category": "counted_custom",
@@ -1507,7 +1507,7 @@ REGISTRY: dict[str, dict] = {
     "isin": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Set membership; cost = (n+m)*ceil(log2(n+m)).",
+        "notes": "Set membership; cost = (n+m)*ceil(log2(n+m)) (sort path) or max(sort_cost(n+m), 2*n*m) when numpy's masked-loop path triggers (m < 10*n**0.145 with non-integer dtypes, or object dtype).",
     },
     "in1d": {
         "category": "counted_custom",
@@ -1533,12 +1533,12 @@ REGISTRY: dict[str, dict] = {
     "put": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Replace elements at given flat indices. Cost: numel(input).",
+        "notes": "Replace elements at given flat indices. Cost: numel(indices).",
     },
     "put_along_axis": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Put values into destination array using indices. Cost: numel(input).",
+        "notes": "Put values into destination array along axis. Cost: elements scattered = (numel(arr) / arr.shape[axis]) x indices.shape[axis] (indices.size when axis=None); gather tier weight 4.0.",
     },
     "putmask": {
         "category": "counted_custom",
@@ -1891,22 +1891,22 @@ REGISTRY: dict[str, dict] = {
     "delete": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Return array with sub-arrays deleted along axis. Cost: num deleted.",
+        "notes": "Return array with sub-arrays deleted along axis. Cost: numel(output) (surviving elements copied).",
     },
     "insert": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Insert values along axis before given indices. Cost: numel(values).",
+        "notes": "Insert values along axis before given indices. Cost: numel(output).",
     },
     "append": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Append values to end of array. Cost: numel(values).",
+        "notes": "Append values to end of array. Cost: numel(output) = arr.size + values.size (np.append = concatenate).",
     },
     "copyto": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Copy values from src to dst array. Cost: num copied.",
+        "notes": "Copy values from src to dst array. Cost: numel(dst), or popcount of broadcast where mask.",
     },
     "unique_all": {
         "category": "counted_custom",
@@ -1976,12 +1976,12 @@ REGISTRY: dict[str, dict] = {
     "base_repr": {
         "category": "blacklisted",
         "module": "numpy",
-        "notes": "Return string representation of number in given base. Cost: numel(input).",
+        "notes": "Return string representation of number in given base. Cost: len(output string).",
     },
     "binary_repr": {
         "category": "blacklisted",
         "module": "numpy",
-        "notes": "Return binary string representation of the input number. Cost: numel(input).",
+        "notes": "Return binary string representation of the input number. Cost: len(output string).",
     },
     # ------------------------------------------------------------------
     # random — passthrough, category=free
@@ -2009,7 +2009,7 @@ REGISTRY: dict[str, dict] = {
     "random.choice": {
         "category": "counted_custom",
         "module": "numpy.random",
-        "notes": "Sampling; cost = numel(output) if replace, n*ceil(log2(n)) if not.",
+        "notes": "Sampling; cost = numel(output) if replace; n (Fisher-Yates, matches permutation) if replace=False and p is None; n*ceil(log2(n)) conservative floor if replace=False with p.",
     },
     "random.default_rng": {
         "category": "free",
@@ -2070,6 +2070,11 @@ REGISTRY: dict[str, dict] = {
         "category": "counted_custom",
         "module": "numpy.random",
         "notes": "Sampling; cost = numel(output).",
+    },
+    "random.random_integers": {
+        "category": "blacklisted",
+        "module": "numpy.random",
+        "notes": "Deprecated numpy alias; intentionally unsupported (raises AttributeError).",
     },
     "random.logseries": {
         "category": "counted_custom",
@@ -2142,11 +2147,6 @@ REGISTRY: dict[str, dict] = {
         "notes": "Sampling; cost = numel(output).",
     },
     "random.random": {
-        "category": "counted_custom",
-        "module": "numpy.random",
-        "notes": "Sampling; cost = numel(output).",
-    },
-    "random.random_integers": {
         "category": "counted_custom",
         "module": "numpy.random",
         "notes": "Sampling; cost = numel(output).",
@@ -2273,7 +2273,7 @@ REGISTRY: dict[str, dict] = {
         "category": "counted_random_method",
         "module": "numpy.random",
         "cost_formula": "choice_cost",
-        "notes": "numel(output) if replace else sort_cost(n).",
+        "notes": "numel(output) if replace; n (Fisher-Yates/Floyd <= O(n)) if replace=False and p is None; sort_cost(n) conservative floor if replace=False with p.",
     },
     "random.Generator.dirichlet": {
         "category": "counted_random_method",
@@ -2476,7 +2476,7 @@ REGISTRY: dict[str, dict] = {
     "random.Generator.uniform": {
         "category": "counted_random_method",
         "module": "numpy.random",
-        "cost_formula": "numel(output)",
+        "cost_formula": "uniform",
         "notes": "Uniform distribution; cost = numel(output).",
     },
     "random.Generator.vonmises": {
@@ -2545,7 +2545,7 @@ REGISTRY: dict[str, dict] = {
         "category": "counted_random_method",
         "module": "numpy.random",
         "cost_formula": "choice_cost",
-        "notes": "Legacy choice sampler; numel(output) if replace else sort_cost(n).",
+        "notes": "Legacy choice sampler; numel(output) if replace; n (Fisher-Yates, matches permutation) if replace=False and p is None; sort_cost(n) conservative floor if replace=False with p.",
     },
     "random.RandomState.dirichlet": {
         "category": "counted_random_method",
@@ -2766,7 +2766,7 @@ REGISTRY: dict[str, dict] = {
     "random.RandomState.uniform": {
         "category": "counted_random_method",
         "module": "numpy.random",
-        "cost_formula": "numel(output)",
+        "cost_formula": "uniform",
         "notes": "Legacy uniform sampler; cost = numel(output).",
     },
     "random.RandomState.vonmises": {
@@ -2835,7 +2835,7 @@ REGISTRY: dict[str, dict] = {
     "stats.uniform.cdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Uniform CDF; cost = numel(input).",
+        "notes": "Uniform CDF; cost = 4*numel(input) (composite clip kernel: sub+div+2 select, weight 1.0).",
     },
     "stats.uniform.ppf": {
         "category": "counted_custom",
@@ -2860,7 +2860,7 @@ REGISTRY: dict[str, dict] = {
     "stats.cauchy.pdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Cauchy PDF; cost = numel(input).",
+        "notes": "Cauchy PDF; cost = 6*numel(input) (pure-arithmetic composite, weight 1.0).",
     },
     "stats.cauchy.cdf": {
         "category": "counted_custom",
@@ -2895,22 +2895,22 @@ REGISTRY: dict[str, dict] = {
     "stats.laplace.cdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Laplace CDF; cost = numel(input).",
+        "notes": "Laplace CDF; composite: 40 FLOPs/elem (two eager exp branches), weight 1.0.",
     },
     "stats.laplace.ppf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Laplace PPF; cost = numel(input).",
+        "notes": "Laplace PPF; composite: 51 FLOPs/elem (two eager log branches), weight 1.0.",
     },
     "stats.lognorm.pdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Log-normal PDF; cost = numel(input).",
+        "notes": "Log-normal PDF; composite: 62 FLOPs/elem (log + exp + arithmetic), weight 1.0.",
     },
     "stats.lognorm.cdf": {
         "category": "counted_custom",
         "module": "flopscope.stats",
-        "notes": "Log-normal CDF; cost = numel(input).",
+        "notes": "Log-normal CDF; composite: 70 FLOPs/elem (log + erf), weight 1.0.",
     },
     "stats.lognorm.ppf": {
         "category": "counted_custom",
@@ -2943,7 +2943,7 @@ REGISTRY: dict[str, dict] = {
     "roots": {
         "category": "counted_custom",
         "module": "flopscope._polynomial",
-        "notes": "Return roots of polynomial with given coefficients. Cost: ~$10n^3$ (companion-matrix eigvals). Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §7.5).",
+        "notes": "Return roots of polynomial with given coefficients. Cost: ~$10n^3$ (companion-matrix eigvals). n = trimmed degree (zero coefficients stripped, as np.roots does). Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e §7.5).",
     },
     "polyadd": {
         "category": "counted_custom",
@@ -2953,7 +2953,7 @@ REGISTRY: dict[str, dict] = {
     "polyder": {
         "category": "counted_custom",
         "module": "flopscope._polynomial",
-        "notes": "Differentiate polynomial. Cost: n FLOPs.",
+        "notes": "Differentiate polynomial m times. Cost: t*n - t*(t+1)/2 FLOPs, t = min(m, n-1) (one multiply per surviving coefficient per step).",
     },
     "polydiv": {
         "category": "counted_custom",
@@ -2968,7 +2968,7 @@ REGISTRY: dict[str, dict] = {
     "polyint": {
         "category": "counted_custom",
         "module": "flopscope._polynomial",
-        "notes": "Integrate polynomial. Cost: n FLOPs.",
+        "notes": "Integrate polynomial. Cost: m*n + m*(m-1)/2 FLOPs (m = integration order).",
     },
     "polymul": {
         "category": "counted_custom",
@@ -2989,12 +2989,12 @@ REGISTRY: dict[str, dict] = {
     "bartlett": {
         "category": "counted_custom",
         "module": "flopscope._window",
-        "notes": "Bartlett window. Cost: n (one linear eval per sample).",
+        "notes": "Bartlett window. Cost: 4*n (compare + divide + add + select per sample; single branch of numpy where-based evaluation).",
     },
     "blackman": {
         "category": "counted_custom",
         "module": "flopscope._window",
-        "notes": "Blackman window. Cost: 3*n (three cosine terms per sample).",
+        "notes": "Blackman window. Cost: 40*n composite (two cosine evals at transcendental rate + 8 arithmetic per sample; the 0.42 term is a constant, not a third cosine).",
     },
     "hamming": {
         "category": "counted_custom",
@@ -3009,7 +3009,7 @@ REGISTRY: dict[str, dict] = {
     "kaiser": {
         "category": "counted_custom",
         "module": "flopscope._window",
-        "notes": "Kaiser window. Cost: 3*n (Bessel function eval per sample).",
+        "notes": "Kaiser window. Cost: 23*n (per sample: 1 Bessel I0 at transcendental tier 16 + 7 arithmetic FLOPs, FMA=2).",
     },
     # blacklisted — IO
     "genfromtxt": {
@@ -3076,12 +3076,12 @@ REGISTRY: dict[str, dict] = {
     "geterr": {
         "category": "blacklisted",
         "module": "numpy",
-        "notes": "Get current way of handling floating-point errors. Not supported.",
+        "notes": "FP-error-state get/set; pure numpy state management. 0 FLOPs.",
     },
     "seterr": {
         "category": "blacklisted",
         "module": "numpy",
-        "notes": "Set how floating-point errors are handled. Not supported.",
+        "notes": "FP-error-state get/set; pure numpy state management. 0 FLOPs.",
     },
     "geterrcall": {
         "category": "blacklisted",

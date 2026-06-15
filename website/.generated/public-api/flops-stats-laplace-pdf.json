@@ -196,14 +196,27 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "22 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: "
+            },
+            {
+              "kind": "text",
+              "text": "|"
+            },
+            {
+              "kind": "text",
+              "text": "x-loc|(3) + exp(-z)(17) +\n/(2*scale)(2), FMA=2, weight 1.0)."
             }
           ],
           "type": "paragraph"
+        },
+        {
+          "raw_kind": "system_message",
+          "raw_text": "<string>:1: (WARNING/2) Inline substitution_reference start-string without end-string.",
+          "type": "raw_block"
         }
       ],
       "title": "Notes"
@@ -251,7 +264,17 @@
   "display_name": "flops.stats.laplace.pdf",
   "display_type": "custom",
   "doc_coverage": {
-    "raw_blocks": [],
+    "raw_blocks": [
+      {
+        "kind": "inline_node",
+        "node_type": "problematic",
+        "raw_text": "|"
+      },
+      {
+        "kind": "system_message",
+        "raw_text": "<string>:1: (WARNING/2) Inline substitution_reference start-string without end-string."
+      }
+    ],
     "unresolved_references": [],
     "unsupported_directives": []
   },
@@ -262,7 +285,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.laplace.pdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_laplace.py#L34",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_laplace.py#L38",
   "href": "/docs/api/stats/laplace/pdf/",
   "import_path": "flops.stats.laplace.pdf",
   "is_operation_cost_leaf": false,
@@ -276,7 +299,7 @@
   },
   "notes": "Laplace PDF; cost = numel(input).",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.laplace.pdf(x, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.laplace.pdf(x, loc, scale)``. FLOP cost: ``22 * numel(x)`` (composite: |x-loc|(3) + exp(-z)(17) + /(2*scale)(2), FMA=2, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.laplace.pdf",
   "operation": {

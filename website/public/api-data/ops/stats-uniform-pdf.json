@@ -261,7 +261,7 @@
   "schema_version": 1,
   "slug": "stats-uniform-pdf",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L33",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_uniform.py#L35",
     "numpy": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html"
   }
 }

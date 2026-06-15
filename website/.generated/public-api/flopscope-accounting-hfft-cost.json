@@ -140,7 +140,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "The Hermitian FFT computes the FFT of a signal with Hermitian symmetry,\nproducing real-valued output."
+              "text": "hfft(a, n) == irfft(conj(a), n): real-output c2r transform (Van Loan 1992 \u00a71.4).\nExploits conjugate symmetry, roughly halving the work vs a full complex FFT."
             }
           ],
           "type": "paragraph"
@@ -174,7 +174,7 @@
   "notes": "",
   "notes_sections": [
     "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
-    "The Hermitian FFT computes the FFT of a signal with Hermitian symmetry, producing real-valued output."
+    "hfft(a, n) == irfft(conj(a), n): real-output c2r transform (Van Loan 1992 \u00a71.4). Exploits conjugate symmetry, roughly halving the work vs a full complex FFT."
   ],
   "numpy_ref": "",
   "operation": null,

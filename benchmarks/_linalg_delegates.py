@@ -36,7 +36,7 @@ _FORMULA_STRINGS: dict[str, str] = {
     "linalg.matrix_norm": "numel",
     "linalg.matrix_power": "(ceil(log2(k))+popcount(k)-1)*n^3",
     "linalg.matrix_rank": "m*n*min(m,n)",
-    "linalg.multi_dot": "sum of chain MNK costs",
+    "linalg.multi_dot": "sum of chain matmul_cost (2MKN-MN)",
     "linalg.norm": "numel",
     "linalg.outer": "M*N",
     "linalg.tensordot": "product of free * contracted dims",
@@ -84,10 +84,10 @@ def _analytical_cost(op_name: str) -> int:
         "matrix_norm": 2 * 512 * 512,  # 2*numel (Frobenius)
         "matrix_power": 3 * 64**3,  # 3 matmuls for n=5
         "matrix_rank": 4 * 512**3 + 512,  # values-only SVD(512,512)+512
-        "multi_dot": 128 * 64 * 128
-        + 128
-        * 128
-        * 64,  # optimal chain (FMA=2); coincidentally same as FMA=1 value = 2,097,152
+        "multi_dot": (2 * 64 * 128 * 64 - 64 * 64)
+        + (
+            2 * 128 * 64 * 64 - 128 * 64
+        ),  # optimal A@(B@C): matmul_cost(64,128,64)+matmul_cost(128,64,64) = 2,084,864
         "norm": 2 * 10_000_000,  # 2*numel (FMA=2, vector L2)
         "outer": 5000 * 5000,  # M*N
         "tensordot": 64

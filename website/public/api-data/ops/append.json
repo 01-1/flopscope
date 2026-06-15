@@ -588,7 +588,7 @@
     "flopscope_ref": "fnp.append",
     "module": "numpy",
     "name": "append",
-    "notes": "Append values to end of array. Cost: numel(values).",
+    "notes": "Append values to end of array. Cost: numel(output) = arr.size + values.size (np.append = concatenate).",
     "numpy_ref": "np.append",
     "signature": "fnp.append(arr, values, axis=None)",
     "status": "supported",
@@ -598,7 +598,7 @@
   "schema_version": 1,
   "slug": "append",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1111",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1155",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L5644"
   }
 }

@@ -222,15 +222,36 @@
                   "inline": [
                     {
                       "kind": "text",
-                      "text": "SVD-based norms (2-norm, nuclear norm): "
+                      "text": "SVD-based norms (2-norm, nuclear norm): values-only SVD cost\n"
                     },
                     {
                       "kind": "code",
-                      "text": "4 * m * n * min(m, n)"
+                      "text": "2*a*b^2 + 2*b^3"
                     },
                     {
                       "kind": "text",
-                      "text": "\n(weight=4 baked in, consistent with linalg.svd weight=4)."
+                      "text": " where a=max(m,n), b=min(m,n)."
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "General-p vector norms (ord not in {None, 0, 1, 2, inf, -inf}):\n"
+                    },
+                    {
+                      "kind": "code",
+                      "text": "18 * numel + 16"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (abs + pow per elem + sum-reduce + root pow)."
                     }
                   ],
                   "type": "paragraph"
@@ -262,7 +283,7 @@
   ],
   "signature": "flops.flops.norm_cost(shape: 'tuple', ord=None) -> 'int'",
   "slug": "flops-norm-cost",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L171",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L178",
   "status_note": "",
   "summary": "Weighted FLOP cost of matrix or vector norm.",
   "upstream_source_url": ""

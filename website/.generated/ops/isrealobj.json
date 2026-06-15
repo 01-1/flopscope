@@ -247,10 +247,10 @@
   ],
   "canonical_name": "isrealobj",
   "canonical_path": "numpy/isrealobj",
-  "category": "counted_unary",
-  "cost_formula": "numel(output)",
-  "cost_formula_latex": "$\\text{numel}(\\text{output})$",
-  "display_type": "counted",
+  "category": "free",
+  "cost_formula": "0",
+  "cost_formula_latex": "$0$",
+  "display_type": "free",
   "doc_coverage": {
     "raw_blocks": [],
     "unresolved_references": [],
@@ -263,7 +263,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.isrealobj",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L364",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L1099",
   "href": "/docs/api/numpy/isrealobj/",
   "legacy_href": "/docs/api/ops/isrealobj/",
   "module": "numpy",
@@ -272,7 +272,7 @@
     "href": "/docs/api/numpy/isscalar/",
     "label": "fnp.isscalar"
   },
-  "notes": "Return True if x is a not complex type or array.",
+  "notes": "Return True if x is not a complex type or array (dtype predicate, O(1)).",
   "notes_sections": [
     "The function is only meant for arrays with numerical values but it accepts all other objects. Since it assumes array input, the return value of other objects may be True.",
     ">>> flops.isrealobj('A string') True >>> flops.isrealobj(False) True >>> flops.isrealobj(None) True"
@@ -327,7 +327,7 @@
       "unresolved": false
     }
   ],
-  "signature": "fnp.isrealobj(x)",
+  "signature": "fnp.isrealobj(x: 'Any') -> 'bool'",
   "slug": "isrealobj",
   "summary": "Return True if x is a not complex type or an array of complex numbers.",
   "upstream_ref_label": "NumPy Ref",

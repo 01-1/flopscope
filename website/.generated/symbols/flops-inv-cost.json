@@ -180,7 +180,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Uses $n^3/3 + n^3$ for symmetric input (Cholesky factorization + n\ntriangular solves against identity), or $n^3$ for general input (LU-based)."
+              "text": "Uses $n^3/3 + n^3$ for symmetric input (Cholesky factorization + n\ntriangular solves against identity), or $2n^3$ for general input\n(getrf 2n^3/3 + getri 4n^3/3)."
             }
           ],
           "type": "paragraph"
@@ -210,7 +210,7 @@
   ],
   "signature": "flops.flops.inv_cost(n: 'int', symmetric: 'bool' = False) -> 'int'",
   "slug": "flops-inv-cost",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L91",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L96",
   "status_note": "",
   "summary": "Weighted FLOP cost of matrix inverse.",
   "upstream_source_url": ""

@@ -24,8 +24,11 @@ class ExponDistribution(ContinuousDistribution):
     Notes
     -----
     ``loc`` shifts the origin and ``scale`` is the reciprocal of the rate.
-    Each public method deducts ``1 * numel(input)`` FLOPs from the active
-    budget.
+    Per-method FLOP costs (weight 1.0): pdf deducts ``22 * numel(input)``
+    (composite: z=(x-loc)/scale(2) + exp(-z)(17) + /scale(1) + where(2),
+    FMA=2), cdf deducts ``22 * numel(input)`` (composite: z(2) + exp(-z)(17)
+    + 1-exp(1) + where(2), FMA=2), ppf deducts ``27 * numel(input)``
+    (composite: log1p(-q)(19) + 3 where/cmp/and(8), FMA=2).
     """
 
     def __init__(self):
@@ -51,7 +54,8 @@ class ExponDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.expon.pdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``22 * numel(x)`` (composite: z=(x-loc)/scale(2) +
+        exp(-z)(17) + /scale(1) + where(2), FMA=2, weight 1.0).
 
         Examples
         --------
@@ -61,7 +65,7 @@ class ExponDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.expon.pdf(x), 3)
         array([1.   , 0.368, 0.135])
         """
-        return self._deduct_and_call("pdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("pdf", 22, x, loc=loc, scale=scale)
 
     def cdf(self, x, loc=0, scale=1):
         """Evaluate the cumulative distribution function.
@@ -83,7 +87,8 @@ class ExponDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.expon.cdf(x, loc, scale)``.
-        FLOP cost: ``1 * numel(x)``.
+        FLOP cost: ``22 * numel(x)`` (composite: z(2) + exp(-z)(17) +
+        1-exp(1) + where(2), FMA=2, weight 1.0).
 
         Examples
         --------
@@ -93,7 +98,7 @@ class ExponDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.expon.cdf(x), 3)
         array([0.   , 0.632, 0.865])
         """
-        return self._deduct_and_call("cdf", 1, x, loc=loc, scale=scale)
+        return self._deduct_and_call("cdf", 22, x, loc=loc, scale=scale)
 
     def ppf(self, q, loc=0, scale=1):
         """Evaluate the percent-point function.
@@ -115,7 +120,8 @@ class ExponDistribution(ContinuousDistribution):
         Notes
         -----
         Equivalent to ``scipy.stats.expon.ppf(q, loc, scale)``.
-        FLOP cost: ``1 * numel(q)``.
+        FLOP cost: ``27 * numel(q)`` (composite: loc-scale*log1p(-q)(19) +
+        3 where/cmp/and(8), FMA=2, weight 1.0).
 
         Examples
         --------
@@ -125,7 +131,7 @@ class ExponDistribution(ContinuousDistribution):
         >>> np.round(flops.stats.expon.ppf(q), 3)
         array([0.288, 0.693, 1.386])
         """
-        return self._deduct_and_call("ppf", 1, q, loc=loc, scale=scale)
+        return self._deduct_and_call("ppf", 27, q, loc=loc, scale=scale)
 
     def _compute_pdf(self, x, loc=0, scale=1):
         z = (x - loc) / scale

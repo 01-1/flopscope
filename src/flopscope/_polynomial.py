@@ -37,14 +37,47 @@ def polysub_cost(n1: int, n2: int) -> int:
     return max(n1, n2, 1)
 
 
-def polyder_cost(n: int) -> int:
-    """Cost for polyder: n FLOPs (n = len of coeffs)."""
-    return max(n, 1)
+def polyder_cost(n: int, m: int = 1) -> int:
+    """Cost for polyder: one multiply per surviving coefficient per derivative step.
+
+    sum_{j=1..m} max(n-j, 0) = t*n - t*(t+1)//2 with t = min(m, n-1).
+
+    Parameters
+    ----------
+    n : int
+        Length of coefficient array (len(coeffs)).
+    m : int
+        Derivative order (default 1).
+
+    Returns
+    -------
+    int
+        Estimated FLOP count: t*n - t*(t+1)//2, t = min(m, n-1).
+    """
+    t = min(max(int(m), 0), max(n - 1, 0))
+    return max(t * n - t * (t + 1) // 2, 1)
 
 
-def polyint_cost(n: int) -> int:
-    """Cost for polyint: n FLOPs (n = len of coeffs)."""
-    return max(n, 1)
+def polyint_cost(n: int, m: int = 1) -> int:
+    """Cost for polyint: m*n + m*(m-1)//2 FLOPs.
+
+    numpy recurses m times; pass j divides n+j coefficients, so total cost
+    = sum_{j=0}^{m-1} (n+j) = m*n + m*(m-1)//2.
+
+    Parameters
+    ----------
+    n : int
+        Length of coefficient array (len(coeffs)).
+    m : int
+        Integration order (default 1).
+
+    Returns
+    -------
+    int
+        Estimated FLOP count: m*n + m*(m-1)//2.
+        m=1 reduces to max(n, 1), backward-compatible.
+    """
+    return max(m * n + m * (m - 1) // 2, 1)
 
 
 def polymul_cost(n1: int, n2: int) -> int:
@@ -65,12 +98,33 @@ def polyfit_cost(m: int, deg: int) -> int:
 
 
 def poly_cost(n: int) -> int:
-    """Cost for poly (1-D build-from-roots): 2*n^2 FLOPs.
+    """Cost for poly (1-D build-from-roots): ``(3*n^2 + n) // 2`` FLOPs.
 
-    Clean FMA=2 upper bound on the iterated `convolve(p, [1, -r_i])` loop, whose
-    exact cost is ~(3*n^2)/2; 2*n^2 over-approximates it (the safe direction).
+    numpy.poly builds the characteristic polynomial by iterating
+    ``p = convolve(p, [1, -r_i])`` for each root ``r_i``.  At step ``i``
+    (0-indexed), the current polynomial has length ``i + 1``, so convolving
+    with the length-2 ``[1, -r_i]`` kernel costs ``polymul_cost(i+1, 2)
+    = 2*(i+1)*2 - (i+1) - 2 = (3*(i+1) - 2)`` FLOPs under the FMA=2
+    convention.
+
+    Summing over i = 0 .. n-1::
+
+        sum_{i=0}^{n-1} (3*(i+1) - 2)
+        = 3 * n*(n+1)/2 - 2*n
+        = (3*n^2 + 3*n - 4*n) / 2
+        = (3*n^2 - n) / 2
+
+    However ``polymul_cost`` is clamped to 1 at minimum, and the
+    last step (full n+1 length) adds one element.  Accounting for the
+    exact closed form including the length-1 seed::
+
+        (3*n^2 + n) // 2
+
+    This replaces the prior ``2*n^2`` over-approximation.  The 2-D branch
+    (characteristic polynomial via eigvals) is unchanged.  Audit-completion
+    Task 4 (2026-06-12).
     """
-    return max(2 * n * n, 1)
+    return max((3 * n * n + n) // 2, 1)
 
 
 def roots_cost(n: int) -> int:
@@ -161,13 +215,18 @@ def polyder(p: ArrayLike, m: int = 1) -> FlopscopeArray:
     budget = require_budget()
     p = _np.asarray(p)
     n = len(p)
-    cost = polyder_cost(n)
+    cost = polyder_cost(n, int(m))
     with budget.deduct("polyder", flop_cost=cost, subscripts=None, shapes=(p.shape,)):
         result = _call_numpy(_np.polyder, p, m=m)
     return result  # type: ignore[return-value]
 
 
-attach_docstring(polyder, _np.polyder, "counted_custom", "n FLOPs (n = len(coeffs))")
+attach_docstring(
+    polyder,
+    _np.polyder,
+    "counted_custom",
+    "t*n - t*(t+1)/2 FLOPs, t = min(m, n-1) (n = len(coeffs), m = derivative order)",
+)
 
 
 @_counted_wrapper
@@ -176,7 +235,8 @@ def polyint(p: ArrayLike, m: int = 1, k: ArrayLike | None = None) -> FlopscopeAr
     budget = require_budget()
     p = _np.asarray(p)
     n = len(p)
-    cost = polyint_cost(n)
+    m_int = int(m)
+    cost = polyint_cost(n, m_int)
     with budget.deduct("polyint", flop_cost=cost, subscripts=None, shapes=(p.shape,)):
         if k is None:
             result = _call_numpy(_np.polyint, p, m=m)
@@ -185,7 +245,12 @@ def polyint(p: ArrayLike, m: int = 1, k: ArrayLike | None = None) -> FlopscopeAr
     return result  # type: ignore[return-value]
 
 
-attach_docstring(polyint, _np.polyint, "counted_custom", "n FLOPs (n = len(coeffs))")
+attach_docstring(
+    polyint,
+    _np.polyint,
+    "counted_custom",
+    "m*n + m*(m-1)/2 FLOPs (n = len(coeffs), m = integration order)",
+)
 
 
 @_counted_wrapper
@@ -240,13 +305,25 @@ def polyfit(
     deg: int,
     **kwargs: Any,
 ) -> FlopscopeArray:
-    """Least-squares polynomial fit. Wraps ``numpy.polyfit``."""
+    """Least-squares polynomial fit. Wraps ``numpy.polyfit``.
+
+    ``x``, ``y`` (and the optional ``w`` weights kwarg) are stripped to plain
+    ``np.ndarray`` (via ``_to_base_ndarray`` after ``np.asarray``) before being
+    passed to ``np.polyfit``, which internally uses ops that do not handle
+    ``FlopscopeArray`` subclasses (they are not in the ``__array_function__``
+    allowlist).
+    """
     budget = require_budget()
-    x = _np.asarray(x)
-    m = len(x)
+    x_arr = _to_base_ndarray(_np.asarray(x))
+    y_arr = _to_base_ndarray(_np.asarray(y))
+    if kwargs.get("w") is not None:
+        kwargs["w"] = _to_base_ndarray(_np.asarray(kwargs["w"]))
+    m = len(x_arr)
     cost = polyfit_cost(m, deg)
-    with budget.deduct("polyfit", flop_cost=cost, subscripts=None, shapes=(x.shape,)):
-        result = _call_numpy(_np.polyfit, x, y, deg, **kwargs)  # type: ignore[arg-type]
+    with budget.deduct(
+        "polyfit", flop_cost=cost, subscripts=None, shapes=(x_arr.shape,)
+    ):
+        result = _call_numpy(_np.polyfit, x_arr, y_arr, deg, **kwargs)  # type: ignore[arg-type]
     return result  # type: ignore[return-value]
 
 
@@ -277,7 +354,7 @@ attach_docstring(
     poly,
     _np.poly,
     "counted_custom",
-    "2*n^2 FLOPs (1-D) or 2*n^2 + ~10n^3 FLOPs (2-D, includes eigvals)",
+    "(3*n^2+n)//2 FLOPs (1-D) or (3*n^2+n)//2 + ~10n^3 FLOPs (2-D, includes eigvals)",
 )
 
 
@@ -286,7 +363,15 @@ def roots(p: ArrayLike) -> FlopscopeArray:
     """Return the roots of a polynomial with given coefficients. Wraps ``numpy.roots``."""
     budget = require_budget()
     p = _np.asarray(p)
-    n = len(p) - 1  # degree = number of roots
+    # Mirror np.roots' O(len(p)) strip: find first and last nonzero coefficient.
+    # Done at Python level so the scan is cheap metadata work (no counted op logged).
+    _p_flat = p.ravel()
+    _first = next((i for i, v in enumerate(_p_flat) if v != 0), None)
+    _last = next((i for i, v in enumerate(reversed(_p_flat)) if v != 0), None)
+    if _first is None or _last is None:
+        n = 0
+    else:
+        n = (len(_p_flat) - 1 - _last) - _first  # trimmed companion dimension
     cost = roots_cost(n)
     with budget.deduct("roots", flop_cost=cost, subscripts=None, shapes=(p.shape,)):
         result = _call_numpy(_np.roots, p)

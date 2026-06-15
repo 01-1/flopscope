@@ -352,10 +352,10 @@
   ],
   "canonical_name": "tril",
   "canonical_path": "numpy/tril",
-  "category": "free",
-  "cost_formula": "0",
-  "cost_formula_latex": "$0$",
-  "display_type": "free",
+  "category": "counted_custom",
+  "cost_formula": "per-operation",
+  "cost_formula_latex": "varies",
+  "display_type": "custom",
   "doc_coverage": {
     "raw_blocks": [],
     "unresolved_references": [],
@@ -368,7 +368,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.tril",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L934",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L967",
   "href": "/docs/api/numpy/tril/",
   "legacy_href": "/docs/api/ops/tril/",
   "module": "numpy",
@@ -377,7 +377,7 @@
     "href": "/docs/api/numpy/tril-indices/",
     "label": "fnp.tril_indices"
   },
-  "notes": "Lower triangle of array.",
+  "notes": "Lower triangle of array. Cost: numel(output) (masked-select copy).",
   "notes_sections": [],
   "numpy_ref": "np.tril",
   "parameters": [
@@ -437,5 +437,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_twodim_base_impl.py#L441",
-  "weight": 0.0
+  "weight": 1.0
 }

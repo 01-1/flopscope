@@ -272,6 +272,9 @@ jobs:
       - name: Check generated files are in sync
         run: uv run python scripts/sync_client.py --check
 
+      - name: Check ops.json is in sync with the registry
+        run: uv run python scripts/generate_api_docs.py --check
+
       - name: Check package versions are in lockstep
         run: uv run python scripts/check_version_sync.py
 

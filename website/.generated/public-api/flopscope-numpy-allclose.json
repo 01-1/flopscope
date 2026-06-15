@@ -674,7 +674,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.allclose",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_counting_ops.py#L60",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_counting_ops.py#L87",
   "href": "/docs/api/numpy/allclose/",
   "import_path": "flopscope.numpy.allclose",
   "is_operation_cost_leaf": true,
@@ -686,7 +686,7 @@
     "href": "/docs/api/numpy/angle/",
     "label": "fnp.angle"
   },
-  "notes": "Element-wise tolerance check; cost = numel(a).",
+  "notes": "Element-wise tolerance check; cost = 7*numel(broadcast) - 1 (6/elem tolerance core + all-reduce).",
   "notes_sections": [
     "If the following equation is element-wise True, then allclose returns True.::",
     "absolute(a - b) <= (atol + rtol * absolute(b))",

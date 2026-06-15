@@ -212,11 +212,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(q)"
+              "text": "83 * numel(q)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: Acklam rational ndtri + Newton polish with erf+exp, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -278,7 +278,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.norm.ppf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_norm.py#L103",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_norm.py#L104",
   "href": "/docs/api/stats/norm/ppf/",
   "import_path": "flops.stats.norm.ppf",
   "is_operation_cost_leaf": false,
@@ -290,9 +290,9 @@
     "href": "/docs/api/stats/truncnorm/cdf/",
     "label": "flops.stats.truncnorm.cdf"
   },
-  "notes": "Normal PPF (inverse CDF); cost = numel(input).",
+  "notes": "Normal PPF (inverse CDF); composite: 83 FLOPs/elem (Acklam rational ndtri + Newton polish with erf+exp), weight 1.0.",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.norm.ppf(q, loc, scale)``. FLOP cost: ``1 * numel(q)``."
+    "Equivalent to ``scipy.stats.norm.ppf(q, loc, scale)``. FLOP cost: ``83 * numel(q)`` (composite: Acklam rational ndtri + Newton polish with erf+exp, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.norm.ppf",
   "operation": {

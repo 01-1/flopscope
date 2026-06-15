@@ -128,84 +128,303 @@
             },
             {
               "kind": "text",
-              "text": ") does\napproximately 6 full-array ufunc passes: "
+              "text": ") performs 13\none-FLOP ufunc passes over the N-1 element "
             },
             {
-              "external_url": "",
-              "href": "/docs/api/numpy/diff/",
-              "kind": "link",
-              "target": "diff",
-              "text": "diff"
+              "kind": "code",
+              "text": "dd = diff(p)"
             },
             {
               "kind": "text",
-              "text": ", "
+              "text": " array, then\none final add of the cumulative correction into the output.  Counting\neach named ufunc call as one pass:"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "items": [
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "external_url": "",
+                      "href": "/docs/api/numpy/diff/",
+                      "kind": "link",
+                      "target": "diff",
+                      "text": "diff"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "            \u2014 subtract adjacent elements (N-1 elements)"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
             },
             {
-              "external_url": "",
-              "href": "/docs/api/numpy/mod/",
-              "kind": "link",
-              "target": "mod",
-              "text": "mod"
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "dd - low"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "        \u2014 subtract scalar "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "interval_low"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " from dd"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "mod(..., period)"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "\u2014 elementwise modulo"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "+ interval_low"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "  \u2014 add scalar back"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "ddmod == low"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "    \u2014 elementwise compare (boundary check)"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "dd > 0"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "          \u2014 elementwise compare"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "``"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "& ``              \u2014 bitwise-and of two bool arrays"
+                    }
+                  ],
+                  "type": "paragraph"
+                },
+                {
+                  "raw_kind": "system_message",
+                  "raw_text": "<string>:14: (WARNING/2) Inline literal start-string without end-string.",
+                  "type": "raw_block"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "copyto/select"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "   \u2014 conditional write (boundary fix)"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "ddmod - dd"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "      \u2014 elementwise subtract (ph_correct)"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "abs(dd)"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "         \u2014 elementwise absolute value"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "< discont"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "       \u2014 elementwise compare"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "code",
+                      "text": "copyto/select"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "   \u2014 conditional write (small-jump zeroing)"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            },
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "external_url": "",
+                      "href": "/docs/api/numpy/cumsum/",
+                      "kind": "link",
+                      "target": "cumsum",
+                      "text": "cumsum"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "          \u2014 prefix-sum scan"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ]
+            }
+          ],
+          "ordered": true,
+          "type": "list"
+        },
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "The "
+            },
+            {
+              "kind": "code",
+              "text": "p[slice1] + ph_correct.cumsum(axis)"
             },
             {
               "kind": "text",
-              "text": ", "
+              "text": " expression (final output\nmaterialization) involves one add pass but is treated as part of the\noutput-write cost \u2014 following the convention that the output buffer\nfill is attributed to the issuing op.  Charging all 13 op-passes\nagainst "
             },
             {
-              "external_url": "",
-              "href": "/docs/api/numpy/add/",
-              "kind": "link",
-              "target": "add",
-              "text": "add"
+              "kind": "code",
+              "text": "numel(input)"
             },
             {
               "kind": "text",
-              "text": ",\n"
+              "text": " rather than "
             },
             {
-              "external_url": "",
-              "href": "/docs/api/numpy/subtract/",
-              "kind": "link",
-              "target": "subtract",
-              "text": "subtract"
+              "kind": "code",
+              "text": "N-1"
             },
             {
               "kind": "text",
-              "text": ", "
-            },
-            {
-              "external_url": "",
-              "href": "/docs/api/numpy/cumsum/",
-              "kind": "link",
-              "target": "cumsum",
-              "text": "cumsum"
-            },
+              "text": " avoids tracking the\nedge-element correction (one extra element) and gives a clean formula."
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "inline": [
             {
               "kind": "text",
-              "text": ", and "
-            },
-            {
-              "external_url": "",
-              "href": "/docs/api/numpy/where/",
-              "kind": "link",
-              "target": "where",
-              "text": "where"
-            },
-            {
-              "kind": "text",
-              "text": ". The "
-            },
-            {
-              "external_url": "",
-              "href": "/docs/api/numpy/where/",
-              "kind": "link",
-              "target": "where",
-              "text": "where"
-            },
-            {
-              "kind": "text",
-              "text": " pass with two\nreal-array arguments charges 2*(N-1) elements rather than N-1,\nbringing the effective total to ~7*(N-1). We charge a fixed\n"
+              "text": "Prior value was "
             },
             {
               "kind": "code",
@@ -213,7 +432,7 @@
             },
             {
               "kind": "text",
-              "text": " to approximate the sum without tracking numpy's\ninternal implementation byte-by-byte. Issue #69."
+              "text": " (under-counted by ~2\u00d7). Audit-completion\nTask 4 (2026-06-12)."
             }
           ],
           "type": "paragraph"

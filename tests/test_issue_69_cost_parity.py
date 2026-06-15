@@ -173,12 +173,33 @@ def _setup_unwrap(rng):
 
 
 def _oracle_unwrap(a):
-    # numpy.unwrap (simplified): diff -> mod -> add -> subtract -> cumsum -> where
+    # numpy.unwrap full 13-pass trace (see unwrap_cost docstring for derivation):
+    # 1. diff
     dd = fnp.diff(a)
-    ddmod = fnp.mod(fnp.add(dd, np.pi), 2 * np.pi)
-    fnp.subtract(ddmod, np.pi)
-    fnp.cumsum(dd)
-    fnp.where(ddmod > 0, ddmod, 0.0)
+    # 2. dd - interval_low  (subtract scalar)
+    dd_shifted = fnp.subtract(dd, -np.pi)
+    # 3. mod(dd_shifted, period)
+    ddmod_raw = fnp.mod(dd_shifted, 2 * np.pi)
+    # 4. + interval_low  (add scalar back)
+    ddmod = fnp.add(ddmod_raw, -np.pi)
+    # 5. ddmod == interval_low  (boundary check)
+    eq_low = fnp.equal(ddmod, -np.pi)
+    # 6. dd > 0
+    dd_pos = fnp.greater(dd, 0.0)
+    # 7. bitwise-and of bool arrays
+    boundary_mask = fnp.bitwise_and(eq_low, dd_pos)
+    # 8. copyto/select (boundary fix)
+    fnp.where(boundary_mask, np.pi / 2, ddmod)
+    # 9. ph_correct = ddmod - dd
+    ph_correct = fnp.subtract(ddmod, dd)
+    # 10. abs(dd)
+    abs_dd = fnp.abs(dd)
+    # 11. abs_dd < discont
+    small_jump = fnp.less(abs_dd, np.pi)
+    # 12. copyto/select (zero small jumps)
+    ph_correct_zeroed = fnp.where(small_jump, 0.0, ph_correct)
+    # 13. cumsum
+    fnp.cumsum(ph_correct_zeroed)
 
 
 CASES.append(
@@ -272,7 +293,10 @@ def _setup_correlate(rng):
 def _oracle_correlate(a, v):
     import numpy as _np
 
-    s = 2 * a.size * v.size - a.size - v.size
+    # default mode='valid': honest = (2*min-1)*(max-min+1)
+    mn = min(a.size, v.size)
+    mx = max(a.size, v.size)
+    s = (2 * mn - 1) * (mx - mn + 1)
     probe = _np.zeros(s)
     fnp.multiply(probe, 1.0)
 

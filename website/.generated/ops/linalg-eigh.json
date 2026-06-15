@@ -726,7 +726,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.eigh",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L194",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_decompositions.py#L200",
   "href": "/docs/api/numpy/linalg/eigh/",
   "legacy_href": "/docs/api/ops/linalg-eigh/",
   "module": "numpy.linalg",
@@ -735,7 +735,7 @@
     "href": "/docs/api/numpy/linalg/eigvals/",
     "label": "fnp.linalg.eigvals"
   },
-  "notes": "Symmetric eigendecomposition. Cost: $n^3$.",
+  "notes": "Symmetric eigendecomposition. Cost: ~$9n^3$. Confirmed by the 2026-06 evidence audit (LAPACK Users' Guide Table 3.13 / G&VL 4e \u00a78.3).",
   "notes_sections": [
     "Broadcasting rules apply, see the `flops.linalg` documentation for details.",
     "The eigenvalues/eigenvectors are computed using LAPACK routines ``_syevd``, ``_heevd``.",

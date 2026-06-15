@@ -897,7 +897,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.norm",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L214",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L226",
   "href": "/docs/api/numpy/linalg/norm/",
   "import_path": "flopscope.numpy.linalg.norm",
   "is_operation_cost_leaf": true,
@@ -909,7 +909,7 @@
     "href": "/docs/api/numpy/linalg/outer/",
     "label": "fnp.linalg.outer"
   },
-  "notes": "Norm. Cost depends on ord: numel for L1/inf, 2*numel for Frobenius, m*n*min(m,n) for ord=2.",
+  "notes": "Norm. Cost depends on ord: 2*numel for L1/inf/Frobenius, $2ab^2+2b^3$ for ord=2/-2/nuc (values-only SVD; a=max(m,n), b=min(m,n)); \u00d7 batch groups (non-reduced dims); axis=None \u2192 1 group.",
   "notes_sections": [
     "For values of ``ord < 1``, the result is, strictly speaking, not a mathematical 'norm', but it may still be useful for various numerical purposes.",
     "The following norms can be calculated:",

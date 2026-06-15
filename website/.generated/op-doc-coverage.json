@@ -4896,12 +4896,6 @@
     "unresolved_references": [],
     "unsupported_directives": []
   },
-  "random.random_integers": {
-    "has_issues": false,
-    "raw_blocks": [],
-    "unresolved_references": [],
-    "unsupported_directives": []
-  },
   "random.random_sample": {
     "has_issues": false,
     "raw_blocks": [],
@@ -5295,12 +5289,6 @@
     "unresolved_references": [],
     "unsupported_directives": []
   },
-  "row_stack": {
-    "has_issues": false,
-    "raw_blocks": [],
-    "unresolved_references": [],
-    "unsupported_directives": []
-  },
   "save": {
     "has_issues": true,
     "raw_blocks": [],
@@ -5634,8 +5622,18 @@
     "unsupported_directives": []
   },
   "stats.laplace.pdf": {
-    "has_issues": false,
-    "raw_blocks": [],
+    "has_issues": true,
+    "raw_blocks": [
+      {
+        "kind": "inline_node",
+        "node_type": "problematic",
+        "raw_text": "|"
+      },
+      {
+        "kind": "system_message",
+        "raw_text": "<string>:1: (WARNING/2) Inline substitution_reference start-string without end-string."
+      }
+    ],
     "unresolved_references": [],
     "unsupported_directives": []
   },

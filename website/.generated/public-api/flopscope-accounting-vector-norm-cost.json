@@ -178,7 +178,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "All norms cost 2*numel FLOPs (FMA=2: one multiply + accumulate per element)."
+              "text": "Standard norms (ord in {None, 0, 1, 2, inf, -inf}) cost 2*numel FLOPs\n(FMA=2: one multiply + accumulate per element).\nGeneral-p norms cost 18*numel + 16 FLOPs per group: abs(1) + pow(16)\nper element + sum-reduce(1) + final root pow(16). The wrapper's\nn_groups multiplier scales the +16 correctly per group."
             }
           ],
           "type": "paragraph"
@@ -200,7 +200,7 @@
   },
   "example": null,
   "flopscope_ref": "flopscope.accounting.vector_norm_cost",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L264",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_properties.py#L289",
   "href": "/docs/api/accounting/vector-norm-cost/",
   "import_path": "flopscope.accounting.vector_norm_cost",
   "is_operation_cost_leaf": false,
@@ -212,7 +212,7 @@
   "notes": "",
   "notes_sections": [
     "This helper multiplies the analytical FLOP count by the active weight from ``flopscope._weights`` and then applies ``int(...)`` so public estimates match budget deductions.",
-    "All norms cost 2*numel FLOPs (FMA=2: one multiply + accumulate per element)."
+    "Standard norms (ord in {None, 0, 1, 2, inf, -inf}) cost 2*numel FLOPs (FMA=2: one multiply + accumulate per element). General-p norms cost 18*numel + 16 FLOPs per group: abs(1) + pow(16) per element + sum-reduce(1) + final root pow(16). The wrapper's n_groups multiplier scales the +16 correctly per group."
   ],
   "numpy_ref": "",
   "operation": null,

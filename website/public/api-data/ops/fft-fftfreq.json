@@ -289,13 +289,13 @@
     ]
   },
   "op": {
-    "category": "free",
-    "cost_formula": "0",
-    "cost_formula_latex": "$0$",
+    "category": "counted_custom",
+    "cost_formula": "per-operation",
+    "cost_formula_latex": "varies",
     "flopscope_ref": "fnp.fft.fftfreq",
     "module": "numpy.fft",
     "name": "fft.fftfreq",
-    "notes": "FFT sample frequencies. No arithmetic; returns index array.",
+    "notes": "FFT sample frequencies; cost = n (index grid scaled by 1/(n*d)).",
     "numpy_ref": "np.fft.fftfreq",
     "signature": "fnp.fft.fftfreq(n: 'int', d: 'float' = 1.0, device: 'Any' = None) -> 'FlopscopeArray'",
     "status": "supported",
@@ -305,7 +305,7 @@
   "schema_version": 1,
   "slug": "fft-fftfreq",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L16",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L18",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/fft/_helper.py#L125"
   }
 }

@@ -432,23 +432,23 @@
     ]
   },
   "op": {
-    "category": "free",
-    "cost_formula": "0",
-    "cost_formula_latex": "$0$",
+    "category": "counted_custom",
+    "cost_formula": "per-operation",
+    "cost_formula_latex": "varies",
     "flopscope_ref": "fnp.hstack",
     "module": "numpy",
     "name": "hstack",
-    "notes": "Stack arrays horizontally.",
+    "notes": "Stack arrays horizontally. Cost: numel(output).",
     "numpy_ref": "np.hstack",
     "signature": "fnp.hstack(tup, *, dtype=None, casting='same_kind')",
     "status": "supported",
     "summary": "Stack arrays in sequence horizontally (column wise).",
-    "weight": 0.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "hstack",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L557",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L577",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/shape_base.py#L295"
   }
 }

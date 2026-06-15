@@ -12,13 +12,27 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Cost for polyder: n FLOPs (n = len of coeffs)."
+              "text": "Cost for polyder: one multiply per surviving coefficient per derivative step."
             }
           ],
           "type": "paragraph"
         }
       ],
       "title": "Summary"
+    },
+    {
+      "blocks": [
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "sum_{j=1..m} max(n-j, 0) = t*n - t*(t+1)//2 with t = min(m, n-1)."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
     },
     {
       "blocks": [
@@ -44,6 +58,44 @@
                 }
               ],
               "name": "n",
+              "type": "field_list"
+            },
+            {
+              "body_blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "Number of rows in the input matrix. Defaults to "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "1"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "data_type": "int, optional",
+              "inline": [
+                {
+                  "kind": "text",
+                  "text": "Number of rows in the input matrix. Defaults to "
+                },
+                {
+                  "kind": "code",
+                  "text": "1"
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ],
+              "name": "m",
               "type": "field_list"
             }
           ],
@@ -135,10 +187,10 @@
       "title": "Budget Planning & Debugging"
     }
   ],
-  "signature": "flops.flops.polyder_cost(n: 'int') -> 'int'",
+  "signature": "flops.flops.polyder_cost(n: 'int', m: 'int' = 1) -> 'int'",
   "slug": "flops-polyder-cost",
   "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_polynomial.py#L40",
   "status_note": "",
-  "summary": "Cost for polyder: n FLOPs (n = len of coeffs).",
+  "summary": "Cost for polyder: one multiply per surviving coefficient per derivative step.",
   "upstream_source_url": ""
 }

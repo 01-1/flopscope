@@ -180,7 +180,7 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Simplified cubic cost model for determinant computation."
+              "text": "2n^3/3 + n FLOPs (LU + product of diagonal)."
             }
           ],
           "type": "paragraph"

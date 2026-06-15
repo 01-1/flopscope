@@ -389,7 +389,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.tensorinv",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L408",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L425",
   "href": "/docs/api/numpy/linalg/tensorinv/",
   "legacy_href": "/docs/api/ops/linalg-tensorinv/",
   "module": "numpy.linalg",
@@ -398,7 +398,7 @@
     "href": "/docs/api/numpy/linalg/tensorsolve/",
     "label": "fnp.linalg.tensorsolve"
   },
-  "notes": "Tensor inverse. Cost: $n^3$ after reshape (delegates to inv).",
+  "notes": "Tensor inverse. Cost: $2n^3$ after reshape, n=prod(leading dims) (delegates to inv).",
   "notes_sections": [],
   "numpy_ref": "np.linalg.tensorinv",
   "parameters": [

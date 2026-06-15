@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import builtins as _builtins
 import inspect as _inspect
+import math as _math
 from collections.abc import Sequence
 from typing import Any
 
@@ -20,6 +21,19 @@ from flopscope._flops import _ceil_log2
 from flopscope._ndarray import FlopscopeArray, _to_base_ndarray, _to_base_ndarray_tree
 from flopscope._validation import require_budget
 from flopscope.errors import _warn_remote_callback
+
+# Estimator surcharge multipliers for string-bins histogram calls (FLOPs/elem above 2n min/max floor)
+# Keys: numpy string estimator names; values: extra cost per element for the estimator step
+# References: percentile precedent numel@1.0 (fd/auto=1n), std=4n (scott), doane~6n, stone=max(100,isqrt(n))
+_HIST_ESTIMATOR_COST: dict[str, int] = {
+    "sturges": 0,
+    "sqrt": 0,
+    "rice": 0,
+    "fd": 1,
+    "auto": 1,
+    "scott": 4,
+    "doane": 6,
+}
 
 # ---------------------------------------------------------------------------
 # Reductions disguised as free
@@ -37,7 +51,17 @@ def trace(
 ) -> FlopscopeArray:
     budget = require_budget()
     a = _np.asarray(a)
-    cost = _builtins.max(_builtins.min(a.shape[axis1], a.shape[axis2]), 1)
+    # Normalise negative axes
+    ndim = a.ndim
+    ax1 = axis1 % ndim if ndim > 0 else 0
+    ax2 = axis2 % ndim if ndim > 0 else 0
+    if ndim >= 2 and a.shape[ax1] > 0 and a.shape[ax2] > 0:
+        k = _builtins.max(_builtins.min(a.shape[ax1], a.shape[ax2]), 1)
+        # Number of independent trace evaluations = product of all other axes
+        n_traces = a.size // (a.shape[ax1] * a.shape[ax2])
+        cost = k * n_traces
+    else:
+        cost = 0
     out_stripped = _to_base_ndarray(out) if out is not None else None
     with budget.deduct("trace", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
         result = _call_numpy(
@@ -53,7 +77,10 @@ def trace(
 
 
 attach_docstring(
-    trace, _np.trace, "counted_custom", "min(a.shape[axis1], a.shape[axis2]) FLOPs"
+    trace,
+    _np.trace,
+    "counted_custom",
+    "min(a.shape[axis1], a.shape[axis2]) × batch FLOPs (diagonal sum per matrix)",
 )
 
 
@@ -66,7 +93,8 @@ def allclose(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> bool:
     numel = 1
     for d in out_shape:
         numel *= d
-    cost = _builtins.max(numel, 1)
+    # 6 FLOPs/elem tolerance core (sub + 2*abs + mul + add + cmp) + (numel-1) all-reduce
+    cost = _builtins.max(7 * numel - 1, 1)
     with budget.deduct(
         "allclose", flop_cost=cost, subscripts=None, shapes=(a.shape, b.shape)
     ):
@@ -74,7 +102,12 @@ def allclose(a: ArrayLike, b: ArrayLike, **kwargs: Any) -> bool:
     return result  # type: ignore[return-value]
 
 
-attach_docstring(allclose, _np.allclose, "counted_custom", "numel(a) FLOPs")
+attach_docstring(
+    allclose,
+    _np.allclose,
+    "counted_custom",
+    "7*numel(broadcast) - 1 FLOPs (6/elem tolerance core + all-reduce)",
+)
 allclose.__signature__ = _inspect.signature(_np.allclose)  # pyright: ignore[reportFunctionMemberAccess]
 
 
@@ -138,12 +171,35 @@ def histogram(
     if isinstance(bins, _builtins.int):
         cost = _builtins.max(n * _ceil_log2(bins), 1)
     elif isinstance(bins, _builtins.str):
-        cost = _builtins.max(n, 1)
+        # Deferred cost: resolve nbins from returned edges, then charge
+        # 2n (min/max scan) + estimator_cost*n + n*ceil_log2(nbins_resolved)
+        with budget.deduct_after(
+            "histogram", subscripts=None, shapes=(a.shape,)
+        ) as _op:
+            result = _call_numpy(
+                _np.histogram,
+                a,
+                bins=bins,
+                **{k: _to_base_ndarray_tree(v) for k, v in kwargs.items()},
+            )
+            nbins = _builtins.max(_builtins.len(result[1]) - 1, 1)
+            est = (
+                _builtins.max(100, _math.isqrt(n))
+                if bins == "stone"
+                else _HIST_ESTIMATOR_COST.get(bins, 1)
+            )
+            _op.set_cost(_builtins.max(n * (2 + est + _ceil_log2(nbins)), 1))
+        return result  # type: ignore[return-value]
     else:
         bins_arr = _np.asarray(bins)
         cost = _builtins.max(n * _ceil_log2(_builtins.len(bins_arr)), 1)
     with budget.deduct("histogram", flop_cost=cost, subscripts=None, shapes=(a.shape,)):
-        result = _call_numpy(_np.histogram, a, bins=bins, **kwargs)
+        result = _call_numpy(
+            _np.histogram,
+            a,
+            bins=_to_base_ndarray_tree(bins),
+            **{k: _to_base_ndarray_tree(v) for k, v in kwargs.items()},
+        )
     return result  # type: ignore[return-value]
 
 
@@ -151,7 +207,7 @@ attach_docstring(
     histogram,
     _np.histogram,
     "counted_custom",
-    "n * ceil(log2(bins)) FLOPs when bins is int; n FLOPs otherwise",
+    "n * ceil(log2(bins)) FLOPs when bins is int or edges; n*(2+estimator+ceil(log2(resolved bins))) when bins is a string estimator",
 )
 histogram.__signature__ = _inspect.signature(_np.histogram)  # pyright: ignore[reportFunctionMemberAccess]
 
@@ -194,7 +250,13 @@ def histogram2d(
     with budget.deduct(
         "histogram2d", flop_cost=cost, subscripts=None, shapes=(x.shape, y.shape)
     ):
-        result = _call_numpy(_np.histogram2d, x, y, bins=bins, **kwargs)
+        result = _call_numpy(
+            _np.histogram2d,
+            x,
+            y,
+            bins=_to_base_ndarray_tree(bins),
+            **{k: _to_base_ndarray_tree(v) for k, v in kwargs.items()},
+        )
     return result  # type: ignore[return-value]
 
 
@@ -242,7 +304,12 @@ def histogramdd(
     with budget.deduct(
         "histogramdd", flop_cost=cost, subscripts=None, shapes=(sample.shape,)
     ):
-        result = _call_numpy(_np.histogramdd, sample, bins=bins, **kwargs)
+        result = _call_numpy(
+            _np.histogramdd,
+            sample,
+            bins=_to_base_ndarray_tree(bins),
+            **{k: _to_base_ndarray_tree(v) for k, v in kwargs.items()},
+        )
     return result  # type: ignore[return-value]
 
 
@@ -263,16 +330,33 @@ def histogram_bin_edges(
 ) -> FlopscopeArray:
     budget = require_budget()
     a = _np.asarray(a)
-    cost = _builtins.max(a.size, 1)
+    n = a.size
+    if isinstance(bins, _builtins.str):
+        est = (
+            _builtins.max(100, _math.isqrt(n))
+            if bins == "stone"
+            else _HIST_ESTIMATOR_COST.get(bins, 1)
+        )
+        cost = _builtins.max(n * (2 + est), 1)
+    else:
+        cost = _builtins.max(n, 1)
     with budget.deduct(
         "histogram_bin_edges", flop_cost=cost, subscripts=None, shapes=(a.shape,)
     ):
-        result = _call_numpy(_np.histogram_bin_edges, a, bins=bins, **kwargs)
+        result = _call_numpy(
+            _np.histogram_bin_edges,
+            a,
+            bins=_to_base_ndarray_tree(bins),
+            **{k: _to_base_ndarray_tree(v) for k, v in kwargs.items()},
+        )
     return result  # type: ignore[return-value]
 
 
 attach_docstring(
-    histogram_bin_edges, _np.histogram_bin_edges, "counted_custom", "numel(a) FLOPs"
+    histogram_bin_edges,
+    _np.histogram_bin_edges,
+    "counted_custom",
+    "numel(a) FLOPs (int/edges); n*(2+estimator) FLOPs (string estimator)",
 )
 histogram_bin_edges.__signature__ = _inspect.signature(_np.histogram_bin_edges)  # pyright: ignore[reportFunctionMemberAccess]
 
@@ -283,7 +367,11 @@ def bincount(x: ArrayLike, **kwargs: Any) -> FlopscopeArray:
     x = _np.asarray(x)
     cost = _builtins.max(x.size, 1)
     with budget.deduct("bincount", flop_cost=cost, subscripts=None, shapes=(x.shape,)):
-        result = _call_numpy(_np.bincount, x, **kwargs)
+        result = _call_numpy(
+            _np.bincount,
+            x,
+            **{k: _to_base_ndarray_tree(v) for k, v in kwargs.items()},
+        )
     return result  # type: ignore[return-value]
 
 

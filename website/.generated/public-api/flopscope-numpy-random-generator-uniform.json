@@ -488,8 +488,8 @@
   "canonical_name": "flopscope.numpy.random.Generator.uniform",
   "canonical_path": "/docs/api/numpy/random/generator/uniform/",
   "category": "counted_random_method",
-  "cost_formula": "numel(output)",
-  "cost_formula_latex": "$\\text{numel}(\\text{output})$",
+  "cost_formula": "per-method",
+  "cost_formula_latex": "varies",
   "display_name": "flopscope.numpy.random.Generator.uniform",
   "display_type": "counted",
   "doc_coverage": {
@@ -527,8 +527,8 @@
   "operation": {
     "blocked": false,
     "category": "counted_random_method",
-    "cost_formula": "numel(output)",
-    "cost_formula_latex": "$\\text{numel}(\\text{output})$",
+    "cost_formula": "per-method",
+    "cost_formula_latex": "varies",
     "free": false,
     "name": "random.Generator.uniform"
   },

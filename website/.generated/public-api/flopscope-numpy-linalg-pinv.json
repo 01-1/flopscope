@@ -668,7 +668,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.linalg.pinv",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L291",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/linalg/_solvers.py#L303",
   "href": "/docs/api/numpy/linalg/pinv/",
   "import_path": "flopscope.numpy.linalg.pinv",
   "is_operation_cost_leaf": true,
@@ -680,7 +680,7 @@
     "href": "/docs/api/numpy/linalg/qr/",
     "label": "fnp.linalg.qr"
   },
-  "notes": "Pseudoinverse. Cost: m*n*min(m,n) (via SVD).",
+  "notes": "Pseudoinverse. Cost: SVD(with U/V) + min(m,n) + n*min(m,n) + matmul (see pinv_cost).",
   "notes_sections": [
     "The pseudo-inverse of a matrix A, denoted :math:`A^+`, is defined as: \"the matrix that 'solves' [the least-squares problem] :math:`Ax = b`,\" i.e., if :math:`\\bar{x}` is said solution, then :math:`A^+` is that matrix such that :math:`\\bar{x} = A^+b`.",
     "It can be shown that if :math:`Q_1 \\Sigma Q_2^T = A` is the singular value decomposition of A, then :math:`A^+ = Q_2 \\Sigma^+ Q_1^T`, where :math:`Q_{1,2}` are orthogonal matrices, :math:`\\Sigma` is a diagonal matrix consisting of A's so-called singular values, (followed, typically, by zeros), and then :math:`\\Sigma^+` is simply the diagonal matrix consisting of the reciprocals of A's singular values (again, followed by zeros). [1]_"

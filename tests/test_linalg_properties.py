@@ -59,7 +59,7 @@ class TestSlogdet:
             from flopscope.numpy.linalg import slogdet
 
             slogdet(A)
-            assert budget.flops_used == 2 * n**3 // 3 + n
+            assert budget.flops_used == 2 * n**3 // 3 + 18 * n
 
 
 class TestNorm:

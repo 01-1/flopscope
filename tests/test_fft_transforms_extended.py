@@ -64,7 +64,8 @@ def test_rfftn_cost():
 def test_hfft_cost():
     assert hfft_cost(0) == 0
     assert hfft_cost(1) == 0
-    assert hfft_cost(8) == 5 * 8 * 3
+    # hfft_cost(8) = 5 * (8//2) * ceil(log2(8)) = 5 * 4 * 3 = 60
+    assert hfft_cost(8) == 5 * (8 // 2) * 3
 
 
 # ---------------------------------------------------------------------------

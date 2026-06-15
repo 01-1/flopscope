@@ -196,11 +196,11 @@
             },
             {
               "kind": "code",
-              "text": "1 * numel(x)"
+              "text": "21 * numel(x)"
             },
             {
               "kind": "text",
-              "text": "."
+              "text": " (composite: z(2)+exp(-z)(17)+\n1+ez(1)+1/denom(1), FMA=2, weight 1.0)."
             }
           ],
           "type": "paragraph"
@@ -261,7 +261,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "flops.stats.logistic.cdf",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_logistic.py#L67",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/stats/_logistic.py#L72",
   "href": "/docs/api/stats/logistic/cdf/",
   "legacy_href": "/docs/api/ops/stats-logistic-cdf/",
   "module": "flopscope.stats",
@@ -272,7 +272,7 @@
   },
   "notes": "Logistic CDF; cost = numel(input).",
   "notes_sections": [
-    "Equivalent to ``scipy.stats.logistic.cdf(x, loc, scale)``. FLOP cost: ``1 * numel(x)``."
+    "Equivalent to ``scipy.stats.logistic.cdf(x, loc, scale)``. FLOP cost: ``21 * numel(x)`` (composite: z(2)+exp(-z)(17)+ 1+ez(1)+1/denom(1), FMA=2, weight 1.0)."
   ],
   "numpy_ref": "scipy.stats.logistic.cdf",
   "parameters": [

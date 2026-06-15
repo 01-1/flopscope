@@ -12,13 +12,130 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Weighted FLOP cost of a (truncated) SVD."
+              "text": "Weighted FLOP cost of an SVD (FMA=2, leading order)."
             }
           ],
           "type": "paragraph"
         }
       ],
       "title": "Summary"
+    },
+    {
+      "blocks": [
+        {
+          "items": [
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "values only (with_vectors=False):        2*a*b^2 + 2*b^3\nthin U, V (full_matrices=False):         6*a*b^2 + 20*b^3\nfull U (full_matrices=True and m != n):  4*a^2*b + 22*b^3"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "term_inline": [
+                {
+                  "kind": "text",
+                  "text": "Full decomposition ("
+                },
+                {
+                  "kind": "code",
+                  "text": "k is None"
+                },
+                {
+                  "kind": "text",
+                  "text": "), with a = max(m, n), b = min(m, n):"
+                }
+              ]
+            }
+          ],
+          "type": "definition_list"
+        },
+        {
+          "raw_kind": "system_message",
+          "raw_text": "<string>:5: (WARNING/2) Definition list ends without a blank line; unexpected unindent.",
+          "type": "raw_block"
+        },
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "Constants from the 2026-06 evidence audit (LAPACK dgesdd + G&VL 4e \u00a78.6);\nsee docs/reference/cost-model.md."
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "items": [
+            {
+              "blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "min(4*m*n*k, economy)"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "term_inline": [
+                {
+                  "kind": "text",
+                  "text": "Top-k truncated SVD ("
+                },
+                {
+                  "kind": "code",
+                  "text": "1 <= k < min(m, n)"
+                },
+                {
+                  "kind": "text",
+                  "text": "):"
+                }
+              ]
+            }
+          ],
+          "type": "definition_list"
+        },
+        {
+          "raw_kind": "system_message",
+          "raw_text": "<string>:10: (WARNING/2) Definition list ends without a blank line; unexpected unindent.",
+          "type": "raw_block"
+        },
+        {
+          "inline": [
+            {
+              "kind": "code",
+              "text": "4*m*n*k"
+            },
+            {
+              "kind": "text",
+              "text": " is the verified leading-order cost of a rank-k randomized SVD\n(Halko-Martinsson-Tropp; two passes over A, Theta(m*n*k)). flopscope bills\nthis standard truncated-algorithm cost even though the reference\nimplementation computes the full economy SVD and slices \u2014 it bills the\ntextbook cost of the operation (like matmul), not literal BLAS work.\nValues-only is NOT leading-order cheaper for the truncated case (unlike the\nfull case). "
+            },
+            {
+              "kind": "code",
+              "text": "k >= min(m, n)"
+            },
+            {
+              "kind": "text",
+              "text": " bills the economy cost; the full_matrices\nfull-U premium applies only to the full decomposition ("
+            },
+            {
+              "kind": "code",
+              "text": "k is None"
+            },
+            {
+              "kind": "text",
+              "text": ").\nSee docs/reference/cost-model.md."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
     },
     {
       "blocks": [
@@ -105,6 +222,126 @@
               ],
               "name": "k",
               "type": "field_list"
+            },
+            {
+              "body_blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "Argument forwarded to the analytical "
+                    },
+                    {
+                      "external_url": "",
+                      "href": "/docs/api/numpy/linalg/svd/",
+                      "kind": "link",
+                      "target": "linalg.svd",
+                      "text": "linalg.svd"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " cost formula. Defaults to "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "False"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "data_type": "bool, optional",
+              "inline": [
+                {
+                  "kind": "text",
+                  "text": "Argument forwarded to the analytical "
+                },
+                {
+                  "external_url": "",
+                  "href": "/docs/api/numpy/linalg/svd/",
+                  "kind": "link",
+                  "target": "linalg.svd",
+                  "text": "linalg.svd"
+                },
+                {
+                  "kind": "text",
+                  "text": " cost formula. Defaults to "
+                },
+                {
+                  "kind": "code",
+                  "text": "False"
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ],
+              "name": "with_vectors",
+              "type": "field_list"
+            },
+            {
+              "body_blocks": [
+                {
+                  "inline": [
+                    {
+                      "kind": "text",
+                      "text": "Argument forwarded to the analytical "
+                    },
+                    {
+                      "external_url": "",
+                      "href": "/docs/api/numpy/linalg/svd/",
+                      "kind": "link",
+                      "target": "linalg.svd",
+                      "text": "linalg.svd"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " cost formula. Defaults to "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "False"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "data_type": "bool, optional",
+              "inline": [
+                {
+                  "kind": "text",
+                  "text": "Argument forwarded to the analytical "
+                },
+                {
+                  "external_url": "",
+                  "href": "/docs/api/numpy/linalg/svd/",
+                  "kind": "link",
+                  "target": "linalg.svd",
+                  "text": "linalg.svd"
+                },
+                {
+                  "kind": "text",
+                  "text": " cost formula. Defaults to "
+                },
+                {
+                  "kind": "code",
+                  "text": "False"
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ],
+              "name": "full_matrices",
+              "type": "field_list"
             }
           ],
           "title": "Parameters",
@@ -175,15 +412,6 @@
             }
           ],
           "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "text",
-              "text": "Based on Golub-Reinsch bidiagonalization."
-            }
-          ],
-          "type": "paragraph"
         }
       ],
       "title": "Notes"
@@ -201,6 +429,11 @@
               "kind": "input",
               "prompt": ">>>",
               "text": "cost = flops.accounting.svd_cost(128, 64)"
+            },
+            {
+              "kind": "input",
+              "prompt": ">>>",
+              "text": "cost_topk = flops.accounting.svd_cost(128, 64, k=8)  # min(4*128*64*8, economy)"
             },
             {
               "kind": "input",
@@ -237,10 +470,10 @@
       "title": "Linear Algebra Guide"
     }
   ],
-  "signature": "flops.flops.svd_cost(m: 'int', n: 'int', k: 'int | None' = None) -> 'int'",
+  "signature": "flops.flops.svd_cost(m: 'int', n: 'int', k: 'int | None' = None, *, with_vectors: 'bool' = False, full_matrices: 'bool' = False) -> 'int'",
   "slug": "flops-svd-cost",
   "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_flops.py#L178",
   "status_note": "",
-  "summary": "Weighted FLOP cost of a (truncated) SVD.",
+  "summary": "Weighted FLOP cost of an SVD (FMA=2, leading order).",
   "upstream_source_url": ""
 }

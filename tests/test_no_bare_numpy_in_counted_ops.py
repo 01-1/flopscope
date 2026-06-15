@@ -97,8 +97,6 @@ _ALLOWLIST = {
     "eye",
     "identity",
     "tri",
-    "tril",
-    "triu",
     "tril_indices",
     "triu_indices",
     "tril_indices_from",

@@ -331,13 +331,13 @@
     ]
   },
   "op": {
-    "category": "free",
-    "cost_formula": "0",
-    "cost_formula_latex": "$0$",
+    "category": "counted_custom",
+    "cost_formula": "per-operation",
+    "cost_formula_latex": "varies",
     "flopscope_ref": "fnp.fft.rfftfreq",
     "module": "numpy.fft",
     "name": "fft.rfftfreq",
-    "notes": "Real FFT sample frequencies. No arithmetic; returns index array.",
+    "notes": "Real FFT sample frequencies; cost = n//2+1 (index grid scaled by 1/(n*d)).",
     "numpy_ref": "np.fft.rfftfreq",
     "signature": "fnp.fft.rfftfreq(n: 'int', d: 'float' = 1.0, device: 'Any' = None) -> 'FlopscopeArray'",
     "status": "supported",
@@ -347,7 +347,7 @@
   "schema_version": 1,
   "slug": "fft-rfftfreq",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L27",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L41",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/fft/_helper.py#L180"
   }
 }
