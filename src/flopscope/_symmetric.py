@@ -217,6 +217,7 @@ def _resolve_symmetry_argument(
     return normalize_symmetry_input(symmetry, ndim=np.asarray(data).ndim)
 
 
+@_counted_wrapper
 def is_symmetric(
     data: np.ndarray,
     *,
@@ -225,6 +226,9 @@ def is_symmetric(
     rtol: float = 1e-5,
 ) -> bool:
     """Check whether *data* is invariant under the given symmetry.
+
+    Checks the group's generators rather than all elements; this is
+    mathematically equivalent for any well-formed group.
 
     Parameters
     ----------
@@ -240,8 +244,8 @@ def is_symmetric(
     Returns
     -------
     bool
-        ``True`` if *data* is invariant under every group element, otherwise
-        ``False``.
+        ``True`` if *data* is invariant under every non-identity generator,
+        otherwise ``False``.
 
     Examples
     --------
@@ -253,25 +257,19 @@ def is_symmetric(
     ... )
     True
     """
-    group = _resolve_symmetry_argument(
-        data,
-        symmetry=symmetry,
-        required=False,
-    )
+    group = _resolve_symmetry_argument(data, symmetry=symmetry, required=False)
     if group is None:
         return False
-
     array = np.asarray(data)
-    group_axes = group.axes if group.axes is not None else tuple(range(group.degree))
     validate_symmetry_group(group, ndim=array.ndim, shape=array.shape)
-
-    for elem in group.elements():
-        axes = list(range(array.ndim))
-        for src_local, dst_local in enumerate(elem.array_form):
-            axes[group_axes[src_local]] = group_axes[dst_local]
-        if not np.allclose(array, array.transpose(axes), atol=atol, rtol=rtol):
-            return False
-    return True
+    n = array.size
+    k = _nonidentity_generator_count(group)
+    cost = max(k * (7 * n - 1), 1)
+    budget = require_budget()
+    with budget.deduct(
+        "is_symmetric", flop_cost=cost, subscripts=None, shapes=(array.shape,)
+    ):
+        return _check_generators(array, group, atol=atol, rtol=rtol)
 
 
 # ---------------------------------------------------------------------------
@@ -804,6 +802,7 @@ class SymmetricTensor(FlopscopeArray):
 # ---------------------------------------------------------------------------
 
 
+@_counted_wrapper
 def as_symmetric(
     data: np.ndarray,
     *,
@@ -834,15 +833,19 @@ def as_symmetric(
     >>> import flopscope.numpy as fnp
     >>>
     >>> matrix = fnp.array([[1.0, 2.0], [2.0, 3.0]])
-    >>> tagged = flops.as_symmetric(matrix, (0, 1))
+    >>> tagged = flops.as_symmetric(matrix, symmetry=(0, 1))
     >>> tagged.symmetric_axes
     [(0, 1)]
     """
-    group = _resolve_symmetry_argument(
-        data,
-        symmetry=symmetry,
-    )
+    group = _resolve_symmetry_argument(data, symmetry=symmetry)
     assert group is not None  # required=True raises if symmetry is None
     array = np.asarray(data)
-    validate_symmetry_groups(array, [group])
-    return SymmetricTensor(array, symmetry=group)
+    n = array.size
+    k = _nonidentity_generator_count(group)
+    cost = max(k * (7 * n - 1), 1)
+    budget = require_budget()
+    with budget.deduct(
+        "as_symmetric", flop_cost=cost, subscripts=None, shapes=(array.shape,)
+    ):
+        validate_symmetry_groups(array, [group])
+        return SymmetricTensor(array, symmetry=group)

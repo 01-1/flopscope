@@ -11,7 +11,7 @@ from numpy.typing import ArrayLike
 from flopscope._budget import _call_numpy, _counted_wrapper
 from flopscope._docstrings import attach_docstring
 from flopscope._ndarray import FlopscopeArray, _asflopscope, _to_base_ndarray
-from flopscope._symmetric import SymmetricTensor, as_symmetric
+from flopscope._symmetric import SymmetricTensor, validate_symmetry_groups
 from flopscope._validation import require_budget
 from flopscope.errors import SymmetryError
 
@@ -138,8 +138,11 @@ def inv(a: ArrayLike) -> FlopscopeArray:
     ):
         result = _call_numpy(_np.linalg.inv, _to_base_ndarray(a))
     if is_symmetric:
+        # Internal wrapping: use SymmetricTensor directly (D1 pattern — no
+        # billing; as_symmetric would double-count the user's inv cost).
         try:
-            result = as_symmetric(result, symmetry=input_symmetry)
+            validate_symmetry_groups(_np.asarray(result), [input_symmetry])
+            result = SymmetricTensor(_np.asarray(result), symmetry=input_symmetry)
         except SymmetryError:
             pass
     if inputs_were_whest:

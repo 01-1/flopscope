@@ -8,14 +8,6 @@ import flopscope.numpy as fnp  # noqa: F401  (used by tests added in later tasks
 from flopscope._symmetric import _check_generators, _project_core
 
 
-def _billed(fn):
-    """Return FLOPs charged by calling fn() inside a fresh BudgetContext."""
-    with flops.BudgetContext(flop_budget=10**12):
-        before = flops.budget_summary_dict()["flops_used"]
-        fn()
-        return flops.budget_summary_dict()["flops_used"] - before
-
-
 def test_project_core_matches_reynolds_average():
     G = flops.SymmetryGroup.symmetric(axes=(0, 1))
     a = np.arange(16.0).reshape(4, 4)
@@ -51,3 +43,30 @@ def test_symmetrize_result_is_symmetric():
         data = fnp.random.randn(4, 4)
         s = flops.symmetrize(data, symmetry=grp)
         assert s.is_symmetric(symmetry=grp)
+
+
+@pytest.mark.parametrize("axes,k", [((0, 1), 1), ((0, 1, 2), 2)])
+def test_as_symmetric_bills_k_times_allclose(axes, k):
+    grp = flops.SymmetryGroup.symmetric(axes=axes)
+    shape = (4,) * len(axes)
+    n = int(np.prod(shape))
+    with flops.BudgetContext(flop_budget=10**12):
+        data = fnp.random.symmetric(shape, grp)  # guaranteed symmetric input
+        b0 = flops.budget_summary_dict()["flops_used"]
+        flops.as_symmetric(data, symmetry=grp)
+        delta = flops.budget_summary_dict()["flops_used"] - b0
+    assert delta == max(k * (7 * n - 1), 1)
+
+
+@pytest.mark.parametrize("axes,k", [((0, 1), 1), ((0, 1, 2), 2)])
+def test_is_symmetric_bills_k_times_allclose(axes, k):
+    grp = flops.SymmetryGroup.symmetric(axes=axes)
+    shape = (4,) * len(axes)
+    n = int(np.prod(shape))
+    with flops.BudgetContext(flop_budget=10**12):
+        data = fnp.random.symmetric(shape, grp)
+        b0 = flops.budget_summary_dict()["flops_used"]
+        result = flops.is_symmetric(data, symmetry=grp)
+        delta = flops.budget_summary_dict()["flops_used"] - b0
+    assert bool(result) is True
+    assert delta == max(k * (7 * n - 1), 1)
