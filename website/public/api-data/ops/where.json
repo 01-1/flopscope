@@ -537,12 +537,12 @@
     "signature": "fnp.where(condition: 'ArrayLike', x: 'ArrayLike | None' = None, y: 'ArrayLike | None' = None) -> 'FlopscopeArray | tuple[FlopscopeArray, ...]'",
     "status": "supported",
     "summary": "Return elements chosen from `x` or `y` depending on `condition`.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "where",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L787",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L847",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.where.html"
   }
 }

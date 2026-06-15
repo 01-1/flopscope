@@ -288,7 +288,15 @@
                     },
                     {
                       "kind": "text",
-                      "text": "   \u2014 conditional write (boundary fix)"
+                      "text": "   \u2014 conditional write (boundary fix) "
+                    },
+                    {
+                      "kind": "strong",
+                      "text": "FREE"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (3-arg where)"
                     }
                   ],
                   "type": "paragraph"
@@ -356,7 +364,15 @@
                     },
                     {
                       "kind": "text",
-                      "text": "   \u2014 conditional write (small-jump zeroing)"
+                      "text": "   \u2014 conditional write (small-jump zeroing) "
+                    },
+                    {
+                      "kind": "strong",
+                      "text": "FREE"
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (3-arg where)"
                     }
                   ],
                   "type": "paragraph"
@@ -399,7 +415,15 @@
             },
             {
               "kind": "text",
-              "text": " expression (final output\nmaterialization) involves one add pass but is treated as part of the\noutput-write cost \u2014 following the convention that the output buffer\nfill is attributed to the issuing op.  Charging all 13 op-passes\nagainst "
+              "text": " expression (final output\nmaterialization) involves one add pass but is treated as part of the\noutput-write cost \u2014 following the convention that the output buffer\nfill is attributed to the issuing op.  Charging all 11 "
+            },
+            {
+              "kind": "emphasis",
+              "text": "non-free"
+            },
+            {
+              "kind": "text",
+              "text": " op-passes\nagainst "
             },
             {
               "kind": "code",
@@ -424,7 +448,34 @@
           "inline": [
             {
               "kind": "text",
-              "text": "Prior value was "
+              "text": "Steps 8 and 12 ("
+            },
+            {
+              "kind": "code",
+              "text": "copyto/select"
+            },
+            {
+              "kind": "text",
+              "text": " via 3-arg "
+            },
+            {
+              "external_url": "",
+              "href": "/docs/api/numpy/where/",
+              "kind": "link",
+              "target": "where",
+              "text": "where"
+            },
+            {
+              "kind": "text",
+              "text": ") are pure data\nmovement (selecting by a given mask) and are therefore free per the\ncost-model rule introduced with the where-arity branching (Task 4,\n2026-06-15).  Prior value was "
+            },
+            {
+              "kind": "code",
+              "text": "13 * numel"
+            },
+            {
+              "kind": "text",
+              "text": " (included 2 free selects);\nbefore that it was "
             },
             {
               "kind": "code",
@@ -432,7 +483,7 @@
             },
             {
               "kind": "text",
-              "text": " (under-counted by ~2\u00d7). Audit-completion\nTask 4 (2026-06-12)."
+              "text": " (Audit-completion Task 4, 2026-06-12)."
             }
           ],
           "type": "paragraph"

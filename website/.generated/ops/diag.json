@@ -442,7 +442,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.diag",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L194",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L207",
   "href": "/docs/api/numpy/diag/",
   "legacy_href": "/docs/api/ops/diag/",
   "module": "numpy",
