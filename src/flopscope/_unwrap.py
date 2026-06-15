@@ -85,7 +85,7 @@ def unwrap(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(unwrap, _np.unwrap, "counted_custom", "13 * numel(input) FLOPs")
+attach_docstring(unwrap, _np.unwrap, "counted_custom", "11 * numel(input) FLOPs")
 
 import sys as _sys  # noqa: E402
 

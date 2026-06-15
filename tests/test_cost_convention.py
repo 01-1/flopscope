@@ -85,7 +85,6 @@ _xy100 = fnp.asarray(_rng.standard_normal((100, 2)))
 _u100 = fnp.asarray(_rng.uniform(0.01, 0.99, 100))
 
 # where inputs (condition must be pre-computed; v100>0 inside a lambda charges numel)
-_zeros100 = fnp.asarray(np.zeros(100))
 _v100_pos = fnp.asarray(np.asarray(_v100) > 0)  # bool mask, built outside BudgetContext
 
 # Copy / gather / view ops
