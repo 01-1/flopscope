@@ -19,9 +19,9 @@ differ from the declared tier — see [empirical-weights.md](empirical-weights.m
 ## How to read this
 
 1. **[Billing model & design principles](#billing-model--design-principles)** — the one equation and *why* it is split into `flop_cost` and `weight`.
-2. **[Non-exploitability](#non-exploitability)** — the invariants that keep billing honest, and the test that enforces each.
+2. **[Non-exploitability](#non-exploitability)** — the invariants that keep billing sound, and the test that enforces each.
 3. **[Cost by family](#cost-by-family)** — the rule + evidence + representative ops for the family you care about.
-4. **[Calibration & reproducibility](#calibration--reproducibility)** — how the constants and weights are derived, and how to reproduce any billed number yourself.
+4. **[Calibration & reproducibility](#calibration--reproducibility)** — how the constants and weights are derived
 5. **[Exhaustive per-op reference](#exhaustive-per-op-reference)** — drill into `ops.json` for one op's exact formula.
 
 **Completeness guarantee:** every billed operation is classified in the registry and
@@ -46,9 +46,7 @@ lives in `flop_cost`, never in the weight. (Enforced by `tests/test_weight_tier_
 `linalg.inv` is billed `2n³` (the standard LU-based `dgetrf`+`dgetri` operation
 count) regardless of what the underlying library does; top-k SVD is billed as the
 standard truncated-algorithm cost. This keeps billing deterministic,
-hardware-independent, and composable. (Contraction — `matmul`/`einsum` — is the
-deliberate exception: a symmetric operand is billed on its unique-orbit count,
-not the dense `2mnk − mn`; see [§Contraction](#contraction-einsum-family).)
+hardware-independent, and composable. 
 
 The rest of this section defines the conventions these principles rest on.
 
@@ -182,8 +180,7 @@ NumPy 2.x introduced `acos`, `acosh`, `asin`, `asinh`, `atan`, `atanh`,
 `atan2`, `pow`, and `divmod` as canonical aliases for their `arc*` /
 `power` / `floor_divide` counterparts (identical ufunc objects).  flopscope
 resolves these via `_UFUNC_ALIAS_RENAMES` in `_weights.py` so each alias
-charges the same weight as its canonical twin.  The fix was introduced in
-commit `7f0b0a18`.
+charges the same weight as its canonical twin.  
 
 ---
 
@@ -191,13 +188,13 @@ commit `7f0b0a18`.
 
 The cost model meters compute so a participant cannot do expensive real work while
 being billed cheaply. The two threats are **under-count** (an op billed below its
-honest cost) and **substitution arbitrage** (routing the same work through a
+true cost) and **substitution arbitrage** (routing the same work through a
 cheaper-billed but equivalent op). The model defends against both with invariants,
 each backed by a CI-enforced test you can open and read:
 
 | Invariant | What it guarantees | Enforced by |
 |---|---|---|
-| **Honest cost** | each `flop_cost` is the real standard-algorithm op count, with every shape/algorithm constant inside `flop_cost` | per-op evidence in [§Cost by family](#cost-by-family); `test_cost_constant_unification.py`, `test_cost_formula_vs_code.py` |
+| **Faithful cost** | each `flop_cost` is the real standard-algorithm op count, with every shape/algorithm constant inside `flop_cost` | per-op evidence in [§Cost by family](#cost-by-family); `test_cost_constant_unification.py`, `test_cost_formula_vs_code.py` |
 | **Weight-tier policy** | every active weight ∈ `{0, 1, 8, 16}`; arithmetic ops are 0 or 1; **no algorithm constant in a weight** | `test_weight_tier_policy.py` |
 | **No substitution arbitrage** | a bit-identical alias cannot bill cheaper than its canonical (e.g. `acos` *is* `arccos` — the 16× ufunc-alias fix); equivalent contractions (`dot`/`inner`/`matmul`/`einsum`) share one cost engine | `test_ufunc_alias_parity.py`, `test_random_weight_aliasing.py`; the shared einsum engine ([§Contraction](#contraction-einsum-family)) |
 | **No cheap in-op path** | top-k `svd(k=)` cannot yield a *full* decomposition below full price (the `min(4mnk, economy)` cap + `k ≥ min → full` guard); invalid `k` (`< 1` or `> min(m, n)`) is rejected before any billing | `test_svd_topk_cost.py` (cap / guard / monotonicity); `test_linalg.py` (invalid-`k` `ValueError`) |
@@ -206,7 +203,7 @@ each backed by a CI-enforced test you can open and read:
 | **End-to-end billing** | production `flop_cost × weight` is pinned per tier `{0,1,8,16}` (catches a silent weight regression) | `test_production_weight_billing.py` |
 
 An auditor can read this table top-to-bottom and, for each claim, open the named test
-to see exactly what guarantees it. The first two rows are the load-bearing ones: honest
+to see exactly what guarantees it. The first two rows are the load-bearing ones: an exact
 `flop_cost` defeats under-count, and the weight-tier policy (no constant in a weight)
 defeats the family of arbitrage exploits where a high-constant op is re-tiered cheaply.
 
