@@ -345,7 +345,7 @@
   "schema_version": 1,
   "slug": "ravel_multi_index",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2443",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2465",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.ravel_multi_index.html"
   }
 }

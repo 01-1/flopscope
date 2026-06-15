@@ -7,6 +7,11 @@ overridden or disabled.
 
 The JSON payload must have a ``"weights"`` key mapping
 ``op_name -> float multiplier``.
+
+Active weights are loaded from the packaged ``data/default_weights.json`` — the
+single source of truth for billed weights. The sibling ``data/weights.json`` and
+``data/weights.csv`` are frozen calibration evidence and are NOT loaded at
+runtime (see ``data/README.md``).
 """
 
 from __future__ import annotations

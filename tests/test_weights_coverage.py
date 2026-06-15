@@ -1,8 +1,8 @@
-"""Validate that weights.json and the migrated docs cover all counted operations.
+"""Validate that default_weights.json and the migrated docs cover all counted operations.
 
 This test ensures that every non-free, non-blacklisted operation in the
 registry either:
-  1. Has a direct weight in weights.json, OR
+  1. Has a direct weight in default_weights.json, OR
   2. Is a known alias of a weighted operation, OR
   3. Is listed in a benchmark module's ops list (weights pending generation), OR
   4. Falls into a documented exclusion category (bitwise, complex, etc.)
@@ -115,7 +115,7 @@ ALIAS_MAP: dict[str, str] = {
 # shape-dependent cost that can't be captured by a single scalar weight.
 # ---------------------------------------------------------------------------
 
-# No excluded ops remaining — all counted ops are now in weights.json.
+# No excluded ops remaining — all counted ops are now in default_weights.json.
 ALL_EXCLUDED: frozenset[str] = frozenset()
 
 
@@ -212,7 +212,7 @@ def counted_ops() -> set[str]:
 
     Excludes method-level entries on Generator/RandomState — those inherit
     cost from their cost_formula at dispatch time and don't need their own
-    rows in weights.json.
+    rows in default_weights.json.
     """
     return {
         name
@@ -233,10 +233,10 @@ def counted_ops() -> set[str]:
 
 
 class TestWeightsJsonCoverage:
-    """Verify weights.json covers all benchmarkable operations."""
+    """Verify default_weights.json covers all benchmarkable operations."""
 
     def test_all_weighted_ops_are_in_registry(self, weights: dict[str, float]):
-        """Every op in weights.json should exist in the registry."""
+        """Every op in default_weights.json should exist in the registry."""
         extra = set(weights) - set(REGISTRY)
         assert not extra, (
             f"weights.json contains {len(extra)} ops not in registry: "
@@ -347,9 +347,9 @@ class TestDocsWeightCoverage:
             if api_operations[name]["weight"] != expected
         }
         assert not mismatched, (
-            "ops.json weights diverge from weights.json for:\n"
+            "ops.json weights diverge from default_weights.json for:\n"
             + "\n".join(
-                f"  {name}: weights.json={expected}, ops.json={actual}"
+                f"  {name}: default_weights.json={expected}, ops.json={actual}"
                 for name, (expected, actual) in sorted(mismatched.items())[:20]
             )
         )

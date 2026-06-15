@@ -671,7 +671,7 @@
     "signature": "fnp.random.Generator.multivariate_hypergeometric(self, colors, nsample, size=None, method='marginals')",
     "status": "supported",
     "summary": "Generate variates from a multivariate hypergeometric distribution.",
-    "weight": 1.0
+    "weight": 16.0
   },
   "schema_version": 1,
   "slug": "random-Generator-multivariate_hypergeometric",

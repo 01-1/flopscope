@@ -391,7 +391,7 @@
     "signature": "fnp.linalg.slogdet(a: 'ArrayLike') -> 'SlogdetResult'",
     "status": "supported",
     "summary": "Compute the sign and (natural) logarithm of the determinant of an array.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "linalg-slogdet",

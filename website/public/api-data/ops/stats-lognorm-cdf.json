@@ -278,7 +278,7 @@
     "signature": "flops.stats.lognorm.cdf(x, s, loc=0, scale=1)",
     "status": "supported",
     "summary": "Evaluate the cumulative distribution function.",
-    "weight": 16.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "stats-lognorm-cdf",

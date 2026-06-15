@@ -1223,7 +1223,7 @@
     "signature": "fnp.linalg.svd(a: 'ArrayLike', full_matrices: 'bool' = True, compute_uv: 'bool' = True, hermitian: 'bool' = False, *, k: 'int | None' = None) -> 'tuple[FlopscopeArray, FlopscopeArray, FlopscopeArray] | FlopscopeArray'",
     "status": "supported",
     "summary": "Singular Value Decomposition.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "linalg-svd",

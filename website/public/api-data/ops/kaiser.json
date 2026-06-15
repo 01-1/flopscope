@@ -370,7 +370,7 @@
     "signature": "fnp.kaiser(M: 'int', beta: 'float') -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Return the Kaiser window.",
-    "weight": 16.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "kaiser",

@@ -648,7 +648,7 @@
     "signature": "fnp.linalg.cholesky(a: 'ArrayLike', /, *, upper: 'bool' = False) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Cholesky decomposition.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "linalg-cholesky",

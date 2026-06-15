@@ -542,7 +542,7 @@
   "schema_version": 1,
   "slug": "where",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L847",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L857",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.where.html"
   }
 }

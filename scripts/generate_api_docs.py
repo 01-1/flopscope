@@ -45,7 +45,6 @@ API_EXAMPLES_DIR = WEBSITE / "content" / "api-examples"
 DOCS = ROOT / "docs"
 API_DIR = DOCS / "api"
 REF_DIR = DOCS / "reference"
-WEIGHTS_PATH = ROOT / "src" / "flopscope" / "data" / "weights.json"
 WEIGHTS_CSV_PATH = ROOT / "src" / "flopscope" / "data" / "weights.csv"
 DEFAULT_WEIGHTS_PATH = ROOT / "src" / "flopscope" / "data" / "default_weights.json"
 

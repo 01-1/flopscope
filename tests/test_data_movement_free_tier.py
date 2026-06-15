@@ -317,3 +317,41 @@ def test_counted_custom_labels_match_actual_weight():
         )
     finally:
         reset_weights()
+
+
+def test_ops_json_weight_equals_billed_weight():
+    """The published ops.json weight must equal what get_weight() actually bills.
+
+    Locks the single-source-of-truth invariant: ops.json is generated from
+    default_weights.json, the same table _weights.py loads. Sampled across tiers.
+    """
+    import json
+    import pathlib
+
+    from flopscope._weights import get_weight, load_weights, reset_weights
+
+    ops_path = (
+        pathlib.Path(__file__).resolve().parents[1] / "website" / "public" / "ops.json"
+    )
+    ops = {
+        o["name"]: o["weight"] for o in json.loads(ops_path.read_text())["operations"]
+    }
+    load_weights()
+    try:
+        for op in [
+            "take",
+            "hstack",
+            "where",
+            "astype",
+            "add",
+            "exp",
+            "sort",
+            "linalg.inv",
+            "geomspace",
+        ]:
+            if op in ops:
+                assert ops[op] == get_weight(op), (
+                    f"{op}: ops.json={ops[op]} but get_weight={get_weight(op)}"
+                )
+    finally:
+        reset_weights()
