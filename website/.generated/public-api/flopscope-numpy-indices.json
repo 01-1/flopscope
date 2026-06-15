@@ -493,7 +493,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.indices",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2053",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2075",
   "href": "/docs/api/numpy/indices/",
   "import_path": "flopscope.numpy.indices",
   "is_operation_cost_leaf": true,

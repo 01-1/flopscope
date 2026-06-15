@@ -25,6 +25,7 @@ from flopscope._registry import REGISTRY
 
 ROOT = Path(__file__).resolve().parent.parent
 WEIGHTS_PATH = ROOT / "src" / "flopscope" / "data" / "weights.json"
+DEFAULT_WEIGHTS_PATH = ROOT / "src" / "flopscope" / "data" / "default_weights.json"
 DOCS_PATH = ROOT / "website" / "content" / "docs" / "development" / "calibration.mdx"
 OPS_INDEX_PATH = ROOT / "website" / "public" / "ops.json"
 
@@ -169,11 +170,12 @@ def _canonical_api_names(alias_map: dict[str, str]) -> dict[str, str]:
 
 @pytest.fixture(scope="module")
 def weights() -> dict[str, float]:
-    """Load weights.json."""
-    assert WEIGHTS_PATH.exists(), f"weights.json not found at {WEIGHTS_PATH}"
-    data = json.loads(WEIGHTS_PATH.read_text())
-    assert "weights" in data, "weights.json missing 'weights' key"
-    assert "meta" in data, "weights.json missing 'meta' key"
+    """Load the BILLED weights — default_weights.json is the source of truth."""
+    assert DEFAULT_WEIGHTS_PATH.exists(), (
+        f"default_weights.json not found at {DEFAULT_WEIGHTS_PATH}"
+    )
+    data = json.loads(DEFAULT_WEIGHTS_PATH.read_text())
+    assert "weights" in data, "default_weights.json missing 'weights' key"
     return data["weights"]
 
 
