@@ -217,3 +217,10 @@ def test_astype_method_charges_value_changing_casts(dtype, changes_values):
     cost, names = _flop_cost(lambda: a.astype(dtype))
     assert "astype" in names
     assert cost == (100 if changes_values else 0)
+
+
+def test_astype_method_honors_casting_kwarg():
+    """a.astype(dt, casting='safe') must raise on an unsafe cast (numpy parity)."""
+    a = fnp.asarray([1.0, 2.0, 3.0])  # float64
+    with pytest.raises(TypeError):
+        a.astype("float32", casting="safe")  # f64->f32 is unsafe

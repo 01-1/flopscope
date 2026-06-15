@@ -1177,6 +1177,42 @@ def astype(
 
 
 @_counted_wrapper
+def _astype_counted(
+    arr: Any,
+    dtype: DTypeLike,
+    *,
+    order: Any = "K",
+    casting: Any = "unsafe",
+    subok: bool = True,
+    copy: bool = True,
+) -> FlopscopeArray:
+    """Counted backend for the ndarray.astype METHOD (honors all params).
+
+    Unlike the array-api ``astype(x, dtype, *, copy, device)`` function above,
+    this backend receives the full ndarray-method signature including ``order``,
+    ``casting``, and ``subok``. In particular it passes ``casting`` through to
+    ``np.ndarray.astype`` so unsafe casts raise ``TypeError`` just as they do
+    on plain ndarrays.
+
+    Cost: ``numel`` when the cast changes values; 0 for a lossless width cast.
+    """
+    budget = require_budget()
+    arr_np = _np.asarray(arr)
+    cost = arr_np.size if _cast_changes_values(arr_np.dtype, dtype) else 0
+    with budget.deduct("astype", flop_cost=cost, subscripts=None, shapes=(arr_np.shape,)):
+        result = _call_numpy(
+            _np.ndarray.astype,
+            _to_base_ndarray(arr),
+            dtype,
+            order=order,
+            casting=casting,
+            subok=subok,
+            copy=copy,
+        )
+    return _asplainflopscope(result)  # type: ignore[return-value]
+
+
+@_counted_wrapper
 def asarray(
     a: ArrayLike,
     dtype: DTypeLike | None = None,

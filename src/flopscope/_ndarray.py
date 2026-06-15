@@ -625,11 +625,15 @@ class FlopscopeArray(_np.ndarray):
         subok: bool = True,
         copy: bool = True,
     ) -> FlopscopeArray:
-        # Delegate to the counted fnp.astype wrapper so billing and
-        # time-attribution go through @_counted_wrapper + budget.deduct.
-        # order/casting/subok are ndarray-method-only params; fnp.astype
-        # (which wraps np.astype) does not expose them.
-        return _me().astype(self, dtype, copy=copy)  # type: ignore[return-value]
+        # Delegate to the full-signature counted backend so order/casting/subok
+        # are forwarded to np.ndarray.astype and unsafe casts raise TypeError
+        # (numpy parity). fnp.astype (array-api form) only takes copy/device
+        # and silently dropped these params.
+        from flopscope._array_ops import _astype_counted
+
+        return _astype_counted(  # type: ignore[return-value]
+            self, dtype, order=order, casting=casting, subok=subok, copy=copy
+        )
 
     # ----- Other ndarray methods -----
 
