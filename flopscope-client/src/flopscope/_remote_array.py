@@ -693,6 +693,115 @@ class RemoteGenerator:
 
 
 # ---------------------------------------------------------------------------
+# RemoteRandomState
+# ---------------------------------------------------------------------------
+
+
+class RemoteRandomState:
+    """Transparent proxy for a server-side counted ``RandomState``.
+
+    ``fnp.random.RandomState(seed)`` constructs one (dispatched; the legacy RNG
+    state lives + advances server-side and is FLOP-counted). Sampler methods
+    dispatch as ``RandomState.<method>``.
+    """
+
+    __slots__ = ("_handle_id",)
+
+    def __init__(self, seed=None):
+        from flopscope._connection import get_connection
+        from flopscope._dispatch import dispatch_span
+        from flopscope._protocol import encode_request
+
+        with dispatch_span():
+            resp = get_connection().send_recv(
+                encode_request("random.RandomState", args=[_encode_arg(seed)])
+            )
+        self._handle_id = resp["result"]["rs_id"]
+
+    @property
+    def handle_id(self) -> str:
+        return self._handle_id
+
+    def __repr__(self) -> str:
+        return f"RemoteRandomState(handle_id={self._handle_id!r})"
+
+    @timed_dispatch
+    def _call(self, method: str, *args: Any, **kwargs: Any) -> Any:
+        from flopscope._connection import get_connection
+        from flopscope._protocol import encode_request
+
+        encoded_args = [_encode_arg(self)] + [_encode_arg(a) for a in args]
+        encoded_kwargs = {k: _encode_arg(v) for k, v in kwargs.items()}
+        resp = get_connection().send_recv(
+            encode_request(
+                f"RandomState.{method}", args=encoded_args, kwargs=encoded_kwargs
+            )
+        )
+        return _result_from_response(resp)
+
+    def __getattr__(self, name: str):
+        if name.startswith("_"):
+            raise AttributeError(name)
+
+        def method(*args, **kwargs):
+            return self._call(name, *args, **kwargs)
+
+        method.__name__ = name
+        return method
+
+
+# ---------------------------------------------------------------------------
+# RemoteSeedSequence
+# ---------------------------------------------------------------------------
+
+
+class RemoteSeedSequence:
+    """Proxy for a server-side ``numpy.random.SeedSequence`` (dispatched
+    construction). Usable as a seed argument to ``fnp.random.default_rng``.
+    ``generate_state`` is supported; ``spawn`` is not yet implemented."""
+
+    __slots__ = ("_handle_id",)
+
+    def __init__(self, entropy=None):
+        from flopscope._connection import get_connection
+        from flopscope._dispatch import dispatch_span
+        from flopscope._protocol import encode_request
+
+        with dispatch_span():
+            resp = get_connection().send_recv(
+                encode_request("random.SeedSequence", args=[_encode_arg(entropy)])
+            )
+        self._handle_id = resp["result"]["seq_id"]
+
+    @property
+    def handle_id(self) -> str:
+        return self._handle_id
+
+    def __repr__(self) -> str:
+        return f"RemoteSeedSequence(handle_id={self._handle_id!r})"
+
+    @timed_dispatch
+    def generate_state(self, n_words, dtype="uint32"):
+        from flopscope._connection import get_connection
+        from flopscope._protocol import encode_request
+
+        resp = get_connection().send_recv(
+            encode_request(
+                "SeedSequence.generate_state",
+                args=[_encode_arg(self), n_words],
+                kwargs={"dtype": dtype},
+            )
+        )
+        return _result_from_response(resp)
+
+    def spawn(self, n_children):
+        raise NotImplementedError(
+            "RemoteSeedSequence.spawn is not yet supported in the flopscope "
+            "client; construct SeedSequences directly or use default_rng(seed)."
+        )
+
+
+# ---------------------------------------------------------------------------
 # Module-level helper
 # ---------------------------------------------------------------------------
 
@@ -711,6 +820,16 @@ def _result_from_response(resp: dict) -> RemoteArray | RemoteScalar | tuple | di
 
     if "gen_id" in result:
         return RemoteGenerator(result["gen_id"])
+
+    if "rs_id" in result:
+        rs = RemoteRandomState.__new__(RemoteRandomState)
+        rs._handle_id = result["rs_id"]
+        return rs
+
+    if "seq_id" in result:
+        seq = RemoteSeedSequence.__new__(RemoteSeedSequence)
+        seq._handle_id = result["seq_id"]
+        return seq
 
     if "value" in result:
         return RemoteScalar(value=result["value"], dtype=result.get("dtype", "float64"))
@@ -782,6 +901,10 @@ def _encode_arg(arg):
         return {"__handle__": arg.handle_id}
     if isinstance(arg, RemoteGenerator):
         return {"__gen__": arg.handle_id}
+    if isinstance(arg, RemoteRandomState):
+        return {"__rs__": arg.handle_id}
+    if isinstance(arg, RemoteSeedSequence):
+        return {"__seq__": arg.handle_id}
     from flopscope._perm_group import SymmetryGroup
 
     if isinstance(arg, SymmetryGroup):
