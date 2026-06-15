@@ -855,6 +855,15 @@
       "module": "numpy",
       "slug": "flopscope-numpy-array"
     },
+    "/docs/api/numpy/as-symmetric/": {
+      "callable": true,
+      "canonical_name": "flopscope.numpy.as_symmetric",
+      "href": "/docs/api/numpy/as-symmetric/",
+      "import_path": "flopscope.numpy.as_symmetric",
+      "kind": "function",
+      "module": "flopscope",
+      "slug": "flopscope-numpy-as-symmetric"
+    },
     "/docs/api/numpy/asarray-chkfinite/": {
       "callable": true,
       "canonical_name": "flopscope.numpy.asarray_chkfinite",
@@ -2393,6 +2402,15 @@
       "kind": "function",
       "module": "numpy",
       "slug": "flopscope-numpy-invert"
+    },
+    "/docs/api/numpy/is-symmetric/": {
+      "callable": true,
+      "canonical_name": "flopscope.numpy.is_symmetric",
+      "href": "/docs/api/numpy/is-symmetric/",
+      "import_path": "flopscope.numpy.is_symmetric",
+      "kind": "function",
+      "module": "flopscope",
+      "slug": "flopscope-numpy-is-symmetric"
     },
     "/docs/api/numpy/isclose/": {
       "callable": true,
@@ -4974,7 +4992,7 @@
       "href": "/docs/api/numpy/random/symmetric/",
       "import_path": "flopscope.numpy.random.symmetric",
       "kind": "function",
-      "module": "flopscope.numpy.random",
+      "module": "numpy.random",
       "slug": "flopscope-numpy-random-symmetric"
     },
     "/docs/api/numpy/random/triangular/": {
@@ -5462,6 +5480,15 @@
       "kind": "function",
       "module": "numpy",
       "slug": "flopscope-numpy-swapaxes"
+    },
+    "/docs/api/numpy/symmetrize/": {
+      "callable": true,
+      "canonical_name": "flopscope.numpy.symmetrize",
+      "href": "/docs/api/numpy/symmetrize/",
+      "import_path": "flopscope.numpy.symmetrize",
+      "kind": "function",
+      "module": "flopscope",
+      "slug": "flopscope-numpy-symmetrize"
     },
     "/docs/api/numpy/take-along-axis/": {
       "callable": true,

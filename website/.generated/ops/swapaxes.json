@@ -294,8 +294,8 @@
   "module": "numpy",
   "name": "swapaxes",
   "next": {
-    "href": "/docs/api/numpy/take/",
-    "label": "fnp.take"
+    "href": "/docs/api/numpy/symmetrize/",
+    "label": "fnp.symmetrize"
   },
   "notes": "Interchange two axes of an array.",
   "notes_sections": [],

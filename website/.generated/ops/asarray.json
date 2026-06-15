@@ -833,8 +833,8 @@
     }
   ],
   "previous": {
-    "href": "/docs/api/numpy/array-split/",
-    "label": "fnp.array_split"
+    "href": "/docs/api/numpy/as-symmetric/",
+    "label": "fnp.as_symmetric"
   },
   "provenance_label": "Adapted from NumPy docs",
   "provenance_ref": "np.asarray",

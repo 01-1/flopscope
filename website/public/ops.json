@@ -549,6 +549,27 @@
     {
       "area": "core",
       "blocked": false,
+      "canonical_path": "numpy/as-symmetric",
+      "category": "counted_custom",
+      "cost_formula": "per-operation",
+      "cost_formula_latex": "varies",
+      "detail_href": "/docs/api/numpy/as-symmetric/",
+      "detail_json_href": "/api-data/ops/as_symmetric.json",
+      "display_type": "custom",
+      "flopscope_ref": "fnp.as_symmetric",
+      "free": false,
+      "module": "flopscope",
+      "name": "as_symmetric",
+      "notes": "Validate + tag data as symmetric. Cost: k*(7*numel-1), k=#non-identity generators (one allclose per generator).",
+      "numpy_ref": "np.as_symmetric",
+      "slug": "as_symmetric",
+      "status": "supported",
+      "summary": "The type of the None singleton.",
+      "weight": 1.0
+    },
+    {
+      "area": "core",
+      "blocked": false,
       "canonical_path": "numpy/asarray",
       "category": "free",
       "cost_formula": "0",
@@ -3379,6 +3400,27 @@
       "slug": "invert",
       "status": "supported",
       "summary": "Compute bit-wise inversion, or bit-wise NOT, element-wise.",
+      "weight": 1.0
+    },
+    {
+      "area": "core",
+      "blocked": false,
+      "canonical_path": "numpy/is-symmetric",
+      "category": "counted_custom",
+      "cost_formula": "per-operation",
+      "cost_formula_latex": "varies",
+      "detail_href": "/docs/api/numpy/is-symmetric/",
+      "detail_json_href": "/api-data/ops/is_symmetric.json",
+      "display_type": "custom",
+      "flopscope_ref": "fnp.is_symmetric",
+      "free": false,
+      "module": "flopscope",
+      "name": "is_symmetric",
+      "notes": "Predicate: invariance under the group's generators. Cost: k*(7*numel-1), k=#non-identity generators.",
+      "numpy_ref": "np.is_symmetric",
+      "slug": "is_symmetric",
+      "status": "supported",
+      "summary": "The type of the None singleton.",
       "weight": 1.0
     },
     {
@@ -9096,6 +9138,27 @@
     {
       "area": "random",
       "blocked": false,
+      "canonical_path": "numpy/random/symmetric",
+      "category": "counted_custom",
+      "cost_formula": "per-operation",
+      "cost_formula_latex": "varies",
+      "detail_href": "/docs/api/numpy/random/symmetric/",
+      "detail_json_href": "/api-data/ops/random-symmetric.json",
+      "display_type": "custom",
+      "flopscope_ref": "fnp.random.symmetric",
+      "free": false,
+      "module": "numpy.random",
+      "name": "random.symmetric",
+      "notes": "Sample + Reynolds-project to a symmetry group. Cost: (|G|+2)*numel (sample numel + projection (|G|+1)*numel).",
+      "numpy_ref": "np.random.symmetric",
+      "slug": "random-symmetric",
+      "status": "supported",
+      "summary": "The type of the None singleton.",
+      "weight": 1.0
+    },
+    {
+      "area": "random",
+      "blocked": false,
       "canonical_path": "numpy/random/triangular",
       "category": "counted_custom",
       "cost_formula": "per-operation",
@@ -10650,6 +10713,27 @@
     {
       "area": "core",
       "blocked": false,
+      "canonical_path": "numpy/symmetrize",
+      "category": "counted_custom",
+      "cost_formula": "per-operation",
+      "cost_formula_latex": "varies",
+      "detail_href": "/docs/api/numpy/symmetrize/",
+      "detail_json_href": "/api-data/ops/symmetrize.json",
+      "display_type": "custom",
+      "flopscope_ref": "fnp.symmetrize",
+      "free": false,
+      "module": "flopscope",
+      "name": "symmetrize",
+      "notes": "Reynolds projection onto a permutation group's invariant subspace. Cost: (|G|+1)*numel (|G| transposed adds + scaling pass; transpose/zeros free; validation uncounted).",
+      "numpy_ref": "np.symmetrize",
+      "slug": "symmetrize",
+      "status": "supported",
+      "summary": "The type of the None singleton.",
+      "weight": 1.0
+    },
+    {
+      "area": "core",
+      "blocked": false,
       "canonical_path": "numpy/take",
       "category": "counted_custom",
       "cost_formula": "per-operation",
@@ -11488,5 +11572,5 @@
       "weight": 0.0
     }
   ],
-  "total": 547
+  "total": 551
 }

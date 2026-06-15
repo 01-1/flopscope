@@ -1984,6 +1984,24 @@ REGISTRY: dict[str, dict] = {
         "notes": "Return binary string representation of the input number. Cost: len(output string).",
     },
     # ------------------------------------------------------------------
+    # flopscope-specific symmetric ops — counted_custom
+    # ------------------------------------------------------------------
+    "symmetrize": {
+        "category": "counted_custom",
+        "module": "flopscope",
+        "notes": "Reynolds projection onto a permutation group's invariant subspace. Cost: (|G|+1)*numel (|G| transposed adds + scaling pass; transpose/zeros free; validation uncounted).",
+    },
+    "as_symmetric": {
+        "category": "counted_custom",
+        "module": "flopscope",
+        "notes": "Validate + tag data as symmetric. Cost: k*(7*numel-1), k=#non-identity generators (one allclose per generator).",
+    },
+    "is_symmetric": {
+        "category": "counted_custom",
+        "module": "flopscope",
+        "notes": "Predicate: invariance under the group's generators. Cost: k*(7*numel-1), k=#non-identity generators.",
+    },
+    # ------------------------------------------------------------------
     # random — passthrough, category=free
     # ------------------------------------------------------------------
     "random.beta": {
@@ -2210,6 +2228,11 @@ REGISTRY: dict[str, dict] = {
         "category": "counted_custom",
         "module": "numpy.random",
         "notes": "Sampling; cost = numel(output).",
+    },
+    "random.symmetric": {
+        "category": "counted_custom",
+        "module": "numpy.random",
+        "notes": "Sample + Reynolds-project to a symmetry group. Cost: (|G|+2)*numel (sample numel + projection (|G|+1)*numel).",
     },
     "random.triangular": {
         "category": "counted_custom",

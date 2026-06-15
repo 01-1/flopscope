@@ -338,6 +338,12 @@
     "unresolved_references": [],
     "unsupported_directives": []
   },
+  "as_symmetric": {
+    "has_issues": false,
+    "raw_blocks": [],
+    "unresolved_references": [],
+    "unsupported_directives": []
+  },
   "asarray": {
     "has_issues": false,
     "raw_blocks": [],
@@ -1712,6 +1718,12 @@
         "target": "ufuncs.kwargs"
       }
     ],
+    "unsupported_directives": []
+  },
+  "is_symmetric": {
+    "has_issues": false,
+    "raw_blocks": [],
+    "unresolved_references": [],
     "unsupported_directives": []
   },
   "isclose": {
@@ -5011,6 +5023,12 @@
     "unresolved_references": [],
     "unsupported_directives": []
   },
+  "random.symmetric": {
+    "has_issues": false,
+    "raw_blocks": [],
+    "unresolved_references": [],
+    "unsupported_directives": []
+  },
   "random.triangular": {
     "has_issues": true,
     "raw_blocks": [
@@ -5766,6 +5784,12 @@
     "unsupported_directives": []
   },
   "swapaxes": {
+    "has_issues": false,
+    "raw_blocks": [],
+    "unresolved_references": [],
+    "unsupported_directives": []
+  },
+  "symmetrize": {
     "has_issues": false,
     "raw_blocks": [],
     "unresolved_references": [],

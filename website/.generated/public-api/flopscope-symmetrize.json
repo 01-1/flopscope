@@ -295,58 +295,23 @@
         {
           "inline": [
             {
-              "kind": "code",
+              "external_url": "",
+              "href": "/docs/api/numpy/symmetrize/",
+              "kind": "link",
+              "target": "symmetrize",
               "text": "symmetrize"
             },
             {
               "kind": "text",
-              "text": " performs exact Reynolds averaging internally and then delegates\nto "
-            },
-            {
-              "display_text": "as_symmetric",
-              "explicit_title": false,
-              "external_url": "https://numpy.org/doc/stable/reference/generated/numpy.as_symmetric.html",
-              "href": "",
-              "kind": "role_reference",
-              "original_target": "as_symmetric",
-              "role": "func",
-              "suppress_link": false,
-              "target": "as_symmetric",
-              "unresolved": false
-            },
-            {
-              "kind": "text",
-              "text": " so the result participates in downstream symmetry\ntracking and validation in the usual way."
-            }
-          ],
-          "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "text",
-              "text": "Estimated FLOP cost is approximately:"
-            }
-          ],
-          "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "code",
-              "text": "|G| * n_elem + n_elem"
-            },
-            {
-              "kind": "text",
-              "text": " for projection, plus validation from\n"
+              "text": " performs exact Reynolds averaging internally, billing\n"
             },
             {
               "kind": "code",
-              "text": "as_symmetric"
+              "text": "(|G| + 1) * numel(data)"
             },
             {
               "kind": "text",
-              "text": ":"
+              "text": " FLOPs:"
             }
           ],
           "type": "paragraph"
@@ -367,7 +332,7 @@
                     },
                     {
                       "kind": "code",
-                      "text": "n_elem"
+                      "text": "numel"
                     },
                     {
                       "kind": "text",
@@ -384,20 +349,15 @@
                   "inline": [
                     {
                       "kind": "text",
-                      "text": "one final scaling pass"
-                    }
-                  ],
-                  "type": "paragraph"
-                }
-              ]
-            },
-            {
-              "blocks": [
-                {
-                  "inline": [
+                      "text": "one final scaling pass (divide by "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "|G|"
+                    },
                     {
                       "kind": "text",
-                      "text": "symmetry checks inside validation"
+                      "text": ")"
                     }
                   ],
                   "type": "paragraph"
@@ -407,6 +367,15 @@
           ],
           "ordered": false,
           "type": "list"
+        },
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "Internal validation runs but is NOT billed (decision D1)."
+            }
+          ],
+          "type": "paragraph"
         },
         {
           "inline": [
@@ -424,7 +393,7 @@
             },
             {
               "kind": "code",
-              "text": "n_elem = data.size"
+              "text": "numel = data.size"
             },
             {
               "kind": "text",
@@ -480,7 +449,7 @@
             {
               "kind": "input",
               "prompt": ">>>",
-              "text": "S = flops.symmetrize(data, flops.SymmetryGroup.symmetric(axes=(0, 1)))"
+              "text": "S = flops.symmetrize(data, symmetry=flops.SymmetryGroup.symmetric(axes=(0, 1)))"
             },
             {
               "kind": "input",
@@ -510,12 +479,12 @@
     "unsupported_directives": []
   },
   "example": {
-    "code": ">>> import flopscope as flops\n>>> import flopscope.numpy as fnp\n>>> data = fnp.random.randn(4, 4)\n>>> S = flops.symmetrize(data, flops.SymmetryGroup.symmetric(axes=(0, 1)))\n>>> S.is_symmetric((0, 1))\nTrue",
+    "code": ">>> import flopscope as flops\n>>> import flopscope.numpy as fnp\n>>> data = fnp.random.randn(4, 4)\n>>> S = flops.symmetrize(data, symmetry=flops.SymmetryGroup.symmetric(axes=(0, 1)))\n>>> S.is_symmetric((0, 1))\nTrue",
     "output": "",
     "source": "derived"
   },
   "flopscope_ref": "flopscope.symmetrize",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_symmetric.py#L58",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_symmetric.py#L100",
   "href": "/docs/api/flopscope/symmetrize/",
   "import_path": "flopscope.symmetrize",
   "is_operation_cost_leaf": false,
@@ -526,11 +495,10 @@
   "next": null,
   "notes": "",
   "notes_sections": [
-    "``symmetrize`` performs exact Reynolds averaging internally and then delegates to :func:`as_symmetric` so the result participates in downstream symmetry tracking and validation in the usual way.",
-    "Estimated FLOP cost is approximately:",
-    "``|G| * n_elem + n_elem`` for projection, plus validation from ``as_symmetric``:",
-    "- ``|G|`` transposed add passes over ``n_elem`` elements - one final scaling pass - symmetry checks inside validation",
-    "where ``|G|`` is the group order and ``n_elem = data.size``.",
+    "``symmetrize`` performs exact Reynolds averaging internally, billing ``(|G| + 1) * numel(data)`` FLOPs:",
+    "- ``|G|`` transposed add passes over ``numel`` elements - one final scaling pass (divide by ``|G|``)",
+    "Internal validation runs but is NOT billed (decision D1).",
+    "where ``|G|`` is the group order and ``numel = data.size``.",
     "The canonical pattern for generating random data with symmetry is:",
     "``fnp.random.symmetric(shape, symmetry_group, distribution=...)``."
   ],

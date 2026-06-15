@@ -686,8 +686,8 @@
     }
   ],
   "previous": {
-    "href": "/docs/api/numpy/swapaxes/",
-    "label": "fnp.swapaxes"
+    "href": "/docs/api/numpy/symmetrize/",
+    "label": "fnp.symmetrize"
   },
   "provenance_label": "Adapted from NumPy docs",
   "provenance_ref": "np.take",

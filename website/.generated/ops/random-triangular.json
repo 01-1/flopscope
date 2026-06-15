@@ -552,8 +552,8 @@
     }
   ],
   "previous": {
-    "href": "/docs/api/numpy/random/standard-t/",
-    "label": "fnp.random.standard_t"
+    "href": "/docs/api/numpy/random/symmetric/",
+    "label": "fnp.random.symmetric"
   },
   "provenance_label": "Adapted from NumPy docs",
   "provenance_ref": "np.random.triangular",

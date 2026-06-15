@@ -159,6 +159,11 @@
     "href": "/docs/api/numpy/array-split/",
     "label": "fnp.array_split"
   },
+  "as_symmetric": {
+    "canonical_name": "as_symmetric",
+    "href": "/docs/api/numpy/as-symmetric/",
+    "label": "fnp.as_symmetric"
+  },
   "asarray": {
     "canonical_name": "asarray",
     "href": "/docs/api/numpy/asarray/",
@@ -883,6 +888,11 @@
     "canonical_name": "invert",
     "href": "/docs/api/numpy/invert/",
     "label": "fnp.invert"
+  },
+  "is_symmetric": {
+    "canonical_name": "is_symmetric",
+    "href": "/docs/api/numpy/is-symmetric/",
+    "label": "fnp.is_symmetric"
   },
   "isclose": {
     "canonical_name": "isclose",
@@ -2264,6 +2274,11 @@
     "href": "/docs/api/numpy/random/standard-t/",
     "label": "fnp.random.standard_t"
   },
+  "random.symmetric": {
+    "canonical_name": "random.symmetric",
+    "href": "/docs/api/numpy/random/symmetric/",
+    "label": "fnp.random.symmetric"
+  },
   "random.triangular": {
     "canonical_name": "random.triangular",
     "href": "/docs/api/numpy/random/triangular/",
@@ -2643,6 +2658,11 @@
     "canonical_name": "swapaxes",
     "href": "/docs/api/numpy/swapaxes/",
     "label": "fnp.swapaxes"
+  },
+  "symmetrize": {
+    "canonical_name": "symmetrize",
+    "href": "/docs/api/numpy/symmetrize/",
+    "label": "fnp.symmetrize"
   },
   "take": {
     "canonical_name": "take",
