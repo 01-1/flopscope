@@ -5,9 +5,16 @@ from pathlib import Path
 from flopscope._registry import REGISTRY
 
 _BUCKET2 = [
-    "ndindex", "nditer", "ndenumerate", "broadcast",
-    "errstate", "printoptions", "get_printoptions", "set_printoptions",
-    "finfo", "iinfo",
+    "ndindex",
+    "nditer",
+    "ndenumerate",
+    "broadcast",
+    "errstate",
+    "printoptions",
+    "get_printoptions",
+    "set_printoptions",
+    "finfo",
+    "iinfo",
 ]
 
 
@@ -26,8 +33,12 @@ def test_server_only_set_syncs_to_client():
         / "flopscope"
         / "_server_only_data.py"
     )
-    assert client_path.exists(), "client _server_only_data.py missing (run sync_client.py)"
-    spec = importlib.util.spec_from_file_location("_client_server_only_data", client_path)
+    assert client_path.exists(), (
+        "client _server_only_data.py missing (run sync_client.py)"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "_client_server_only_data", client_path
+    )
     mod = importlib.util.module_from_spec(spec)
     sys.modules["_client_server_only_data"] = mod
     spec.loader.exec_module(mod)

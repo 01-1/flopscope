@@ -86,6 +86,7 @@ def test_random_symmetric_equals_sample_plus_symmetrize(axes, G):
 
 def test_symmetric_ops_registered_as_counted_custom():
     from flopscope._registry import REGISTRY
+
     for name in ("symmetrize", "as_symmetric", "is_symmetric", "random.symmetric"):
         assert name in REGISTRY, f"{name} missing from REGISTRY"
         assert REGISTRY[name]["category"] == "counted_custom"
