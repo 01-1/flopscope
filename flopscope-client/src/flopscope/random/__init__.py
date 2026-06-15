@@ -42,5 +42,11 @@ for _qname in _random_ops:
 # Cleanup loop vars from module namespace
 del _qname, _short, _random_ops
 
+# Expose RNG class names so fnp.random.Generator / RandomState / SeedSequence resolve.
+# Module-level names take precedence over __getattr__, so these shadow the fallback.
+from flopscope._remote_array import RemoteGenerator as Generator  # noqa: E402
+from flopscope._remote_array import RemoteRandomState as RandomState  # noqa: E402
+from flopscope._remote_array import RemoteSeedSequence as SeedSequence  # noqa: E402
+
 # Fall-through for unknown / blacklisted names
 __getattr__ = make_module_getattr("random.", "flopscope.numpy.random")
