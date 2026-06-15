@@ -9,6 +9,7 @@ from typing import Any
 
 from flopscope import _codec
 from flopscope._connection import get_connection
+from flopscope._dispatch import timed_dispatch
 from flopscope._protocol import encode_create_from_data
 from flopscope._remote_array import (
     _DTYPE_INFO,
@@ -19,6 +20,7 @@ from flopscope._remote_array import (
 _META_KEY = "__meta__"
 
 
+@timed_dispatch
 def _ingest(dtype: str, shape: tuple, buffer: bytes) -> RemoteArray:
     conn = get_connection()
     resp = conn.send_recv(encode_create_from_data(buffer, list(shape), dtype))
@@ -49,6 +51,7 @@ def _as_triple(val: Any) -> tuple[str, tuple, bytes]:
     return dtype, shape, struct.pack(f"<{len(flat)}{fmt}", *[float(x) for x in flat])
 
 
+@timed_dispatch
 def load(file: str) -> Any:
     """Load .npy/.npz. Returns a RemoteArray, or {name: RemoteArray, __meta__}."""
     with open(file, "rb") as fh:
@@ -65,6 +68,8 @@ def load(file: str) -> Any:
     return _ingest(dtype, shape, data)
 
 
+# Overhead attribution: absorb local codec encode + any _fetch_data egress.
+@timed_dispatch
 def save(file: str, arr: Any) -> None:
     dtype, shape, buf = _as_triple(arr)
     with open(file, "wb") as fh:
@@ -85,9 +90,11 @@ def _write_npz(file: str, arrays: dict, compressed: bool) -> None:
         fh.write(blob)
 
 
+@timed_dispatch
 def savez(file: str, **arrays: Any) -> None:
     _write_npz(file, arrays, compressed=False)
 
 
+@timed_dispatch
 def savez_compressed(file: str, **arrays: Any) -> None:
     _write_npz(file, arrays, compressed=True)

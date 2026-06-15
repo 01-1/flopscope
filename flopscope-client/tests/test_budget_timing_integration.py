@@ -16,6 +16,7 @@ import os
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 
 import pytest
@@ -224,6 +225,14 @@ def test_every_op_family_increments_dispatch():
         _grew(lambda: fl.stats.norm.pdf(fl.ones((4,))))  # stats _DistributionProxy.pdf
         _grew(lambda: fl.array([1.0, 2.0, 3.0]))  # array() special-case
         _grew(lambda: fl.einsum("ij,jk->ik", a, b))  # einsum() special-case
+        with tempfile.TemporaryDirectory() as _tmpdir:
+            npy_path = os.path.join(_tmpdir, "state.npy")
+            _grew(
+                lambda: fl.save(npy_path, a)
+            )  # save: _fetch_data egress + local write
+            _grew(
+                lambda: fl.load(npy_path)
+            )  # load: local parse + create_from_data ingress
         # fl.flops.einsum_cost / fl.flops.svd_cost are @timed_dispatch but send
         # "flops.einsum_cost" / "flops.svd_cost" to the server — neither op is
         # in the server whitelist (flopscope._registry.REGISTRY has no "flops.*"
@@ -272,3 +281,24 @@ def test_flops_used_refreshed_on_close_without_summary():
 
     # ~2M FLOPs per 128³ matmul × 5 ⇒ ~10M server-side; was exactly 0 pre-fix.
     assert ctx.flops_used > 1_000_000, "flops_used not refreshed from server on close"
+
+
+def test_connection_setup_is_overhead_not_residual():
+    """First-op connection setup + version handshake must land in overhead, not
+    the participant's billed residual. Locks the absorption Layer 1 guarantees."""
+    from flopscope._connection import reset_connection
+
+    import flopscope as fl
+
+    # The _reset_client autouse fixture already clears the connection; this is left
+    # explicit so the intent (cold connect+handshake inside the context) is obvious.
+    reset_connection()
+    with fl.BudgetContext(flop_budget=10**12) as ctx:
+        a = fl.ones((8, 8))  # first op triggers lazy connect + handshake
+        _ = fl.dot(a, a)
+
+    assert ctx.flopscope_overhead_time_s > 0
+    # residual is pure inter-op Python; connect+handshake+ops all run inside a
+    # dispatch_span, so no round-trip time lands here. Bound matches the loosest
+    # stable sibling (test_worker_tolist_not_billed).
+    assert ctx.residual_wall_time_s < 0.05
