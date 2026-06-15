@@ -6,6 +6,7 @@ import pytest
 
 import flopscope as flops
 import flopscope.numpy as fnp
+from flopscope._symmetric import SymmetricTensor
 from flopscope._weights import get_weight, load_weights
 
 # Ops that must bill 0 FLOPs under production weights (data movement / select).
@@ -112,3 +113,18 @@ def test_init_like_op_is_time_accounted(name):
         new = ctx.op_log[n0:]
     assert len(new) == 1, f"{name}: expected 1 op-log record, got {len(new)}"
     assert new[0].flop_cost == 0
+
+
+def test_empty_and_tri_are_not_falsely_symmetric():
+    """empty/empty_like/tri are NOT constant fills, so must not infer symmetry.
+
+    A triangular (`tri`) or uninitialized (`empty`) square array tagged S_n would
+    let a symmetry-aware op undercount. Only genuine constant fills (zeros/ones)
+    and structural constructors (eye/identity) carry symmetry.
+    """
+    assert not isinstance(fnp.empty((3, 3)), SymmetricTensor)
+    assert not isinstance(fnp.empty_like(fnp.zeros((2, 2))), SymmetricTensor)
+    assert not isinstance(fnp.tri(3), SymmetricTensor)
+    # Contrast: genuine constant fills still infer symmetry (unchanged).
+    assert isinstance(fnp.zeros((3, 3)), SymmetricTensor)
+    assert isinstance(fnp.ones((3, 3)), SymmetricTensor)

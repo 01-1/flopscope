@@ -377,7 +377,8 @@ def empty(
     budget = require_budget()
     with budget.deduct("empty", flop_cost=0, subscripts=None, shapes=()):
         result = _call_numpy(_np.empty, shape, dtype=dtype, **kwargs)
-    return _wrap_constant_fill(result)
+    # Uninitialized memory is not a constant fill — do NOT infer symmetry.
+    return _asplainflopscope(result)
 
 
 attach_docstring(empty, _np.empty, "free", "0 FLOPs")
@@ -394,7 +395,8 @@ def empty_like(
     base = _to_base_ndarray(a)
     with budget.deduct("empty_like", flop_cost=0, subscripts=None, shapes=(_np.shape(base),)):
         result = _call_numpy(_np.empty_like, base, dtype=dtype, **kwargs)
-    return _wrap_constant_fill(result)
+    # Uninitialized memory is not a constant fill — do NOT infer symmetry.
+    return _asplainflopscope(result)
 
 
 attach_docstring(empty_like, _np.empty_like, "free", "0 FLOPs")
@@ -2563,7 +2565,8 @@ def tri(*args, **kwargs):
     budget = require_budget()
     with budget.deduct("tri", flop_cost=0, subscripts=None, shapes=()):
         result = _call_numpy(_np.tri, *args, **kwargs)
-    return _wrap_constant_fill(result)
+    # A triangular matrix is not symmetric — do NOT infer constant-fill symmetry.
+    return _asplainflopscope(result)
 
 
 attach_docstring(tri, _np.tri, "free", "0 FLOPs")
