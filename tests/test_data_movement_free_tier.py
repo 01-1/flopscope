@@ -8,7 +8,6 @@ import flopscope as flops
 import flopscope.numpy as fnp
 from flopscope._weights import get_weight, load_weights
 
-
 # Ops that must bill 0 FLOPs under production weights (data movement / select).
 FREE_DATA_MOVEMENT_OPS = [
     "hstack", "vstack", "column_stack", "dstack", "concatenate", "stack",
