@@ -183,6 +183,18 @@ XFAIL_PATTERNS: dict[str, str] = {
         "lacks a ufunc loop for structured dtypes; same root cause as the "
         "other SUBCLASS_RETURN entries"
     ),
+    # test_shuffle_masked: numpy.ma's masked-array shuffle calls umath.equal
+    # internally (numpy/ma/core.py), which auto-routes through fnp.equal on the
+    # WhestArray subclass and diverges from numpy's stock masked shuffle (the
+    # test hard-codes a count: ACTUAL 19 vs DESIRED 13). Same SUBCLASS_RETURN
+    # root cause as test_shuffle above; pre-existing flopscope/numpy divergence
+    # surfaced only when the gated numpy-compat job runs. Not matched by the
+    # test_shuffle pattern (it has no trailing wildcard), so listed explicitly.
+    "*TestRandomDist::test_shuffle_masked": (
+        "SUBCLASS_RETURN: numpy.ma masked shuffle's internal umath.equal routes "
+        "through fnp.equal on the WhestArray subclass; same root cause as "
+        "test_shuffle"
+    ),
     # NOTE: test_polyval, test_out_scalar, and test_choice_return_shape
     # were previously xfailed here. They now pass after targeted fixes:
     #   - polyval: use asanyarray(x) to preserve MaskedArray / ndarray
