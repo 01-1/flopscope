@@ -54,9 +54,8 @@ The rest of this section defines the conventions these principles rest on.
 
 Each floating-point multiply, add, subtract, divide, or square root counts
 as 1 FLOP.  A fused multiply-add (FMA) therefore counts as 2.  This matches
-the textbook convention used in Golub & Van Loan, _Matrix Computations_, 4th
-ed. (G&VL 4e) §1.1.  All formulas in this document are stated in FMA=2 units
-unless noted.
+the standard textbook convention.  All formulas in this document are stated
+in FMA=2 units unless noted.
 
 ### Comparison and select
 
@@ -72,12 +71,9 @@ arccosh, arctanh, power, and their NumPy 2.x aliases) are billed at weight
 16.0.  The `flop_cost` formula is `numel(output)` (1 per element); the 16×
 factor is supplied entirely by the weight.
 
-Citation: J.-M. Muller, _Elementary Functions_, 3rd ed., Birkhäuser (2016),
-Chapter 2 (range-reduction + minimax polynomial).
-
 A subset of moderate-cost binary ops (floor_divide, mod/remainder, fmod,
 arctan2, hypot, logaddexp, logaddexp2) is calibrated into the same tier
-(weight 16.0).  See empirical-weights.md for measured values.
+(weight 16.0).  See [empirical-weights.md](empirical-weights.md) for measured values.
 
 ### Half-tier transcendentals (weight 8.0)
 
@@ -199,7 +195,7 @@ each backed by a CI-enforced test you can open and read:
 | **No substitution arbitrage** | a bit-identical alias cannot bill cheaper than its canonical (e.g. `acos` *is* `arccos` — the 16× ufunc-alias fix); equivalent contractions (`dot`/`inner`/`matmul`/`einsum`) share one cost engine | `test_ufunc_alias_parity.py`, `test_random_weight_aliasing.py`; the shared einsum engine ([§Contraction](#contraction-einsum-family)) |
 | **No cheap in-op path** | top-k `svd(k=)` cannot yield a *full* decomposition below full price (the `min(4mnk, economy)` cap + `k ≥ min → full` guard); invalid `k` (`< 1` or `> min(m, n)`) is rejected before any billing | `test_svd_topk_cost.py` (cap / guard / monotonicity); `test_linalg.py` (invalid-`k` `ValueError`) |
 | **Free-tier discipline** | only ops that perform no value arithmetic/comparison carry weight 0; a value-test is charged wherever it hides — including `a.nonzero()` (method), value-changing `astype`, `where(1-arg)`, `argwhere`, `flatnonzero`, and `count_nonzero` | `test_weight_tier_policy.py`; `test_data_movement_free_tier.py` (free-labels consistency guard) |
-| **Memoization accepted** | free gather makes look-up-table reuse (precompute once with a charged op, then `take` for free) cheaper — this is deliberate; see spec §5: memoization is a legitimate optimization under a pure-compute metric | documented here; `test_data_movement_free_tier.py` |
+| **Memoization accepted** | free gather makes look-up-table reuse (precompute once with a charged op, then `take` for free) cheaper — this is deliberate: memoization is a legitimate optimization under a pure-compute metric | documented here; `test_data_movement_free_tier.py` |
 | **End-to-end billing** | production `flop_cost × weight` is pinned per tier `{0,1,8,16}` (catches a silent weight regression) | `test_production_weight_billing.py` |
 
 An auditor can read this table top-to-bottom and, for each claim, open the named test
@@ -281,7 +277,7 @@ Source: `src/flopscope/_pointwise.py`; reduction accumulation model in
 Every op in this family is billed by **one shared, symmetry-aware engine**
 (`_resolve_cost_and_output_symmetry` → `einsum_cost`); the closed forms below are
 that engine's output specialised to each op's shapes, not separately maintained
-constants. All rows are DERIVED from Golub & Van Loan 4e §1.1.
+constants.
 
 **Family rule:**
 
@@ -333,8 +329,8 @@ build on the same helper.
 
 | Op | flop_cost | basis |
 |---|---|---|
-| `linalg.matrix_power` | `(⌊log₂ k⌋ + popcount(k) − 1) × matmul_cost(n, n, n)` | repeated squaring, Knuth TAOCP §4.6.3 |
-| `linalg.multi_dot` | sum of optimal-chain matmul costs; each step `2mkn − mn` | optimal chain order, CLRS §15.2 |
+| `linalg.matrix_power` | `(⌊log₂ k⌋ + popcount(k) − 1) × matmul_cost(n, n, n)` | repeated squaring |
+| `linalg.multi_dot` | sum of optimal-chain matmul costs; each step `2mkn − mn` | optimal chain order |
 
 All contraction ops use **weight 1.0** — the shape formulas already carry the
 full FMA=2 cost. Source: `_pointwise.py` (op wrappers), `_einsum.py`
@@ -361,7 +357,7 @@ Weight: **1.0** for `arange` and `linspace`; **16.0** for `geomspace` and
 
 ### Sort and select
 
-**Family rule** (DECLARED, Knuth TAOCP v3 §5.2):
+**Family rule** (DECLARED):
 
 | Op | flop_cost | basis |
 |---|---|---|
@@ -388,26 +384,26 @@ matrices charge 0.
 
 | Op | flop_cost (per matrix) | basis | source |
 |---|---|---|---|
-| `linalg.cholesky` | `n³/3` | DERIVED: G&VL 4e Alg 4.2.1 (dpotrf); LAPACK dpotrf driver count | `_decompositions.py:cholesky_cost` |
-| `linalg.qr` (reduced/complete) | `2(2mnk − 2k³/3)`, `k = min(m,n)` | DERIVED: G&VL 4e §5.2 (dgeqrf) + dorgqr Q-formation ≈ same count; LAWN 41 confirms | `_decompositions.py:qr_cost` |
+| `linalg.cholesky` | `n³/3` | DERIVED: Cholesky factorization (dpotrf) | `_decompositions.py:cholesky_cost` |
+| `linalg.qr` (reduced/complete) | `2(2mnk − 2k³/3)`, `k = min(m,n)` | DERIVED: factorization (dgeqrf) + Q-formation (dorgqr) ≈ same count | `_decompositions.py:qr_cost` |
 | `linalg.qr` (r/raw) | `2mnk − 2k³/3` | DERIVED: factorization only | `_decompositions.py:qr_cost` |
-| `linalg.solve` | `2n³/3 + 2n²×nrhs` | DERIVED: G&VL 4e §3.2 (dgesv = dgetrf + dgetrs) | `_solvers.py:solve_cost` |
-| `linalg.inv` | `2n³` | DERIVED: G&VL 4e §3.4 (dgetrf + dgetri ≈ 2n³) | `_solvers.py:inv_cost` |
-| `linalg.det` | `2n³/3 + n` | DERIVED: G&VL 4e §3.2 LU (dgetrf) + diagonal product | `_properties.py:det_cost` |
+| `linalg.solve` | `2n³/3 + 2n²×nrhs` | DERIVED: LU solve (dgesv = dgetrf + dgetrs) | `_solvers.py:solve_cost` |
+| `linalg.inv` | `2n³` | DERIVED: LU factorization + inversion (dgetrf + dgetri ≈ 2n³) | `_solvers.py:inv_cost` |
+| `linalg.det` | `2n³/3 + n` | DERIVED: LU factorization (dgetrf) + diagonal product | `_properties.py:det_cost` |
 | `linalg.slogdet` | `2n³/3 + 18n` | DERIVED: LU (dgetrf) + sum of log\|diag\| (abs + 16/elem log + reduce) | `_properties.py:slogdet_cost` |
 | `linalg.norm` (fro/L1/Linf) | `2 × numel(effective_shape) × n_groups` | DERIVED: FMA=2 square+accumulate or abs+accumulate | `_properties.py:norm_cost` |
 | `linalg.norm` (ord=2, nuc) | `(2ab² + 2b³) × n_groups`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: values-only SVD cost per group | `_properties.py:norm_cost` |
 | `linalg.vector_norm` | `2 × numel(effective_shape) × n_groups` (standard ord); `(18 × numel + 16) × n_groups` (general fractional p-norm: abs + pow per element) | DERIVED: FMA=2 | `_properties.py:vector_norm_cost` |
 | `linalg.matrix_norm` | same as `linalg.norm` | DERIVED | `_properties.py` |
 | `linalg.trace` | `min(m,n) × batch` | DERIVED: n−1 diagonal adds, batch-multiplied | `_properties.py:trace_cost` |
-| `linalg.tensorinv` | `2n³`, `n = prod(shape[:ind])` | DERIVED: G&VL 4e §3.4 via inv | `_solvers.py:tensorinv_cost` |
-| `linalg.tensorsolve` | `2n³/3 + 2n²`, `n = prod(shape[ind:])` | DERIVED: G&VL 4e §3.2 via solve | `_solvers.py:tensorsolve_cost` |
+| `linalg.tensorinv` | `2n³`, `n = prod(shape[:ind])` | DERIVED: via inv | `_solvers.py:tensorinv_cost` |
+| `linalg.tensorsolve` | `2n³/3 + 2n²`, `n = prod(shape[ind:])` | DERIVED: via solve | `_solvers.py:tensorsolve_cost` |
 | `linalg.matrix_rank` | `2ab² + 2b³ + min(m,n)`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: values-only SVD + `min(m,n)` threshold comparisons | `_properties.py:matrix_rank_cost` |
 | `linalg.cond` | `2ab² + 2b³ + 1` for `ord∈{None,2,−2}` (values-only SVD + 1 divide); `2k³ + 4mn + 1`, `k=min(m,n)` for other ords (inv-based) | DERIVED | `_properties.py:cond_cost` |
-| `linalg.pinv` | `6ab² + 20b³ + min(m,n) + n·min(m,n) + matmul\_cost(n, min(m,n), m)`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: thin SVD (with vectors) + threshold + diagonal scale + reconstruction matmul; G&VL 4e §5.5 | `_solvers.py:pinv_cost` |
-| `linalg.lstsq` | `6ab² + 20b³ + matmul\_cost(k,m,c) + k·c + matmul\_cost(n,k,c)`, `k=min(m,n)`, `c=#rhs cols` | DERIVED: thin SVD (with vectors) + U^T b + divide by s + reconstruction; G&VL 4e §5.5 | `_solvers.py:lstsq_cost` |
+| `linalg.pinv` | `6ab² + 20b³ + min(m,n) + n·min(m,n) + matmul\_cost(n, min(m,n), m)`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: thin SVD (with vectors) + threshold + diagonal scale + reconstruction matmul | `_solvers.py:pinv_cost` |
+| `linalg.lstsq` | `6ab² + 20b³ + matmul\_cost(k,m,c) + k·c + matmul\_cost(n,k,c)`, `k=min(m,n)`, `c=#rhs cols` | DERIVED: thin SVD (with vectors) + U^T b + divide by s + reconstruction | `_solvers.py:lstsq_cost` |
 | `linalg.cross` | `3 × numel(output)` (delegates to `fnp.cross`) | DERIVED | `_aliases.py` |
-| `linalg.multi_dot` | optimal chain matmul cost (CLRS §15.2); each step uses `matmul_cost(m,k,n)` = `2mkn − mn` | DERIVED | `_compound.py:multi_dot_cost` |
+| `linalg.multi_dot` | optimal chain matmul cost; each step uses `matmul_cost(m,k,n)` = `2mkn − mn` | DERIVED | `_compound.py:multi_dot_cost` |
 | `linalg.outer`, `linalg.tensordot`, `linalg.vecdot`, `linalg.matmul`, `linalg.matrix_power` | delegates to `fnp.*` | DERIVED | `_compound.py`, `_aliases.py` |
 | `linalg.diagonal`, `linalg.matrix_transpose` | 0 (view) | DECLARED free | `_aliases.py` |
 
@@ -416,19 +412,19 @@ matrices charge 0.
 ### Linalg iterative (eigen / SVD)
 
 These ops use LAPACK drivers that iterate until convergence; counts are
-leading-order estimates with confirmed-2026-06 citations.  All use
+leading-order estimates.  All use
 **weight 1.0**.  See [Calibration & reproducibility](#calibration--reproducibility)
-for the three-leg derivation.
+for the derivation and runtime measurements.
 
 | Op | flop_cost (per matrix) | basis | source |
 |---|---|---|---|
-| `linalg.eig` | `25n³` | DERIVED: G&VL 4e §7.5 (Hessenberg + Francis QR with eigenvectors); LAPACK Users' Guide Table 3.13 DGEEV-with-vectors = 26.33 n³ | `_decompositions.py:eig_cost` |
-| `linalg.eigvals` | `10n³` | DERIVED: LAPACK Users' Guide Table 3.13 DGEEV values-only = 10.00 n³ (exact) | `_decompositions.py:eigvals_cost` |
-| `linalg.eigh` | `9n³` | DERIVED: G&VL 4e §8.3 (dsyevd tridiagonalization + divide-and-conquer with eigenvectors) | `_decompositions.py:eigh_cost` |
-| `linalg.eigvalsh` | `4n³/3` | DERIVED: G&VL 4e §8.3 (dsyevd tridiagonalization only, MRRR, no vectors) | `_decompositions.py:eigvalsh_cost` |
-| `linalg.svd` (thin, full_matrices=False or square) | `6ab² + 20b³`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD Σ+U₁+V (dgesdd thin path) | `_svd.py:svd_cost` |
-| `linalg.svd` (full, full_matrices=True and m≠n) | `4a²b + 22b³` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD full U (forming full m×m U dominates) | `_svd.py:svd_cost` |
-| `linalg.svdvals` | `2ab² + 2b³` | DERIVED: G&VL 4e §8.6 Table 8.6.1 R-SVD Σ only (dgesdd values, no vectors) | `_decompositions.py:svdvals_cost` |
+| `linalg.eig` | `25n³` | DERIVED: dense eigendecomposition with eigenvectors — Hessenberg reduction + QR iteration + back-transform (dgeev) | `_decompositions.py:eig_cost` |
+| `linalg.eigvals` | `10n³` | DERIVED: dense eigenvalues only, no vectors (dgeev) | `_decompositions.py:eigvals_cost` |
+| `linalg.eigh` | `9n³` | DERIVED: symmetric tridiagonalization + divide-and-conquer with eigenvectors (dsyevd) | `_decompositions.py:eigh_cost` |
+| `linalg.eigvalsh` | `4n³/3` | DERIVED: symmetric tridiagonalization only, no vectors (dsyevd) | `_decompositions.py:eigvalsh_cost` |
+| `linalg.svd` (thin, full_matrices=False or square) | `6ab² + 20b³`, `a=max(m,n)`, `b=min(m,n)` | DERIVED: thin SVD — Σ + U₁ + V (dgesdd thin path) | `_svd.py:svd_cost` |
+| `linalg.svd` (full, full_matrices=True and m≠n) | `4a²b + 22b³` | DERIVED: full SVD — forming the full m×m U dominates (dgesdd) | `_svd.py:svd_cost` |
+| `linalg.svdvals` | `2ab² + 2b³` | DERIVED: SVD values only, no vectors (dgesdd) | `_decompositions.py:svdvals_cost` |
 | `roots` | `10n³`, `n` = stripped companion dimension (leading and trailing zero coefficients removed before companion matrix is built) | DERIVED: companion-matrix eigvals (delegates to eigvals_cost on trimmed degree) | `_polynomial.py`; consistent with polynomial-table `roots` row |
 
 #### Top-k (truncated) SVD
@@ -439,8 +435,8 @@ For `1 ≤ k < min(m, n)` the billed cost is
     min(4·m·n·k, economy)
 
 where `economy` is the full thin/values-only cost above. `4·m·n·k` is the
-verified leading-order cost (FMA=2, Θ(mnk)) of a rank-k randomized SVD
-(Halko–Martinsson–Tropp; two unavoidable passes over A). It is billed as the
+leading-order cost (FMA=2, Θ(mnk)) of a rank-k truncated SVD (two
+unavoidable passes over A). It is billed as the
 **standard truncated-algorithm cost of the operation** — consistent with how
 this model bills direct-linalg ops at their textbook standard-algorithm count
 rather than literal BLAS/LAPACK work — even though the reference implementation
@@ -465,16 +461,15 @@ constant is the standard textbook estimate.
 
 ### FFT
 
-**Family rule** (DERIVED, Van Loan, _Computational Frameworks for the Fast
-Fourier Transform_, 1992 §1.4, Cooley-Tukey radix-2):
+**Family rule** (DERIVED, radix-2 FFT — 5 real ops per butterfly):
 
 | Op | flop_cost | basis |
 |---|---|---|
-| `fft.fft`, `fft.ifft` | `5 × N × ⌈log₂ N⌉`, `N` = transform length | DERIVED: Van Loan 1992 §1.4; 5 real ops per butterfly |
-| `fft.fft2`, `fft.ifft2`, `fft.fftn`, `fft.ifftn` | `5 × N × Σᵢ⌈log₂ dᵢ⌉`, `N = prod(transform dims)`, `dᵢ` = individual axis lengths | DERIVED: Van Loan 1992 §1.4; sum of per-axis log₂ terms (coincides with `5N⌈log₂N⌉` only when all axes are the same power of 2) |
+| `fft.fft`, `fft.ifft` | `5 × N × ⌈log₂ N⌉`, `N` = transform length | DERIVED: 5 real ops per butterfly |
+| `fft.fft2`, `fft.ifft2`, `fft.fftn`, `fft.ifftn` | `5 × N × Σᵢ⌈log₂ dᵢ⌉`, `N = prod(transform dims)`, `dᵢ` = individual axis lengths | DERIVED: sum of per-axis log₂ terms (coincides with `5N⌈log₂N⌉` only when all axes are the same power of 2) |
 | `fft.rfft`, `fft.irfft` | `5 × (N/2) × ⌈log₂ N⌉` | DERIVED: real-input / real-output half-spectrum |
-| `fft.rfft2`, `fft.irfft2`, `fft.rfftn`, `fft.irfftn` | `5 × (N/2) × Σᵢ⌈log₂ dᵢ⌉` (real half-spectrum) | DERIVED: Van Loan 1992 §1.4; half-spectrum with per-axis log₂ sum |
-| `fft.hfft` | `5 × (n_out/2) × ⌈log₂ n_out⌉` | DERIVED: hfft = irfft(conj(a)) — conjugate-symmetry halves the work (Van Loan 1992 §1.4) |
+| `fft.rfft2`, `fft.irfft2`, `fft.rfftn`, `fft.irfftn` | `5 × (N/2) × Σᵢ⌈log₂ dᵢ⌉` (real half-spectrum) | DERIVED: half-spectrum with per-axis log₂ sum |
+| `fft.hfft` | `5 × (n_out/2) × ⌈log₂ n_out⌉` | DERIVED: hfft = irfft(conj(a)) — conjugate-symmetry halves the work |
 | `fft.ihfft` | `5 × (n/2) × ⌈log₂ n⌉` | DERIVED: same `hfft_cost(n)` formula |
 | `fft.fftfreq` | `n` (index grid scaled by `1/(n*d)` — one divide per output element) | DECLARED: `n` divides |
 | `fft.rfftfreq` | `n//2 + 1` (real-spectrum grid has `n//2 + 1` elements) | DECLARED: `n//2 + 1` divides |
@@ -530,10 +525,10 @@ Weight tiers:
 | `random.randn`, `random.standard_normal`, `random.normal` | `numel(output)` (weight **16.0**) → billed `16 × numel` | DECLARED: flop_cost = numel(output); transcendental weight 16.0 from `default_weights.json` | `_cost_formulas.py` |
 | `random.randint`, `random.integers` | `numel(output)` | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=True, p=None) | `numel(output)` | DECLARED | `_cost_formulas.py` |
-| `random.choice` (replace=True, p≠None) | `numel(output) + 3n + m×⌈log₂ n⌉` (n=population, m=size) | DERIVED: cumsum + normalize + searchsorted | `_cost_formulas.py`; confirmed issue audit |
-| `random.choice` (replace=False, p=None) | `n` (Fisher-Yates O(n): conservative ceiling on tail-shuffle / Floyd's algorithm) | DECLARED | `_cost_formulas.py` |
+| `random.choice` (replace=True, p≠None) | `numel(output) + 3n + m×⌈log₂ n⌉` (n=population, m=size) | DERIVED: cumsum + normalize + searchsorted | `_cost_formulas.py` |
+| `random.choice` (replace=False, p=None) | `n` (O(n) shuffle-based sampling: conservative ceiling on tail-shuffle) | DECLARED | `_cost_formulas.py` |
 | `random.choice` (replace=False, p≠None) | `sort_cost(n) = n × ⌈log₂ n⌉` (data-dependent rejection loop with weights) | DECLARED | `_cost_formulas.py` |
-| `random.shuffle`, `random.permutation` | `numel(input)` | DECLARED: Fisher-Yates O(n) | `_cost_formulas.py` |
+| `random.shuffle`, `random.permutation` | `numel(input)` | DECLARED: O(n) in-place shuffle | `_cost_formulas.py` |
 | `random.exponential` | `numel(output)` (weight **16.0**) → billed `16 × numel` | DECLARED: transcendental weight 16.0 | `_cost_formulas.py` |
 | `random.poisson`, `random.binomial`, `random.geometric`, `random.hypergeometric`, `random.negative_binomial`, `random.multinomial` | `numel(output)` (weight **16.0**) → billed `16 × numel` | DECLARED: transcendental weight 16.0 | `_cost_formulas.py` |
 | `random.multivariate_normal` | `26d³ + 2Nd² + 16Nd` (d=dims, N=size) | DERIVED composite: SVD factorization of covariance (`svd_cost(d,d,with_vectors=True)` = `6d·d² + 20d³` = `26d³`) + affine transform (`2Nd²`) + N·d transcendental normal draws (`16Nd`) | `_cost_formulas.py` |
@@ -551,7 +546,7 @@ Stats ops are composite (weight 1.0; all per-element factors in `flop_cost`).
 |---|---|---|
 | `stats.norm.pdf` | 27 | DERIVED: exp(17) + affine normalization(10); composite, weight 1.0 |
 | `stats.norm.cdf` | 48 | DERIVED: erf rational approx(45) + affine(3); composite, weight 1.0 |
-| `stats.norm.ppf` | 83 | DERIVED composite: Acklam degree-5 rational + Newton step (erf + pdf + correction) + affine; empirical-weights.md 83.05 FP-instr/elem |
+| `stats.norm.ppf` | 83 | DERIVED composite: degree-5 rational approximation + Newton step (erf + pdf + correction) + affine; [empirical-weights.md](empirical-weights.md) 83.05 FP-instr/elem |
 | `stats.expon.pdf` | 22 | DERIVED: z=(x−loc)/scale(2) + exp(−z)(17) + /scale(1) + where(2); weight 1.0 |
 | `stats.expon.cdf` | 22 | DERIVED: z(2) + exp(−z)(17) + 1−exp(1) + where(2); weight 1.0 |
 | `stats.expon.ppf` | 27 | DERIVED: loc−scale·log1p(−q)(19) + 3 where/cmp/and(8); weight 1.0 |
@@ -667,7 +662,7 @@ These ops derive a selector by testing element values (`!= 0`), so the test is t
 compute cost.  The predicate and the selection are the *same* step here — unlike the
 3-arg `where(cond, x, y)` where the predicate (a separate charged op) is an *input*.
 
-**Worked examples** (source of truth: spec §2 + §7):
+**Worked examples**:
 
 | Expression | Charge | Reasoning |
 |---|---|---|
@@ -750,20 +745,19 @@ Source: `src/flopscope/_array_ops.py`.
 
 ## Calibration & reproducibility
 
-How the two layers are pinned down. `flop_cost` **constants** are derived from
-standard-algorithm counts and confirmed by the three-leg evidence below (LAPACK
-driver counts + runtime scaling + textbook citation). `weight` **tiers** are
+How the two layers are pinned down. `flop_cost` **constants** are the standard
+operation counts described per family above. `weight` **tiers** are
 calibrated by EC2 micro-benchmark — methodology and measured values in
 [empirical-weights.md](empirical-weights.md). The recipe at the end lets you
 reproduce any billed number yourself.
 
-### Evidence: iterative linalg constants
+### Iterative linalg constants
 
-The constants `eig=25n³`, `eigvals=10n³`, `eigh=9n³`, `eigvalsh=4n³/3`,
-`svd-thin=6ab²+20b³`, `svd-full=4a²b+22b³`, `svdvals=2ab²+2b³` were
-confirmed in June 2026 by three independent legs.
+The charged constants for `eig`, `eigvals`, `eigh`, `eigvalsh`, `svd`, and
+`svdvals` are the standard operation counts. The tables below give the
+per-driver counts and the runtime-scaling measurements.
 
-**Leg (a) — LAPACK driver op-counts**
+**Standard operation counts (per LAPACK driver)**
 
 | Op | LAPACK driver | Standard FLOP count |
 |---|---|---|
@@ -772,18 +766,15 @@ confirmed in June 2026 by three independent legs.
 | `inv` | dgetrf + dgetri | ≈2n³ |
 | `det`, `slogdet` | dgetrf | 2n³/3 |
 | `qr` (reduced) | dgeqrf + dorgqr | 2(2mn² − 2n³/3), k=min(m,n) |
-| `eig` | dgeev (jobvr=V) | ≈25n³ (LAPACK Users' Guide Table 3.13 = 26.33) |
-| `eigvals` | dgeev (jobvl=N, jobvr=N) | 10.00n³ (LUG Table 3.13, exact) |
+| `eig` | dgeev (jobvr=V) | ≈25n³ |
+| `eigvals` | dgeev (jobvl=N, jobvr=N) | 10n³ |
 | `eigh` | dsyevd | ≈9n³ |
 | `eigvalsh` | dsyevd (jobz=N) | ≈4n³/3 |
-| `svd` (thin) | dgesdd | 6ab² + 20b³ (G&VL 4e §8.6 Table 8.6.1) |
+| `svd` (thin) | dgesdd | 6ab² + 20b³ |
 | `svd` (full, m≠n) | dgesdd | 4a²b + 22b³ |
 | `svdvals` | dgesdd (jobz=N) | 2ab² + 2b³ |
 
-References: LAPACK Users' Guide 3rd ed. Table 3.13; G&VL 4e §7.5 (eig), §8.3
-(eigh/eigvalsh), §8.6 (SVD); LAWN 41 (QR).
-
-**Leg (b) — Runtime scaling relative to Cholesky**
+**Runtime scaling relative to Cholesky**
 
 cholesky ≡ n³/3 FLOPs (dpotrf, anchor).  Implied constant for op X:
 `implied_c = (t_X / t_cholesky) × (1/3)`.  See BLAS caveat below.
@@ -821,40 +812,26 @@ Raw timings (median of 5 runs, float64, `numpy.random.default_rng(42)`):
 > **BLAS caveat**: wall-clock ratios are informative for compute-bound BLAS-3
 > kernels but do NOT isolate n³ work alone — iteration counts vary per input,
 > cache effects differ by n, and parallel thread counts may differ.  Treat
-> `verdict_hint` as supporting signal (leg b of three), not a definitive count.
-
-**Leg (c) — Textbook citations**
-
-- `eig` 25n³: G&VL 4e §7.5 Hessenberg reduction (~10/3 n³) + Francis
-  double-shift QR + eigenvector backtransform (~25n³ total); corroborated by
-  LAPACK Users' Guide Table 3.13 DGEEV-with-vectors = 26.33n³.
-- `eigvals` 10n³: LAPACK Users' Guide Table 3.13 DGEEV values-only = 10.00n³
-  (exact entry).
-- `eigh` 9n³: G&VL 4e §8.3 (DSYEVD: tridiagonalization + divide-and-conquer
-  with eigenvectors).
-- `eigvalsh` 4n³/3: G&VL 4e §8.3 (DSYEVD tridiagonalization only, MRRR, no
-  eigenvectors).
-- `svd` thin 6ab²+20b³, full 4a²b+22b³: G&VL 4e §8.6 Table 8.6.1 (R-SVD).
-- `svdvals` 2ab²+2b³: G&VL 4e §8.6 Table 8.6.1 Σ-only row.
+> `verdict_hint` as supporting signal, not a definitive count.
 
 **Per-op verdict summary**
 
-| Op | charged constant | leg-b verdict | leg-c | overall |
-|---|---|---|---|---|
-| `eig` | 25n³ | low (implied ~39–72n³) | G&VL/LUG 25–26n³ | keep (textbook-anchored) |
-| `eigvals` | 10n³ | low (implied ~25–63n³) | LUG exact 10n³ | keep (exact citation) |
-| `eigh` | 9n³ | supports (implied ~4–9n³) | G&VL 9n³ | keep |
-| `eigvalsh` | 4n³/3 | low (implied ~3–4n³) | G&VL 4n³/3 | keep |
-| `svd` (thin) | 6ab²+20b³ | high (implied ~8–10n³ vs 26n³ @sq) | G&VL Table 8.6.1 | keep |
-| `svd` (full) | 4a²b+22b³ | — | G&VL Table 8.6.1 | keep |
-| `svdvals` | 2ab²+2b³ | supports | G&VL Table 8.6.1 | keep |
-| `cholesky` | n³/3 | supports | G&VL Alg 4.2.1 | keep |
-| `solve` | 2n³/3+2n²/rhs | supports | G&VL §3.2 / LUG 0.67n³ | keep |
-| `qr` | 2(2mn²−2n³/3) | supports | G&VL §5.2 / LAWN 41 | keep |
-| `inv` | 2n³ | high (implied ~0.7–1.0n³) | G&VL §3.4 | overcharges; retained |
-| `det` | 2n³/3 | supports | G&VL §3.2 LU only | keep |
+| Op | charged constant | runtime verdict | decision |
+|---|---|---|---|
+| `eig` | 25n³ | low (implied ~39–72n³) | keep |
+| `eigvals` | 10n³ | low (implied ~25–63n³) | keep |
+| `eigh` | 9n³ | supports (implied ~4–9n³) | keep |
+| `eigvalsh` | 4n³/3 | low (implied ~3–4n³) | keep |
+| `svd` (thin) | 6ab²+20b³ | high (implied ~8–10n³ vs 26n³ @sq) | keep |
+| `svd` (full) | 4a²b+22b³ | — | keep |
+| `svdvals` | 2ab²+2b³ | supports | keep |
+| `cholesky` | n³/3 | supports | keep |
+| `solve` | 2n³/3+2n²/rhs | supports | keep |
+| `qr` | 2(2mn²−2n³/3) | supports | keep |
+| `inv` | 2n³ | high (implied ~0.7–1.0n³) | overcharges; retained |
+| `det` | 2n³/3 | supports | keep |
 
-### Verify any op yourself
+### Reproduce any op yourself
 
 1. **Measure billed cost.** Build tracked inputs *outside* the budget (array creation
    itself bills `numel` under unit weights), then measure only the op:
