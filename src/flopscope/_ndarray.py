@@ -625,9 +625,11 @@ class FlopscopeArray(_np.ndarray):
         subok: bool = True,
         copy: bool = True,
     ) -> FlopscopeArray:
-        return _np.ndarray.astype(
-            self, dtype, order=order, casting=casting, subok=subok, copy=copy
-        )  # type: ignore[return-value]
+        # Delegate to the counted fnp.astype wrapper so billing and
+        # time-attribution go through @_counted_wrapper + budget.deduct.
+        # order/casting/subok are ndarray-method-only params; fnp.astype
+        # (which wraps np.astype) does not expose them.
+        return _me().astype(self, dtype, copy=copy)  # type: ignore[return-value]
 
     # ----- Other ndarray methods -----
 

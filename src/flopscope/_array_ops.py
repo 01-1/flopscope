@@ -1141,6 +1141,18 @@ attach_docstring(
 # ---------------------------------------------------------------------------
 
 
+def _cast_changes_values(src_dtype: Any, dst_dtype: Any) -> bool:
+    """True when casting src->dst alters element values (so it is charged).
+
+    A lossless representation/width cast (e.g. float32->float64, int32->int64,
+    bool->int) is ``can_cast(..., "safe")`` and stays free. To-bool (``!=0``),
+    float->int (truncation), float-narrowing (round), and complex->real all
+    fail the safe-cast test and are charged ``numel``.
+    """
+    return not _np.can_cast(_np.dtype(src_dtype), _np.dtype(dst_dtype), casting="safe")
+
+
+@_counted_wrapper
 def astype(
     x: ArrayLike,
     dtype: DTypeLike,
@@ -1149,8 +1161,19 @@ def astype(
     copy: bool = True,
     device: Any = None,
 ) -> FlopscopeArray:
-    """Cast array to *dtype*. Wraps ``np.astype(x, dtype)``. Cost: 0 FLOPs."""
-    return _np.astype(_to_base_ndarray(x), dtype, copy=copy, device=device)  # type: ignore[arg-type, call-overload]
+    """Cast array to *dtype*. Wraps ``np.astype(x, dtype)``.
+
+    Cost: ``numel`` when the cast changes values (to-bool, float->int,
+    narrowing, complex->real); 0 for a lossless width cast.
+    """
+    budget = require_budget()
+    x_arr = _np.asarray(x)
+    cost = x_arr.size if _cast_changes_values(x_arr.dtype, dtype) else 0
+    with budget.deduct("astype", flop_cost=cost, subscripts=None, shapes=(x_arr.shape,)):
+        result = _call_numpy(
+            _np.astype, _to_base_ndarray(x), dtype, copy=copy, device=device
+        )
+    return result  # type: ignore[return-value]
 
 
 @_counted_wrapper

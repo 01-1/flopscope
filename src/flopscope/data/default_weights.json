@@ -28,7 +28,7 @@
     "array_split": 0.0,
     "asarray": 0.0,
     "asarray_chkfinite": 1.0,
-    "astype": 0.0,
+    "astype": 1.0,
     "atleast_1d": 0.0,
     "atleast_2d": 0.0,
     "atleast_3d": 0.0,

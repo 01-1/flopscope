@@ -177,3 +177,43 @@ def test_nonzero_method_matches_function():
     assert len(method_records) == 1, "a.nonzero() produced no op-log record"
     assert method_records[0].op_name == "nonzero"
     assert method_records[0].flop_cost == 100  # numel, unit weight
+
+
+# ---------------------------------------------------------------------------
+# Task 6: value-changing astype is charged; lossless cast stays free
+# ---------------------------------------------------------------------------
+
+
+def _flop_cost(call):
+    with flops.BudgetContext(flop_budget=10**12, quiet=True) as ctx:
+        n0 = len(ctx.op_log)
+        call()
+        new = ctx.op_log[n0:]
+    return sum(r.flop_cost for r in new), [r.op_name for r in new]
+
+
+@pytest.mark.parametrize(
+    "dtype, changes_values",
+    [
+        (bool, True),        # !=0 test
+        ("int64", True),     # float->int truncation
+        ("float32", True),   # narrowing (round)
+        ("float64", False),  # width cast (lossless) - stays free
+    ],
+)
+def test_astype_function_charges_value_changing_casts(dtype, changes_values):
+    a = fnp.asarray([float(i) - 50 for i in range(100)])  # float64 source
+    cost, names = _flop_cost(lambda: fnp.astype(a, dtype))
+    assert "astype" in names, "astype must produce an op-log record"
+    assert cost == (100 if changes_values else 0)
+
+
+@pytest.mark.parametrize(
+    "dtype, changes_values",
+    [(bool, True), ("int64", True), ("float64", False)],
+)
+def test_astype_method_charges_value_changing_casts(dtype, changes_values):
+    a = fnp.asarray([float(i) - 50 for i in range(100)])
+    cost, names = _flop_cost(lambda: a.astype(dtype))
+    assert "astype" in names
+    assert cost == (100 if changes_values else 0)
