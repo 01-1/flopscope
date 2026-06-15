@@ -16,7 +16,7 @@ FREE_DATA_MOVEMENT_OPS = [
     "triu", "insert", "append", "delete", "copyto", "diag", "diagflat",
     "meshgrid", "fromiter", "compress", "full", "full_like", "take",
     "take_along_axis", "put", "put_along_axis", "choose", "place", "putmask",
-    "select", "extract", "fill_diagonal", "trim_zeros",
+    "select", "extract", "fill_diagonal", "trim_zeros", "unstack",
 ]
 
 
