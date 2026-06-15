@@ -11257,6 +11257,10 @@
     "unravel_index": 0.0,
     "vsplit": 0.0,
     "zeros": 0.0,
-    "zeros_like": 0.0
+    "zeros_like": 0.0,
+    "symmetrize": 1.0,
+    "as_symmetric": 1.0,
+    "is_symmetric": 1.0,
+    "random.symmetric": 1.0
   }
 }
