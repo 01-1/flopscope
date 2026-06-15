@@ -94,8 +94,10 @@ def test_server_only_set_syncs_to_client():
     spec = importlib.util.spec_from_file_location(
         "_client_server_only_data", client_path
     )
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load {client_path}")
     mod = importlib.util.module_from_spec(spec)
     sys.modules["_client_server_only_data"] = mod
-    spec.loader.exec_module(mod)
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
     assert set(core_set) == set(mod.SERVER_ONLY)
     assert "SymmetricTensor" in core_set  # representative member

@@ -43,6 +43,7 @@ import importlib.util
 import sys
 import types
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -63,7 +64,7 @@ if _SERVER_SRC not in sys.path:
 # ---------------------------------------------------------------------------
 
 if "msgpack" not in sys.modules:
-    _msgpack_stub = types.ModuleType("msgpack")
+    _msgpack_stub: Any = types.ModuleType("msgpack")
     _msgpack_stub.packb = lambda obj, use_bin_type=True: obj  # dict → dict (not bytes)
     _msgpack_stub.unpackb = lambda data, raw=True, strict_map_key=False: data
     sys.modules["msgpack"] = _msgpack_stub
@@ -119,9 +120,9 @@ _load_client_module("flopscope/_protocol.py", "flopscope._protocol")
 # ---------------------------------------------------------------------------
 
 if "flopscope._connection" not in sys.modules:
-    _fake_conn_module = types.ModuleType("flopscope._connection")
+    _fake_conn_module: Any = types.ModuleType("flopscope._connection")
     # Populated by the fixture below; safe to register now.
-    _fake_conn_module.get_connection = None  # type: ignore[assignment]
+    _fake_conn_module.get_connection = None
     _fake_conn_module.reset_connection = lambda: None
     _fake_conn_module._connection = None
     sys.modules["flopscope._connection"] = _fake_conn_module

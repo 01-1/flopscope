@@ -119,7 +119,7 @@ def _ast_all_list(src_text: str) -> set[str]:
                 if isinstance(target, ast.Name) and target.id == "__all__":
                     if isinstance(node.value, ast.List):
                         return {
-                            elt.value
+                            str(elt.value)
                             for elt in node.value.elts
                             if isinstance(elt, ast.Constant)
                         }
@@ -210,13 +210,16 @@ def _build_client_reachability() -> dict[str, bool]:
     client_testing: set[str] = set()
 
     # ---- 4. Build lookup ----
-    # Import the surface names from the scripts module (adds SCRIPTS_DIR to path
-    # only while collecting, then removes it to avoid polluting subsequent tests).
-    if str(SCRIPTS_DIR) not in sys.path:
-        sys.path.insert(0, str(SCRIPTS_DIR))
-    if str(CORE_SRC) not in sys.path:
-        sys.path.insert(0, str(CORE_SRC))
-    from generate_api_docs import collect_public_api_surface_names
+    # Load generate_api_docs via importlib so pyright can resolve the import
+    # (sys.path mutation is not visible to the type-checker).
+    _gad_spec = importlib.util.spec_from_file_location(
+        "generate_api_docs", SCRIPTS_DIR / "generate_api_docs.py"
+    )
+    assert _gad_spec is not None and _gad_spec.loader is not None
+    _gad_mod = importlib.util.module_from_spec(_gad_spec)
+    sys.modules[_gad_spec.name] = _gad_mod
+    _gad_spec.loader.exec_module(_gad_mod)  # type: ignore[union-attr]
+    collect_public_api_surface_names = _gad_mod.collect_public_api_surface_names
 
     surface = collect_public_api_surface_names()
 
