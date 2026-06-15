@@ -696,17 +696,24 @@ def symmetric(
         )
 
     budget = require_budget()
-    sym_cost = _builtins.max(sample_size * _builtins.max(symmetry.order(), 1), 1)
-    sample_cost = sample_size
+    G = _builtins.max(symmetry.order(), 1)
+    # sample numel + projection core ((|G|+1)*numel) == sample + symmetrize
+    cost = _builtins.max(sample_size + (G + 1) * sample_size, 1)
     with budget.deduct(
         "random.symmetric",
-        flop_cost=_builtins.max(sample_cost + sym_cost, 1),
+        flop_cost=cost,
         subscripts=None,
         shapes=(shape_tuple,),
     ):
-        from flopscope import symmetrize
+        from flopscope._symmetric import (
+            SymmetricTensor,
+            _project_core,
+            validate_symmetry_groups,
+        )
 
-        return symmetrize(sample, symmetry=symmetry)
+        projected = _project_core(sample, symmetry)  # _project_core does np.asarray
+        validate_symmetry_groups(projected, [symmetry])  # uncounted safety check
+        return SymmetricTensor(projected, symmetry=symmetry)
 
 
 @_counted_wrapper

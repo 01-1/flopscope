@@ -70,3 +70,15 @@ def test_is_symmetric_bills_k_times_allclose(axes, k):
         delta = flops.budget_summary_dict()["flops_used"] - b0
     assert bool(result) is True
     assert delta == max(k * (7 * n - 1), 1)
+
+
+@pytest.mark.parametrize("axes,G", [((0, 1), 2), ((0, 1, 2), 6)])
+def test_random_symmetric_equals_sample_plus_symmetrize(axes, G):
+    grp = flops.SymmetryGroup.symmetric(axes=axes)
+    shape = (4,) * len(axes)
+    n = int(np.prod(shape))
+    with flops.BudgetContext(flop_budget=10**12):
+        b0 = flops.budget_summary_dict()["flops_used"]
+        fnp.random.symmetric(shape, grp)
+        delta = flops.budget_summary_dict()["flops_used"] - b0
+    assert delta == max((G + 2) * n, 1)  # sample (n) + symmetrize ((G+1)*n)
