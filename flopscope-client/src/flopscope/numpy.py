@@ -9,4 +9,8 @@ are equivalent.) The full in-process flopscope distribution ships its own
 real ``flopscope/numpy/`` package; this is the client-only equivalent.
 """
 
-from flopscope import *  # noqa: F401,F403
+from flopscope import *  # noqa: F401,F403,I001
+
+from flopscope._getattr import make_module_getattr as _make_module_getattr  # noqa: E402,I001
+
+__getattr__ = _make_module_getattr("", "flopscope.numpy")
