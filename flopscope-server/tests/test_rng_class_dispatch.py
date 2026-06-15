@@ -105,3 +105,68 @@ def test_generator_resolve_unaffected(handler):
     gen_id = packed["result"]["gen_id"]
     resolved = handler._resolve_arg({"__gen__": gen_id})
     assert isinstance(resolved, np.random.Generator)
+
+
+# ---------------------------------------------------------------------------
+# RandomState method dispatch
+# ---------------------------------------------------------------------------
+
+
+def test_randomstate_method_dispatch_returns_array(handler):
+    import flopscope.numpy as fnp
+
+    rs = fnp.random.RandomState(0)  # _CountedRandomState
+    handle = handler._session.store_generator(rs)
+    budget_before = handler._session.budget_remaining
+    resp = handler.handle(
+        {
+            "op": "RandomState.normal",
+            "args": [{"__rs__": handle}],
+            "kwargs": {"size": 8},
+        }
+    )
+    assert resp["status"] == "ok"
+    assert "id" in resp["result"]  # array handle key from array_metadata()
+    # _CountedRandomState must bill FLOPs for the sample; budget must decrease.
+    assert handler._session.budget_remaining < budget_before
+
+
+def test_randomstate_method_rejects_unknown(handler):
+    rs_handle = handler._session.store_generator(np.random.RandomState(0))
+    resp = handler.handle(
+        {
+            "op": "RandomState.not_a_method",
+            "args": [{"__rs__": rs_handle}],
+            "kwargs": {},
+        }
+    )
+    assert resp["status"] == "error"
+
+
+def test_seedsequence_generate_state_dispatch(handler):
+    seq_handle = handler._session.store_generator(np.random.SeedSequence(123))
+    resp = handler.handle(
+        {
+            "op": "SeedSequence.generate_state",
+            "args": [{"__seq__": seq_handle}, 4],
+            "kwargs": {},
+        }
+    )
+    assert resp["status"] == "ok"
+    assert "id" in resp["result"]  # array handle key from array_metadata()
+
+
+def test_randomstate_shuffle_is_rejected(handler):
+    """shuffle must be excluded from the allowlist (in-place array mutator)."""
+    # Store an array for the handle argument
+    arr = np.arange(10, dtype=np.float64)
+    arr_handle = handler._session.store_array(arr)
+    rs_handle = handler._session.store_generator(np.random.RandomState(0))
+    resp = handler.handle(
+        {
+            "op": "RandomState.shuffle",
+            "args": [{"__rs__": rs_handle}, {"__handle__": arr_handle}],
+            "kwargs": {},
+        }
+    )
+    assert resp["status"] == "error"

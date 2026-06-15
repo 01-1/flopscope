@@ -37,6 +37,26 @@ _ALLOWED_GEN_METHODS = frozenset(
 )
 
 
+def _allowed_rs_methods() -> frozenset:
+    """Allowed legacy RandomState method names, derived from the registry.
+
+    A function (not a module constant) so the REGISTRY import is lazy and
+    avoids a circular import at module load.
+    """
+    from flopscope._registry import REGISTRY
+
+    prefix = "random.RandomState."
+    methods = {name[len(prefix) :] for name in REGISTRY if name.startswith(prefix)}
+    # Exclude in-place array mutators: shuffle mutates its array argument in
+    # place, which breaks the client's immutable-RemoteArray contract. This
+    # mirrors the Generator dispatch, which deliberately does not expose shuffle.
+    methods.discard("shuffle")
+    return frozenset(methods)
+
+
+_ALLOWED_RS_METHODS = _allowed_rs_methods()
+
+
 def _make_serializable(obj):
     """Convert a nested structure to be msgpack-safe (no numpy types)."""
     if isinstance(obj, np.ndarray):
@@ -302,6 +322,34 @@ class RequestHandler:
             rest = [self._resolve_arg(a) for a in raw_args[1:]]
             resolved_kwargs = {k: self._resolve_arg(v) for k, v in kwargs.items()}
             result = self._run_kernel(getattr(gen, method), *rest, **resolved_kwargs)
+            return self._pack_result(result)
+
+        if op.startswith("RandomState."):
+            method = op[len("RandomState.") :]
+            if method not in _ALLOWED_RS_METHODS:
+                return {
+                    "status": "error",
+                    "error_type": "UnsupportedFunctionError",
+                    "message": f"RandomState.{method} is not supported by the flopscope server",
+                }
+            rs = self._resolve_arg(raw_args[0])
+            rest = [self._resolve_arg(a) for a in raw_args[1:]]
+            resolved_kwargs = {k: self._resolve_arg(v) for k, v in kwargs.items()}
+            result = self._run_kernel(getattr(rs, method), *rest, **resolved_kwargs)
+            return self._pack_result(result)
+
+        if op.startswith("SeedSequence."):
+            method = op[len("SeedSequence.") :]
+            if method != "generate_state":
+                return {
+                    "status": "error",
+                    "error_type": "UnsupportedFunctionError",
+                    "message": f"SeedSequence.{method} is not supported by the flopscope server",
+                }
+            seq = self._resolve_arg(raw_args[0])
+            rest = [self._resolve_arg(a) for a in raw_args[1:]]
+            resolved_kwargs = {k: self._resolve_arg(v) for k, v in kwargs.items()}
+            result = self._run_kernel(getattr(seq, method), *rest, **resolved_kwargs)
             return self._pack_result(result)
 
         func = _get_flopscope_func(op)
