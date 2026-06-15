@@ -132,25 +132,33 @@ def array(
 attach_docstring(array, _np.array, "counted_custom", "numel(input) FLOPs")
 
 
+@_counted_wrapper
 def zeros(
     shape: int | Sequence[int],
     dtype: DTypeLike = float,
     **kwargs: Any,
 ) -> FlopscopeArray:
     """Return array of zeros. Wraps ``numpy.zeros``. Cost: 0 FLOPs."""
-    return _wrap_constant_fill(_np.zeros(shape, dtype=dtype, **kwargs))
+    budget = require_budget()
+    with budget.deduct("zeros", flop_cost=0, subscripts=None, shapes=()):
+        result = _call_numpy(_np.zeros, shape, dtype=dtype, **kwargs)
+    return _wrap_constant_fill(result)
 
 
 attach_docstring(zeros, _np.zeros, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def ones(
     shape: int | Sequence[int],
     dtype: DTypeLike = float,
     **kwargs: Any,
 ) -> FlopscopeArray:
     """Return array of ones. Wraps ``numpy.ones``. Cost: 0 FLOPs."""
-    return _wrap_constant_fill(_np.ones(shape, dtype=dtype, **kwargs))
+    budget = require_budget()
+    with budget.deduct("ones", flop_cost=0, subscripts=None, shapes=()):
+        result = _call_numpy(_np.ones, shape, dtype=dtype, **kwargs)
+    return _wrap_constant_fill(result)
 
 
 attach_docstring(ones, _np.ones, "free", "0 FLOPs")
@@ -175,6 +183,7 @@ def full(
 attach_docstring(full, _np.full, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def eye(
     N: int,
     M: int | None = None,
@@ -183,7 +192,9 @@ def eye(
     **kwargs: Any,
 ) -> FlopscopeArray:
     """Return identity matrix. Wraps ``numpy.eye``. Cost: 0 FLOPs."""
-    result = _np.eye(N, M=M, k=k, dtype=dtype, **kwargs)
+    budget = require_budget()
+    with budget.deduct("eye", flop_cost=0, subscripts=None, shapes=()):
+        result = _call_numpy(_np.eye, N, M=M, k=k, dtype=dtype, **kwargs)
     symmetry = _infer_structural_constructor_symmetry(kind="eye", N=N, M=M, k=k)
     if symmetry is not None:
         return wrap_with_trusted_symmetry(result, symmetry)  # type: ignore[return-value]
@@ -271,13 +282,17 @@ attach_docstring(
 )
 
 
+@_counted_wrapper
 def zeros_like(
     a: ArrayLike,
     dtype: DTypeLike | None = None,
     **kwargs: Any,
 ) -> FlopscopeArray:
     """Return array of zeros with same shape. Wraps ``numpy.zeros_like``. Cost: 0 FLOPs."""
-    result = _np.zeros_like(_to_base_ndarray(a), dtype=dtype, **kwargs)
+    budget = require_budget()
+    base = _to_base_ndarray(a)
+    with budget.deduct("zeros_like", flop_cost=0, subscripts=None, shapes=(base.shape,)):
+        result = _call_numpy(_np.zeros_like, base, dtype=dtype, **kwargs)
     propagated_symmetry = None
     if isinstance(a, SymmetricTensor):
         propagated_symmetry = _compatible_symmetry_for_shape(a.symmetry, result.shape)
@@ -294,13 +309,17 @@ def zeros_like(
 attach_docstring(zeros_like, _np.zeros_like, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def ones_like(
     a: ArrayLike,
     dtype: DTypeLike | None = None,
     **kwargs: Any,
 ) -> FlopscopeArray:
     """Return array of ones with same shape. Wraps ``numpy.ones_like``. Cost: 0 FLOPs."""
-    result = _np.ones_like(_to_base_ndarray(a), dtype=dtype, **kwargs)
+    budget = require_budget()
+    base = _to_base_ndarray(a)
+    with budget.deduct("ones_like", flop_cost=0, subscripts=None, shapes=(base.shape,)):
+        result = _call_numpy(_np.ones_like, base, dtype=dtype, **kwargs)
     propagated_symmetry = None
     if isinstance(a, SymmetricTensor):
         propagated_symmetry = _compatible_symmetry_for_shape(a.symmetry, result.shape)
@@ -348,33 +367,45 @@ def full_like(
 attach_docstring(full_like, _np.full_like, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def empty(
     shape: int | Sequence[int],
     dtype: DTypeLike = float,
     **kwargs: Any,
 ) -> FlopscopeArray:
     """Return uninitialized array. Wraps ``numpy.empty``. Cost: 0 FLOPs."""
-    return _np.empty(shape, dtype=dtype, **kwargs)  # type: ignore[return-value]
+    budget = require_budget()
+    with budget.deduct("empty", flop_cost=0, subscripts=None, shapes=()):
+        result = _call_numpy(_np.empty, shape, dtype=dtype, **kwargs)
+    return _wrap_constant_fill(result)
 
 
 attach_docstring(empty, _np.empty, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def empty_like(
     a: ArrayLike,
     dtype: DTypeLike | None = None,
     **kwargs: Any,
 ) -> FlopscopeArray:
     """Return uninitialized array with same shape. Wraps ``numpy.empty_like``. Cost: 0 FLOPs."""
-    return _np.empty_like(_to_base_ndarray(a), dtype=dtype, **kwargs)  # type: ignore[return-value]
+    budget = require_budget()
+    base = _to_base_ndarray(a)
+    with budget.deduct("empty_like", flop_cost=0, subscripts=None, shapes=(base.shape,)):
+        result = _call_numpy(_np.empty_like, base, dtype=dtype, **kwargs)
+    return _wrap_constant_fill(result)
 
 
 attach_docstring(empty_like, _np.empty_like, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def identity(n: int, dtype: DTypeLike = float) -> FlopscopeArray:
     """Return identity matrix. Wraps ``numpy.identity``. Cost: 0 FLOPs."""
-    result = _np.identity(n, dtype=dtype)
+    budget = require_budget()
+    with budget.deduct("identity", flop_cost=0, subscripts=None, shapes=()):
+        result = _call_numpy(_np.identity, n, dtype=dtype)
     symmetry = _infer_structural_constructor_symmetry(kind="identity")
     if symmetry is not None:
         return wrap_with_trusted_symmetry(result, symmetry)  # type: ignore[return-value]
@@ -2526,9 +2557,13 @@ def take_along_axis(
 attach_docstring(take_along_axis, _np.take_along_axis, "free", "0 FLOPs")
 
 
+@_counted_wrapper
 def tri(*args, **kwargs):
     """Array with ones at and below the given diagonal. Wraps ``numpy.tri``. Cost: 0 FLOPs."""
-    return _np.tri(*args, **kwargs)
+    budget = require_budget()
+    with budget.deduct("tri", flop_cost=0, subscripts=None, shapes=()):
+        result = _call_numpy(_np.tri, *args, **kwargs)
+    return _wrap_constant_fill(result)
 
 
 attach_docstring(tri, _np.tri, "free", "0 FLOPs")

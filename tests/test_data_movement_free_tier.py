@@ -78,3 +78,37 @@ def test_view_op_is_time_accounted(name):
         new = ctx.op_log[n0:]
     assert len(new) >= 1, f"{name}: no op-log record (still bypasses deduct)"
     assert all(r.flop_cost == 0 for r in new), f"{name}: free op billed nonzero FLOPs"
+
+
+INIT_OPS_126 = {
+    "zeros": lambda: fnp.zeros((10, 10)),
+    "ones": lambda: fnp.ones((10, 10)),
+    "empty": lambda: fnp.empty((10, 10)),
+    "eye": lambda: fnp.eye(10),
+    "identity": lambda: fnp.identity(10),
+    "tri": lambda: fnp.tri(10),
+}
+
+
+@pytest.mark.parametrize("name", sorted(INIT_OPS_126))
+def test_init_op_is_time_accounted(name):
+    """#126: constant-init ops route through deduct -> one op-log record, 0 FLOPs."""
+    call = INIT_OPS_126[name]
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as ctx:
+        n0 = len(ctx.op_log)
+        call()
+        new = ctx.op_log[n0:]
+    assert len(new) == 1, f"{name}: expected 1 op-log record, got {len(new)}"
+    assert new[0].op_name == name
+    assert new[0].flop_cost == 0
+
+
+@pytest.mark.parametrize("name", ["zeros_like", "ones_like", "empty_like"])
+def test_init_like_op_is_time_accounted(name):
+    with flops.BudgetContext(flop_budget=10**9, quiet=True) as ctx:
+        a = fnp.asarray([float(i) for i in range(100)])
+        n0 = len(ctx.op_log)
+        getattr(fnp, name)(a)
+        new = ctx.op_log[n0:]
+    assert len(new) == 1, f"{name}: expected 1 op-log record, got {len(new)}"
+    assert new[0].flop_cost == 0
