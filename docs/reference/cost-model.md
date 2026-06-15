@@ -42,10 +42,13 @@ discipline that makes the model composable and non-gameable: **an algorithm cons
 never hides in a weight** — if a cost depends on a matrix dimension or a loop length it
 lives in `flop_cost`, never in the weight. (Enforced by `tests/test_weight_tier_policy.py`.)
 
-**We bill the textbook standard-algorithm cost, not literal BLAS.** `matmul` is
-`2mnk − mn` regardless of what the underlying BLAS does; top-k SVD is billed as the
+**We bill the textbook standard-algorithm cost, not literal BLAS/LAPACK.**
+`linalg.inv` is billed `2n³` (the standard LU-based `dgetrf`+`dgetri` operation
+count) regardless of what the underlying library does; top-k SVD is billed as the
 standard truncated-algorithm cost. This keeps billing deterministic,
-hardware-independent, and composable.
+hardware-independent, and composable. (Contraction — `matmul`/`einsum` — is the
+deliberate exception: a symmetric operand is billed on its unique-orbit count,
+not the dense `2mnk − mn`; see [§Contraction](#contraction-einsum-family).)
 
 The rest of this section defines the conventions these principles rest on.
 
@@ -434,8 +437,9 @@ where `economy` is the full thin/values-only cost above. `4·m·n·k` is the
 verified leading-order cost (FMA=2, Θ(mnk)) of a rank-k randomized SVD
 (Halko–Martinsson–Tropp; two unavoidable passes over A). It is billed as the
 **standard truncated-algorithm cost of the operation** — consistent with how
-this model bills the textbook matmul cost (`2mnk−mn`) rather than literal BLAS
-work — even though the reference implementation computes the full economy SVD
+this model bills direct-linalg ops at their textbook standard-algorithm count
+rather than literal BLAS/LAPACK work — even though the reference implementation
+computes the full economy SVD
 and slices (results stay exact). Unlike the full case, **values-only is not
 leading-order cheaper** for top-k. `k = min(m, n)` (all components) bills the
 full economy cost, and the `full_matrices` full-U premium applies only to the
