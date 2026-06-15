@@ -337,6 +337,20 @@ class RequestHandler:
                 if isinstance(gen_handle, bytes):
                     gen_handle = gen_handle.decode("utf-8")
                 return self._session.get_generator(gen_handle)
+            rs_handle = arg.get("__rs__")
+            if rs_handle is None:
+                rs_handle = arg.get(b"__rs__")
+            if rs_handle is not None:
+                if isinstance(rs_handle, bytes):
+                    rs_handle = rs_handle.decode("utf-8")
+                return self._session.get_generator(rs_handle)
+            seq_handle = arg.get("__seq__")
+            if seq_handle is None:
+                seq_handle = arg.get(b"__seq__")
+            if seq_handle is not None:
+                if isinstance(seq_handle, bytes):
+                    seq_handle = seq_handle.decode("utf-8")
+                return self._session.get_generator(seq_handle)
             # SymmetryGroup wire format
             pg_data = arg.get("__symmetry_group__") or arg.get(b"__symmetry_group__")
             if pg_data is not None:
@@ -463,6 +477,12 @@ class RequestHandler:
         if isinstance(result, np.random.Generator):
             handle = self._session.store_generator(result)
             return {"status": "ok", "result": {"gen_id": handle}, "budget": budget}
+        if isinstance(result, np.random.RandomState):
+            handle = self._session.store_generator(result)
+            return {"status": "ok", "result": {"rs_id": handle}, "budget": budget}
+        if isinstance(result, np.random.SeedSequence):
+            handle = self._session.store_generator(result)
+            return {"status": "ok", "result": {"seq_id": handle}, "budget": budget}
 
         # Fallback: flatten nested numpy structures to JSON-safe values. If the
         # result still isn't msgpack-native, fail loudly + attributably rather
