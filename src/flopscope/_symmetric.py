@@ -55,6 +55,46 @@ def validate_symmetry(
                     raise SymmetryError(axes=group, max_deviation=max_dev)
 
 
+def _nonidentity_generator_count(group) -> int:
+    """Number of non-identity generators (the count is what validation iterates)."""
+    return sum(1 for gen in group.generators if not gen.is_identity)
+
+
+def _project_core(array, group):
+    """Raw Reynolds projection. UNCOUNTED. Returns an ndarray.
+
+    R_G(T) = (1/|G|) * sum_{g in G} g·T  — |G| transposed adds + one scaling pass.
+    """
+    array = np.asarray(array)
+    group_axes = group.axes if group.axes is not None else tuple(range(group.degree))
+    symmetrized = np.zeros_like(array, dtype=np.result_type(array, np.float64))
+    for g in group.elements():
+        perm = list(range(array.ndim))
+        for local_idx, tensor_axis in enumerate(group_axes):
+            perm[tensor_axis] = group_axes[g.array_form[local_idx]]
+        symmetrized = symmetrized + np.transpose(array, perm)
+    return symmetrized / group.order()
+
+
+def _check_generators(array, group, *, atol: float = 1e-6, rtol: float = 1e-5) -> bool:
+    """Return True iff *array* is invariant under every non-identity generator.
+
+    Checking generators is sufficient for whole-group invariance. UNCOUNTED.
+    Mirrors the generator loop in ``validate_symmetry_groups``.
+    """
+    array = np.asarray(array)
+    axes = group.axes if group.axes is not None else tuple(range(group.degree))
+    for gen in group.generators:
+        if gen.is_identity:
+            continue
+        perm = list(range(array.ndim))
+        for i in range(group.degree):
+            perm[axes[i]] = axes[gen._array_form[i]]
+        if not np.allclose(array, array.transpose(perm), atol=atol, rtol=rtol):
+            return False
+    return True
+
+
 def symmetrize(
     data: np.ndarray,
     *,
