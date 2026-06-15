@@ -22,3 +22,10 @@ def test_flops_submodule_has_getattr():
     # so flops.* server-only names (populated in C4) raise the clear error
     # instead of a bare AttributeError.
     assert callable(getattr(flops_mod, "__getattr__", None))
+
+
+def test_flops_cost_helper_gives_clear_error():
+    import flopscope.flops as flops_mod
+
+    with pytest.raises(AttributeError, match="not available in the flopscope client"):
+        _ = flops_mod.det_cost
