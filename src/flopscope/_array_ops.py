@@ -1715,7 +1715,7 @@ def concat(
     return result  # type: ignore[return-value]
 
 
-attach_docstring(concat, _np.concat, "counted_custom", "numel(output) FLOPs")
+attach_docstring(concat, _np.concat, "free", "0 FLOPs")
 
 
 @_counted_wrapper
@@ -2168,7 +2168,7 @@ def ix_(*args: ArrayLike, **kwargs: Any) -> tuple[FlopscopeArray, ...]:
     return result
 
 
-attach_docstring(ix_, _np.ix_, "counted_custom", "sum of output array sizes FLOPs")
+attach_docstring(ix_, _np.ix_, "free", "0 FLOPs")
 
 
 @_counted_wrapper

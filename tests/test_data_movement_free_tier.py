@@ -17,6 +17,7 @@ FREE_DATA_MOVEMENT_OPS = [
     "meshgrid", "fromiter", "compress", "full", "full_like", "take",
     "take_along_axis", "put", "put_along_axis", "choose", "place", "putmask",
     "select", "extract", "fill_diagonal", "trim_zeros", "unstack",
+    "concat", "ix_",
 ]
 
 
