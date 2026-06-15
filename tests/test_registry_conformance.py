@@ -236,6 +236,7 @@ PENDING_EXAMPLES: frozenset[str] = frozenset(
         "array_equal",
         "array_equiv",
         "array_split",
+        "as_symmetric",  # exact probes in tests/test_symmetric_cost.py
         "asarray_chkfinite",
         "astype",
         "atleast_1d",
@@ -318,6 +319,7 @@ PENDING_EXAMPLES: frozenset[str] = frozenset(
         "isrealobj",
         "isscalar",
         "issubdtype",
+        "is_symmetric",  # exact probes in tests/test_symmetric_cost.py
         "iterable",
         "ix_",
         "kaiser",
@@ -405,6 +407,7 @@ PENDING_EXAMPLES: frozenset[str] = frozenset(
         "random.standard_exponential",
         "random.standard_gamma",
         "random.standard_t",
+        "random.symmetric",  # exact probes in tests/test_symmetric_cost.py
         "random.triangular",
         "random.vonmises",
         "random.wald",
@@ -453,6 +456,7 @@ PENDING_EXAMPLES: frozenset[str] = frozenset(
         "stats.uniform.cdf",
         "stats.uniform.pdf",
         "stats.uniform.ppf",
+        "symmetrize",  # exact probes in tests/test_symmetric_cost.py
         "take",
         "take_along_axis",
         "tile",

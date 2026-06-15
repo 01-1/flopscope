@@ -560,8 +560,8 @@
   "module": "numpy.random",
   "name": "random.standard_t",
   "next": {
-    "href": "/docs/api/numpy/random/triangular/",
-    "label": "fnp.random.triangular"
+    "href": "/docs/api/numpy/random/symmetric/",
+    "label": "fnp.random.symmetric"
   },
   "notes": "Sampling; cost = numel(output).",
   "notes_sections": [

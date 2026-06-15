@@ -299,6 +299,18 @@ def _generate_errors() -> str:
     return "".join(lines)
 
 
+def _generate_server_only_data() -> str:
+    """Generate _server_only_data.py from core SERVER_ONLY."""
+    from flopscope._server_only import SERVER_ONLY
+
+    lines = [_HEADER, '"""Server-only public names snapshot for the client."""\n\n']
+    lines.append("SERVER_ONLY: frozenset[str] = frozenset(\n    {\n")
+    for name in sorted(SERVER_ONLY):
+        lines.append(f"        {name!r},\n")
+    lines.append("    }\n)\n")
+    return "".join(lines)
+
+
 def _generate_perm_group() -> str:
     """Copy _perm_group.py from core (pure Python, no numpy dependency)."""
     core_path = (
@@ -450,6 +462,14 @@ def main():
     _write_or_check(
         _CLIENT_SRC / "_registry_data.py",
         _generate_registry_data(),
+        args.check,
+        diffs,
+    )
+
+    print("Generating server-only data...")
+    _write_or_check(
+        _CLIENT_SRC / "_server_only_data.py",
+        _generate_server_only_data(),
         args.check,
         diffs,
     )

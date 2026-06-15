@@ -298,58 +298,23 @@
         {
           "inline": [
             {
-              "kind": "code",
+              "external_url": "",
+              "href": "/docs/api/symmetrize/",
+              "kind": "link",
+              "target": "symmetrize",
               "text": "symmetrize"
             },
             {
               "kind": "text",
-              "text": " performs exact Reynolds averaging internally and then delegates\nto "
-            },
-            {
-              "display_text": "as_symmetric",
-              "explicit_title": false,
-              "external_url": "",
-              "href": "/docs/api/as-symmetric/",
-              "kind": "role_reference",
-              "original_target": "as_symmetric",
-              "role": "func",
-              "suppress_link": false,
-              "target": "as_symmetric",
-              "unresolved": false
-            },
-            {
-              "kind": "text",
-              "text": " so the result participates in downstream symmetry\ntracking and validation in the usual way."
-            }
-          ],
-          "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "text",
-              "text": "Estimated FLOP cost is approximately:"
-            }
-          ],
-          "type": "paragraph"
-        },
-        {
-          "inline": [
-            {
-              "kind": "code",
-              "text": "|G| * n_elem + n_elem"
-            },
-            {
-              "kind": "text",
-              "text": " for projection, plus validation from\n"
+              "text": " performs exact Reynolds averaging internally, billing\n"
             },
             {
               "kind": "code",
-              "text": "as_symmetric"
+              "text": "(|G| + 1) * numel(data)"
             },
             {
               "kind": "text",
-              "text": ":"
+              "text": " FLOPs:"
             }
           ],
           "type": "paragraph"
@@ -370,7 +335,7 @@
                     },
                     {
                       "kind": "code",
-                      "text": "n_elem"
+                      "text": "numel"
                     },
                     {
                       "kind": "text",
@@ -387,20 +352,15 @@
                   "inline": [
                     {
                       "kind": "text",
-                      "text": "one final scaling pass"
-                    }
-                  ],
-                  "type": "paragraph"
-                }
-              ]
-            },
-            {
-              "blocks": [
-                {
-                  "inline": [
+                      "text": "one final scaling pass (divide by "
+                    },
+                    {
+                      "kind": "code",
+                      "text": "|G|"
+                    },
                     {
                       "kind": "text",
-                      "text": "symmetry checks inside validation"
+                      "text": ")"
                     }
                   ],
                   "type": "paragraph"
@@ -410,6 +370,15 @@
           ],
           "ordered": false,
           "type": "list"
+        },
+        {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "Internal validation runs but is NOT billed (decision D1)."
+            }
+          ],
+          "type": "paragraph"
         },
         {
           "inline": [
@@ -427,7 +396,7 @@
             },
             {
               "kind": "code",
-              "text": "n_elem = data.size"
+              "text": "numel = data.size"
             },
             {
               "kind": "text",
@@ -483,7 +452,7 @@
             {
               "kind": "input",
               "prompt": ">>>",
-              "text": "S = flops.symmetrize(data, flops.SymmetryGroup.symmetric(axes=(0, 1)))"
+              "text": "S = flops.symmetrize(data, symmetry=flops.SymmetryGroup.symmetric(axes=(0, 1)))"
             },
             {
               "kind": "input",
@@ -513,7 +482,7 @@
   "related_guides": [],
   "signature": "flops.symmetrize(data: 'np.ndarray', *, symmetry) -> 'SymmetricTensor'",
   "slug": "symmetrize",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_symmetric.py#L58",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_symmetric.py#L100",
   "status_note": "",
   "summary": "Project an array onto the invariant subspace of a permutation group.",
   "upstream_source_url": ""

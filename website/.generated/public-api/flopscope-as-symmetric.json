@@ -238,7 +238,7 @@
             {
               "kind": "input",
               "prompt": ">>>",
-              "text": "tagged = flops.as_symmetric(matrix, (0, 1))"
+              "text": "tagged = flops.as_symmetric(matrix, symmetry=(0, 1))"
             },
             {
               "kind": "input",
@@ -268,12 +268,12 @@
     "unsupported_directives": []
   },
   "example": {
-    "code": ">>> import flopscope as flops\n>>> import flopscope.numpy as fnp\n>>>\n>>> matrix = fnp.array([[1.0, 2.0], [2.0, 3.0]])\n>>> tagged = flops.as_symmetric(matrix, (0, 1))\n>>> tagged.symmetric_axes\n[(0, 1)]",
+    "code": ">>> import flopscope as flops\n>>> import flopscope.numpy as fnp\n>>>\n>>> matrix = fnp.array([[1.0, 2.0], [2.0, 3.0]])\n>>> tagged = flops.as_symmetric(matrix, symmetry=(0, 1))\n>>> tagged.symmetric_axes\n[(0, 1)]",
     "output": "",
     "source": "derived"
   },
   "flopscope_ref": "flopscope.as_symmetric",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_symmetric.py#L771",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_symmetric.py#L805",
   "href": "/docs/api/flopscope/as-symmetric/",
   "import_path": "flopscope.as_symmetric",
   "is_operation_cost_leaf": false,

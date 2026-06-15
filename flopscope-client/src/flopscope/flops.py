@@ -141,3 +141,8 @@ def svd_cost(m: int, n: int, k: int = 0) -> int:
     )
     result = resp.get("result", {})
     return int(result.get("value", 0))
+
+
+from flopscope._getattr import make_module_getattr as _make_module_getattr  # noqa: E402
+
+__getattr__ = _make_module_getattr("flops.", "flopscope.flops")

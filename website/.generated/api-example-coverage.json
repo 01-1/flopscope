@@ -259,6 +259,14 @@
     "has_flopscope_examples": false,
     "has_inherited_examples": true
   },
+  "as_symmetric": {
+    "coverage_status": "missing",
+    "example_count": 0,
+    "example_source": "missing",
+    "example_sources": [],
+    "has_flopscope_examples": false,
+    "has_inherited_examples": false
+  },
   "asarray": {
     "coverage_status": "derived",
     "example_count": 1,
@@ -1608,6 +1616,14 @@
     ],
     "has_flopscope_examples": false,
     "has_inherited_examples": true
+  },
+  "is_symmetric": {
+    "coverage_status": "missing",
+    "example_count": 0,
+    "example_source": "missing",
+    "example_sources": [],
+    "has_flopscope_examples": false,
+    "has_inherited_examples": false
   },
   "isclose": {
     "coverage_status": "derived",
@@ -4307,6 +4323,14 @@
     "has_flopscope_examples": false,
     "has_inherited_examples": true
   },
+  "random.symmetric": {
+    "coverage_status": "missing",
+    "example_count": 0,
+    "example_source": "missing",
+    "example_sources": [],
+    "has_flopscope_examples": false,
+    "has_inherited_examples": false
+  },
   "random.triangular": {
     "coverage_status": "derived",
     "example_count": 1,
@@ -5046,6 +5070,14 @@
     ],
     "has_flopscope_examples": false,
     "has_inherited_examples": true
+  },
+  "symmetrize": {
+    "coverage_status": "missing",
+    "example_count": 0,
+    "example_source": "missing",
+    "example_sources": [],
+    "has_flopscope_examples": false,
+    "has_inherited_examples": false
   },
   "take": {
     "coverage_status": "derived",

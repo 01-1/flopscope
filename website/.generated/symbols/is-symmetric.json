@@ -32,6 +32,20 @@
     {
       "blocks": [
         {
+          "inline": [
+            {
+              "kind": "text",
+              "text": "Checks the group's generators rather than all elements; this is\nmathematically equivalent for any well-formed group."
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "title": "Extended Summary"
+    },
+    {
+      "blocks": [
+        {
           "items": [
             {
               "body_blocks": [
@@ -278,7 +292,7 @@
                     },
                     {
                       "kind": "text",
-                      "text": " is invariant under every group element, otherwise\n"
+                      "text": " is invariant under every non-identity generator,\notherwise "
                     },
                     {
                       "kind": "code",
@@ -308,7 +322,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " is invariant under every group element, otherwise\n"
+                  "text": " is invariant under every non-identity generator,\notherwise "
                 },
                 {
                   "kind": "code",
@@ -391,7 +405,7 @@
   ],
   "signature": "flops.is_symmetric(data: 'np.ndarray', *, symmetry, atol: 'float' = 1e-06, rtol: 'float' = 1e-05) -> 'bool'",
   "slug": "is-symmetric",
-  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_symmetric.py#L184",
+  "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_symmetric.py#L220",
   "status_note": "",
   "summary": "Check whether *data* is invariant under the given symmetry.",
   "upstream_source_url": ""

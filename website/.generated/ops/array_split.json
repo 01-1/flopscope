@@ -168,8 +168,8 @@
   "module": "numpy",
   "name": "array_split",
   "next": {
-    "href": "/docs/api/numpy/asarray/",
-    "label": "fnp.asarray"
+    "href": "/docs/api/numpy/as-symmetric/",
+    "label": "fnp.as_symmetric"
   },
   "notes": "Split array into sub-arrays (possibly unequal). Cost: numel(output).",
   "notes_sections": [],

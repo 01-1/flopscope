@@ -655,8 +655,10 @@ class TestErrorCases:
         import flopscope as we
 
         # save/load/savez are supported pickle-free I/O now; savetxt (text I/O)
-        # remains blacklisted.
-        with pytest.raises(AttributeError, match="blacklisted"):
+        # remains excluded (clear "not supported in the flopscope client" error).
+        with pytest.raises(
+            AttributeError, match="not supported in the flopscope client"
+        ):
             _ = we.savetxt
 
     def test_unknown_function_raises_attribute_error(self):

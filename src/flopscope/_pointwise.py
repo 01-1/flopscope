@@ -29,8 +29,7 @@ from flopscope._ndarray import (
     _to_base_ndarray_tree,
 )
 from flopscope._perm_group import _DiminoBudgetExceeded
-from flopscope._symmetric import SymmetricTensor
-from flopscope._symmetric import is_symmetric as _is_symmetric
+from flopscope._symmetric import SymmetricTensor, _check_generators
 from flopscope._symmetry_utils import (
     broadcast_group,
     direct_product_groups,
@@ -101,7 +100,7 @@ def _prepare_symmetric_out(out, target_symmetry):
             return None
         raise ValueError("out symmetry does not match result symmetry")
 
-    if not _is_symmetric(_np.asarray(out), symmetry=target_symmetry):
+    if not _check_generators(_np.asarray(out), target_symmetry):
         if inferred:
             return None
         axes = target_symmetry.axes
@@ -121,7 +120,7 @@ def _validate_result_symmetry(result, symmetry):
     # by the (symmetric) inputs; numerical checks on inf/nan are meaningless.
     if not _np.all(_np.isfinite(result_arr)):
         return
-    if not _is_symmetric(result_arr, symmetry=symmetry):
+    if not _check_generators(result_arr, symmetry):
         axes = symmetry.axes
         if axes is None:
             axes = tuple(range(symmetry.degree))

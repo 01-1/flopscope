@@ -1418,6 +1418,18 @@
     },
     {
       "callable": true,
+      "display_name": "flopscope.numpy.as_symmetric",
+      "href": "/docs/api/numpy/as-symmetric/",
+      "import_path": "flopscope.numpy.as_symmetric",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "flopscope",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-as-symmetric",
+      "summary": "The type of the None singleton."
+    },
+    {
+      "callable": true,
       "display_name": "flopscope.numpy.asarray",
       "href": "/docs/api/numpy/asarray/",
       "import_path": "flopscope.numpy.asarray",
@@ -3467,6 +3479,18 @@
       "namespace": "numpy",
       "slug": "flopscope-numpy-invert",
       "summary": "Compute bit-wise inversion, or bit-wise NOT, element-wise."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.is_symmetric",
+      "href": "/docs/api/numpy/is-symmetric/",
+      "import_path": "flopscope.numpy.is_symmetric",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "flopscope",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-is-symmetric",
+      "summary": "The type of the None singleton."
     },
     {
       "callable": true,
@@ -6907,10 +6931,10 @@
       "import_path": "flopscope.numpy.random.symmetric",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope.numpy.random",
+      "module": "numpy.random",
       "namespace": "numpy",
       "slug": "flopscope-numpy-random-symmetric",
-      "summary": "Sample random data and project it to a symmetry group."
+      "summary": "The type of the None singleton."
     },
     {
       "callable": true,
@@ -7559,6 +7583,18 @@
       "namespace": "numpy",
       "slug": "flopscope-numpy-swapaxes",
       "summary": "Interchange two axes of an array."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.symmetrize",
+      "href": "/docs/api/numpy/symmetrize/",
+      "import_path": "flopscope.numpy.symmetrize",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "flopscope",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-symmetrize",
+      "summary": "The type of the None singleton."
     },
     {
       "callable": true,
@@ -8881,6 +8917,18 @@
       "namespace": "numpy",
       "slug": "flopscope-numpy-array-split",
       "summary": "Split an array into multiple sub-arrays."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.as_symmetric",
+      "href": "/docs/api/numpy/as-symmetric/",
+      "import_path": "flopscope.numpy.as_symmetric",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "flopscope",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-as-symmetric",
+      "summary": "The type of the None singleton."
     },
     {
       "callable": true,
@@ -10729,6 +10777,18 @@
       "namespace": "numpy",
       "slug": "flopscope-numpy-invert",
       "summary": "Compute bit-wise inversion, or bit-wise NOT, element-wise."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.is_symmetric",
+      "href": "/docs/api/numpy/is-symmetric/",
+      "import_path": "flopscope.numpy.is_symmetric",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "flopscope",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-is-symmetric",
+      "summary": "The type of the None singleton."
     },
     {
       "callable": true,
@@ -14073,10 +14133,10 @@
       "import_path": "flopscope.numpy.random.symmetric",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope.numpy.random",
+      "module": "numpy.random",
       "namespace": "numpy",
       "slug": "flopscope-numpy-random-symmetric",
-      "summary": "Sample random data and project it to a symmetry group."
+      "summary": "The type of the None singleton."
     },
     {
       "callable": true,
@@ -14725,6 +14785,18 @@
       "namespace": "numpy",
       "slug": "flopscope-numpy-swapaxes",
       "summary": "Interchange two axes of an array."
+    },
+    {
+      "callable": true,
+      "display_name": "flopscope.numpy.symmetrize",
+      "href": "/docs/api/numpy/symmetrize/",
+      "import_path": "flopscope.numpy.symmetrize",
+      "is_operation_cost_leaf": true,
+      "kind": "function",
+      "module": "flopscope",
+      "namespace": "numpy",
+      "slug": "flopscope-numpy-symmetrize",
+      "summary": "The type of the None singleton."
     },
     {
       "callable": true,
@@ -15508,5 +15580,5 @@
     }
   ],
   "schema_version": 1,
-  "total": 708
+  "total": 711
 }

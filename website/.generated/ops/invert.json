@@ -677,14 +677,14 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.invert",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L364",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_pointwise.py#L363",
   "href": "/docs/api/numpy/invert/",
   "legacy_href": "/docs/api/ops/invert/",
   "module": "numpy",
   "name": "invert",
   "next": {
-    "href": "/docs/api/numpy/isclose/",
-    "label": "fnp.isclose"
+    "href": "/docs/api/numpy/is-symmetric/",
+    "label": "fnp.is_symmetric"
   },
   "notes": "Bitwise NOT element-wise.",
   "notes_sections": [

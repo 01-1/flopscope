@@ -173,7 +173,15 @@ _UFUNC = {
     "floor_divide",
 }
 
-COVERED_ELSEWHERE: set[str] = _CCU | _FMA | _UFUNC
+# test_symmetric_cost.py — exact billing probes for (G+1)*n, (G+2)*n, k*(7n-1)
+_SYMMETRIC = {
+    "symmetrize",
+    "as_symmetric",
+    "is_symmetric",
+    "random.symmetric",
+}
+
+COVERED_ELSEWHERE: set[str] = _CCU | _FMA | _UFUNC | _SYMMETRIC
 
 # ---------------------------------------------------------------------------
 # Registry categories where ALL members follow a simple family rule.

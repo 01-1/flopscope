@@ -611,6 +611,12 @@
     "kind": "op",
     "slug": "array_split"
   },
+  "numpy/as-symmetric": {
+    "canonical_name": "as_symmetric",
+    "href": "/docs/api/numpy/as-symmetric/",
+    "kind": "op",
+    "slug": "as_symmetric"
+  },
   "numpy/asarray": {
     "canonical_name": "asarray",
     "href": "/docs/api/numpy/asarray/",
@@ -1420,6 +1426,12 @@
     "href": "/docs/api/numpy/invert/",
     "kind": "op",
     "slug": "invert"
+  },
+  "numpy/is-symmetric": {
+    "canonical_name": "is_symmetric",
+    "href": "/docs/api/numpy/is-symmetric/",
+    "kind": "op",
+    "slug": "is_symmetric"
   },
   "numpy/isclose": {
     "canonical_name": "isclose",
@@ -3053,6 +3065,12 @@
     "kind": "op",
     "slug": "random-standard_t"
   },
+  "numpy/random/symmetric": {
+    "canonical_name": "random.symmetric",
+    "href": "/docs/api/numpy/random/symmetric/",
+    "kind": "op",
+    "slug": "random-symmetric"
+  },
   "numpy/random/triangular": {
     "canonical_name": "random.triangular",
     "href": "/docs/api/numpy/random/triangular/",
@@ -3353,6 +3371,12 @@
     "kind": "op",
     "slug": "swapaxes"
   },
+  "numpy/symmetrize": {
+    "canonical_name": "symmetrize",
+    "href": "/docs/api/numpy/symmetrize/",
+    "kind": "op",
+    "slug": "symmetrize"
+  },
   "numpy/take": {
     "canonical_name": "take",
     "href": "/docs/api/numpy/take/",
@@ -3640,12 +3664,6 @@
     "href": "/docs/api/random/seed-sequence/",
     "kind": "symbol",
     "slug": "random-seed-sequence"
-  },
-  "random/symmetric": {
-    "canonical_name": "random.symmetric",
-    "href": "/docs/api/random/symmetric/",
-    "kind": "symbol",
-    "slug": "random-symmetric"
   },
   "set-printoptions": {
     "canonical_name": "set_printoptions",
