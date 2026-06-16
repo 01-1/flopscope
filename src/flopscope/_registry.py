@@ -1783,9 +1783,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "Convert flat index to multi-dimensional index.",
     },
     "ravel_multi_index": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Convert multi-dimensional index to flat index.",
+        "notes": "Convert multi-index to flat index. Cost: 2*(ndim-1)*N (+N for clip/wrap mode), N = #output indices.",
     },
     "indices": {
         "category": "counted_custom",

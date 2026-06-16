@@ -352,7 +352,7 @@
     "random.weibull": 16.0,
     "random.zipf": 16.0,
     "ravel": 0.0,
-    "ravel_multi_index": 0.0,
+    "ravel_multi_index": 1.0,
     "real": 1.0,
     "real_if_close": 1.0,
     "reciprocal": 1.0,

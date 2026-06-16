@@ -96,3 +96,20 @@ def test_pad_constant_malformed_pad_width_raises_numpy_error():
     # free mode must surface numpy's ValueError (not an IndexError from cost calc)
     with pytest.raises(ValueError):
         fnp.pad(a, ((1, 2), (3, 4)), mode="constant")
+
+
+def test_ravel_multi_index_charged():
+    rows = fnp.asarray(np.arange(100) % 10)
+    cols = fnp.asarray(np.arange(100) % 10)
+    # ndim=2, N=100 -> 2*(2-1)*100 = 200
+    assert billed(lambda: fnp.ravel_multi_index((rows, cols), (10, 10))) == 200
+
+
+def test_ravel_multi_index_clip_adds_n():
+    rows = fnp.asarray(np.arange(100) % 10)
+    cols = fnp.asarray(np.arange(100) % 10)
+    # 200 + N(=100) for clip = 300
+    assert (
+        billed(lambda: fnp.ravel_multi_index((rows, cols), (10, 10), mode="clip"))
+        == 300
+    )

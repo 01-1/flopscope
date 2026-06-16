@@ -2556,13 +2556,31 @@ def putmask(
 attach_docstring(putmask, _np.putmask, "free", "0 FLOPs")
 
 
-def ravel_multi_index(*args, **kwargs):
-    """Convert multi-index to flat index. Wraps ``numpy.ravel_multi_index``. Cost: 0 FLOPs."""
-    stripped_args = _to_base_ndarray_tree(args)
-    return _np.ravel_multi_index(*stripped_args, **kwargs)
+@_counted_wrapper
+def ravel_multi_index(multi_index, dims, mode="raise", order="C"):
+    """Convert a multi-index to flat indices. Cost: 2*(ndim-1)*N (one stride is unity),
+    plus N for mode in {'clip','wrap'} (one clamp/mod per element). N = #output indices."""
+    budget = require_budget()
+    stripped = _to_base_ndarray_tree(multi_index)
+    idx_arrays = [_np.asarray(a) for a in stripped]
+    n = int(_np.broadcast(*idx_arrays).size) if idx_arrays else 0
+    ndim = len(dims) if hasattr(dims, "__len__") else 1
+    cost = 2 * (ndim - 1) * n
+    if mode != "raise":
+        cost += n
+    with budget.deduct("ravel_multi_index", flop_cost=cost, subscripts=None, shapes=()):
+        result = _call_numpy(  # type: ignore[arg-type, call-overload]
+            _np.ravel_multi_index, stripped, dims, mode=mode, order=order
+        )
+    return result
 
 
-attach_docstring(ravel_multi_index, _np.ravel_multi_index, "free", "0 FLOPs")
+attach_docstring(
+    ravel_multi_index,
+    _np.ravel_multi_index,
+    "counted_custom",
+    "2*(ndim-1)*N (+N for clip/wrap)",
+)
 
 
 def require(*args, **kwargs):
