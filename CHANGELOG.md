@@ -1,5 +1,113 @@
 # Changelog
 
+## v0.8.0rc0 (2026-06-16)
+
+### Feat
+
+- **cost-model**: charge value-changing astype casts (to-bool/float->int/narrowing)
+- **cost-model**: charge 1-arg where (nonzero), free the 3-arg select
+- **cost-model**: make data-movement and gather ops free (weight 0)
+- **client**: clear errors for fnp.<blacklisted>/<server-only> via numpy __getattr__
+- mark flops.* cost-introspection helpers as SERVER_ONLY
+- **client**: clear server-only errors for top-level + flops.* names
+- add SERVER_ONLY declaration synced to client
+- **registry**: blacklist numpy iterator/state/dtype-info utilities
+- **client**: expose random.Generator/RandomState/SeedSequence
+- **client**: RemoteRandomState + RemoteSeedSequence proxies + wire codec
+- **server**: dispatch RandomState.<method> and SeedSequence.generate_state
+- **server**: pack/resolve RandomState + SeedSequence handles
+- **registry**: register symmetric ops; regenerate client registry
+- **random**: random.symmetric bills sample + symmetrize ((|G|+2)*numel)
+- **symmetric**: bill as_symmetric/is_symmetric; is_symmetric checks generators
+- **symmetric**: bill symmetrize at (|G|+1)*numel
+- **docs**: generate_api_docs --check gate for ops.json drift
+- **cost**: top-k SVD bills verified 4mnk truncated cost (capped at full)
+- **client**: make the immutable-array assignment error actionable
+- **server**: token-gate budget_open/budget_close via --token-fd
+- **errors**: add UnauthorizedControlError (core + generated client)
+
+### Fix
+
+- **release**: make version-sync and the version handshake prerelease-robust (#133)
+- **cost-model**: copyto charges only value-changing (lossy) casts, mirroring astype
+- **cost-model**: charge copyto value-changing cast only
+- **cost-model**: charge trim_zeros value scan
+- **cost-model**: charge ravel_multi_index linear-index computation
+- **cost-model**: make pad mode-aware (charge value modes, reject callable)
+- **cost-model**: concat and ix_ are free data-movement (set weight 0, revert label)
+- astype method must honor casting/order params (was silently dropped)
+- charge a.nonzero() method (was bypassing accounting)
+- **test**: update unwrap pins to 11x and where weight in empirical weights.json
+- make unwrap cost consistent at 11 (label + formula pin missed in Task 4)
+- **symmetry**: empty/empty_like/tri must not infer constant-fill symmetry
+- **types**: use _np.shape(base) so pyright accepts *_like shapes arg
+- **#126**: route constant-init ops through deduct so time is accounted
+- **#126**: route free view ops through deduct so time is accounted
+- **ci**: ops.json drift gate ignores numpy-version-dependent summary
+- **poly**: polyfit strips FlopscopeArray inputs (x/y/w) before numpy.polyfit
+- **cost**: reject k<1 in svd (close negative-k undercount); refresh wrapper docstring
+- **client**: re-sync generated _registry_data.py after random_integers blacklist
+- **cost**: cross bills 3*numel(actual result) — robust to axis kwargs (review fix)
+- **cost**: intersect1d sorts both inputs; mvn factorization bills SVD
+- **cost**: cross/convolve/cov/corrcoef/unwrap/poly honest costs
+- **cost**: diag/diagonal view-vs-copy + gather-tier consistency
+- **cost**: fft freq grids bill n; random.uniform 3x affine; random_integers blacklisted
+- **cost**: stats norm/expon/cauchy/logistic/laplace/truncnorm composite kernels
+- **cost**: drop low-value 8-op blacklist reclassification; keep gap fixes
+- **cost**: linalg trace/slogdet/multi_dot, random.choice (audit gaps)
+- **cost**: sort crash + isin/unique/poly/roots cost fixes (audit gaps)
+- **cost**: trace batch, window/fft/histogram/allclose (audit gaps)
+- **cost**: _free_ops copy/gather/stack ops bill materialized output (audit gaps)
+- **cost**: _pointwise clip/count_nonzero/correlate/gradient/nan costs
+- **cost**: stats laplace/lognorm/uniform/cauchy composite kernels
+- **client**: self-time send_recv transport so no caller leaks to residual
+- **client**: bill flops.load ingress to overhead, add send_recv span guard
+- **cost**: ptp 2-pass, average divides, nan-quantile wrappers, free dtype checks
+- **cost**: stats norm/truncnorm/lognorm composites bill real kernels
+- **cost**: weighted choice bills cdf build; diff bills and accepts pads
+- **cost**: lexsort all slices; sort_complex per-slice; select bills output
+- **cost**: svd bills full_matrices honestly; general-p norms bill pow
+- **cost**: linspace(retstep)/arange/indices bill materialized output (audit-2 verified)
+- **cost**: numpy 2.x ufunc aliases bill canonical weight (16x exploit)
+- **cost**: norm family bills batch dims (was 1-slice)
+- **sort**: forward kind/order to numpy (results diverged for structured/stable sorts)
+- **cost**: Generator/RandomState multivariate_normal composite formula
+- **cost**: multivariate_normal bills factorization+transform+draws
+- **cost**: eigen-family provisional constants; roots composes eigvals
+- **cost**: cholesky/qr/det/slogdet textbook constants, mode-aware qr, de-weighted
+- **cost**: solve/inv/tensor solvers honest LU constants, nrhs-aware
+- **cost**: svd family real FMA=2 constants; de-weight composers
+- **cost**: cross parity oracle charges 3/output (matches the cross fix)
+- **cost**: poly strips input (no crash), bills 2*n^2 + eigvals on 2-D
+- **cost**: vander charges n*(N-2) (seeded x^1 column is free)
+- **cost**: cross charges 3*output.size (was 5)
+- **cost**: interp adds the search-locate term, not multiplies by it
+- **cost**: polydiv scales with quotient length, not dividend*divisor
+- **cost**: geomspace/logspace cost broadcast output x transcendental weight
+- **cost**: linspace costs 2*numel(output), broadcast-aware
+- **cost**: trapezoid/trapz charge 4*numel (FMA=2 averaging pass)
+- **cost**: average via _call_numpy; oversized tensordot via einsum_cost
+- **cost**: var/std/nanvar/nanstd bill 4 passes; weight 2.0->1.0
+- **cost**: average charges the a*w multiply pass when weighted
+- **cost**: polymul uses convolve FMA=2 formula
+- **cost**: multi_dot promotes 1-D operands (no matvec overcharge)
+- **cost**: route tensordot partial contraction through einsum (FMA=2)
+- **docs-gen**: preserve ufunc wrapper signatures; sanitize volatile reprs
+- **server**: ignore client flop_multiplier; cost is flop_cost*weight only
+
+### Refactor
+
+- **weights**: drop duplicate weights dict; delete generate_default_weights.py
+- **weights**: empirical-docs read applied weight from default_weights.json
+- **weights**: ops.json + coverage read billed default_weights.json
+- retire leftover 'free ops' section labels after rename
+- rename _free_ops.py to _array_ops.py (it holds charged ops too)
+- **symmetric**: extract uncounted _project_core/_check_generators
+- **cost**: matmul_cost delegates to einsum_cost (single source of truth)
+- **cost**: tensorsolve/tensorinv delegate to solve/inv costs
+- **client**: drop flop_multiplier; BudgetContext stays functional
+- **core**: remove vestigial flop_multiplier from BudgetContext
+
 ## v0.7.0 (2026-06-09)
 
 ### Feat

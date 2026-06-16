@@ -10,7 +10,8 @@ from flopscope._registry import REGISTRY_META
 
 def test_version_includes_numpy_suffix():
     assert "+np" in flops.__version__
-    assert re.match(r"\d+\.\d+\.\d+\+np\d+\.\d+\.\d+", flops.__version__)
+    # X.Y.Z may carry a PEP 440 prerelease segment (e.g. 0.8.0rc0) before +np.
+    assert re.match(r"\d+\.\d+\.\d+[0-9A-Za-z.]*\+np\d+\.\d+\.\d+", flops.__version__)
 
 
 def test_numpy_version_attribute():

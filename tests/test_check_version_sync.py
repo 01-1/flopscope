@@ -19,8 +19,10 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / "scripts" / "check_version_sync.py"
 
+# Mirror the script's PEP 440 public-version pattern so this helper also works
+# when the repo is itself at a prerelease (e.g. 0.8.0rc0) after `cz bump`.
 _PYPROJECT_VERSION_RE = re.compile(
-    r'^version\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"', re.MULTILINE
+    r'^version\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.]*)"', re.MULTILINE
 )
 
 
@@ -46,9 +48,12 @@ def _other_version(version: str) -> str:
     """Return a different X.Y.Z guaranteed to differ from `version`.
 
     Bumps the patch digit by 99 — large enough to avoid colliding with
-    any plausible nearby release, small enough to stay parseable.
+    any plausible nearby release. Strips any prerelease/local suffix first so a
+    current prerelease version (e.g. 0.8.0rc0) stays parseable.
     """
-    major, minor, patch = version.split(".")
+    m = re.match(r"([0-9]+)\.([0-9]+)\.([0-9]+)", version)
+    assert m is not None, f"unparseable version: {version}"
+    major, minor, patch = m.group(1), m.group(2), m.group(3)
     return f"{major}.{minor}.{int(patch) + 99}"
 
 
