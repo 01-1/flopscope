@@ -1834,10 +1834,15 @@ attach_docstring(concat, _np.concat, "free", "0 FLOPs")
 
 @_counted_wrapper
 def copyto(dst, src, casting="same_kind", where=True):
-    """Copies values from one array to another. Cost: num elements written."""
+    """Copy values from src to dst. Cost: 0 for a same-dtype copy / where-mask copy
+    (data movement); numel(dst) (or popcount(where)) when the cast changes dtype
+    (value-changing, mirrors value-changing astype)."""
     budget = require_budget()
     dst_arr = _np.asarray(dst)
-    if where is True:
+    src_arr = _np.asarray(src)
+    if src_arr.dtype == dst_arr.dtype:
+        cost = 0
+    elif where is True:
         cost = dst_arr.size
     else:
         where_arr = _np.asarray(where)
@@ -1856,7 +1861,12 @@ def copyto(dst, src, casting="same_kind", where=True):
     return result
 
 
-attach_docstring(copyto, _np.copyto, "free", "0 FLOPs")
+attach_docstring(
+    copyto,
+    _np.copyto,
+    "counted_custom",
+    "0 for same-dtype copy; numel(dst) for value-changing cast",
+)
 
 
 @_counted_wrapper

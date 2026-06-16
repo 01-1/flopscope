@@ -119,3 +119,16 @@ def test_trim_zeros_charged():
     a = fnp.asarray(np.array([0, 0, 1, 2, 3, 0, 0], dtype=float))
     # value scan = numel(input) = 7
     assert billed(lambda: fnp.trim_zeros(a)) == 7
+
+
+def test_copyto_same_dtype_free():
+    dst = fnp.zeros(100, dtype=np.float64)
+    src = fnp.asarray(np.ones(100, dtype=np.float64))
+    assert billed(lambda: fnp.copyto(dst, src)) == 0
+
+
+def test_copyto_value_changing_cast_charged():
+    dst = fnp.zeros(100, dtype=np.int64)
+    src = fnp.asarray(np.random.default_rng(0).standard_normal(100))
+    # float64 -> int64 cast computes per element -> numel(dst) = 100
+    assert billed(lambda: fnp.copyto(dst, src, casting="unsafe")) == 100

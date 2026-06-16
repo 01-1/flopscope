@@ -883,12 +883,25 @@ class TestFreeOps:
     def test_fill_diagonal(self, we):
         assert _cost_of(we.fill_diagonal, numpy.zeros((5, 5)), 1.0) == 5
 
-    def test_copyto_with_where(self, we):
+    def test_copyto_same_dtype_where_free(self, we):
         mask = numpy.array([True, False] * 5)
-        assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10), where=mask) == 5
+        # same-dtype copy is data movement -> free even with a where mask
+        assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10), where=mask) == 0
 
-    def test_copyto_no_where(self, we):
-        assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10)) == 10
+    def test_copyto_same_dtype_free(self, we):
+        assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10)) == 0
+
+    def test_copyto_value_changing_cast(self, we):
+        # float -> int cast computes per element -> numel(dst)
+        assert (
+            _cost_of(
+                we.copyto,
+                numpy.zeros(10, dtype=numpy.int64),
+                numpy.ones(10),
+                casting="unsafe",
+            )
+            == 10
+        )
 
     def test_arange(self, we):
         assert (

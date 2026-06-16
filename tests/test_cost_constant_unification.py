@@ -510,22 +510,24 @@ def test_delete_bills_numel_output():
     assert c_delete == c_concat == 9999
 
 
-def test_copyto_bills_dst_numel():
+def test_copyto_cost_is_dtype_gated():
+    # same-dtype copy is pure data movement -> free
     dst = np.zeros(10000)
-    # scalar src: should bill dst.size = 10000
-    assert cost(lambda: fnp.copyto(dst, 3.14)) == 10000
-    # broadcast src row -> 100x100 dst
+    assert cost(lambda: fnp.copyto(dst, 3.14)) == 0
     dst2d = np.zeros((100, 100))
-    assert cost(lambda: fnp.copyto(dst2d, np.arange(100.0))) == 10000
-    # full-shape copy unchanged
-    assert cost(lambda: fnp.copyto(dst, np.ones(10000))) == 10000
-    # broadcast where mask: ones((100,1)) -> (100,100) = 10000 writes
-    where_mask = np.ones((100, 1), dtype=bool)
+    assert cost(lambda: fnp.copyto(dst2d, np.arange(100.0))) == 0
+    assert cost(lambda: fnp.copyto(dst, np.ones(10000))) == 0
+    # value-changing cast (float -> int) computes per element -> numel(dst)
+    dsti = np.zeros(10000, dtype=np.int64)
+    assert cost(lambda: fnp.copyto(dsti, np.ones(10000), casting="unsafe")) == 10000
+    # value-changing cast restricted by a broadcast where mask -> popcount(where)
+    dsti2d = np.zeros((100, 100), dtype=np.int64)
+    where_mask = np.ones((100, 1), dtype=bool)  # broadcasts to (100,100) -> 10000 True
 
-    def _copyto_where():
-        fnp.copyto(dst2d, np.ones((100, 100)), where=where_mask)  # type: ignore[arg-type]
+    def _copyto_cast_where():
+        fnp.copyto(dsti2d, np.ones((100, 100)), where=where_mask, casting="unsafe")  # type: ignore[arg-type]
 
-    assert cost(_copyto_where) == 10000
+    assert cost(_copyto_cast_where) == 10000
 
 
 def test_hstack_bills_numel_output():

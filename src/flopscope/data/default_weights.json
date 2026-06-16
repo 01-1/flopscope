@@ -64,7 +64,7 @@
     "convolve": 1.0,
     "copy": 0.0,
     "copysign": 1.0,
-    "copyto": 0.0,
+    "copyto": 1.0,
     "corrcoef": 1.0,
     "correlate": 1.0,
     "cos": 16.0,

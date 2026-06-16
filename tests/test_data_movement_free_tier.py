@@ -29,7 +29,6 @@ FREE_DATA_MOVEMENT_OPS = [
     "insert",
     "append",
     "delete",
-    "copyto",
     "diag",
     "diagflat",
     "meshgrid",
