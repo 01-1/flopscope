@@ -2,7 +2,7 @@
 
 import numpy
 
-from flopscope import _free_ops as ops
+from flopscope import _array_ops as ops
 from flopscope._budget import BudgetContext
 
 
@@ -48,7 +48,7 @@ def test_where():
     assert list(result) == [1, 5, 3]
 
 
-def test_free_ops_dont_cost_flops():
+def test_array_ops_dont_cost_flops():
     with BudgetContext(flop_budget=1) as budget:
         ops.zeros((1000, 1000))
         ops.ones((1000,))
@@ -56,7 +56,7 @@ def test_free_ops_dont_cost_flops():
         assert budget.flops_used == 0
 
 
-def test_free_ops_work_outside_context():
+def test_array_ops_work_outside_context():
     x = ops.zeros((3,))
     assert x.shape == (3,)
 

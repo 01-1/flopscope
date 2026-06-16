@@ -443,12 +443,12 @@
     "signature": "fnp.hstack(tup, *, dtype=None, casting='same_kind')",
     "status": "supported",
     "summary": "Stack arrays in sequence horizontally (column wise).",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "hstack",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L577",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L633",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/shape_base.py#L295"
   }
 }

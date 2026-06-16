@@ -363,12 +363,12 @@
     "signature": "fnp.tril(m: 'ArrayLike', k: 'int' = 0) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Lower triangle of an array.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "tril",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L967",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1145",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_twodim_base_impl.py#L441"
   }
 }

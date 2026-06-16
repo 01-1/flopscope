@@ -1254,7 +1254,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.pad",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L939",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1099",
   "href": "/docs/api/numpy/pad/",
   "import_path": "flopscope.numpy.pad",
   "is_operation_cost_leaf": true,
@@ -1266,7 +1266,7 @@
     "href": "/docs/api/numpy/partition/",
     "label": "fnp.partition"
   },
-  "notes": "Pad array. Cost: numel(output).",
+  "notes": "Pad array. Cost: 0 for data-movement modes; reduction cost (maximum/minimum/mean/median) or 2*(numel_out-numel_in) (linear_ramp, reflect_type='odd') for value-computing modes; mode=<callable> raises.",
   "notes_sections": [
     "For an array with rank greater than 1, some of the padding of later axes is calculated from padding of previous axes.  This is easiest to think about with a rank 2 array where the corners of the padded array are calculated by using padded values from the first axis.",
     "The padding function, if used, should modify a rank 1 array in-place. It has the following signature::",

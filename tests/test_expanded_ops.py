@@ -161,7 +161,7 @@ class TestNewFreeOps:
     def test_shape(self):
         assert fnp.shape(numpy.eye(3)) == (3, 3)
 
-    def test_free_ops_outside_context(self):
+    def test_array_ops_outside_context(self):
         fnp.rot90(numpy.eye(3))
         fnp.shape(numpy.eye(3))
         fnp.atleast_1d(1.0)

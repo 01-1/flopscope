@@ -400,12 +400,12 @@
     "signature": "fnp.putmask(a: 'ArrayLike', mask: 'ArrayLike', values: 'ArrayLike', *args: 'Any', **kwargs: 'Any') -> 'None'",
     "status": "supported",
     "summary": "Changes elements of an array based on conditional and input values.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "putmask",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2266",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2540",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.putmask.html"
   }
 }

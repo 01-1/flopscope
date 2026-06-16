@@ -329,23 +329,23 @@
     ]
   },
   "op": {
-    "category": "free",
-    "cost_formula": "0",
-    "cost_formula_latex": "$0$",
+    "category": "counted_custom",
+    "cost_formula": "per-operation",
+    "cost_formula_latex": "varies",
     "flopscope_ref": "fnp.ravel_multi_index",
     "module": "numpy",
     "name": "ravel_multi_index",
-    "notes": "Convert multi-dimensional index to flat index.",
+    "notes": "Convert multi-index to flat index. Cost: 2*(ndim-1)*N (+N for clip/wrap mode), N = #output indices.",
     "numpy_ref": "np.ravel_multi_index",
-    "signature": "fnp.ravel_multi_index(*args, **kwargs)",
+    "signature": "fnp.ravel_multi_index(multi_index, dims, mode='raise', order='C')",
     "status": "supported",
     "summary": "Converts a tuple of index arrays into an array of flat indices, applying boundary modes to the multi-index.",
-    "weight": 0.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "ravel_multi_index",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2295",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2569",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.ravel_multi_index.html"
   }
 }

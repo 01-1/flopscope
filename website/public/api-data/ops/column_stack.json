@@ -218,12 +218,12 @@
     "signature": "fnp.column_stack(tup)",
     "status": "supported",
     "summary": "Stack 1-D arrays as columns into a 2-D array.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "column_stack",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1481",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1737",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_shape_base_impl.py#L621"
   }
 }

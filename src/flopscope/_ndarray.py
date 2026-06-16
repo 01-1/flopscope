@@ -55,7 +55,7 @@ def _me():
     numpy ops live under flopscope.numpy in the JAX-style public API
     (top-level flopscope exposes only primitives like BudgetContext).
     Defer the import until first use to break the import cycle:
-    flopscope.numpy → flopscope._free_ops/etc. → this module.
+    flopscope.numpy → flopscope._array_ops/etc. → this module.
     """
     import flopscope.numpy as _fnp
 
@@ -625,9 +625,15 @@ class FlopscopeArray(_np.ndarray):
         subok: bool = True,
         copy: bool = True,
     ) -> FlopscopeArray:
-        return _np.ndarray.astype(
+        # Delegate to the full-signature counted backend so order/casting/subok
+        # are forwarded to np.ndarray.astype and unsafe casts raise TypeError
+        # (numpy parity). fnp.astype (array-api form) only takes copy/device
+        # and silently dropped these params.
+        from flopscope._array_ops import _astype_counted
+
+        return _astype_counted(  # type: ignore[return-value]
             self, dtype, order=order, casting=casting, subok=subok, copy=copy
-        )  # type: ignore[return-value]
+        )
 
     # ----- Other ndarray methods -----
 
@@ -658,6 +664,9 @@ class FlopscopeArray(_np.ndarray):
     def compress(self, condition: Any, *args: Any, **kwargs: Any) -> FlopscopeArray:
         # ndarray.compress(condition) -> np.compress(condition, arr)
         return _me().compress(condition, self, *args, **kwargs)
+
+    def nonzero(self, *args: Any, **kwargs: Any) -> tuple[FlopscopeArray, ...]:  # type: ignore[override]
+        return _me().nonzero(self, *args, **kwargs)
 
     # In-place sort/partition: NumPy mutates self and returns None.
     # Charge FLOPs through me.sort/partition, then copy result into self.

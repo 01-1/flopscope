@@ -430,12 +430,12 @@
     "signature": "fnp.extract(condition, arr)",
     "status": "supported",
     "summary": "Return the elements of an array that satisfy some condition.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "extract",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1708",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1972",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L1990"
   }
 }

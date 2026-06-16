@@ -284,7 +284,7 @@
   "signature": "fnp.broadcast",
   "slug": "broadcast",
   "source_url": "",
-  "status_note": "",
+  "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
   "summary": "Produce an object that mimics broadcasting.",
   "upstream_source_url": ""
 }

@@ -987,7 +987,7 @@
       "href": "/docs/api/numpy/base-repr/",
       "import_path": "flopscope.numpy.base_repr",
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "slug": "flopscope-numpy-base-repr"
     },
     "/docs/api/numpy/binary-repr/": {
@@ -996,7 +996,7 @@
       "href": "/docs/api/numpy/binary-repr/",
       "import_path": "flopscope.numpy.binary_repr",
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "slug": "flopscope-numpy-binary-repr"
     },
     "/docs/api/numpy/bincount/": {
@@ -1257,7 +1257,7 @@
       "href": "/docs/api/numpy/concat/",
       "import_path": "flopscope.numpy.concat",
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "slug": "flopscope-numpy-concat"
     },
     "/docs/api/numpy/concatenate/": {
@@ -2049,7 +2049,7 @@
       "href": "/docs/api/numpy/fromfile/",
       "import_path": "flopscope.numpy.fromfile",
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "slug": "flopscope-numpy-fromfile"
     },
     "/docs/api/numpy/fromfunction/": {
@@ -2076,7 +2076,7 @@
       "href": "/docs/api/numpy/fromregex/",
       "import_path": "flopscope.numpy.fromregex",
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "slug": "flopscope-numpy-fromregex"
     },
     "/docs/api/numpy/fromstring/": {
@@ -2085,7 +2085,7 @@
       "href": "/docs/api/numpy/fromstring/",
       "import_path": "flopscope.numpy.fromstring",
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "slug": "flopscope-numpy-fromstring"
     },
     "/docs/api/numpy/full-like/": {
@@ -5217,7 +5217,7 @@
       "href": "/docs/api/numpy/row-stack/",
       "import_path": "flopscope.numpy.row_stack",
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "slug": "flopscope-numpy-row-stack"
     },
     "/docs/api/numpy/save/": {

@@ -775,7 +775,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.meshgrid",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1041",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1219",
   "href": "/docs/api/numpy/meshgrid/",
   "import_path": "flopscope.numpy.meshgrid",
   "is_operation_cost_leaf": true,
@@ -918,5 +918,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L5117",
-  "weight": 1.0
+  "weight": 0.0
 }

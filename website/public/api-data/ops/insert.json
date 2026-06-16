@@ -797,12 +797,12 @@
     "signature": "fnp.insert(arr, obj, values, axis=None)",
     "status": "supported",
     "summary": "Insert values along the given axis before the given indices.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "insert",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1927",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2201",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L5456"
   }
 }

@@ -23,7 +23,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src" / "flopscope"
 # Counted-op modules whose @_counted_wrapper functions are scanned.
 _MODULES = [
     "_counting_ops.py",
-    "_free_ops.py",
+    "_array_ops.py",
     "_pointwise.py",
     "_sorting_ops.py",
     "_polynomial.py",
@@ -52,6 +52,7 @@ _ALLOWLIST = {
     "common_type",
     "can_cast",
     "broadcast_shapes",
+    "broadcast",
     "prod",
     # predicates
     "iterable",

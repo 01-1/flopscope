@@ -709,7 +709,7 @@
     "signature": "fnp.linalg.qr(a: 'ArrayLike', mode: 'str' = 'reduced') -> 'tuple[FlopscopeArray, FlopscopeArray] | FlopscopeArray'",
     "status": "supported",
     "summary": "Compute the qr factorization of a matrix.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "linalg-qr",

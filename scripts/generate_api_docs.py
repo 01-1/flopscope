@@ -45,8 +45,8 @@ API_EXAMPLES_DIR = WEBSITE / "content" / "api-examples"
 DOCS = ROOT / "docs"
 API_DIR = DOCS / "api"
 REF_DIR = DOCS / "reference"
-WEIGHTS_PATH = ROOT / "src" / "flopscope" / "data" / "weights.json"
 WEIGHTS_CSV_PATH = ROOT / "src" / "flopscope" / "data" / "weights.csv"
+DEFAULT_WEIGHTS_PATH = ROOT / "src" / "flopscope" / "data" / "default_weights.json"
 
 # ---------------------------------------------------------------------------
 # Signature helpers
@@ -108,7 +108,7 @@ def load_registry() -> dict[str, dict]:
 #
 # Existing pages (not generated):
 #   counted-ops.md  → ::: flopscope._pointwise, ::: flopscope._einsum.einsum
-#   free-ops.md     → ::: flopscope._free_ops
+#   free-ops.md     → ::: flopscope._array_ops
 #
 # Generated pages:
 GENERATED_PAGES: dict[str, dict] = {
@@ -3216,10 +3216,14 @@ def resolve_canonical_name(name: str, alias_map: dict[str, str]) -> str:
 
 
 def load_operation_weights() -> dict[str, float]:
-    """Load per-operation weights for docs manifests."""
-    if not WEIGHTS_PATH.exists():
+    """Load per-operation BILLED weights for docs manifests.
+
+    Source of truth is default_weights.json (what _weights.py bills), not the
+    frozen empirical weights.json — so ops.json can never disagree with billing.
+    """
+    if not DEFAULT_WEIGHTS_PATH.exists():
         return {}
-    raw = json.loads(WEIGHTS_PATH.read_text())
+    raw = json.loads(DEFAULT_WEIGHTS_PATH.read_text())
     return raw.get("weights", {})
 
 

@@ -316,7 +316,7 @@
     "signature": "flops.stats.truncnorm.ppf(q, a, b, loc=0, scale=1)",
     "status": "supported",
     "summary": "Evaluate the percent-point function.",
-    "weight": 16.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "stats-truncnorm-ppf",

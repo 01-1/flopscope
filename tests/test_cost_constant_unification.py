@@ -510,22 +510,24 @@ def test_delete_bills_numel_output():
     assert c_delete == c_concat == 9999
 
 
-def test_copyto_bills_dst_numel():
+def test_copyto_cost_is_dtype_gated():
+    # same-dtype copy is pure data movement -> free
     dst = np.zeros(10000)
-    # scalar src: should bill dst.size = 10000
-    assert cost(lambda: fnp.copyto(dst, 3.14)) == 10000
-    # broadcast src row -> 100x100 dst
+    assert cost(lambda: fnp.copyto(dst, 3.14)) == 0
     dst2d = np.zeros((100, 100))
-    assert cost(lambda: fnp.copyto(dst2d, np.arange(100.0))) == 10000
-    # full-shape copy unchanged
-    assert cost(lambda: fnp.copyto(dst, np.ones(10000))) == 10000
-    # broadcast where mask: ones((100,1)) -> (100,100) = 10000 writes
-    where_mask = np.ones((100, 1), dtype=bool)
+    assert cost(lambda: fnp.copyto(dst2d, np.arange(100.0))) == 0
+    assert cost(lambda: fnp.copyto(dst, np.ones(10000))) == 0
+    # value-changing cast (float -> int) computes per element -> numel(dst)
+    dsti = np.zeros(10000, dtype=np.int64)
+    assert cost(lambda: fnp.copyto(dsti, np.ones(10000), casting="unsafe")) == 10000
+    # value-changing cast restricted by a broadcast where mask -> popcount(where)
+    dsti2d = np.zeros((100, 100), dtype=np.int64)
+    where_mask = np.ones((100, 1), dtype=bool)  # broadcasts to (100,100) -> 10000 True
 
-    def _copyto_where():
-        fnp.copyto(dst2d, np.ones((100, 100)), where=where_mask)  # type: ignore[arg-type]
+    def _copyto_cast_where():
+        fnp.copyto(dsti2d, np.ones((100, 100)), where=where_mask, casting="unsafe")  # type: ignore[arg-type]
 
-    assert cost(_copyto_where) == 10000
+    assert cost(_copyto_cast_where) == 10000
 
 
 def test_hstack_bills_numel_output():
@@ -588,13 +590,12 @@ def test_put_bills_numel_indices():
     assert cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap")) == 1000
     # must NOT scale with destination size (was: a.size; now: ind.size)
     assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 7
-    # With packaged weights loaded (weight=4.0): charged = int(7*4.0) = 28
+    # Data-movement free tier: with packaged weights loaded, put bills 0
     try:
         load_weights()
-        assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 28
+        assert cost(lambda: fnp.put(np.zeros(10000), np.arange(7), np.ones(7))) == 0
         assert (
-            cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap"))
-            == 4000
+            cost(lambda: fnp.put(np.zeros(4), np.arange(1000), 1.0, mode="wrap")) == 0
         )
     finally:
         reset_weights()
@@ -622,17 +623,17 @@ def test_put_along_axis_bills_scattered_elements():
         )
         == 1_000_000
     )
-    # With packaged weights loaded (weight=4.0): charged = scattered_count * 4
+    # Data-movement free tier: with packaged weights loaded, put_along_axis bills 0
     try:
         load_weights()
-        assert cost(lambda: fnp.put_along_axis(dest, np.arange(5), np.ones(5), 0)) == 20
+        assert cost(lambda: fnp.put_along_axis(dest, np.arange(5), np.ones(5), 0)) == 0
         assert (
             cost(
                 lambda: fnp.put_along_axis(
                     dest2d, np.zeros((1, 5), dtype=int), 1.0, axis=1
                 )
             )
-            == 2000
+            == 0
         )
         assert (
             cost(
@@ -640,7 +641,7 @@ def test_put_along_axis_bills_scattered_elements():
                     dest_small, np.zeros(1_000_000, dtype=np.int64), 1.0, 0
                 )
             )
-            == 4_000_000
+            == 0
         )
     finally:
         reset_weights()
@@ -1413,17 +1414,18 @@ def test_diag_diagonal_view_vs_copy():
 
 
 def test_gather_tier_consistency():
-    """take_along_axis weight→4.0; argwhere/bmat/fromiter weight→1.0."""
+    """Data-movement free tier: take_along_axis/put/put_along_axis/bmat/fromiter bill 0.
+    argwhere remains at weight 1.0 (search op, not pure data-movement)."""
     load_weights()
     try:
-        # take_along_axis: numel(output)=100, weight=4.0 → 400
-        assert cost(lambda: fnp.take_along_axis(_A100, _idx100, axis=1)) == 4 * 100
-        # argwhere: numel(input)=100, weight 4→1 → 100
+        # take_along_axis: data-movement free tier → weight=0.0 → 0
+        assert cost(lambda: fnp.take_along_axis(_A100, _idx100, axis=1)) == 0
+        # bmat: data-movement free tier → weight=0.0 → 0
+        assert cost(lambda: fnp.bmat([[_A_bmat, _A_bmat], [_A_bmat, _A_bmat]])) == 0
+        # fromiter: data-movement free tier → weight=0.0 → 0
+        assert cost(lambda: fnp.fromiter(range(100), dtype=float)) == 0
+        # argwhere: search op, weight 1.0 → numel(input)=100 → 100
         assert cost(lambda: fnp.argwhere(_z100)) == 100
-        # bmat: 2x2 blocks in 2x2 layout → 4x4=16, weight 4→1 → 16
-        assert cost(lambda: fnp.bmat([[_A_bmat, _A_bmat], [_A_bmat, _A_bmat]])) == 16
-        # fromiter: numel(result)=100, weight 16→1 → 100
-        assert cost(lambda: fnp.fromiter(range(100), dtype=float)) == 100
     finally:
         reset_weights()
 
@@ -1491,12 +1493,12 @@ def test_cov_corrcoef_centering():
 
 
 def test_unwrap_passes():
-    """unwrap: 13 one-FLOP ufunc passes per element
-    (diff, +period/2, mod, -period/2, ==low, >0, &, select, sub, abs, <discont, select, cumsum)
-    plus final add of correction to p: total 13 passes on N-1 elements, charged as 13*N.
+    """unwrap: 11 one-FLOP ufunc passes per element
+    (diff, +period/2, mod, -period/2, ==low, >0, &, sub, abs, <discont, cumsum)
+    Two 3-arg where (select) passes are now free (weight=1.0→free), charged as 11*N.
     """
     v = fnp.asarray(np.random.rand(1000))
-    assert cost(lambda: fnp.unwrap(v)) == 13 * 1000
+    assert cost(lambda: fnp.unwrap(v)) == 11 * 1000
 
 
 def test_poly_1d_exact_convolution():

@@ -382,12 +382,12 @@
     "signature": "fnp.place(arr: 'ArrayLike', mask: 'ArrayLike', vals: 'ArrayLike', *args: 'Any', **kwargs: 'Any') -> 'None'",
     "status": "supported",
     "summary": "Change elements of an array based on conditional and input values.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "place",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2152",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2426",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L2047"
   }
 }

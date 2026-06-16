@@ -1146,12 +1146,12 @@
     "import_path": "fnp.base_repr",
     "kind": "function",
     "members": [],
-    "module": "flopscope._free_ops",
+    "module": "flopscope._array_ops",
     "name": "base_repr",
     "related_guides": [],
     "signature": "fnp.base_repr(number, base=2, padding=0)",
     "slug": "base-repr",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1336",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1592",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Return a string representation of a number in the given base system.",
     "upstream_source_url": ""
@@ -1586,12 +1586,12 @@
     "import_path": "fnp.binary_repr",
     "kind": "function",
     "members": [],
-    "module": "flopscope._free_ops",
+    "module": "flopscope._array_ops",
     "name": "binary_repr",
     "related_guides": [],
     "signature": "fnp.binary_repr(num, width=None)",
     "slug": "binary-repr",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1350",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1606",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Return the binary representation of the input number as a string.",
     "upstream_source_url": ""
@@ -1882,7 +1882,7 @@
     "signature": "fnp.broadcast",
     "slug": "broadcast",
     "source_url": "",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Produce an object that mimics broadcasting.",
     "upstream_source_url": ""
   },
@@ -4262,7 +4262,7 @@
     "signature": "fnp.errstate(*, call=<numpy._core._ufunc_config._unspecified object>, all=None, divide=None, over=None, under=None, invalid=None)",
     "slug": "errstate",
     "source_url": "",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Context manager for floating-point error handling.",
     "upstream_source_url": ""
   },
@@ -4514,7 +4514,7 @@
     "signature": "fnp.finfo(dtype)",
     "slug": "finfo",
     "source_url": "",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Machine limits for floating point types.",
     "upstream_source_url": ""
   },
@@ -14629,7 +14629,15 @@
                       },
                       {
                         "kind": "text",
-                        "text": "   \u2014 conditional write (boundary fix)"
+                        "text": "   \u2014 conditional write (boundary fix) "
+                      },
+                      {
+                        "kind": "strong",
+                        "text": "FREE"
+                      },
+                      {
+                        "kind": "text",
+                        "text": " (3-arg where)"
                       }
                     ],
                     "type": "paragraph"
@@ -14697,7 +14705,15 @@
                       },
                       {
                         "kind": "text",
-                        "text": "   \u2014 conditional write (small-jump zeroing)"
+                        "text": "   \u2014 conditional write (small-jump zeroing) "
+                      },
+                      {
+                        "kind": "strong",
+                        "text": "FREE"
+                      },
+                      {
+                        "kind": "text",
+                        "text": " (3-arg where)"
                       }
                     ],
                     "type": "paragraph"
@@ -14740,7 +14756,15 @@
               },
               {
                 "kind": "text",
-                "text": " expression (final output\nmaterialization) involves one add pass but is treated as part of the\noutput-write cost \u2014 following the convention that the output buffer\nfill is attributed to the issuing op.  Charging all 13 op-passes\nagainst "
+                "text": " expression (final output\nmaterialization) involves one add pass but is treated as part of the\noutput-write cost \u2014 following the convention that the output buffer\nfill is attributed to the issuing op.  Charging all 11 "
+              },
+              {
+                "kind": "emphasis",
+                "text": "non-free"
+              },
+              {
+                "kind": "text",
+                "text": " op-passes\nagainst "
               },
               {
                 "kind": "code",
@@ -14765,7 +14789,34 @@
             "inline": [
               {
                 "kind": "text",
-                "text": "Prior value was "
+                "text": "Steps 8 and 12 ("
+              },
+              {
+                "kind": "code",
+                "text": "copyto/select"
+              },
+              {
+                "kind": "text",
+                "text": " via 3-arg "
+              },
+              {
+                "external_url": "",
+                "href": "/docs/api/numpy/where/",
+                "kind": "link",
+                "target": "where",
+                "text": "where"
+              },
+              {
+                "kind": "text",
+                "text": ") are pure data\nmovement (selecting by a given mask) and are therefore free per the\ncost-model rule introduced with the where-arity branching (Task 4,\n2026-06-15).  Prior value was "
+              },
+              {
+                "kind": "code",
+                "text": "13 * numel"
+              },
+              {
+                "kind": "text",
+                "text": " (included 2 free selects);\nbefore that it was "
               },
               {
                 "kind": "code",
@@ -14773,7 +14824,7 @@
               },
               {
                 "kind": "text",
-                "text": " (under-counted by ~2\u00d7). Audit-completion\nTask 4 (2026-06-12)."
+                "text": " (Audit-completion Task 4, 2026-06-12)."
               }
             ],
             "type": "paragraph"
@@ -15535,12 +15586,12 @@
     "import_path": "fnp.fromfile",
     "kind": "function",
     "members": [],
-    "module": "flopscope._free_ops",
+    "module": "flopscope._array_ops",
     "name": "fromfile",
     "related_guides": [],
     "signature": "fnp.fromfile(*args, **kwargs)",
     "slug": "fromfile",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1829",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2101",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Construct an array from data in a text or binary file.",
     "upstream_source_url": ""
@@ -15950,12 +16001,12 @@
     "import_path": "fnp.fromregex",
     "kind": "function",
     "members": [],
-    "module": "flopscope._free_ops",
+    "module": "flopscope._array_ops",
     "name": "fromregex",
     "related_guides": [],
     "signature": "fnp.fromregex(file, regexp, dtype, encoding=None)",
     "slug": "fromregex",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1877",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2151",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Construct an array from a text file, using regular expression parsing.",
     "upstream_source_url": ""
@@ -16354,12 +16405,12 @@
     "import_path": "fnp.fromstring",
     "kind": "function",
     "members": [],
-    "module": "flopscope._free_ops",
+    "module": "flopscope._array_ops",
     "name": "fromstring",
     "related_guides": [],
     "signature": "fnp.fromstring(*args, **kwargs)",
     "slug": "fromstring",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1891",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2165",
     "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "A new 1-D array initialized from text data in a string.",
     "upstream_source_url": ""
@@ -16689,7 +16740,7 @@
     "signature": "fnp.get_printoptions()",
     "slug": "get-printoptions",
     "source_url": "https://github.com/AIcrowd/flopscope/blob/main/.venv/lib/python3.14/site-packages/numpy/_core/arrayprint.py#L318",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Return the current print options.",
     "upstream_source_url": ""
   },
@@ -17114,7 +17165,7 @@
     "signature": "fnp.iinfo(int_type)",
     "slug": "iinfo",
     "source_url": "",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Machine limits for integer types.",
     "upstream_source_url": ""
   },
@@ -18375,7 +18426,7 @@
     "signature": "fnp.ndenumerate(arr)",
     "slug": "ndenumerate",
     "source_url": "",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Multidimensional index iterator.",
     "upstream_source_url": ""
   },
@@ -18618,7 +18669,7 @@
     "signature": "fnp.ndindex(*shape)",
     "slug": "ndindex",
     "source_url": "",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "An N-dimensional iterator object to index arrays.",
     "upstream_source_url": ""
   },
@@ -20222,7 +20273,7 @@
     "signature": "fnp.nditer",
     "slug": "nditer",
     "source_url": "",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Efficient multi-dimensional iterator object to iterate over arrays. To get started using this object, see the :ref:`introductory guide to array iteration <arrays.nditer>`.",
     "upstream_source_url": ""
   },
@@ -20404,7 +20455,7 @@
     "signature": "fnp.printoptions(*args, **kwargs)",
     "slug": "printoptions",
     "source_url": "https://github.com/AIcrowd/flopscope/blob/main/.venv/lib/python3.14/site-packages/numpy/_core/arrayprint.py#L372",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Context manager for setting print options.",
     "upstream_source_url": ""
   },
@@ -22696,7 +22747,7 @@
     "signature": "fnp.set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=None, nanstr=None, infstr=None, formatter=None, sign=None, floatmode=None, *, legacy=None, override_repr=None)",
     "slug": "set-printoptions",
     "source_url": "https://github.com/AIcrowd/flopscope/blob/main/.venv/lib/python3.14/site-packages/numpy/_core/arrayprint.py#L113",
-    "status_note": "",
+    "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
     "summary": "Set printing options.",
     "upstream_source_url": ""
   },

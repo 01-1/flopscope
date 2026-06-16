@@ -933,7 +933,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.block",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1364",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1620",
   "href": "/docs/api/numpy/block/",
   "import_path": "flopscope.numpy.block",
   "is_operation_cost_leaf": true,
@@ -1137,5 +1137,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/shape_base.py#L784",
-  "weight": 1.0
+  "weight": 0.0
 }

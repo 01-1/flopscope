@@ -666,7 +666,7 @@
     "signature": "fnp.geomspace(start, stop, num=50, endpoint=True, dtype=None, axis=0)",
     "status": "supported",
     "summary": "Return numbers spaced evenly on a log scale (a geometric progression).",
-    "weight": 1.0
+    "weight": 16.0
   },
   "schema_version": 1,
   "slug": "geomspace",

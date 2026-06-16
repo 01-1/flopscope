@@ -452,12 +452,12 @@
     "signature": "fnp.select(condlist: 'Sequence[ArrayLike]', choicelist: 'Sequence[ArrayLike]', default: 'Any' = 0) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Return an array drawn from elements in choicelist, depending on conditions.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "select",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2371",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2667",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L786"
   }
 }

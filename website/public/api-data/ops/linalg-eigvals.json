@@ -435,7 +435,7 @@
     "signature": "fnp.linalg.eigvals(a: 'ArrayLike') -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Compute the eigenvalues of a general matrix.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "linalg-eigvals",

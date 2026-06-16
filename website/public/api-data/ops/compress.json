@@ -470,12 +470,12 @@
     "signature": "fnp.compress(condition, a, axis=None, out=None)",
     "status": "supported",
     "summary": "Return selected slices of an array along given axis.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "compress",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1523",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1777",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/fromnumeric.py#L2171"
   }
 }

@@ -652,7 +652,7 @@
     "signature": "fnp.linalg.pinv(a: 'ArrayLike', rcond: 'float | None' = None, hermitian: 'bool' = False, *, rtol: 'float | None' = None) -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Compute the (Moore-Penrose) pseudo-inverse of a matrix.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "linalg-pinv",

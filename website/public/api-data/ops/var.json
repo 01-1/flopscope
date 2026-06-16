@@ -1026,7 +1026,7 @@
     "signature": "fnp.var(a, axis=None, dtype=None, out=None, ddof=0, keepdims=<no value>, *, where=<no value>, mean=<no value>, correction=<no value>)",
     "status": "supported",
     "summary": "Compute the variance along the specified axis.",
-    "weight": 2.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "var",

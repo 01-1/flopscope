@@ -604,12 +604,12 @@
     "signature": "fnp.fill_diagonal(a: 'ArrayLike', val: 'Any', wrap: 'bool' = False, **kwargs: 'Any') -> 'None'",
     "status": "supported",
     "summary": "Fill the main diagonal of the given array of any dimensionality.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "fill_diagonal",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1735",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1999",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_index_tricks_impl.py#L815"
   }
 }

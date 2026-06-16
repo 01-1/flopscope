@@ -168,7 +168,7 @@
     "kind": "op",
     "label": "fnp.append",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1155"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1396"
   },
   "apply_along_axis": {
     "canonical_name": "apply_along_axis",
@@ -195,7 +195,7 @@
     "kind": "op",
     "label": "fnp.arange",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L224"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L238"
   },
   "arccos": {
     "canonical_name": "arccos",
@@ -303,7 +303,7 @@
     "kind": "op",
     "label": "fnp.argwhere",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1186"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1425"
   },
   "around": {
     "canonical_name": "rint",
@@ -321,7 +321,7 @@
     "kind": "op",
     "label": "fnp.array",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L112"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L115"
   },
   "array_equal": {
     "canonical_name": "array_equal",
@@ -348,7 +348,7 @@
     "kind": "op",
     "label": "fnp.array_split",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1205"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1444"
   },
   "as_symmetric": {
     "canonical_name": "as_symmetric",
@@ -366,7 +366,7 @@
     "kind": "op",
     "label": "fnp.asarray",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1084"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1325"
   },
   "asarray_chkfinite": {
     "canonical_name": "asarray_chkfinite",
@@ -375,7 +375,7 @@
     "kind": "op",
     "label": "fnp.asarray_chkfinite",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1222"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1461"
   },
   "asin": {
     "canonical_name": "arcsin",
@@ -402,7 +402,7 @@
     "kind": "op",
     "label": "fnp.astype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1072"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1261"
   },
   "atan": {
     "canonical_name": "arctan",
@@ -438,7 +438,7 @@
     "kind": "op",
     "label": "fnp.atleast_1d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1243"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1484"
   },
   "atleast_2d": {
     "canonical_name": "atleast_2d",
@@ -447,7 +447,7 @@
     "kind": "op",
     "label": "fnp.atleast_2d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1274"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1520"
   },
   "atleast_3d": {
     "canonical_name": "atleast_3d",
@@ -456,7 +456,7 @@
     "kind": "op",
     "label": "fnp.atleast_3d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1305"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1556"
   },
   "average": {
     "canonical_name": "average",
@@ -491,8 +491,8 @@
     "import_path": "fnp.base_repr",
     "kind": "function",
     "label": "fnp.base_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1336"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1592"
   },
   "binary_repr": {
     "canonical_name": "binary_repr",
@@ -500,8 +500,8 @@
     "import_path": "fnp.binary_repr",
     "kind": "function",
     "label": "fnp.binary_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1350"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1606"
   },
   "bincount": {
     "canonical_name": "bincount",
@@ -609,7 +609,7 @@
     "kind": "op",
     "label": "fnp.block",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1364"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1620"
   },
   "bmat": {
     "canonical_name": "bmat",
@@ -618,7 +618,7 @@
     "kind": "op",
     "label": "fnp.bmat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1390"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1646"
   },
   "broadcast": {
     "canonical_name": "broadcast",
@@ -636,7 +636,7 @@
     "kind": "op",
     "label": "fnp.broadcast_arrays",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1414"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1670"
   },
   "broadcast_shapes": {
     "canonical_name": "broadcast_shapes",
@@ -645,7 +645,7 @@
     "kind": "op",
     "label": "fnp.broadcast_shapes",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1440"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1696"
   },
   "broadcast_to": {
     "canonical_name": "broadcast_to",
@@ -654,7 +654,7 @@
     "kind": "op",
     "label": "fnp.broadcast_to",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1006"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1184"
   },
   "budget": {
     "canonical_name": "budget",
@@ -708,7 +708,7 @@
     "kind": "op",
     "label": "fnp.can_cast",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1448"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1704"
   },
   "cbrt": {
     "canonical_name": "cbrt",
@@ -744,7 +744,7 @@
     "kind": "op",
     "label": "fnp.choose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1456"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1712"
   },
   "clear_einsum_cache": {
     "canonical_name": "clear_einsum_cache",
@@ -771,7 +771,7 @@
     "kind": "op",
     "label": "fnp.column_stack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1481"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1737"
   },
   "common_type": {
     "canonical_name": "common_type",
@@ -780,7 +780,7 @@
     "kind": "op",
     "label": "fnp.common_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1515"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1769"
   },
   "compress": {
     "canonical_name": "compress",
@@ -789,7 +789,7 @@
     "kind": "op",
     "label": "fnp.compress",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1523"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1777"
   },
   "concat": {
     "canonical_name": "concatenate",
@@ -798,7 +798,7 @@
     "kind": "op",
     "label": "fnp.concatenate",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L476"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L532"
   },
   "concatenate": {
     "canonical_name": "concatenate",
@@ -807,7 +807,7 @@
     "kind": "op",
     "label": "fnp.concatenate",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L476"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L532"
   },
   "cond_cost": {
     "canonical_name": "flops.cond_cost",
@@ -861,7 +861,7 @@
     "kind": "op",
     "label": "fnp.copy",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L776"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L843"
   },
   "copysign": {
     "canonical_name": "copysign",
@@ -879,7 +879,7 @@
     "kind": "op",
     "label": "fnp.copyto",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1581"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1835"
   },
   "corrcoef": {
     "canonical_name": "corrcoef",
@@ -1005,7 +1005,7 @@
     "kind": "op",
     "label": "fnp.delete",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1608"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1872"
   },
   "det_cost": {
     "canonical_name": "flops.det_cost",
@@ -1023,7 +1023,7 @@
     "kind": "op",
     "label": "fnp.diag",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L194"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L208"
   },
   "diag_indices": {
     "canonical_name": "diag_indices",
@@ -1032,7 +1032,7 @@
     "kind": "op",
     "label": "fnp.diag_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1629"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1893"
   },
   "diag_indices_from": {
     "canonical_name": "diag_indices_from",
@@ -1041,7 +1041,7 @@
     "kind": "op",
     "label": "fnp.diag_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1637"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1901"
   },
   "diagflat": {
     "canonical_name": "diagflat",
@@ -1050,7 +1050,7 @@
     "kind": "op",
     "label": "fnp.diagflat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1645"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1909"
   },
   "diagonal": {
     "canonical_name": "diagonal",
@@ -1059,7 +1059,7 @@
     "kind": "op",
     "label": "fnp.diagonal",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L981"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1159"
   },
   "diff": {
     "canonical_name": "diff",
@@ -1113,7 +1113,7 @@
     "kind": "op",
     "label": "fnp.dsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1664"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1928"
   },
   "dstack": {
     "canonical_name": "dstack",
@@ -1122,7 +1122,7 @@
     "kind": "op",
     "label": "fnp.dstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1693"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1957"
   },
   "ediff1d": {
     "canonical_name": "ediff1d",
@@ -1212,7 +1212,7 @@
     "kind": "op",
     "label": "fnp.empty",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L349"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L375"
   },
   "empty_like": {
     "canonical_name": "empty_like",
@@ -1221,7 +1221,7 @@
     "kind": "op",
     "label": "fnp.empty_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L361"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L392"
   },
   "equal": {
     "canonical_name": "equal",
@@ -1266,7 +1266,7 @@
     "kind": "op",
     "label": "fnp.expand_dims",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L731"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L793"
   },
   "expm1": {
     "canonical_name": "expm1",
@@ -1284,7 +1284,7 @@
     "kind": "op",
     "label": "fnp.extract",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1708"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1972"
   },
   "eye": {
     "canonical_name": "eye",
@@ -1293,7 +1293,7 @@
     "kind": "op",
     "label": "fnp.eye",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L176"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L187"
   },
   "fabs": {
     "canonical_name": "fabs",
@@ -1392,7 +1392,7 @@
     "kind": "op",
     "label": "fnp.fft.ifftshift",
     "module": "fnp.fft",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L76"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L83"
   },
   "fft.ihfft": {
     "canonical_name": "fft.ihfft",
@@ -1491,7 +1491,7 @@
     "kind": "op",
     "label": "fnp.fill_diagonal",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1735"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1999"
   },
   "finfo": {
     "canonical_name": "finfo",
@@ -1518,7 +1518,7 @@
     "kind": "op",
     "label": "fnp.flatnonzero",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1760"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2024"
   },
   "flip": {
     "canonical_name": "flip",
@@ -1527,7 +1527,7 @@
     "kind": "op",
     "label": "fnp.flip",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L878"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L960"
   },
   "fliplr": {
     "canonical_name": "fliplr",
@@ -1536,7 +1536,7 @@
     "kind": "op",
     "label": "fnp.fliplr",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1776"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2040"
   },
   "flipud": {
     "canonical_name": "flipud",
@@ -1545,7 +1545,7 @@
     "kind": "op",
     "label": "fnp.flipud",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1786"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2054"
   },
   "float_power": {
     "canonical_name": "float_power",
@@ -2175,7 +2175,7 @@
     "kind": "op",
     "label": "fnp.append",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1155"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1396"
   },
   "flops.apply_along_axis": {
     "canonical_name": "apply_along_axis",
@@ -2202,7 +2202,7 @@
     "kind": "op",
     "label": "fnp.arange",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L224"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L238"
   },
   "flops.arccos": {
     "canonical_name": "arccos",
@@ -2310,7 +2310,7 @@
     "kind": "op",
     "label": "fnp.argwhere",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1186"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1425"
   },
   "flops.around": {
     "canonical_name": "rint",
@@ -2328,7 +2328,7 @@
     "kind": "op",
     "label": "fnp.array",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L112"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L115"
   },
   "flops.array_equal": {
     "canonical_name": "array_equal",
@@ -2355,7 +2355,7 @@
     "kind": "op",
     "label": "fnp.array_split",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1205"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1444"
   },
   "flops.as_symmetric": {
     "canonical_name": "as_symmetric",
@@ -2373,7 +2373,7 @@
     "kind": "op",
     "label": "fnp.asarray",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1084"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1325"
   },
   "flops.asarray_chkfinite": {
     "canonical_name": "asarray_chkfinite",
@@ -2382,7 +2382,7 @@
     "kind": "op",
     "label": "fnp.asarray_chkfinite",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1222"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1461"
   },
   "flops.asin": {
     "canonical_name": "arcsin",
@@ -2409,7 +2409,7 @@
     "kind": "op",
     "label": "fnp.astype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1072"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1261"
   },
   "flops.atan": {
     "canonical_name": "arctan",
@@ -2445,7 +2445,7 @@
     "kind": "op",
     "label": "fnp.atleast_1d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1243"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1484"
   },
   "flops.atleast_2d": {
     "canonical_name": "atleast_2d",
@@ -2454,7 +2454,7 @@
     "kind": "op",
     "label": "fnp.atleast_2d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1274"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1520"
   },
   "flops.atleast_3d": {
     "canonical_name": "atleast_3d",
@@ -2463,7 +2463,7 @@
     "kind": "op",
     "label": "fnp.atleast_3d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1305"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1556"
   },
   "flops.average": {
     "canonical_name": "average",
@@ -2498,8 +2498,8 @@
     "import_path": "fnp.base_repr",
     "kind": "function",
     "label": "fnp.base_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1336"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1592"
   },
   "flops.binary_repr": {
     "canonical_name": "binary_repr",
@@ -2507,8 +2507,8 @@
     "import_path": "fnp.binary_repr",
     "kind": "function",
     "label": "fnp.binary_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1350"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1606"
   },
   "flops.bincount": {
     "canonical_name": "bincount",
@@ -2616,7 +2616,7 @@
     "kind": "op",
     "label": "fnp.block",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1364"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1620"
   },
   "flops.bmat": {
     "canonical_name": "bmat",
@@ -2625,7 +2625,7 @@
     "kind": "op",
     "label": "fnp.bmat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1390"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1646"
   },
   "flops.broadcast": {
     "canonical_name": "broadcast",
@@ -2643,7 +2643,7 @@
     "kind": "op",
     "label": "fnp.broadcast_arrays",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1414"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1670"
   },
   "flops.broadcast_shapes": {
     "canonical_name": "broadcast_shapes",
@@ -2652,7 +2652,7 @@
     "kind": "op",
     "label": "fnp.broadcast_shapes",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1440"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1696"
   },
   "flops.broadcast_to": {
     "canonical_name": "broadcast_to",
@@ -2661,7 +2661,7 @@
     "kind": "op",
     "label": "fnp.broadcast_to",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1006"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1184"
   },
   "flops.budget": {
     "canonical_name": "budget",
@@ -2715,7 +2715,7 @@
     "kind": "op",
     "label": "fnp.can_cast",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1448"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1704"
   },
   "flops.cbrt": {
     "canonical_name": "cbrt",
@@ -2751,7 +2751,7 @@
     "kind": "op",
     "label": "fnp.choose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1456"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1712"
   },
   "flops.clear_einsum_cache": {
     "canonical_name": "clear_einsum_cache",
@@ -2778,7 +2778,7 @@
     "kind": "op",
     "label": "fnp.column_stack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1481"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1737"
   },
   "flops.common_type": {
     "canonical_name": "common_type",
@@ -2787,7 +2787,7 @@
     "kind": "op",
     "label": "fnp.common_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1515"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1769"
   },
   "flops.compress": {
     "canonical_name": "compress",
@@ -2796,7 +2796,7 @@
     "kind": "op",
     "label": "fnp.compress",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1523"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1777"
   },
   "flops.concat": {
     "canonical_name": "concatenate",
@@ -2805,7 +2805,7 @@
     "kind": "op",
     "label": "fnp.concatenate",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L476"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L532"
   },
   "flops.concatenate": {
     "canonical_name": "concatenate",
@@ -2814,7 +2814,7 @@
     "kind": "op",
     "label": "fnp.concatenate",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L476"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L532"
   },
   "flops.cond_cost": {
     "canonical_name": "flops.cond_cost",
@@ -2868,7 +2868,7 @@
     "kind": "op",
     "label": "fnp.copy",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L776"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L843"
   },
   "flops.copysign": {
     "canonical_name": "copysign",
@@ -2886,7 +2886,7 @@
     "kind": "op",
     "label": "fnp.copyto",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1581"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1835"
   },
   "flops.corrcoef": {
     "canonical_name": "corrcoef",
@@ -3012,7 +3012,7 @@
     "kind": "op",
     "label": "fnp.delete",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1608"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1872"
   },
   "flops.det_cost": {
     "canonical_name": "flops.det_cost",
@@ -3030,7 +3030,7 @@
     "kind": "op",
     "label": "fnp.diag",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L194"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L208"
   },
   "flops.diag_indices": {
     "canonical_name": "diag_indices",
@@ -3039,7 +3039,7 @@
     "kind": "op",
     "label": "fnp.diag_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1629"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1893"
   },
   "flops.diag_indices_from": {
     "canonical_name": "diag_indices_from",
@@ -3048,7 +3048,7 @@
     "kind": "op",
     "label": "fnp.diag_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1637"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1901"
   },
   "flops.diagflat": {
     "canonical_name": "diagflat",
@@ -3057,7 +3057,7 @@
     "kind": "op",
     "label": "fnp.diagflat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1645"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1909"
   },
   "flops.diagonal": {
     "canonical_name": "diagonal",
@@ -3066,7 +3066,7 @@
     "kind": "op",
     "label": "fnp.diagonal",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L981"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1159"
   },
   "flops.diff": {
     "canonical_name": "diff",
@@ -3120,7 +3120,7 @@
     "kind": "op",
     "label": "fnp.dsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1664"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1928"
   },
   "flops.dstack": {
     "canonical_name": "dstack",
@@ -3129,7 +3129,7 @@
     "kind": "op",
     "label": "fnp.dstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1693"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1957"
   },
   "flops.ediff1d": {
     "canonical_name": "ediff1d",
@@ -3219,7 +3219,7 @@
     "kind": "op",
     "label": "fnp.empty",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L349"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L375"
   },
   "flops.empty_like": {
     "canonical_name": "empty_like",
@@ -3228,7 +3228,7 @@
     "kind": "op",
     "label": "fnp.empty_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L361"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L392"
   },
   "flops.equal": {
     "canonical_name": "equal",
@@ -3273,7 +3273,7 @@
     "kind": "op",
     "label": "fnp.expand_dims",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L731"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L793"
   },
   "flops.expm1": {
     "canonical_name": "expm1",
@@ -3291,7 +3291,7 @@
     "kind": "op",
     "label": "fnp.extract",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1708"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1972"
   },
   "flops.eye": {
     "canonical_name": "eye",
@@ -3300,7 +3300,7 @@
     "kind": "op",
     "label": "fnp.eye",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L176"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L187"
   },
   "flops.fabs": {
     "canonical_name": "fabs",
@@ -3399,7 +3399,7 @@
     "kind": "op",
     "label": "fnp.fft.ifftshift",
     "module": "fnp.fft",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L76"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L83"
   },
   "flops.fft.ihfft": {
     "canonical_name": "fft.ihfft",
@@ -3498,7 +3498,7 @@
     "kind": "op",
     "label": "fnp.fill_diagonal",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1735"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1999"
   },
   "flops.finfo": {
     "canonical_name": "finfo",
@@ -3525,7 +3525,7 @@
     "kind": "op",
     "label": "fnp.flatnonzero",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1760"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2024"
   },
   "flops.flip": {
     "canonical_name": "flip",
@@ -3534,7 +3534,7 @@
     "kind": "op",
     "label": "fnp.flip",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L878"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L960"
   },
   "flops.fliplr": {
     "canonical_name": "fliplr",
@@ -3543,7 +3543,7 @@
     "kind": "op",
     "label": "fnp.fliplr",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1776"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2040"
   },
   "flops.flipud": {
     "canonical_name": "flipud",
@@ -3552,7 +3552,7 @@
     "kind": "op",
     "label": "fnp.flipud",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1786"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2054"
   },
   "flops.float_power": {
     "canonical_name": "float_power",
@@ -3624,7 +3624,7 @@
     "kind": "op",
     "label": "fnp.from_dlpack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1796"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2068"
   },
   "flops.frombuffer": {
     "canonical_name": "frombuffer",
@@ -3633,7 +3633,7 @@
     "kind": "op",
     "label": "fnp.frombuffer",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1810"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2082"
   },
   "flops.fromfile": {
     "canonical_name": "fromfile",
@@ -3641,8 +3641,8 @@
     "import_path": "fnp.fromfile",
     "kind": "function",
     "label": "fnp.fromfile",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1829"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2101"
   },
   "flops.fromfunction": {
     "canonical_name": "fromfunction",
@@ -3651,7 +3651,7 @@
     "kind": "op",
     "label": "fnp.fromfunction",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1843"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2115"
   },
   "flops.fromiter": {
     "canonical_name": "fromiter",
@@ -3660,7 +3660,7 @@
     "kind": "op",
     "label": "fnp.fromiter",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1858"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2132"
   },
   "flops.fromregex": {
     "canonical_name": "fromregex",
@@ -3668,8 +3668,8 @@
     "import_path": "fnp.fromregex",
     "kind": "function",
     "label": "fnp.fromregex",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1877"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2151"
   },
   "flops.fromstring": {
     "canonical_name": "fromstring",
@@ -3677,8 +3677,8 @@
     "import_path": "fnp.fromstring",
     "kind": "function",
     "label": "fnp.fromstring",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1891"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2165"
   },
   "flops.full": {
     "canonical_name": "full",
@@ -3687,7 +3687,7 @@
     "kind": "op",
     "label": "fnp.full",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L157"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L168"
   },
   "flops.full_like": {
     "canonical_name": "full_like",
@@ -3696,7 +3696,7 @@
     "kind": "op",
     "label": "fnp.full_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L318"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L344"
   },
   "flops.gcd": {
     "canonical_name": "gcd",
@@ -3858,7 +3858,7 @@
     "kind": "op",
     "label": "fnp.hsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L647"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L703"
   },
   "flops.hstack": {
     "canonical_name": "hstack",
@@ -3867,7 +3867,7 @@
     "kind": "op",
     "label": "fnp.hstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L577"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L633"
   },
   "flops.hypot": {
     "canonical_name": "hypot",
@@ -3894,7 +3894,7 @@
     "kind": "op",
     "label": "fnp.identity",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L373"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L412"
   },
   "flops.iinfo": {
     "canonical_name": "iinfo",
@@ -3930,7 +3930,7 @@
     "kind": "op",
     "label": "fnp.indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1905"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2179"
   },
   "flops.inner": {
     "canonical_name": "inner",
@@ -3948,7 +3948,7 @@
     "kind": "op",
     "label": "fnp.insert",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1927"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2201"
   },
   "flops.interp": {
     "canonical_name": "interp",
@@ -4029,7 +4029,7 @@
     "kind": "op",
     "label": "fnp.isdtype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1953"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2227"
   },
   "flops.isfinite": {
     "canonical_name": "isfinite",
@@ -4038,7 +4038,7 @@
     "kind": "op",
     "label": "fnp.isfinite",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1121"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1362"
   },
   "flops.isfortran": {
     "canonical_name": "isfortran",
@@ -4047,7 +4047,7 @@
     "kind": "op",
     "label": "fnp.isfortran",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1961"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2235"
   },
   "flops.isin": {
     "canonical_name": "isin",
@@ -4065,7 +4065,7 @@
     "kind": "op",
     "label": "fnp.isinf",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1137"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1378"
   },
   "flops.isnan": {
     "canonical_name": "isnan",
@@ -4074,7 +4074,7 @@
     "kind": "op",
     "label": "fnp.isnan",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1105"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1346"
   },
   "flops.isnat": {
     "canonical_name": "isnat",
@@ -4128,7 +4128,7 @@
     "kind": "op",
     "label": "fnp.isscalar",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1987"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2261"
   },
   "flops.issubdtype": {
     "canonical_name": "issubdtype",
@@ -4137,7 +4137,7 @@
     "kind": "op",
     "label": "fnp.issubdtype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1995"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2269"
   },
   "flops.iterable": {
     "canonical_name": "iterable",
@@ -4146,7 +4146,7 @@
     "kind": "op",
     "label": "fnp.iterable",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2003"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2277"
   },
   "flops.ix_": {
     "canonical_name": "ix_",
@@ -4155,7 +4155,7 @@
     "kind": "op",
     "label": "fnp.ix_",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2011"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2285"
   },
   "flops.kaiser": {
     "canonical_name": "kaiser",
@@ -4524,7 +4524,7 @@
     "kind": "op",
     "label": "fnp.linspace",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L242"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L256"
   },
   "flops.load": {
     "canonical_name": "load",
@@ -4650,7 +4650,7 @@
     "kind": "op",
     "label": "fnp.mask_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2026"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2300"
   },
   "flops.matmul": {
     "canonical_name": "matmul",
@@ -4695,7 +4695,7 @@
     "kind": "op",
     "label": "fnp.matrix_transpose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2052"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2326"
   },
   "flops.matvec": {
     "canonical_name": "matvec",
@@ -4731,7 +4731,7 @@
     "kind": "op",
     "label": "fnp.may_share_memory",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2075"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2349"
   },
   "flops.mean": {
     "canonical_name": "mean",
@@ -4758,7 +4758,7 @@
     "kind": "op",
     "label": "fnp.meshgrid",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1041"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1219"
   },
   "flops.min": {
     "canonical_name": "min",
@@ -4776,7 +4776,7 @@
     "kind": "op",
     "label": "fnp.min_scalar_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2084"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2358"
   },
   "flops.minimum": {
     "canonical_name": "minimum",
@@ -4794,7 +4794,7 @@
     "kind": "op",
     "label": "fnp.mintypecode",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2092"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2366"
   },
   "flops.mod": {
     "canonical_name": "mod",
@@ -4821,7 +4821,7 @@
     "kind": "op",
     "label": "fnp.moveaxis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L453"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L506"
   },
   "flops.multi_dot_cost": {
     "canonical_name": "flops.multi_dot_cost",
@@ -5001,7 +5001,7 @@
     "kind": "op",
     "label": "fnp.ndim",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2100"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2374"
   },
   "flops.ndindex": {
     "canonical_name": "ndindex",
@@ -5046,7 +5046,7 @@
     "kind": "op",
     "label": "fnp.nonzero",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2108"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2382"
   },
   "flops.norm_cost": {
     "canonical_name": "flops.norm_cost",
@@ -5073,7 +5073,7 @@
     "kind": "op",
     "label": "fnp.ones",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L145"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L152"
   },
   "flops.ones_like": {
     "canonical_name": "ones_like",
@@ -5082,7 +5082,7 @@
     "kind": "op",
     "label": "fnp.ones_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L295"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L315"
   },
   "flops.outer": {
     "canonical_name": "outer",
@@ -5100,7 +5100,7 @@
     "kind": "op",
     "label": "fnp.packbits",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2124"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2398"
   },
   "flops.pad": {
     "canonical_name": "pad",
@@ -5109,7 +5109,7 @@
     "kind": "op",
     "label": "fnp.pad",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L939"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1099"
   },
   "flops.partition": {
     "canonical_name": "partition",
@@ -5136,7 +5136,7 @@
     "kind": "op",
     "label": "fnp.permute_dims",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2143"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2417"
   },
   "flops.piecewise": {
     "canonical_name": "piecewise",
@@ -5163,7 +5163,7 @@
     "kind": "op",
     "label": "fnp.place",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2152"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2426"
   },
   "flops.pointwise_cost": {
     "canonical_name": "flops.pointwise_cost",
@@ -5388,7 +5388,7 @@
     "kind": "op",
     "label": "fnp.promote_types",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2183"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2457"
   },
   "flops.ptp": {
     "canonical_name": "ptp",
@@ -5406,7 +5406,7 @@
     "kind": "op",
     "label": "fnp.put",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2191"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2465"
   },
   "flops.put_along_axis": {
     "canonical_name": "put_along_axis",
@@ -5415,7 +5415,7 @@
     "kind": "op",
     "label": "fnp.put_along_axis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2222"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2496"
   },
   "flops.putmask": {
     "canonical_name": "putmask",
@@ -5424,7 +5424,7 @@
     "kind": "op",
     "label": "fnp.putmask",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2266"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2540"
   },
   "flops.qr_cost": {
     "canonical_name": "flops.qr_cost",
@@ -6801,7 +6801,7 @@
     "kind": "op",
     "label": "fnp.ravel",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L749"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L816"
   },
   "flops.ravel_multi_index": {
     "canonical_name": "ravel_multi_index",
@@ -6810,7 +6810,7 @@
     "kind": "op",
     "label": "fnp.ravel_multi_index",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2295"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2569"
   },
   "flops.real": {
     "canonical_name": "real",
@@ -6864,7 +6864,7 @@
     "kind": "op",
     "label": "fnp.repeat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L847"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L929"
   },
   "flops.require": {
     "canonical_name": "require",
@@ -6873,7 +6873,7 @@
     "kind": "op",
     "label": "fnp.require",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2304"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2596"
   },
   "flops.reshape": {
     "canonical_name": "reshape",
@@ -6882,7 +6882,7 @@
     "kind": "op",
     "label": "fnp.reshape",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L389"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L431"
   },
   "flops.resize": {
     "canonical_name": "resize",
@@ -6891,7 +6891,7 @@
     "kind": "op",
     "label": "fnp.resize",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2317"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2609"
   },
   "flops.result_type": {
     "canonical_name": "result_type",
@@ -6900,7 +6900,7 @@
     "kind": "op",
     "label": "fnp.result_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2331"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2623"
   },
   "flops.rfft_cost": {
     "canonical_name": "flops.rfft_cost",
@@ -6945,7 +6945,7 @@
     "kind": "op",
     "label": "fnp.roll",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L908"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L993"
   },
   "flops.rollaxis": {
     "canonical_name": "rollaxis",
@@ -6954,7 +6954,7 @@
     "kind": "op",
     "label": "fnp.rollaxis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2339"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2631"
   },
   "flops.roots": {
     "canonical_name": "roots",
@@ -6981,7 +6981,7 @@
     "kind": "op",
     "label": "fnp.rot90",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2354"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2646"
   },
   "flops.round": {
     "canonical_name": "rint",
@@ -6999,7 +6999,7 @@
     "kind": "op",
     "label": "fnp.vstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L545"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L601"
   },
   "flops.save": {
     "canonical_name": "save",
@@ -7044,7 +7044,7 @@
     "kind": "op",
     "label": "fnp.select",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2371"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2667"
   },
   "flops.set_printoptions": {
     "canonical_name": "set_printoptions",
@@ -7089,7 +7089,7 @@
     "kind": "op",
     "label": "fnp.shape",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2402"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2698"
   },
   "flops.shares_memory": {
     "canonical_name": "shares_memory",
@@ -7098,7 +7098,7 @@
     "kind": "op",
     "label": "fnp.shares_memory",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2410"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2706"
   },
   "flops.sign": {
     "canonical_name": "sign",
@@ -7152,7 +7152,7 @@
     "kind": "op",
     "label": "fnp.size",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2418"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2714"
   },
   "flops.slogdet_cost": {
     "canonical_name": "flops.slogdet_cost",
@@ -7206,7 +7206,7 @@
     "kind": "op",
     "label": "fnp.split",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L609"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L665"
   },
   "flops.sqrt": {
     "canonical_name": "sqrt",
@@ -7233,7 +7233,7 @@
     "kind": "op",
     "label": "fnp.squeeze",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L705"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L764"
   },
   "flops.stack": {
     "canonical_name": "stack",
@@ -7242,7 +7242,7 @@
     "kind": "op",
     "label": "fnp.stack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L512"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L568"
   },
   "flops.stats.cauchy": {
     "canonical_name": "stats.cauchy",
@@ -7584,7 +7584,7 @@
     "kind": "op",
     "label": "fnp.swapaxes",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L434"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L484"
   },
   "flops.symmetrize": {
     "canonical_name": "symmetrize",
@@ -7602,7 +7602,7 @@
     "kind": "op",
     "label": "fnp.take",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2426"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2722"
   },
   "flops.take_along_axis": {
     "canonical_name": "take_along_axis",
@@ -7611,7 +7611,7 @@
     "kind": "op",
     "label": "fnp.take_along_axis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2452"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2748"
   },
   "flops.tan": {
     "canonical_name": "tan",
@@ -7683,7 +7683,7 @@
     "kind": "op",
     "label": "fnp.tile",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L815"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L897"
   },
   "flops.trace": {
     "canonical_name": "trace",
@@ -7710,7 +7710,7 @@
     "kind": "op",
     "label": "fnp.transpose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L416"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L461"
   },
   "flops.trapezoid": {
     "canonical_name": "trapezoid",
@@ -7737,7 +7737,7 @@
     "kind": "op",
     "label": "fnp.tri",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2478"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2774"
   },
   "flops.tril": {
     "canonical_name": "tril",
@@ -7746,7 +7746,7 @@
     "kind": "op",
     "label": "fnp.tril",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L967"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1145"
   },
   "flops.tril_indices": {
     "canonical_name": "tril_indices",
@@ -7755,7 +7755,7 @@
     "kind": "op",
     "label": "fnp.tril_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2486"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2787"
   },
   "flops.tril_indices_from": {
     "canonical_name": "tril_indices_from",
@@ -7764,7 +7764,7 @@
     "kind": "op",
     "label": "fnp.tril_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2494"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2795"
   },
   "flops.trim_zeros": {
     "canonical_name": "trim_zeros",
@@ -7773,7 +7773,7 @@
     "kind": "op",
     "label": "fnp.trim_zeros",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2502"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2803"
   },
   "flops.triu": {
     "canonical_name": "triu",
@@ -7782,7 +7782,7 @@
     "kind": "op",
     "label": "fnp.triu",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L953"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1131"
   },
   "flops.triu_indices": {
     "canonical_name": "triu_indices",
@@ -7791,7 +7791,7 @@
     "kind": "op",
     "label": "fnp.triu_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2519"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2821"
   },
   "flops.triu_indices_from": {
     "canonical_name": "triu_indices_from",
@@ -7800,7 +7800,7 @@
     "kind": "op",
     "label": "fnp.triu_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2527"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2829"
   },
   "flops.true_divide": {
     "canonical_name": "true_divide",
@@ -7827,7 +7827,7 @@
     "kind": "op",
     "label": "fnp.typename",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2535"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2837"
   },
   "flops.union1d": {
     "canonical_name": "union1d",
@@ -7890,7 +7890,7 @@
     "kind": "op",
     "label": "fnp.unpackbits",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2543"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2845"
   },
   "flops.unravel_index": {
     "canonical_name": "unravel_index",
@@ -7899,7 +7899,7 @@
     "kind": "op",
     "label": "fnp.unravel_index",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2562"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2864"
   },
   "flops.unstack": {
     "canonical_name": "unstack",
@@ -7908,7 +7908,7 @@
     "kind": "op",
     "label": "fnp.unstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2572"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2874"
   },
   "flops.unwrap": {
     "canonical_name": "unwrap",
@@ -7917,7 +7917,7 @@
     "kind": "op",
     "label": "fnp.unwrap",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_unwrap.py#L65"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_unwrap.py#L68"
   },
   "flops.unwrap_cost": {
     "canonical_name": "flops.unwrap_cost",
@@ -7989,7 +7989,7 @@
     "kind": "op",
     "label": "fnp.vsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L673"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L732"
   },
   "flops.vstack": {
     "canonical_name": "vstack",
@@ -7998,7 +7998,7 @@
     "kind": "op",
     "label": "fnp.vstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L545"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L601"
   },
   "flops.where": {
     "canonical_name": "where",
@@ -8007,7 +8007,7 @@
     "kind": "op",
     "label": "fnp.where",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L787"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L858"
   },
   "flops.zeros": {
     "canonical_name": "zeros",
@@ -8016,7 +8016,7 @@
     "kind": "op",
     "label": "fnp.zeros",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L133"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L136"
   },
   "flops.zeros_like": {
     "canonical_name": "zeros_like",
@@ -8025,7 +8025,7 @@
     "kind": "op",
     "label": "fnp.zeros_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L272"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L286"
   },
   "flopscope.BudgetContext": {
     "canonical_name": "BudgetContext",
@@ -8628,7 +8628,7 @@
     "kind": "op",
     "label": "fnp.append",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1155"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1396"
   },
   "flopscope.apply_along_axis": {
     "canonical_name": "apply_along_axis",
@@ -8655,7 +8655,7 @@
     "kind": "op",
     "label": "fnp.arange",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L224"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L238"
   },
   "flopscope.arccos": {
     "canonical_name": "arccos",
@@ -8763,7 +8763,7 @@
     "kind": "op",
     "label": "fnp.argwhere",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1186"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1425"
   },
   "flopscope.around": {
     "canonical_name": "rint",
@@ -8781,7 +8781,7 @@
     "kind": "op",
     "label": "fnp.array",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L112"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L115"
   },
   "flopscope.array_equal": {
     "canonical_name": "array_equal",
@@ -8808,7 +8808,7 @@
     "kind": "op",
     "label": "fnp.array_split",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1205"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1444"
   },
   "flopscope.as_symmetric": {
     "canonical_name": "as_symmetric",
@@ -8826,7 +8826,7 @@
     "kind": "op",
     "label": "fnp.asarray",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1084"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1325"
   },
   "flopscope.asarray_chkfinite": {
     "canonical_name": "asarray_chkfinite",
@@ -8835,7 +8835,7 @@
     "kind": "op",
     "label": "fnp.asarray_chkfinite",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1222"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1461"
   },
   "flopscope.asin": {
     "canonical_name": "arcsin",
@@ -8862,7 +8862,7 @@
     "kind": "op",
     "label": "fnp.astype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1072"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1261"
   },
   "flopscope.atan": {
     "canonical_name": "arctan",
@@ -8898,7 +8898,7 @@
     "kind": "op",
     "label": "fnp.atleast_1d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1243"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1484"
   },
   "flopscope.atleast_2d": {
     "canonical_name": "atleast_2d",
@@ -8907,7 +8907,7 @@
     "kind": "op",
     "label": "fnp.atleast_2d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1274"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1520"
   },
   "flopscope.atleast_3d": {
     "canonical_name": "atleast_3d",
@@ -8916,7 +8916,7 @@
     "kind": "op",
     "label": "fnp.atleast_3d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1305"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1556"
   },
   "flopscope.average": {
     "canonical_name": "average",
@@ -8942,8 +8942,8 @@
     "import_path": "fnp.base_repr",
     "kind": "function",
     "label": "fnp.base_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1336"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1592"
   },
   "flopscope.binary_repr": {
     "canonical_name": "binary_repr",
@@ -8951,8 +8951,8 @@
     "import_path": "fnp.binary_repr",
     "kind": "function",
     "label": "fnp.binary_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1350"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1606"
   },
   "flopscope.bincount": {
     "canonical_name": "bincount",
@@ -9051,7 +9051,7 @@
     "kind": "op",
     "label": "fnp.block",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1364"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1620"
   },
   "flopscope.bmat": {
     "canonical_name": "bmat",
@@ -9060,7 +9060,7 @@
     "kind": "op",
     "label": "fnp.bmat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1390"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1646"
   },
   "flopscope.broadcast": {
     "canonical_name": "broadcast",
@@ -9078,7 +9078,7 @@
     "kind": "op",
     "label": "fnp.broadcast_arrays",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1414"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1670"
   },
   "flopscope.broadcast_shapes": {
     "canonical_name": "broadcast_shapes",
@@ -9087,7 +9087,7 @@
     "kind": "op",
     "label": "fnp.broadcast_shapes",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1440"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1696"
   },
   "flopscope.broadcast_to": {
     "canonical_name": "broadcast_to",
@@ -9096,7 +9096,7 @@
     "kind": "op",
     "label": "fnp.broadcast_to",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1006"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1184"
   },
   "flopscope.budget": {
     "canonical_name": "budget",
@@ -9150,7 +9150,7 @@
     "kind": "op",
     "label": "fnp.can_cast",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1448"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1704"
   },
   "flopscope.cbrt": {
     "canonical_name": "cbrt",
@@ -9177,7 +9177,7 @@
     "kind": "op",
     "label": "fnp.choose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1456"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1712"
   },
   "flopscope.clear_einsum_cache": {
     "canonical_name": "clear_einsum_cache",
@@ -9204,7 +9204,7 @@
     "kind": "op",
     "label": "fnp.column_stack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1481"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1737"
   },
   "flopscope.common_type": {
     "canonical_name": "common_type",
@@ -9213,7 +9213,7 @@
     "kind": "op",
     "label": "fnp.common_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1515"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1769"
   },
   "flopscope.compress": {
     "canonical_name": "compress",
@@ -9222,7 +9222,7 @@
     "kind": "op",
     "label": "fnp.compress",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1523"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1777"
   },
   "flopscope.concat": {
     "canonical_name": "concatenate",
@@ -9231,7 +9231,7 @@
     "kind": "op",
     "label": "fnp.concatenate",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L476"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L532"
   },
   "flopscope.concatenate": {
     "canonical_name": "concatenate",
@@ -9240,7 +9240,7 @@
     "kind": "op",
     "label": "fnp.concatenate",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L476"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L532"
   },
   "flopscope.configure": {
     "canonical_name": "configure",
@@ -9285,7 +9285,7 @@
     "kind": "op",
     "label": "fnp.copy",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L776"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L843"
   },
   "flopscope.copysign": {
     "canonical_name": "copysign",
@@ -9303,7 +9303,7 @@
     "kind": "op",
     "label": "fnp.copyto",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1581"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1835"
   },
   "flopscope.corrcoef": {
     "canonical_name": "corrcoef",
@@ -9429,7 +9429,7 @@
     "kind": "op",
     "label": "fnp.delete",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1608"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1872"
   },
   "flopscope.diag": {
     "canonical_name": "diag",
@@ -9438,7 +9438,7 @@
     "kind": "op",
     "label": "fnp.diag",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L194"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L208"
   },
   "flopscope.diag_indices": {
     "canonical_name": "diag_indices",
@@ -9447,7 +9447,7 @@
     "kind": "op",
     "label": "fnp.diag_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1629"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1893"
   },
   "flopscope.diag_indices_from": {
     "canonical_name": "diag_indices_from",
@@ -9456,7 +9456,7 @@
     "kind": "op",
     "label": "fnp.diag_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1637"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1901"
   },
   "flopscope.diagflat": {
     "canonical_name": "diagflat",
@@ -9465,7 +9465,7 @@
     "kind": "op",
     "label": "fnp.diagflat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1645"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1909"
   },
   "flopscope.diagonal": {
     "canonical_name": "diagonal",
@@ -9474,7 +9474,7 @@
     "kind": "op",
     "label": "fnp.diagonal",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L981"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1159"
   },
   "flopscope.diff": {
     "canonical_name": "diff",
@@ -9528,7 +9528,7 @@
     "kind": "op",
     "label": "fnp.dsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1664"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1928"
   },
   "flopscope.dstack": {
     "canonical_name": "dstack",
@@ -9537,7 +9537,7 @@
     "kind": "op",
     "label": "fnp.dstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1693"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1957"
   },
   "flopscope.ediff1d": {
     "canonical_name": "ediff1d",
@@ -9582,7 +9582,7 @@
     "kind": "op",
     "label": "fnp.empty",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L349"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L375"
   },
   "flopscope.empty_like": {
     "canonical_name": "empty_like",
@@ -9591,7 +9591,7 @@
     "kind": "op",
     "label": "fnp.empty_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L361"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L392"
   },
   "flopscope.equal": {
     "canonical_name": "equal",
@@ -9636,7 +9636,7 @@
     "kind": "op",
     "label": "fnp.expand_dims",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L731"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L793"
   },
   "flopscope.expm1": {
     "canonical_name": "expm1",
@@ -9654,7 +9654,7 @@
     "kind": "op",
     "label": "fnp.extract",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1708"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1972"
   },
   "flopscope.eye": {
     "canonical_name": "eye",
@@ -9663,7 +9663,7 @@
     "kind": "op",
     "label": "fnp.eye",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L176"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L187"
   },
   "flopscope.fabs": {
     "canonical_name": "fabs",
@@ -9762,7 +9762,7 @@
     "kind": "op",
     "label": "fnp.fft.ifftshift",
     "module": "fnp.fft",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L76"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L83"
   },
   "flopscope.fft.ihfft": {
     "canonical_name": "fft.ihfft",
@@ -9843,7 +9843,7 @@
     "kind": "op",
     "label": "fnp.fill_diagonal",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1735"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1999"
   },
   "flopscope.finfo": {
     "canonical_name": "finfo",
@@ -9870,7 +9870,7 @@
     "kind": "op",
     "label": "fnp.flatnonzero",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1760"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2024"
   },
   "flopscope.flip": {
     "canonical_name": "flip",
@@ -9879,7 +9879,7 @@
     "kind": "op",
     "label": "fnp.flip",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L878"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L960"
   },
   "flopscope.fliplr": {
     "canonical_name": "fliplr",
@@ -9888,7 +9888,7 @@
     "kind": "op",
     "label": "fnp.fliplr",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1776"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2040"
   },
   "flopscope.flipud": {
     "canonical_name": "flipud",
@@ -9897,7 +9897,7 @@
     "kind": "op",
     "label": "fnp.flipud",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1786"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2054"
   },
   "flopscope.float_power": {
     "canonical_name": "float_power",
@@ -9969,7 +9969,7 @@
     "kind": "op",
     "label": "fnp.from_dlpack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1796"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2068"
   },
   "flopscope.frombuffer": {
     "canonical_name": "frombuffer",
@@ -9978,7 +9978,7 @@
     "kind": "op",
     "label": "fnp.frombuffer",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1810"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2082"
   },
   "flopscope.fromfile": {
     "canonical_name": "fromfile",
@@ -9986,8 +9986,8 @@
     "import_path": "fnp.fromfile",
     "kind": "function",
     "label": "fnp.fromfile",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1829"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2101"
   },
   "flopscope.fromfunction": {
     "canonical_name": "fromfunction",
@@ -9996,7 +9996,7 @@
     "kind": "op",
     "label": "fnp.fromfunction",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1843"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2115"
   },
   "flopscope.fromiter": {
     "canonical_name": "fromiter",
@@ -10005,7 +10005,7 @@
     "kind": "op",
     "label": "fnp.fromiter",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1858"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2132"
   },
   "flopscope.fromregex": {
     "canonical_name": "fromregex",
@@ -10013,8 +10013,8 @@
     "import_path": "fnp.fromregex",
     "kind": "function",
     "label": "fnp.fromregex",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1877"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2151"
   },
   "flopscope.fromstring": {
     "canonical_name": "fromstring",
@@ -10022,8 +10022,8 @@
     "import_path": "fnp.fromstring",
     "kind": "function",
     "label": "fnp.fromstring",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1891"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2165"
   },
   "flopscope.full": {
     "canonical_name": "full",
@@ -10032,7 +10032,7 @@
     "kind": "op",
     "label": "fnp.full",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L157"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L168"
   },
   "flopscope.full_like": {
     "canonical_name": "full_like",
@@ -10041,7 +10041,7 @@
     "kind": "op",
     "label": "fnp.full_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L318"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L344"
   },
   "flopscope.gcd": {
     "canonical_name": "gcd",
@@ -10176,7 +10176,7 @@
     "kind": "op",
     "label": "fnp.hsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L647"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L703"
   },
   "flopscope.hstack": {
     "canonical_name": "hstack",
@@ -10185,7 +10185,7 @@
     "kind": "op",
     "label": "fnp.hstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L577"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L633"
   },
   "flopscope.hypot": {
     "canonical_name": "hypot",
@@ -10212,7 +10212,7 @@
     "kind": "op",
     "label": "fnp.identity",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L373"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L412"
   },
   "flopscope.iinfo": {
     "canonical_name": "iinfo",
@@ -10248,7 +10248,7 @@
     "kind": "op",
     "label": "fnp.indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1905"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2179"
   },
   "flopscope.inner": {
     "canonical_name": "inner",
@@ -10266,7 +10266,7 @@
     "kind": "op",
     "label": "fnp.insert",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1927"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2201"
   },
   "flopscope.interp": {
     "canonical_name": "interp",
@@ -10338,7 +10338,7 @@
     "kind": "op",
     "label": "fnp.isdtype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1953"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2227"
   },
   "flopscope.isfinite": {
     "canonical_name": "isfinite",
@@ -10347,7 +10347,7 @@
     "kind": "op",
     "label": "fnp.isfinite",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1121"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1362"
   },
   "flopscope.isfortran": {
     "canonical_name": "isfortran",
@@ -10356,7 +10356,7 @@
     "kind": "op",
     "label": "fnp.isfortran",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1961"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2235"
   },
   "flopscope.isin": {
     "canonical_name": "isin",
@@ -10374,7 +10374,7 @@
     "kind": "op",
     "label": "fnp.isinf",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1137"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1378"
   },
   "flopscope.isnan": {
     "canonical_name": "isnan",
@@ -10383,7 +10383,7 @@
     "kind": "op",
     "label": "fnp.isnan",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1105"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1346"
   },
   "flopscope.isnat": {
     "canonical_name": "isnat",
@@ -10437,7 +10437,7 @@
     "kind": "op",
     "label": "fnp.isscalar",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1987"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2261"
   },
   "flopscope.issubdtype": {
     "canonical_name": "issubdtype",
@@ -10446,7 +10446,7 @@
     "kind": "op",
     "label": "fnp.issubdtype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1995"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2269"
   },
   "flopscope.iterable": {
     "canonical_name": "iterable",
@@ -10455,7 +10455,7 @@
     "kind": "op",
     "label": "fnp.iterable",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2003"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2277"
   },
   "flopscope.ix_": {
     "canonical_name": "ix_",
@@ -10464,7 +10464,7 @@
     "kind": "op",
     "label": "fnp.ix_",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2011"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2285"
   },
   "flopscope.kaiser": {
     "canonical_name": "kaiser",
@@ -10824,7 +10824,7 @@
     "kind": "op",
     "label": "fnp.linspace",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L242"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L256"
   },
   "flopscope.load": {
     "canonical_name": "load",
@@ -10941,7 +10941,7 @@
     "kind": "op",
     "label": "fnp.mask_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2026"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2300"
   },
   "flopscope.matmul": {
     "canonical_name": "matmul",
@@ -10959,7 +10959,7 @@
     "kind": "op",
     "label": "fnp.matrix_transpose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2052"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2326"
   },
   "flopscope.matvec": {
     "canonical_name": "matvec",
@@ -10995,7 +10995,7 @@
     "kind": "op",
     "label": "fnp.may_share_memory",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2075"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2349"
   },
   "flopscope.mean": {
     "canonical_name": "mean",
@@ -11022,7 +11022,7 @@
     "kind": "op",
     "label": "fnp.meshgrid",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1041"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1219"
   },
   "flopscope.min": {
     "canonical_name": "min",
@@ -11040,7 +11040,7 @@
     "kind": "op",
     "label": "fnp.min_scalar_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2084"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2358"
   },
   "flopscope.minimum": {
     "canonical_name": "minimum",
@@ -11058,7 +11058,7 @@
     "kind": "op",
     "label": "fnp.mintypecode",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2092"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2366"
   },
   "flopscope.mod": {
     "canonical_name": "mod",
@@ -11085,7 +11085,7 @@
     "kind": "op",
     "label": "fnp.moveaxis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L453"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L506"
   },
   "flopscope.multiply": {
     "canonical_name": "multiply",
@@ -11256,7 +11256,7 @@
     "kind": "op",
     "label": "fnp.ndim",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2100"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2374"
   },
   "flopscope.ndindex": {
     "canonical_name": "ndindex",
@@ -11301,7 +11301,7 @@
     "kind": "op",
     "label": "fnp.nonzero",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2108"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2382"
   },
   "flopscope.not_equal": {
     "canonical_name": "not_equal",
@@ -11390,8 +11390,8 @@
     "import_path": "fnp.base_repr",
     "kind": "function",
     "label": "fnp.base_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1336"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1592"
   },
   "flopscope.numpy.binary_repr": {
     "canonical_name": "binary_repr",
@@ -11399,8 +11399,8 @@
     "import_path": "fnp.binary_repr",
     "kind": "function",
     "label": "fnp.binary_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1350"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1606"
   },
   "flopscope.numpy.broadcast": {
     "canonical_name": "broadcast",
@@ -11507,8 +11507,8 @@
     "import_path": "fnp.fromfile",
     "kind": "function",
     "label": "fnp.fromfile",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1829"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2101"
   },
   "flopscope.numpy.fromregex": {
     "canonical_name": "fromregex",
@@ -11516,8 +11516,8 @@
     "import_path": "fnp.fromregex",
     "kind": "function",
     "label": "fnp.fromregex",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1877"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2151"
   },
   "flopscope.numpy.fromstring": {
     "canonical_name": "fromstring",
@@ -11525,8 +11525,8 @@
     "import_path": "fnp.fromstring",
     "kind": "function",
     "label": "fnp.fromstring",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1891"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2165"
   },
   "flopscope.numpy.get_printoptions": {
     "canonical_name": "get_printoptions",
@@ -11715,7 +11715,7 @@
     "kind": "op",
     "label": "fnp.ones",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L145"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L152"
   },
   "flopscope.ones_like": {
     "canonical_name": "ones_like",
@@ -11724,7 +11724,7 @@
     "kind": "op",
     "label": "fnp.ones_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L295"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L315"
   },
   "flopscope.outer": {
     "canonical_name": "outer",
@@ -11742,7 +11742,7 @@
     "kind": "op",
     "label": "fnp.packbits",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2124"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2398"
   },
   "flopscope.pad": {
     "canonical_name": "pad",
@@ -11751,7 +11751,7 @@
     "kind": "op",
     "label": "fnp.pad",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L939"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1099"
   },
   "flopscope.partition": {
     "canonical_name": "partition",
@@ -11778,7 +11778,7 @@
     "kind": "op",
     "label": "fnp.permute_dims",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2143"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2417"
   },
   "flopscope.piecewise": {
     "canonical_name": "piecewise",
@@ -11796,7 +11796,7 @@
     "kind": "op",
     "label": "fnp.place",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2152"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2426"
   },
   "flopscope.poly": {
     "canonical_name": "poly",
@@ -11931,7 +11931,7 @@
     "kind": "op",
     "label": "fnp.promote_types",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2183"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2457"
   },
   "flopscope.ptp": {
     "canonical_name": "ptp",
@@ -11949,7 +11949,7 @@
     "kind": "op",
     "label": "fnp.put",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2191"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2465"
   },
   "flopscope.put_along_axis": {
     "canonical_name": "put_along_axis",
@@ -11958,7 +11958,7 @@
     "kind": "op",
     "label": "fnp.put_along_axis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2222"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2496"
   },
   "flopscope.putmask": {
     "canonical_name": "putmask",
@@ -11967,7 +11967,7 @@
     "kind": "op",
     "label": "fnp.putmask",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2266"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2540"
   },
   "flopscope.quantile": {
     "canonical_name": "quantile",
@@ -13308,7 +13308,7 @@
     "kind": "op",
     "label": "fnp.ravel",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L749"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L816"
   },
   "flopscope.ravel_multi_index": {
     "canonical_name": "ravel_multi_index",
@@ -13317,7 +13317,7 @@
     "kind": "op",
     "label": "fnp.ravel_multi_index",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2295"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2569"
   },
   "flopscope.real": {
     "canonical_name": "real",
@@ -13362,7 +13362,7 @@
     "kind": "op",
     "label": "fnp.repeat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L847"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L929"
   },
   "flopscope.require": {
     "canonical_name": "require",
@@ -13371,7 +13371,7 @@
     "kind": "op",
     "label": "fnp.require",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2304"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2596"
   },
   "flopscope.reshape": {
     "canonical_name": "reshape",
@@ -13380,7 +13380,7 @@
     "kind": "op",
     "label": "fnp.reshape",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L389"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L431"
   },
   "flopscope.resize": {
     "canonical_name": "resize",
@@ -13389,7 +13389,7 @@
     "kind": "op",
     "label": "fnp.resize",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2317"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2609"
   },
   "flopscope.result_type": {
     "canonical_name": "result_type",
@@ -13398,7 +13398,7 @@
     "kind": "op",
     "label": "fnp.result_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2331"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2623"
   },
   "flopscope.right_shift": {
     "canonical_name": "right_shift",
@@ -13425,7 +13425,7 @@
     "kind": "op",
     "label": "fnp.roll",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L908"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L993"
   },
   "flopscope.rollaxis": {
     "canonical_name": "rollaxis",
@@ -13434,7 +13434,7 @@
     "kind": "op",
     "label": "fnp.rollaxis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2339"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2631"
   },
   "flopscope.roots": {
     "canonical_name": "roots",
@@ -13452,7 +13452,7 @@
     "kind": "op",
     "label": "fnp.rot90",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2354"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2646"
   },
   "flopscope.round": {
     "canonical_name": "rint",
@@ -13470,7 +13470,7 @@
     "kind": "op",
     "label": "fnp.vstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L545"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L601"
   },
   "flopscope.save": {
     "canonical_name": "save",
@@ -13515,7 +13515,7 @@
     "kind": "op",
     "label": "fnp.select",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2371"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2667"
   },
   "flopscope.set_printoptions": {
     "canonical_name": "set_printoptions",
@@ -13560,7 +13560,7 @@
     "kind": "op",
     "label": "fnp.shape",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2402"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2698"
   },
   "flopscope.shares_memory": {
     "canonical_name": "shares_memory",
@@ -13569,7 +13569,7 @@
     "kind": "op",
     "label": "fnp.shares_memory",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2410"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2706"
   },
   "flopscope.sign": {
     "canonical_name": "sign",
@@ -13623,7 +13623,7 @@
     "kind": "op",
     "label": "fnp.size",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2418"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2714"
   },
   "flopscope.sort": {
     "canonical_name": "sort",
@@ -13659,7 +13659,7 @@
     "kind": "op",
     "label": "fnp.split",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L609"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L665"
   },
   "flopscope.sqrt": {
     "canonical_name": "sqrt",
@@ -13686,7 +13686,7 @@
     "kind": "op",
     "label": "fnp.squeeze",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L705"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L764"
   },
   "flopscope.stack": {
     "canonical_name": "stack",
@@ -13695,7 +13695,7 @@
     "kind": "op",
     "label": "fnp.stack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L512"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L568"
   },
   "flopscope.stats.cauchy": {
     "canonical_name": "stats.cauchy",
@@ -14019,7 +14019,7 @@
     "kind": "op",
     "label": "fnp.swapaxes",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L434"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L484"
   },
   "flopscope.symmetrize": {
     "canonical_name": "symmetrize",
@@ -14037,7 +14037,7 @@
     "kind": "op",
     "label": "fnp.take",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2426"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2722"
   },
   "flopscope.take_along_axis": {
     "canonical_name": "take_along_axis",
@@ -14046,7 +14046,7 @@
     "kind": "op",
     "label": "fnp.take_along_axis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2452"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2748"
   },
   "flopscope.tan": {
     "canonical_name": "tan",
@@ -14082,7 +14082,7 @@
     "kind": "op",
     "label": "fnp.tile",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L815"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L897"
   },
   "flopscope.trace": {
     "canonical_name": "trace",
@@ -14100,7 +14100,7 @@
     "kind": "op",
     "label": "fnp.transpose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L416"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L461"
   },
   "flopscope.trapezoid": {
     "canonical_name": "trapezoid",
@@ -14127,7 +14127,7 @@
     "kind": "op",
     "label": "fnp.tri",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2478"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2774"
   },
   "flopscope.tril": {
     "canonical_name": "tril",
@@ -14136,7 +14136,7 @@
     "kind": "op",
     "label": "fnp.tril",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L967"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1145"
   },
   "flopscope.tril_indices": {
     "canonical_name": "tril_indices",
@@ -14145,7 +14145,7 @@
     "kind": "op",
     "label": "fnp.tril_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2486"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2787"
   },
   "flopscope.tril_indices_from": {
     "canonical_name": "tril_indices_from",
@@ -14154,7 +14154,7 @@
     "kind": "op",
     "label": "fnp.tril_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2494"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2795"
   },
   "flopscope.trim_zeros": {
     "canonical_name": "trim_zeros",
@@ -14163,7 +14163,7 @@
     "kind": "op",
     "label": "fnp.trim_zeros",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2502"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2803"
   },
   "flopscope.triu": {
     "canonical_name": "triu",
@@ -14172,7 +14172,7 @@
     "kind": "op",
     "label": "fnp.triu",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L953"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1131"
   },
   "flopscope.triu_indices": {
     "canonical_name": "triu_indices",
@@ -14181,7 +14181,7 @@
     "kind": "op",
     "label": "fnp.triu_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2519"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2821"
   },
   "flopscope.triu_indices_from": {
     "canonical_name": "triu_indices_from",
@@ -14190,7 +14190,7 @@
     "kind": "op",
     "label": "fnp.triu_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2527"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2829"
   },
   "flopscope.true_divide": {
     "canonical_name": "true_divide",
@@ -14217,7 +14217,7 @@
     "kind": "op",
     "label": "fnp.typename",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2535"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2837"
   },
   "flopscope.union1d": {
     "canonical_name": "union1d",
@@ -14280,7 +14280,7 @@
     "kind": "op",
     "label": "fnp.unpackbits",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2543"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2845"
   },
   "flopscope.unravel_index": {
     "canonical_name": "unravel_index",
@@ -14289,7 +14289,7 @@
     "kind": "op",
     "label": "fnp.unravel_index",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2562"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2864"
   },
   "flopscope.unstack": {
     "canonical_name": "unstack",
@@ -14298,7 +14298,7 @@
     "kind": "op",
     "label": "fnp.unstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2572"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2874"
   },
   "flopscope.unwrap": {
     "canonical_name": "unwrap",
@@ -14307,7 +14307,7 @@
     "kind": "op",
     "label": "fnp.unwrap",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_unwrap.py#L65"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_unwrap.py#L68"
   },
   "flopscope.vander": {
     "canonical_name": "vander",
@@ -14361,7 +14361,7 @@
     "kind": "op",
     "label": "fnp.vsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L673"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L732"
   },
   "flopscope.vstack": {
     "canonical_name": "vstack",
@@ -14370,7 +14370,7 @@
     "kind": "op",
     "label": "fnp.vstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L545"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L601"
   },
   "flopscope.where": {
     "canonical_name": "where",
@@ -14379,7 +14379,7 @@
     "kind": "op",
     "label": "fnp.where",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L787"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L858"
   },
   "flopscope.zeros": {
     "canonical_name": "zeros",
@@ -14388,7 +14388,7 @@
     "kind": "op",
     "label": "fnp.zeros",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L133"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L136"
   },
   "flopscope.zeros_like": {
     "canonical_name": "zeros_like",
@@ -14397,7 +14397,7 @@
     "kind": "op",
     "label": "fnp.zeros_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L272"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L286"
   },
   "fmax": {
     "canonical_name": "fmax",
@@ -14550,7 +14550,7 @@
     "kind": "op",
     "label": "fnp.append",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1155"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1396"
   },
   "fnp.apply_along_axis": {
     "canonical_name": "apply_along_axis",
@@ -14577,7 +14577,7 @@
     "kind": "op",
     "label": "fnp.arange",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L224"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L238"
   },
   "fnp.arccos": {
     "canonical_name": "arccos",
@@ -14685,7 +14685,7 @@
     "kind": "op",
     "label": "fnp.argwhere",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1186"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1425"
   },
   "fnp.array": {
     "canonical_name": "array",
@@ -14694,7 +14694,7 @@
     "kind": "op",
     "label": "fnp.array",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L112"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L115"
   },
   "fnp.array_equal": {
     "canonical_name": "array_equal",
@@ -14721,7 +14721,7 @@
     "kind": "op",
     "label": "fnp.array_split",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1205"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1444"
   },
   "fnp.as_symmetric": {
     "canonical_name": "as_symmetric",
@@ -14739,7 +14739,7 @@
     "kind": "op",
     "label": "fnp.asarray",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1084"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1325"
   },
   "fnp.asarray_chkfinite": {
     "canonical_name": "asarray_chkfinite",
@@ -14748,7 +14748,7 @@
     "kind": "op",
     "label": "fnp.asarray_chkfinite",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1222"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1461"
   },
   "fnp.astype": {
     "canonical_name": "astype",
@@ -14757,7 +14757,7 @@
     "kind": "op",
     "label": "fnp.astype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1072"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1261"
   },
   "fnp.atleast_1d": {
     "canonical_name": "atleast_1d",
@@ -14766,7 +14766,7 @@
     "kind": "op",
     "label": "fnp.atleast_1d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1243"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1484"
   },
   "fnp.atleast_2d": {
     "canonical_name": "atleast_2d",
@@ -14775,7 +14775,7 @@
     "kind": "op",
     "label": "fnp.atleast_2d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1274"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1520"
   },
   "fnp.atleast_3d": {
     "canonical_name": "atleast_3d",
@@ -14784,7 +14784,7 @@
     "kind": "op",
     "label": "fnp.atleast_3d",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1305"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1556"
   },
   "fnp.average": {
     "canonical_name": "average",
@@ -14810,8 +14810,8 @@
     "import_path": "fnp.base_repr",
     "kind": "function",
     "label": "fnp.base_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1336"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1592"
   },
   "fnp.binary_repr": {
     "canonical_name": "binary_repr",
@@ -14819,8 +14819,8 @@
     "import_path": "fnp.binary_repr",
     "kind": "function",
     "label": "fnp.binary_repr",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1350"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1606"
   },
   "fnp.bincount": {
     "canonical_name": "bincount",
@@ -14910,7 +14910,7 @@
     "kind": "op",
     "label": "fnp.block",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1364"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1620"
   },
   "fnp.bmat": {
     "canonical_name": "bmat",
@@ -14919,7 +14919,7 @@
     "kind": "op",
     "label": "fnp.bmat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1390"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1646"
   },
   "fnp.broadcast": {
     "canonical_name": "broadcast",
@@ -14937,7 +14937,7 @@
     "kind": "op",
     "label": "fnp.broadcast_arrays",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1414"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1670"
   },
   "fnp.broadcast_shapes": {
     "canonical_name": "broadcast_shapes",
@@ -14946,7 +14946,7 @@
     "kind": "op",
     "label": "fnp.broadcast_shapes",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1440"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1696"
   },
   "fnp.broadcast_to": {
     "canonical_name": "broadcast_to",
@@ -14955,7 +14955,7 @@
     "kind": "op",
     "label": "fnp.broadcast_to",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1006"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1184"
   },
   "fnp.budget": {
     "canonical_name": "budget",
@@ -15009,7 +15009,7 @@
     "kind": "op",
     "label": "fnp.can_cast",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1448"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1704"
   },
   "fnp.cbrt": {
     "canonical_name": "cbrt",
@@ -15036,7 +15036,7 @@
     "kind": "op",
     "label": "fnp.choose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1456"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1712"
   },
   "fnp.clear_einsum_cache": {
     "canonical_name": "clear_einsum_cache",
@@ -15063,7 +15063,7 @@
     "kind": "op",
     "label": "fnp.column_stack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1481"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1737"
   },
   "fnp.common_type": {
     "canonical_name": "common_type",
@@ -15072,7 +15072,7 @@
     "kind": "op",
     "label": "fnp.common_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1515"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1769"
   },
   "fnp.compress": {
     "canonical_name": "compress",
@@ -15081,7 +15081,7 @@
     "kind": "op",
     "label": "fnp.compress",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1523"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1777"
   },
   "fnp.concatenate": {
     "canonical_name": "concatenate",
@@ -15090,7 +15090,7 @@
     "kind": "op",
     "label": "fnp.concatenate",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L476"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L532"
   },
   "fnp.configure": {
     "canonical_name": "configure",
@@ -15135,7 +15135,7 @@
     "kind": "op",
     "label": "fnp.copy",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L776"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L843"
   },
   "fnp.copysign": {
     "canonical_name": "copysign",
@@ -15153,7 +15153,7 @@
     "kind": "op",
     "label": "fnp.copyto",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1581"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1835"
   },
   "fnp.corrcoef": {
     "canonical_name": "corrcoef",
@@ -15270,7 +15270,7 @@
     "kind": "op",
     "label": "fnp.delete",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1608"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1872"
   },
   "fnp.diag": {
     "canonical_name": "diag",
@@ -15279,7 +15279,7 @@
     "kind": "op",
     "label": "fnp.diag",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L194"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L208"
   },
   "fnp.diag_indices": {
     "canonical_name": "diag_indices",
@@ -15288,7 +15288,7 @@
     "kind": "op",
     "label": "fnp.diag_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1629"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1893"
   },
   "fnp.diag_indices_from": {
     "canonical_name": "diag_indices_from",
@@ -15297,7 +15297,7 @@
     "kind": "op",
     "label": "fnp.diag_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1637"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1901"
   },
   "fnp.diagflat": {
     "canonical_name": "diagflat",
@@ -15306,7 +15306,7 @@
     "kind": "op",
     "label": "fnp.diagflat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1645"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1909"
   },
   "fnp.diagonal": {
     "canonical_name": "diagonal",
@@ -15315,7 +15315,7 @@
     "kind": "op",
     "label": "fnp.diagonal",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L981"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1159"
   },
   "fnp.diff": {
     "canonical_name": "diff",
@@ -15360,7 +15360,7 @@
     "kind": "op",
     "label": "fnp.dsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1664"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1928"
   },
   "fnp.dstack": {
     "canonical_name": "dstack",
@@ -15369,7 +15369,7 @@
     "kind": "op",
     "label": "fnp.dstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1693"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1957"
   },
   "fnp.ediff1d": {
     "canonical_name": "ediff1d",
@@ -15414,7 +15414,7 @@
     "kind": "op",
     "label": "fnp.empty",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L349"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L375"
   },
   "fnp.empty_like": {
     "canonical_name": "empty_like",
@@ -15423,7 +15423,7 @@
     "kind": "op",
     "label": "fnp.empty_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L361"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L392"
   },
   "fnp.equal": {
     "canonical_name": "equal",
@@ -15468,7 +15468,7 @@
     "kind": "op",
     "label": "fnp.expand_dims",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L731"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L793"
   },
   "fnp.expm1": {
     "canonical_name": "expm1",
@@ -15486,7 +15486,7 @@
     "kind": "op",
     "label": "fnp.extract",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1708"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1972"
   },
   "fnp.eye": {
     "canonical_name": "eye",
@@ -15495,7 +15495,7 @@
     "kind": "op",
     "label": "fnp.eye",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L176"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L187"
   },
   "fnp.fabs": {
     "canonical_name": "fabs",
@@ -15594,7 +15594,7 @@
     "kind": "op",
     "label": "fnp.fft.ifftshift",
     "module": "fnp.fft",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L76"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/numpy/fft/_free.py#L83"
   },
   "fnp.fft.ihfft": {
     "canonical_name": "fft.ihfft",
@@ -15675,7 +15675,7 @@
     "kind": "op",
     "label": "fnp.fill_diagonal",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1735"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1999"
   },
   "fnp.finfo": {
     "canonical_name": "finfo",
@@ -15693,7 +15693,7 @@
     "kind": "op",
     "label": "fnp.flatnonzero",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1760"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2024"
   },
   "fnp.flip": {
     "canonical_name": "flip",
@@ -15702,7 +15702,7 @@
     "kind": "op",
     "label": "fnp.flip",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L878"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L960"
   },
   "fnp.fliplr": {
     "canonical_name": "fliplr",
@@ -15711,7 +15711,7 @@
     "kind": "op",
     "label": "fnp.fliplr",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1776"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2040"
   },
   "fnp.flipud": {
     "canonical_name": "flipud",
@@ -15720,7 +15720,7 @@
     "kind": "op",
     "label": "fnp.flipud",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1786"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2054"
   },
   "fnp.float_power": {
     "canonical_name": "float_power",
@@ -15792,7 +15792,7 @@
     "kind": "op",
     "label": "fnp.from_dlpack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1796"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2068"
   },
   "fnp.frombuffer": {
     "canonical_name": "frombuffer",
@@ -15801,7 +15801,7 @@
     "kind": "op",
     "label": "fnp.frombuffer",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1810"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2082"
   },
   "fnp.fromfile": {
     "canonical_name": "fromfile",
@@ -15809,8 +15809,8 @@
     "import_path": "fnp.fromfile",
     "kind": "function",
     "label": "fnp.fromfile",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1829"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2101"
   },
   "fnp.fromfunction": {
     "canonical_name": "fromfunction",
@@ -15819,7 +15819,7 @@
     "kind": "op",
     "label": "fnp.fromfunction",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1843"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2115"
   },
   "fnp.fromiter": {
     "canonical_name": "fromiter",
@@ -15828,7 +15828,7 @@
     "kind": "op",
     "label": "fnp.fromiter",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1858"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2132"
   },
   "fnp.fromregex": {
     "canonical_name": "fromregex",
@@ -15836,8 +15836,8 @@
     "import_path": "fnp.fromregex",
     "kind": "function",
     "label": "fnp.fromregex",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1877"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2151"
   },
   "fnp.fromstring": {
     "canonical_name": "fromstring",
@@ -15845,8 +15845,8 @@
     "import_path": "fnp.fromstring",
     "kind": "function",
     "label": "fnp.fromstring",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1891"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2165"
   },
   "fnp.full": {
     "canonical_name": "full",
@@ -15855,7 +15855,7 @@
     "kind": "op",
     "label": "fnp.full",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L157"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L168"
   },
   "fnp.full_like": {
     "canonical_name": "full_like",
@@ -15864,7 +15864,7 @@
     "kind": "op",
     "label": "fnp.full_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L318"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L344"
   },
   "fnp.gcd": {
     "canonical_name": "gcd",
@@ -15999,7 +15999,7 @@
     "kind": "op",
     "label": "fnp.hsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L647"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L703"
   },
   "fnp.hstack": {
     "canonical_name": "hstack",
@@ -16008,7 +16008,7 @@
     "kind": "op",
     "label": "fnp.hstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L577"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L633"
   },
   "fnp.hypot": {
     "canonical_name": "hypot",
@@ -16035,7 +16035,7 @@
     "kind": "op",
     "label": "fnp.identity",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L373"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L412"
   },
   "fnp.iinfo": {
     "canonical_name": "iinfo",
@@ -16071,7 +16071,7 @@
     "kind": "op",
     "label": "fnp.indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1905"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2179"
   },
   "fnp.inner": {
     "canonical_name": "inner",
@@ -16089,7 +16089,7 @@
     "kind": "op",
     "label": "fnp.insert",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1927"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2201"
   },
   "fnp.interp": {
     "canonical_name": "interp",
@@ -16161,7 +16161,7 @@
     "kind": "op",
     "label": "fnp.isdtype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1953"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2227"
   },
   "fnp.isfinite": {
     "canonical_name": "isfinite",
@@ -16170,7 +16170,7 @@
     "kind": "op",
     "label": "fnp.isfinite",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1121"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1362"
   },
   "fnp.isfortran": {
     "canonical_name": "isfortran",
@@ -16179,7 +16179,7 @@
     "kind": "op",
     "label": "fnp.isfortran",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1961"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2235"
   },
   "fnp.isin": {
     "canonical_name": "isin",
@@ -16197,7 +16197,7 @@
     "kind": "op",
     "label": "fnp.isinf",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1137"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1378"
   },
   "fnp.isnan": {
     "canonical_name": "isnan",
@@ -16206,7 +16206,7 @@
     "kind": "op",
     "label": "fnp.isnan",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1105"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1346"
   },
   "fnp.isnat": {
     "canonical_name": "isnat",
@@ -16260,7 +16260,7 @@
     "kind": "op",
     "label": "fnp.isscalar",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1987"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2261"
   },
   "fnp.issubdtype": {
     "canonical_name": "issubdtype",
@@ -16269,7 +16269,7 @@
     "kind": "op",
     "label": "fnp.issubdtype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1995"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2269"
   },
   "fnp.iterable": {
     "canonical_name": "iterable",
@@ -16278,7 +16278,7 @@
     "kind": "op",
     "label": "fnp.iterable",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2003"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2277"
   },
   "fnp.ix_": {
     "canonical_name": "ix_",
@@ -16287,7 +16287,7 @@
     "kind": "op",
     "label": "fnp.ix_",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2011"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2285"
   },
   "fnp.kaiser": {
     "canonical_name": "kaiser",
@@ -16647,7 +16647,7 @@
     "kind": "op",
     "label": "fnp.linspace",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L242"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L256"
   },
   "fnp.load": {
     "canonical_name": "load",
@@ -16764,7 +16764,7 @@
     "kind": "op",
     "label": "fnp.mask_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2026"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2300"
   },
   "fnp.matmul": {
     "canonical_name": "matmul",
@@ -16782,7 +16782,7 @@
     "kind": "op",
     "label": "fnp.matrix_transpose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2052"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2326"
   },
   "fnp.matvec": {
     "canonical_name": "matvec",
@@ -16818,7 +16818,7 @@
     "kind": "op",
     "label": "fnp.may_share_memory",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2075"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2349"
   },
   "fnp.mean": {
     "canonical_name": "mean",
@@ -16845,7 +16845,7 @@
     "kind": "op",
     "label": "fnp.meshgrid",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1041"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1219"
   },
   "fnp.min": {
     "canonical_name": "min",
@@ -16863,7 +16863,7 @@
     "kind": "op",
     "label": "fnp.min_scalar_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2084"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2358"
   },
   "fnp.minimum": {
     "canonical_name": "minimum",
@@ -16881,7 +16881,7 @@
     "kind": "op",
     "label": "fnp.mintypecode",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2092"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2366"
   },
   "fnp.mod": {
     "canonical_name": "mod",
@@ -16908,7 +16908,7 @@
     "kind": "op",
     "label": "fnp.moveaxis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L453"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L506"
   },
   "fnp.multiply": {
     "canonical_name": "multiply",
@@ -17079,7 +17079,7 @@
     "kind": "op",
     "label": "fnp.ndim",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2100"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2374"
   },
   "fnp.ndindex": {
     "canonical_name": "ndindex",
@@ -17124,7 +17124,7 @@
     "kind": "op",
     "label": "fnp.nonzero",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2108"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2382"
   },
   "fnp.not_equal": {
     "canonical_name": "not_equal",
@@ -17142,7 +17142,7 @@
     "kind": "op",
     "label": "fnp.ones",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L145"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L152"
   },
   "fnp.ones_like": {
     "canonical_name": "ones_like",
@@ -17151,7 +17151,7 @@
     "kind": "op",
     "label": "fnp.ones_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L295"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L315"
   },
   "fnp.outer": {
     "canonical_name": "outer",
@@ -17169,7 +17169,7 @@
     "kind": "op",
     "label": "fnp.packbits",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2124"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2398"
   },
   "fnp.pad": {
     "canonical_name": "pad",
@@ -17178,7 +17178,7 @@
     "kind": "op",
     "label": "fnp.pad",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L939"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1099"
   },
   "fnp.partition": {
     "canonical_name": "partition",
@@ -17205,7 +17205,7 @@
     "kind": "op",
     "label": "fnp.permute_dims",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2143"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2417"
   },
   "fnp.piecewise": {
     "canonical_name": "piecewise",
@@ -17223,7 +17223,7 @@
     "kind": "op",
     "label": "fnp.place",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2152"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2426"
   },
   "fnp.poly": {
     "canonical_name": "poly",
@@ -17349,7 +17349,7 @@
     "kind": "op",
     "label": "fnp.promote_types",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2183"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2457"
   },
   "fnp.ptp": {
     "canonical_name": "ptp",
@@ -17367,7 +17367,7 @@
     "kind": "op",
     "label": "fnp.put",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2191"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2465"
   },
   "fnp.put_along_axis": {
     "canonical_name": "put_along_axis",
@@ -17376,7 +17376,7 @@
     "kind": "op",
     "label": "fnp.put_along_axis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2222"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2496"
   },
   "fnp.putmask": {
     "canonical_name": "putmask",
@@ -17385,7 +17385,7 @@
     "kind": "op",
     "label": "fnp.putmask",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2266"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2540"
   },
   "fnp.quantile": {
     "canonical_name": "quantile",
@@ -18699,7 +18699,7 @@
     "kind": "op",
     "label": "fnp.ravel",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L749"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L816"
   },
   "fnp.ravel_multi_index": {
     "canonical_name": "ravel_multi_index",
@@ -18708,7 +18708,7 @@
     "kind": "op",
     "label": "fnp.ravel_multi_index",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2295"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2569"
   },
   "fnp.real": {
     "canonical_name": "real",
@@ -18753,7 +18753,7 @@
     "kind": "op",
     "label": "fnp.repeat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L847"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L929"
   },
   "fnp.require": {
     "canonical_name": "require",
@@ -18762,7 +18762,7 @@
     "kind": "op",
     "label": "fnp.require",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2304"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2596"
   },
   "fnp.reshape": {
     "canonical_name": "reshape",
@@ -18771,7 +18771,7 @@
     "kind": "op",
     "label": "fnp.reshape",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L389"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L431"
   },
   "fnp.resize": {
     "canonical_name": "resize",
@@ -18780,7 +18780,7 @@
     "kind": "op",
     "label": "fnp.resize",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2317"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2609"
   },
   "fnp.result_type": {
     "canonical_name": "result_type",
@@ -18789,7 +18789,7 @@
     "kind": "op",
     "label": "fnp.result_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2331"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2623"
   },
   "fnp.right_shift": {
     "canonical_name": "right_shift",
@@ -18816,7 +18816,7 @@
     "kind": "op",
     "label": "fnp.roll",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L908"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L993"
   },
   "fnp.rollaxis": {
     "canonical_name": "rollaxis",
@@ -18825,7 +18825,7 @@
     "kind": "op",
     "label": "fnp.rollaxis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2339"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2631"
   },
   "fnp.roots": {
     "canonical_name": "roots",
@@ -18843,7 +18843,7 @@
     "kind": "op",
     "label": "fnp.rot90",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2354"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2646"
   },
   "fnp.save": {
     "canonical_name": "save",
@@ -18888,7 +18888,7 @@
     "kind": "op",
     "label": "fnp.select",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2371"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2667"
   },
   "fnp.set_printoptions": {
     "canonical_name": "set_printoptions",
@@ -18933,7 +18933,7 @@
     "kind": "op",
     "label": "fnp.shape",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2402"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2698"
   },
   "fnp.shares_memory": {
     "canonical_name": "shares_memory",
@@ -18942,7 +18942,7 @@
     "kind": "op",
     "label": "fnp.shares_memory",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2410"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2706"
   },
   "fnp.sign": {
     "canonical_name": "sign",
@@ -18996,7 +18996,7 @@
     "kind": "op",
     "label": "fnp.size",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2418"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2714"
   },
   "fnp.sort": {
     "canonical_name": "sort",
@@ -19032,7 +19032,7 @@
     "kind": "op",
     "label": "fnp.split",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L609"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L665"
   },
   "fnp.sqrt": {
     "canonical_name": "sqrt",
@@ -19059,7 +19059,7 @@
     "kind": "op",
     "label": "fnp.squeeze",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L705"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L764"
   },
   "fnp.stack": {
     "canonical_name": "stack",
@@ -19068,7 +19068,7 @@
     "kind": "op",
     "label": "fnp.stack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L512"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L568"
   },
   "fnp.std": {
     "canonical_name": "std",
@@ -19104,7 +19104,7 @@
     "kind": "op",
     "label": "fnp.swapaxes",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L434"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L484"
   },
   "fnp.symmetrize": {
     "canonical_name": "symmetrize",
@@ -19122,7 +19122,7 @@
     "kind": "op",
     "label": "fnp.take",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2426"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2722"
   },
   "fnp.take_along_axis": {
     "canonical_name": "take_along_axis",
@@ -19131,7 +19131,7 @@
     "kind": "op",
     "label": "fnp.take_along_axis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2452"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2748"
   },
   "fnp.tan": {
     "canonical_name": "tan",
@@ -19167,7 +19167,7 @@
     "kind": "op",
     "label": "fnp.tile",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L815"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L897"
   },
   "fnp.trace": {
     "canonical_name": "trace",
@@ -19185,7 +19185,7 @@
     "kind": "op",
     "label": "fnp.transpose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L416"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L461"
   },
   "fnp.trapezoid": {
     "canonical_name": "trapezoid",
@@ -19203,7 +19203,7 @@
     "kind": "op",
     "label": "fnp.tri",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2478"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2774"
   },
   "fnp.tril": {
     "canonical_name": "tril",
@@ -19212,7 +19212,7 @@
     "kind": "op",
     "label": "fnp.tril",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L967"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1145"
   },
   "fnp.tril_indices": {
     "canonical_name": "tril_indices",
@@ -19221,7 +19221,7 @@
     "kind": "op",
     "label": "fnp.tril_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2486"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2787"
   },
   "fnp.tril_indices_from": {
     "canonical_name": "tril_indices_from",
@@ -19230,7 +19230,7 @@
     "kind": "op",
     "label": "fnp.tril_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2494"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2795"
   },
   "fnp.trim_zeros": {
     "canonical_name": "trim_zeros",
@@ -19239,7 +19239,7 @@
     "kind": "op",
     "label": "fnp.trim_zeros",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2502"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2803"
   },
   "fnp.triu": {
     "canonical_name": "triu",
@@ -19248,7 +19248,7 @@
     "kind": "op",
     "label": "fnp.triu",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L953"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1131"
   },
   "fnp.triu_indices": {
     "canonical_name": "triu_indices",
@@ -19257,7 +19257,7 @@
     "kind": "op",
     "label": "fnp.triu_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2519"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2821"
   },
   "fnp.triu_indices_from": {
     "canonical_name": "triu_indices_from",
@@ -19266,7 +19266,7 @@
     "kind": "op",
     "label": "fnp.triu_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2527"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2829"
   },
   "fnp.true_divide": {
     "canonical_name": "true_divide",
@@ -19293,7 +19293,7 @@
     "kind": "op",
     "label": "fnp.typename",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2535"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2837"
   },
   "fnp.union1d": {
     "canonical_name": "union1d",
@@ -19356,7 +19356,7 @@
     "kind": "op",
     "label": "fnp.unpackbits",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2543"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2845"
   },
   "fnp.unravel_index": {
     "canonical_name": "unravel_index",
@@ -19365,7 +19365,7 @@
     "kind": "op",
     "label": "fnp.unravel_index",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2562"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2864"
   },
   "fnp.unstack": {
     "canonical_name": "unstack",
@@ -19374,7 +19374,7 @@
     "kind": "op",
     "label": "fnp.unstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2572"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2874"
   },
   "fnp.unwrap": {
     "canonical_name": "unwrap",
@@ -19383,7 +19383,7 @@
     "kind": "op",
     "label": "fnp.unwrap",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_unwrap.py#L65"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_unwrap.py#L68"
   },
   "fnp.vander": {
     "canonical_name": "vander",
@@ -19437,7 +19437,7 @@
     "kind": "op",
     "label": "fnp.vsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L673"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L732"
   },
   "fnp.vstack": {
     "canonical_name": "vstack",
@@ -19446,7 +19446,7 @@
     "kind": "op",
     "label": "fnp.vstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L545"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L601"
   },
   "fnp.where": {
     "canonical_name": "where",
@@ -19455,7 +19455,7 @@
     "kind": "op",
     "label": "fnp.where",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L787"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L858"
   },
   "fnp.zeros": {
     "canonical_name": "zeros",
@@ -19464,7 +19464,7 @@
     "kind": "op",
     "label": "fnp.zeros",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L133"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L136"
   },
   "fnp.zeros_like": {
     "canonical_name": "zeros_like",
@@ -19473,7 +19473,7 @@
     "kind": "op",
     "label": "fnp.zeros_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L272"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L286"
   },
   "frexp": {
     "canonical_name": "frexp",
@@ -19491,7 +19491,7 @@
     "kind": "op",
     "label": "fnp.from_dlpack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1796"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2068"
   },
   "frombuffer": {
     "canonical_name": "frombuffer",
@@ -19500,7 +19500,7 @@
     "kind": "op",
     "label": "fnp.frombuffer",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1810"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2082"
   },
   "fromfile": {
     "canonical_name": "fromfile",
@@ -19508,8 +19508,8 @@
     "import_path": "fnp.fromfile",
     "kind": "function",
     "label": "fnp.fromfile",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1829"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2101"
   },
   "fromfunction": {
     "canonical_name": "fromfunction",
@@ -19518,7 +19518,7 @@
     "kind": "op",
     "label": "fnp.fromfunction",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1843"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2115"
   },
   "fromiter": {
     "canonical_name": "fromiter",
@@ -19527,7 +19527,7 @@
     "kind": "op",
     "label": "fnp.fromiter",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1858"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2132"
   },
   "fromregex": {
     "canonical_name": "fromregex",
@@ -19535,8 +19535,8 @@
     "import_path": "fnp.fromregex",
     "kind": "function",
     "label": "fnp.fromregex",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1877"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2151"
   },
   "fromstring": {
     "canonical_name": "fromstring",
@@ -19544,8 +19544,8 @@
     "import_path": "fnp.fromstring",
     "kind": "function",
     "label": "fnp.fromstring",
-    "module": "flopscope._free_ops",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1891"
+    "module": "flopscope._array_ops",
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2165"
   },
   "full": {
     "canonical_name": "full",
@@ -19554,7 +19554,7 @@
     "kind": "op",
     "label": "fnp.full",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L157"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L168"
   },
   "full_like": {
     "canonical_name": "full_like",
@@ -19563,7 +19563,7 @@
     "kind": "op",
     "label": "fnp.full_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L318"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L344"
   },
   "gcd": {
     "canonical_name": "gcd",
@@ -19725,7 +19725,7 @@
     "kind": "op",
     "label": "fnp.hsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L647"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L703"
   },
   "hstack": {
     "canonical_name": "hstack",
@@ -19734,7 +19734,7 @@
     "kind": "op",
     "label": "fnp.hstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L577"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L633"
   },
   "hypot": {
     "canonical_name": "hypot",
@@ -19761,7 +19761,7 @@
     "kind": "op",
     "label": "fnp.identity",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L373"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L412"
   },
   "iinfo": {
     "canonical_name": "iinfo",
@@ -19797,7 +19797,7 @@
     "kind": "op",
     "label": "fnp.indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1905"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2179"
   },
   "inner": {
     "canonical_name": "inner",
@@ -19815,7 +19815,7 @@
     "kind": "op",
     "label": "fnp.insert",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1927"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2201"
   },
   "interp": {
     "canonical_name": "interp",
@@ -19896,7 +19896,7 @@
     "kind": "op",
     "label": "fnp.isdtype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1953"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2227"
   },
   "isfinite": {
     "canonical_name": "isfinite",
@@ -19905,7 +19905,7 @@
     "kind": "op",
     "label": "fnp.isfinite",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1121"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1362"
   },
   "isfortran": {
     "canonical_name": "isfortran",
@@ -19914,7 +19914,7 @@
     "kind": "op",
     "label": "fnp.isfortran",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1961"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2235"
   },
   "isin": {
     "canonical_name": "isin",
@@ -19932,7 +19932,7 @@
     "kind": "op",
     "label": "fnp.isinf",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1137"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1378"
   },
   "isnan": {
     "canonical_name": "isnan",
@@ -19941,7 +19941,7 @@
     "kind": "op",
     "label": "fnp.isnan",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1105"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1346"
   },
   "isnat": {
     "canonical_name": "isnat",
@@ -19995,7 +19995,7 @@
     "kind": "op",
     "label": "fnp.isscalar",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1987"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2261"
   },
   "issubdtype": {
     "canonical_name": "issubdtype",
@@ -20004,7 +20004,7 @@
     "kind": "op",
     "label": "fnp.issubdtype",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1995"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2269"
   },
   "iterable": {
     "canonical_name": "iterable",
@@ -20013,7 +20013,7 @@
     "kind": "op",
     "label": "fnp.iterable",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2003"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2277"
   },
   "ix_": {
     "canonical_name": "ix_",
@@ -20022,7 +20022,7 @@
     "kind": "op",
     "label": "fnp.ix_",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2011"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2285"
   },
   "kaiser": {
     "canonical_name": "kaiser",
@@ -20391,7 +20391,7 @@
     "kind": "op",
     "label": "fnp.linspace",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L242"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L256"
   },
   "load": {
     "canonical_name": "load",
@@ -20517,7 +20517,7 @@
     "kind": "op",
     "label": "fnp.mask_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2026"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2300"
   },
   "matmul": {
     "canonical_name": "matmul",
@@ -20562,7 +20562,7 @@
     "kind": "op",
     "label": "fnp.matrix_transpose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2052"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2326"
   },
   "matvec": {
     "canonical_name": "matvec",
@@ -20598,7 +20598,7 @@
     "kind": "op",
     "label": "fnp.may_share_memory",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2075"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2349"
   },
   "mean": {
     "canonical_name": "mean",
@@ -20625,7 +20625,7 @@
     "kind": "op",
     "label": "fnp.meshgrid",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1041"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1219"
   },
   "min": {
     "canonical_name": "min",
@@ -20643,7 +20643,7 @@
     "kind": "op",
     "label": "fnp.min_scalar_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2084"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2358"
   },
   "minimum": {
     "canonical_name": "minimum",
@@ -20661,7 +20661,7 @@
     "kind": "op",
     "label": "fnp.mintypecode",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2092"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2366"
   },
   "mod": {
     "canonical_name": "mod",
@@ -20688,7 +20688,7 @@
     "kind": "op",
     "label": "fnp.moveaxis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L453"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L506"
   },
   "multi_dot_cost": {
     "canonical_name": "flops.multi_dot_cost",
@@ -20868,7 +20868,7 @@
     "kind": "op",
     "label": "fnp.ndim",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2100"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2374"
   },
   "ndindex": {
     "canonical_name": "ndindex",
@@ -20913,7 +20913,7 @@
     "kind": "op",
     "label": "fnp.nonzero",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2108"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2382"
   },
   "norm_cost": {
     "canonical_name": "flops.norm_cost",
@@ -20940,7 +20940,7 @@
     "kind": "op",
     "label": "fnp.ones",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L145"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L152"
   },
   "ones_like": {
     "canonical_name": "ones_like",
@@ -20949,7 +20949,7 @@
     "kind": "op",
     "label": "fnp.ones_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L295"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L315"
   },
   "outer": {
     "canonical_name": "outer",
@@ -20967,7 +20967,7 @@
     "kind": "op",
     "label": "fnp.packbits",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2124"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2398"
   },
   "pad": {
     "canonical_name": "pad",
@@ -20976,7 +20976,7 @@
     "kind": "op",
     "label": "fnp.pad",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L939"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1099"
   },
   "partition": {
     "canonical_name": "partition",
@@ -21003,7 +21003,7 @@
     "kind": "op",
     "label": "fnp.permute_dims",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2143"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2417"
   },
   "piecewise": {
     "canonical_name": "piecewise",
@@ -21030,7 +21030,7 @@
     "kind": "op",
     "label": "fnp.place",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2152"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2426"
   },
   "pointwise_cost": {
     "canonical_name": "flops.pointwise_cost",
@@ -21255,7 +21255,7 @@
     "kind": "op",
     "label": "fnp.promote_types",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2183"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2457"
   },
   "ptp": {
     "canonical_name": "ptp",
@@ -21273,7 +21273,7 @@
     "kind": "op",
     "label": "fnp.put",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2191"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2465"
   },
   "put_along_axis": {
     "canonical_name": "put_along_axis",
@@ -21282,7 +21282,7 @@
     "kind": "op",
     "label": "fnp.put_along_axis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2222"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2496"
   },
   "putmask": {
     "canonical_name": "putmask",
@@ -21291,7 +21291,7 @@
     "kind": "op",
     "label": "fnp.putmask",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2266"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2540"
   },
   "qr_cost": {
     "canonical_name": "flops.qr_cost",
@@ -22668,7 +22668,7 @@
     "kind": "op",
     "label": "fnp.ravel",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L749"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L816"
   },
   "ravel_multi_index": {
     "canonical_name": "ravel_multi_index",
@@ -22677,7 +22677,7 @@
     "kind": "op",
     "label": "fnp.ravel_multi_index",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2295"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2569"
   },
   "real": {
     "canonical_name": "real",
@@ -22731,7 +22731,7 @@
     "kind": "op",
     "label": "fnp.repeat",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L847"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L929"
   },
   "require": {
     "canonical_name": "require",
@@ -22740,7 +22740,7 @@
     "kind": "op",
     "label": "fnp.require",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2304"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2596"
   },
   "reshape": {
     "canonical_name": "reshape",
@@ -22749,7 +22749,7 @@
     "kind": "op",
     "label": "fnp.reshape",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L389"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L431"
   },
   "resize": {
     "canonical_name": "resize",
@@ -22758,7 +22758,7 @@
     "kind": "op",
     "label": "fnp.resize",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2317"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2609"
   },
   "result_type": {
     "canonical_name": "result_type",
@@ -22767,7 +22767,7 @@
     "kind": "op",
     "label": "fnp.result_type",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2331"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2623"
   },
   "rfft_cost": {
     "canonical_name": "flops.rfft_cost",
@@ -22812,7 +22812,7 @@
     "kind": "op",
     "label": "fnp.roll",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L908"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L993"
   },
   "rollaxis": {
     "canonical_name": "rollaxis",
@@ -22821,7 +22821,7 @@
     "kind": "op",
     "label": "fnp.rollaxis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2339"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2631"
   },
   "roots": {
     "canonical_name": "roots",
@@ -22848,7 +22848,7 @@
     "kind": "op",
     "label": "fnp.rot90",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2354"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2646"
   },
   "round": {
     "canonical_name": "rint",
@@ -22866,7 +22866,7 @@
     "kind": "op",
     "label": "fnp.vstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L545"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L601"
   },
   "save": {
     "canonical_name": "save",
@@ -22911,7 +22911,7 @@
     "kind": "op",
     "label": "fnp.select",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2371"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2667"
   },
   "set_printoptions": {
     "canonical_name": "set_printoptions",
@@ -22956,7 +22956,7 @@
     "kind": "op",
     "label": "fnp.shape",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2402"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2698"
   },
   "shares_memory": {
     "canonical_name": "shares_memory",
@@ -22965,7 +22965,7 @@
     "kind": "op",
     "label": "fnp.shares_memory",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2410"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2706"
   },
   "sign": {
     "canonical_name": "sign",
@@ -23019,7 +23019,7 @@
     "kind": "op",
     "label": "fnp.size",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2418"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2714"
   },
   "slogdet_cost": {
     "canonical_name": "flops.slogdet_cost",
@@ -23073,7 +23073,7 @@
     "kind": "op",
     "label": "fnp.split",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L609"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L665"
   },
   "sqrt": {
     "canonical_name": "sqrt",
@@ -23100,7 +23100,7 @@
     "kind": "op",
     "label": "fnp.squeeze",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L705"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L764"
   },
   "stack": {
     "canonical_name": "stack",
@@ -23109,7 +23109,7 @@
     "kind": "op",
     "label": "fnp.stack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L512"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L568"
   },
   "stats.cauchy": {
     "canonical_name": "stats.cauchy",
@@ -23451,7 +23451,7 @@
     "kind": "op",
     "label": "fnp.swapaxes",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L434"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L484"
   },
   "symmetrize": {
     "canonical_name": "symmetrize",
@@ -23469,7 +23469,7 @@
     "kind": "op",
     "label": "fnp.take",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2426"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2722"
   },
   "take_along_axis": {
     "canonical_name": "take_along_axis",
@@ -23478,7 +23478,7 @@
     "kind": "op",
     "label": "fnp.take_along_axis",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2452"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2748"
   },
   "tan": {
     "canonical_name": "tan",
@@ -23550,7 +23550,7 @@
     "kind": "op",
     "label": "fnp.tile",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L815"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L897"
   },
   "trace": {
     "canonical_name": "trace",
@@ -23577,7 +23577,7 @@
     "kind": "op",
     "label": "fnp.transpose",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L416"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L461"
   },
   "trapezoid": {
     "canonical_name": "trapezoid",
@@ -23604,7 +23604,7 @@
     "kind": "op",
     "label": "fnp.tri",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2478"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2774"
   },
   "tril": {
     "canonical_name": "tril",
@@ -23613,7 +23613,7 @@
     "kind": "op",
     "label": "fnp.tril",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L967"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1145"
   },
   "tril_indices": {
     "canonical_name": "tril_indices",
@@ -23622,7 +23622,7 @@
     "kind": "op",
     "label": "fnp.tril_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2486"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2787"
   },
   "tril_indices_from": {
     "canonical_name": "tril_indices_from",
@@ -23631,7 +23631,7 @@
     "kind": "op",
     "label": "fnp.tril_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2494"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2795"
   },
   "trim_zeros": {
     "canonical_name": "trim_zeros",
@@ -23640,7 +23640,7 @@
     "kind": "op",
     "label": "fnp.trim_zeros",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2502"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2803"
   },
   "triu": {
     "canonical_name": "triu",
@@ -23649,7 +23649,7 @@
     "kind": "op",
     "label": "fnp.triu",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L953"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1131"
   },
   "triu_indices": {
     "canonical_name": "triu_indices",
@@ -23658,7 +23658,7 @@
     "kind": "op",
     "label": "fnp.triu_indices",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2519"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2821"
   },
   "triu_indices_from": {
     "canonical_name": "triu_indices_from",
@@ -23667,7 +23667,7 @@
     "kind": "op",
     "label": "fnp.triu_indices_from",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2527"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2829"
   },
   "true_divide": {
     "canonical_name": "true_divide",
@@ -23694,7 +23694,7 @@
     "kind": "op",
     "label": "fnp.typename",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2535"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2837"
   },
   "union1d": {
     "canonical_name": "union1d",
@@ -23757,7 +23757,7 @@
     "kind": "op",
     "label": "fnp.unpackbits",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2543"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2845"
   },
   "unravel_index": {
     "canonical_name": "unravel_index",
@@ -23766,7 +23766,7 @@
     "kind": "op",
     "label": "fnp.unravel_index",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2562"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2864"
   },
   "unstack": {
     "canonical_name": "unstack",
@@ -23775,7 +23775,7 @@
     "kind": "op",
     "label": "fnp.unstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2572"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2874"
   },
   "unwrap": {
     "canonical_name": "unwrap",
@@ -23784,7 +23784,7 @@
     "kind": "op",
     "label": "fnp.unwrap",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_unwrap.py#L65"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_unwrap.py#L68"
   },
   "unwrap_cost": {
     "canonical_name": "flops.unwrap_cost",
@@ -23856,7 +23856,7 @@
     "kind": "op",
     "label": "fnp.vsplit",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L673"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L732"
   },
   "vstack": {
     "canonical_name": "vstack",
@@ -23865,7 +23865,7 @@
     "kind": "op",
     "label": "fnp.vstack",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L545"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L601"
   },
   "where": {
     "canonical_name": "where",
@@ -23874,7 +23874,7 @@
     "kind": "op",
     "label": "fnp.where",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L787"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L858"
   },
   "zeros": {
     "canonical_name": "zeros",
@@ -23883,7 +23883,7 @@
     "kind": "op",
     "label": "fnp.zeros",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L133"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L136"
   },
   "zeros_like": {
     "canonical_name": "zeros_like",
@@ -23892,6 +23892,6 @@
     "kind": "op",
     "label": "fnp.zeros_like",
     "module": "fnp",
-    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L272"
+    "source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L286"
   }
 }

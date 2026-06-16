@@ -869,8 +869,9 @@ class TestFreeOps:
             _cost_of(we.insert, numpy.array([1, 2, 3]), 1, [10, 20]) == 5
         )  # was 2 (values.size only)
 
-    def test_trim_zeros_num_trimmed(self, we):
-        assert _cost_of(we.trim_zeros, numpy.array([0, 0, 1, 2, 0, 0])) == 4
+    def test_trim_zeros_numel_input(self, we):
+        # value scan for the nonzero boundary = numel(input)
+        assert _cost_of(we.trim_zeros, numpy.array([0, 0, 1, 2, 0, 0])) == 6
 
     def test_diag_1d(self, we):
         # 1D->2D: cost = numel(output) = 3*3 = 9
@@ -882,12 +883,25 @@ class TestFreeOps:
     def test_fill_diagonal(self, we):
         assert _cost_of(we.fill_diagonal, numpy.zeros((5, 5)), 1.0) == 5
 
-    def test_copyto_with_where(self, we):
+    def test_copyto_same_dtype_where_free(self, we):
         mask = numpy.array([True, False] * 5)
-        assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10), where=mask) == 5
+        # same-dtype copy is data movement -> free even with a where mask
+        assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10), where=mask) == 0
 
-    def test_copyto_no_where(self, we):
-        assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10)) == 10
+    def test_copyto_same_dtype_free(self, we):
+        assert _cost_of(we.copyto, numpy.zeros(10), numpy.ones(10)) == 0
+
+    def test_copyto_value_changing_cast(self, we):
+        # float -> int cast computes per element -> numel(dst)
+        assert (
+            _cost_of(
+                we.copyto,
+                numpy.zeros(10, dtype=numpy.int64),
+                numpy.ones(10),
+                casting="unsafe",
+            )
+            == 10
+        )
 
     def test_arange(self, we):
         assert (
@@ -1064,7 +1078,7 @@ def test_gradient_cost_pinned(shape, expected, we):
     assert _cost_of(we.gradient, f) == expected
 
 
-@pytest.mark.parametrize("size,expected", [(100, 1300), (1000, 13000)])
+@pytest.mark.parametrize("size,expected", [(100, 1100), (1000, 11000)])
 def test_unwrap_cost_pinned(size, expected, we):
     a = we.asarray(numpy.zeros(size))
     assert _cost_of(we.unwrap, a) == expected

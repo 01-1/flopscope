@@ -258,7 +258,7 @@
     "signature": "fnp.isrealobj(x: 'Any') -> 'bool'",
     "status": "supported",
     "summary": "Return True if x is a not complex type or an array of complex numbers.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "isrealobj",

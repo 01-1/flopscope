@@ -337,12 +337,12 @@
     "signature": "fnp.fromiter(*args, **kwargs)",
     "status": "supported",
     "summary": "Create a new 1-dimensional array from an iterable object.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "fromiter",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1858",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2132",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.fromiter.html"
   }
 }

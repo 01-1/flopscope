@@ -536,7 +536,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.full_like",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L318",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L344",
   "href": "/docs/api/numpy/full-like/",
   "legacy_href": "/docs/api/ops/full_like/",
   "module": "numpy",
@@ -698,5 +698,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/numeric.py#L367",
-  "weight": 1.0
+  "weight": 0.0
 }

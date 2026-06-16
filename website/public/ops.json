@@ -145,7 +145,7 @@
       "slug": "append",
       "status": "supported",
       "summary": "Append values to the end of an array.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -628,7 +628,7 @@
       "slug": "astype",
       "status": "supported",
       "summary": "Copies an array to a specified data type.",
-      "weight": 0.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -922,7 +922,7 @@
       "slug": "blackman",
       "status": "supported",
       "summary": "Return the Blackman window.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -943,7 +943,7 @@
       "slug": "block",
       "status": "supported",
       "summary": "Assemble an nd-array from nested lists of blocks.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -964,7 +964,7 @@
       "slug": "bmat",
       "status": "supported",
       "summary": "Build a matrix object from a string, nested sequence, or array.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -1111,7 +1111,7 @@
       "slug": "choose",
       "status": "supported",
       "summary": "Construct an array from an index array and a list of arrays to choose from.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -1153,7 +1153,7 @@
       "slug": "column_stack",
       "status": "supported",
       "summary": "Stack 1-D arrays as columns into a 2-D array.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -1195,7 +1195,7 @@
       "slug": "compress",
       "status": "supported",
       "summary": "Return selected slices of an array along given axis.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -1216,7 +1216,7 @@
       "slug": "concatenate",
       "status": "supported",
       "summary": "Join a sequence of arrays along an existing axis.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -1337,7 +1337,7 @@
       "free": false,
       "module": "numpy",
       "name": "copyto",
-      "notes": "Copy values from src to dst array. Cost: numel(dst), or popcount of broadcast where mask.",
+      "notes": "Copy values into dst. Cost: 0 for a lossless copy (same dtype or safe widening); numel(dst) (or popcount where) for a value-changing (lossy) cast.",
       "numpy_ref": "np.copyto",
       "slug": "copyto",
       "status": "supported",
@@ -1615,7 +1615,7 @@
       "slug": "delete",
       "status": "supported",
       "summary": "Return a new array with sub-arrays along an axis deleted. For a one dimensional array, this returns those entries not returned by `arr[obj]`.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -1636,7 +1636,7 @@
       "slug": "diag",
       "status": "supported",
       "summary": "Extract a diagonal or construct a diagonal array.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -1699,7 +1699,7 @@
       "slug": "diagflat",
       "status": "supported",
       "summary": "Create a two-dimensional array with the flattened input as a diagonal.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -1846,7 +1846,7 @@
       "slug": "dstack",
       "status": "supported",
       "summary": "Stack arrays in sequence depth wise (along third axis).",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -2077,7 +2077,7 @@
       "slug": "extract",
       "status": "supported",
       "summary": "Return the elements of an array that satisfy some condition.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -2182,7 +2182,7 @@
       "slug": "fft-fftfreq",
       "status": "supported",
       "summary": "Return the Discrete Fourier Transform sample frequencies.",
-      "weight": 0.0
+      "weight": 1.0
     },
     {
       "area": "fft",
@@ -2476,7 +2476,7 @@
       "slug": "fft-rfftfreq",
       "status": "supported",
       "summary": "Return the Discrete Fourier Transform sample frequencies (for usage with rfft, irfft).",
-      "weight": 0.0
+      "weight": 1.0
     },
     {
       "area": "fft",
@@ -2518,7 +2518,7 @@
       "slug": "fill_diagonal",
       "status": "supported",
       "summary": "Fill the main diagonal of the given array of any dimensionality.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -2833,7 +2833,7 @@
       "slug": "fromiter",
       "status": "supported",
       "summary": "Create a new 1-dimensional array from an iterable object.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -2854,7 +2854,7 @@
       "slug": "full",
       "status": "supported",
       "summary": "Return a new array of given shape and type, filled with `fill_value`.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -2875,7 +2875,7 @@
       "slug": "full_like",
       "status": "supported",
       "summary": "Return a full array with the same shape and type as a given array.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -2917,7 +2917,7 @@
       "slug": "geomspace",
       "status": "supported",
       "summary": "Return numbers spaced evenly on a log scale (a geometric progression).",
-      "weight": 1.0
+      "weight": 16.0
     },
     {
       "area": "core",
@@ -3169,7 +3169,7 @@
       "slug": "hstack",
       "status": "supported",
       "summary": "Stack arrays in sequence horizontally (column wise).",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -3337,7 +3337,7 @@
       "slug": "insert",
       "status": "supported",
       "summary": "Insert values along the given axis before the given indices.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -3484,7 +3484,7 @@
       "slug": "iscomplexobj",
       "status": "supported",
       "summary": "Check for a complex type or an array of complex numbers.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -3694,7 +3694,7 @@
       "slug": "isrealobj",
       "status": "supported",
       "summary": "Return True if x is a not complex type or an array of complex numbers.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -3778,7 +3778,7 @@
       "slug": "ix_",
       "status": "supported",
       "summary": "Construct an open mesh from multiple sequences.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -3799,7 +3799,7 @@
       "slug": "kaiser",
       "status": "supported",
       "summary": "Return the Kaiser window.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -3967,7 +3967,7 @@
       "slug": "linalg-cholesky",
       "status": "supported",
       "summary": "Cholesky decomposition.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -3988,7 +3988,7 @@
       "slug": "linalg-cond",
       "status": "supported",
       "summary": "Compute the condition number of a matrix.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4030,7 +4030,7 @@
       "slug": "linalg-det",
       "status": "supported",
       "summary": "Compute the determinant of an array.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4072,7 +4072,7 @@
       "slug": "linalg-eig",
       "status": "supported",
       "summary": "Compute the eigenvalues and right eigenvectors of a square array.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4093,7 +4093,7 @@
       "slug": "linalg-eigh",
       "status": "supported",
       "summary": "Return the eigenvalues and eigenvectors of a complex Hermitian (conjugate symmetric) or a real symmetric matrix.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4114,7 +4114,7 @@
       "slug": "linalg-eigvals",
       "status": "supported",
       "summary": "Compute the eigenvalues of a general matrix.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4135,7 +4135,7 @@
       "slug": "linalg-eigvalsh",
       "status": "supported",
       "summary": "Compute the eigenvalues of a complex Hermitian or real symmetric matrix.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4156,7 +4156,7 @@
       "slug": "linalg-inv",
       "status": "supported",
       "summary": "Compute the inverse of a matrix.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4177,7 +4177,7 @@
       "slug": "linalg-lstsq",
       "status": "supported",
       "summary": "Return the least-squares solution to a linear matrix equation.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4261,7 +4261,7 @@
       "slug": "linalg-matrix_rank",
       "status": "supported",
       "summary": "Return matrix rank of array using SVD method",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4366,7 +4366,7 @@
       "slug": "linalg-pinv",
       "status": "supported",
       "summary": "Compute the (Moore-Penrose) pseudo-inverse of a matrix.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4387,7 +4387,7 @@
       "slug": "linalg-qr",
       "status": "supported",
       "summary": "Compute the qr factorization of a matrix.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4408,7 +4408,7 @@
       "slug": "linalg-slogdet",
       "status": "supported",
       "summary": "Compute the sign and (natural) logarithm of the determinant of an array.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4429,7 +4429,7 @@
       "slug": "linalg-solve",
       "status": "supported",
       "summary": "Solve a linear matrix equation, or system of linear scalar equations.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4450,7 +4450,7 @@
       "slug": "linalg-svd",
       "status": "supported",
       "summary": "Singular Value Decomposition.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4471,7 +4471,7 @@
       "slug": "linalg-svdvals",
       "status": "supported",
       "summary": "Returns the singular values of a matrix (or a stack of matrices) ``x``. When x is a stack of matrices, the function will compute the singular values for each matrix in the stack.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4513,7 +4513,7 @@
       "slug": "linalg-tensorinv",
       "status": "supported",
       "summary": "Compute the 'inverse' of an N-dimensional array.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4534,7 +4534,7 @@
       "slug": "linalg-tensorsolve",
       "status": "supported",
       "summary": "Solve the tensor equation ``a x = b`` for x.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "linalg",
@@ -4870,7 +4870,7 @@
       "slug": "logspace",
       "status": "supported",
       "summary": "Return numbers spaced evenly on a log scale.",
-      "weight": 1.0
+      "weight": 16.0
     },
     {
       "area": "core",
@@ -5080,7 +5080,7 @@
       "slug": "meshgrid",
       "status": "supported",
       "summary": "Return a tuple of coordinate matrices from coordinate vectors.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -5521,7 +5521,7 @@
       "slug": "nanstd",
       "status": "supported",
       "summary": "Compute the standard deviation along the specified axis, while ignoring NaNs.",
-      "weight": 2.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -5563,7 +5563,7 @@
       "slug": "nanvar",
       "status": "supported",
       "summary": "Compute the variance along the specified axis, while ignoring NaNs.",
-      "weight": 2.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -5768,7 +5768,7 @@
       "free": false,
       "module": "numpy",
       "name": "pad",
-      "notes": "Pad array. Cost: numel(output).",
+      "notes": "Pad array. Cost: 0 for data-movement modes; reduction cost (maximum/minimum/mean/median) or 2*(numel_out-numel_in) (linear_ramp, reflect_type='odd') for value-computing modes; mode=<callable> raises.",
       "numpy_ref": "np.pad",
       "slug": "pad",
       "status": "supported",
@@ -5878,7 +5878,7 @@
       "slug": "place",
       "status": "supported",
       "summary": "Change elements of an array based on conditional and input values.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -6193,7 +6193,7 @@
       "slug": "put",
       "status": "supported",
       "summary": "Replaces specified elements of an array with given values.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -6214,7 +6214,7 @@
       "slug": "put_along_axis",
       "status": "supported",
       "summary": "Put values into the destination array by matching 1d index and data slices.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -6235,7 +6235,7 @@
       "slug": "putmask",
       "status": "supported",
       "summary": "Changes elements of an array based on conditional and input values.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -6697,7 +6697,7 @@
       "slug": "random-Generator-multivariate_hypergeometric",
       "status": "supported",
       "summary": "Generate variates from a multivariate hypergeometric distribution.",
-      "weight": 1.0
+      "weight": 16.0
     },
     {
       "area": "random",
@@ -8671,7 +8671,7 @@
       "slug": "random-multivariate_normal",
       "status": "supported",
       "summary": "Draw random samples from a multivariate normal distribution.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "random",
@@ -9307,22 +9307,22 @@
       "area": "core",
       "blocked": false,
       "canonical_path": "numpy/ravel-multi-index",
-      "category": "free",
-      "cost_formula": "0",
-      "cost_formula_latex": "$0$",
+      "category": "counted_custom",
+      "cost_formula": "per-operation",
+      "cost_formula_latex": "varies",
       "detail_href": "/docs/api/numpy/ravel-multi-index/",
       "detail_json_href": "/api-data/ops/ravel_multi_index.json",
-      "display_type": "free",
+      "display_type": "custom",
       "flopscope_ref": "fnp.ravel_multi_index",
-      "free": true,
+      "free": false,
       "module": "numpy",
       "name": "ravel_multi_index",
-      "notes": "Convert multi-dimensional index to flat index.",
+      "notes": "Convert multi-index to flat index. Cost: 2*(ndim-1)*N (+N for clip/wrap mode), N = #output indices.",
       "numpy_ref": "np.ravel_multi_index",
       "slug": "ravel_multi_index",
       "status": "supported",
       "summary": "Converts a tuple of index arrays into an array of flat indices, applying boundary modes to the multi-index.",
-      "weight": 0.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -9427,7 +9427,7 @@
       "slug": "repeat",
       "status": "supported",
       "summary": "Repeat each element of an array after themselves",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -9490,7 +9490,7 @@
       "slug": "resize",
       "status": "supported",
       "summary": "Return a new array with the specified shape.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -9574,7 +9574,7 @@
       "slug": "roll",
       "status": "supported",
       "summary": "Roll array elements along a given axis.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -9616,7 +9616,7 @@
       "slug": "roots",
       "status": "supported",
       "summary": "Return the roots of a polynomial with coefficients given in p.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -9742,7 +9742,7 @@
       "slug": "select",
       "status": "supported",
       "summary": "Return an array drawn from elements in choicelist, depending on conditions.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -10120,7 +10120,7 @@
       "slug": "stack",
       "status": "supported",
       "summary": "Join a sequence of arrays along a new axis.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "stats",
@@ -10141,7 +10141,7 @@
       "slug": "stats-cauchy-cdf",
       "status": "supported",
       "summary": "Evaluate the cumulative distribution function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10162,7 +10162,7 @@
       "slug": "stats-cauchy-pdf",
       "status": "supported",
       "summary": "Evaluate the probability density function.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10183,7 +10183,7 @@
       "slug": "stats-cauchy-ppf",
       "status": "supported",
       "summary": "Evaluate the percent-point function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10204,7 +10204,7 @@
       "slug": "stats-expon-cdf",
       "status": "supported",
       "summary": "Evaluate the cumulative distribution function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10225,7 +10225,7 @@
       "slug": "stats-expon-pdf",
       "status": "supported",
       "summary": "Evaluate the probability density function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10246,7 +10246,7 @@
       "slug": "stats-expon-ppf",
       "status": "supported",
       "summary": "Evaluate the percent-point function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10267,7 +10267,7 @@
       "slug": "stats-laplace-cdf",
       "status": "supported",
       "summary": "Evaluate the cumulative distribution function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10288,7 +10288,7 @@
       "slug": "stats-laplace-pdf",
       "status": "supported",
       "summary": "Evaluate the probability density function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10309,7 +10309,7 @@
       "slug": "stats-laplace-ppf",
       "status": "supported",
       "summary": "Evaluate the percent-point function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10330,7 +10330,7 @@
       "slug": "stats-logistic-cdf",
       "status": "supported",
       "summary": "Evaluate the cumulative distribution function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10351,7 +10351,7 @@
       "slug": "stats-logistic-pdf",
       "status": "supported",
       "summary": "Evaluate the probability density function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10372,7 +10372,7 @@
       "slug": "stats-logistic-ppf",
       "status": "supported",
       "summary": "Evaluate the percent-point function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10393,7 +10393,7 @@
       "slug": "stats-lognorm-cdf",
       "status": "supported",
       "summary": "Evaluate the cumulative distribution function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10414,7 +10414,7 @@
       "slug": "stats-lognorm-pdf",
       "status": "supported",
       "summary": "Evaluate the probability density function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10435,7 +10435,7 @@
       "slug": "stats-lognorm-ppf",
       "status": "supported",
       "summary": "Evaluate the percent-point function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10456,7 +10456,7 @@
       "slug": "stats-norm-cdf",
       "status": "supported",
       "summary": "Evaluate the cumulative distribution function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10477,7 +10477,7 @@
       "slug": "stats-norm-pdf",
       "status": "supported",
       "summary": "Evaluate the probability density function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10498,7 +10498,7 @@
       "slug": "stats-norm-ppf",
       "status": "supported",
       "summary": "Evaluate the percent-point function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10519,7 +10519,7 @@
       "slug": "stats-truncnorm-cdf",
       "status": "supported",
       "summary": "Evaluate the cumulative distribution function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10540,7 +10540,7 @@
       "slug": "stats-truncnorm-pdf",
       "status": "supported",
       "summary": "Evaluate the probability density function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10561,7 +10561,7 @@
       "slug": "stats-truncnorm-ppf",
       "status": "supported",
       "summary": "Evaluate the percent-point function.",
-      "weight": 16.0
+      "weight": 1.0
     },
     {
       "area": "stats",
@@ -10645,7 +10645,7 @@
       "slug": "std",
       "status": "supported",
       "summary": "Compute the standard deviation along the specified axis.",
-      "weight": 2.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -10750,7 +10750,7 @@
       "slug": "take",
       "status": "supported",
       "summary": "Take elements from an array along an axis.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -10771,7 +10771,7 @@
       "slug": "take_along_axis",
       "status": "supported",
       "summary": "Take values from the input array by matching 1d index and data slices.",
-      "weight": 4.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -10855,7 +10855,7 @@
       "slug": "tile",
       "status": "supported",
       "summary": "Construct an array by repeating A the number of times given by reps.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -10960,7 +10960,7 @@
       "slug": "tril",
       "status": "supported",
       "summary": "Lower triangle of an array.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -11018,12 +11018,12 @@
       "free": false,
       "module": "numpy",
       "name": "trim_zeros",
-      "notes": "Trim leading/trailing zeros from 1-D array. Cost: num trimmed.",
+      "notes": "Trim leading/trailing zeros. Cost: numel(input) (value scan, like nonzero).",
       "numpy_ref": "np.trim_zeros",
       "slug": "trim_zeros",
       "status": "supported",
       "summary": "Remove values along a dimension which are zero along all other.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -11044,7 +11044,7 @@
       "slug": "triu",
       "status": "supported",
       "summary": "Upper triangle of an array.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -11338,7 +11338,7 @@
       "slug": "unstack",
       "status": "supported",
       "summary": "Split an array into a sequence of arrays along the given axis.",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -11401,7 +11401,7 @@
       "slug": "var",
       "status": "supported",
       "summary": "Compute the variance along the specified axis.",
-      "weight": 2.0
+      "weight": 1.0
     },
     {
       "area": "core",
@@ -11506,7 +11506,7 @@
       "slug": "vstack",
       "status": "supported",
       "summary": "Stack arrays in sequence vertically (row wise).",
-      "weight": 1.0
+      "weight": 0.0
     },
     {
       "area": "core",
@@ -11527,7 +11527,7 @@
       "slug": "where",
       "status": "supported",
       "summary": "Return elements chosen from `x` or `y` depending on `condition`.",
-      "weight": 4.0
+      "weight": 1.0
     },
     {
       "area": "core",

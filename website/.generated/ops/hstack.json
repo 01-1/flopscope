@@ -448,7 +448,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.hstack",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L577",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L633",
   "href": "/docs/api/numpy/hstack/",
   "legacy_href": "/docs/api/ops/hstack/",
   "module": "numpy",
@@ -643,5 +643,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/shape_base.py#L295",
-  "weight": 1.0
+  "weight": 0.0
 }

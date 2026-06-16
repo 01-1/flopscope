@@ -432,12 +432,12 @@
     "signature": "fnp.unstack(x, /, *, axis=0)",
     "status": "supported",
     "summary": "Split an array into a sequence of arrays along the given axis.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "unstack",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2572",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2874",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/shape_base.py#L473"
   }
 }

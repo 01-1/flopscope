@@ -378,12 +378,12 @@
     "signature": "fnp.astype(x, dtype, /, *, copy=True, device=None)",
     "status": "supported",
     "summary": "Copies an array to a specified data type.",
-    "weight": 0.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "astype",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1072",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1261",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/numeric.py#L2618"
   }
 }

@@ -762,12 +762,12 @@
     "signature": "fnp.meshgrid(*xi, copy=True, sparse=False, indexing='xy')",
     "status": "supported",
     "summary": "Return a tuple of coordinate matrices from coordinate vectors.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "meshgrid",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1041",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1219",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L5117"
   }
 }

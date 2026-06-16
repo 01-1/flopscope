@@ -1186,7 +1186,7 @@ REGISTRY: dict[str, dict] = {
         "notes": "N-D real FFT. Cost: 5*(N//2)*ceil(log2(N)), N=prod(s) (Cooley-Tukey radix-2; Van Loan 1992 §1.4).",
     },
     # ------------------------------------------------------------------
-    # free — implemented in _free_ops.py
+    # free — implemented in _array_ops.py
     # ------------------------------------------------------------------
     "array": {
         "category": "counted_custom",
@@ -1381,7 +1381,7 @@ REGISTRY: dict[str, dict] = {
     "pad": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Pad array. Cost: numel(output).",
+        "notes": "Pad array. Cost: 0 for data-movement modes; reduction cost (maximum/minimum/mean/median) or 2*(numel_out-numel_in) (linear_ramp, reflect_type='odd') for value-computing modes; mode=<callable> raises.",
     },
     "triu": {
         "category": "counted_custom",
@@ -1603,7 +1603,7 @@ REGISTRY: dict[str, dict] = {
     "trim_zeros": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Trim leading/trailing zeros from 1-D array. Cost: num trimmed.",
+        "notes": "Trim leading/trailing zeros. Cost: numel(input) (value scan, like nonzero).",
     },
     "resize": {
         "category": "counted_custom",
@@ -1783,9 +1783,9 @@ REGISTRY: dict[str, dict] = {
         "notes": "Convert flat index to multi-dimensional index.",
     },
     "ravel_multi_index": {
-        "category": "free",
+        "category": "counted_custom",
         "module": "numpy",
-        "notes": "Convert multi-dimensional index to flat index.",
+        "notes": "Convert multi-index to flat index. Cost: 2*(ndim-1)*N (+N for clip/wrap mode), N = #output indices.",
     },
     "indices": {
         "category": "counted_custom",
@@ -1906,7 +1906,7 @@ REGISTRY: dict[str, dict] = {
     "copyto": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Copy values from src to dst array. Cost: numel(dst), or popcount of broadcast where mask.",
+        "notes": "Copy values into dst. Cost: 0 for a lossless copy (same dtype or safe widening); numel(dst) (or popcount where) for a value-changing (lossy) cast.",
     },
     "unique_all": {
         "category": "counted_custom",

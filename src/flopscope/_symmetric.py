@@ -706,17 +706,17 @@ class SymmetricTensor(FlopscopeArray):
         return out
 
     def reshape(self, *shape, **kwargs):  # type: ignore[override]
-        from flopscope._free_ops import reshape as _reshape
+        from flopscope._array_ops import reshape as _reshape
 
         return _reshape(self, *shape, **kwargs)
 
     def ravel(self, order: str = "C"):  # type: ignore[override]
-        from flopscope._free_ops import ravel as _ravel
+        from flopscope._array_ops import ravel as _ravel
 
         return _ravel(self, order=order)
 
     def flatten(self, order: str = "C"):  # type: ignore[override]
-        from flopscope._free_ops import ravel as _ravel
+        from flopscope._array_ops import ravel as _ravel
         from flopscope._symmetry_transport import transport_ravel
         from flopscope.errors import _warn_symmetry_loss
 
@@ -733,7 +733,7 @@ class SymmetricTensor(FlopscopeArray):
         return np.array(out, copy=True)
 
     def squeeze(self, axis=None):  # type: ignore[override]
-        from flopscope._free_ops import squeeze as _squeeze
+        from flopscope._array_ops import squeeze as _squeeze
 
         return _squeeze(self, axis=axis)  # type: ignore[arg-type]
 

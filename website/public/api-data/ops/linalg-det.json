@@ -272,7 +272,7 @@
     "signature": "fnp.linalg.det(a: 'ArrayLike') -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Compute the determinant of an array.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "linalg-det",

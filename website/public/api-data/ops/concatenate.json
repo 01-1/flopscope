@@ -646,12 +646,12 @@
     "signature": "fnp.concatenate(arrays: 'Sequence[ArrayLike]', axis: 'int | None' = 0, **kwargs: 'Any') -> 'FlopscopeArray'",
     "status": "supported",
     "summary": "Join a sequence of arrays along an existing axis.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "concatenate",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L476",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L532",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.concatenate.html"
   }
 }

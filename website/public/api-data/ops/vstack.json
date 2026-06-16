@@ -480,12 +480,12 @@
     "signature": "fnp.vstack(tup, *, dtype=None, casting='same_kind')",
     "status": "supported",
     "summary": "Stack arrays in sequence vertically (row wise).",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "vstack",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L545",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L601",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/shape_base.py#L220"
   }
 }

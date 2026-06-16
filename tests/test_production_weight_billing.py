@@ -9,9 +9,13 @@ each weight is a legal tier value). Neither pins what production actually
 
 This module closes that gap: it loads the packaged production weights
 (``data/default_weights.json``) and pins the billed cost for one representative
-op per weight tier {0, 1, 4, 8, 16}. A silent weight regression (e.g. a
+op per weight tier {0, 1, 8, 16}. A silent weight regression (e.g. a
 transcendental sampler dropping from 16x to 1x) or a tier mislabel now fails
 here — not only in the (unenforced) ``docs/reference/cost-model.md`` table.
+
+Note: the former 4.0 "gather" tier (take/put/take_along_axis/put_along_axis etc.)
+was replaced by the data-movement free tier (weight=0.0) in the cost-model
+data-movement-free-tier change.
 """
 
 import numpy as np
@@ -38,16 +42,11 @@ def _billed(call):
 
 # label, weight_key, call, expected_billed (= flop_cost x weight), expected_weight.
 # One op per tier; expected_billed verified against the live model at 100 elems.
+# Tiers: {0, 1, 8, 16}. The old 4.0 gather tier is gone (data-movement free).
 _TIER_CASES = [
     ("free: reshape", "reshape", lambda: fnp.reshape(_A, (10, 10)), 0, 0.0),
+    ("free: take (was gather)", "take", lambda: fnp.take(_A, _IDX), 0, 0.0),
     ("arithmetic: add", "add", lambda: fnp.add(_A, _B), 100, 1.0),
-    (
-        "gather: take_along_axis",
-        "take_along_axis",
-        lambda: fnp.take_along_axis(_A, _IDX, axis=0),
-        400,
-        4.0,
-    ),
     ("half: hanning", "hanning", lambda: fnp.hanning(100), 1600, 8.0),
     ("transcendental: exp", "exp", lambda: fnp.exp(_A), 1600, 16.0),
     (

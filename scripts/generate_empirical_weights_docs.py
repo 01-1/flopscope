@@ -31,6 +31,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 WEIGHTS_PATH = REPO_ROOT / "src" / "flopscope" / "data" / "weights.json"
+DEFAULT_WEIGHTS_PATH = REPO_ROOT / "src" / "flopscope" / "data" / "default_weights.json"
 CSV_OUT = REPO_ROOT / "src" / "flopscope" / "data" / "weights.csv"
 MD_OUT = REPO_ROOT / "docs" / "reference" / "empirical-weights.md"
 
@@ -426,7 +427,8 @@ def build_rows(data: dict) -> list[dict]:
     """
     from flopscope._registry import REGISTRY
 
-    weights = data["weights"]
+    # Applied/billed weight from the source of truth; per_op_details (measurements) stay in weights.json.
+    weights = json.loads(DEFAULT_WEIGHTS_PATH.read_text())["weights"]
     details = data["meta"]["per_op_details"]
     timing_weights = data["meta"]["validation"].get("timing_weights", {})
     abs_alphas = data["meta"]["validation"].get("absolute_correction_factors", {})

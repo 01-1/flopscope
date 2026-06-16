@@ -531,12 +531,12 @@
     "signature": "fnp.full_like(a, fill_value, dtype=None, order='K', subok=True, shape=None, *, device=None)",
     "status": "supported",
     "summary": "Return a full array with the same shape and type as a given array.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "full_like",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L318",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L344",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/numeric.py#L367"
   }
 }

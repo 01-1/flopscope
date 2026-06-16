@@ -445,12 +445,12 @@
     "signature": "fnp.stack(arrays, axis=0, out=None, *, dtype=None, casting='same_kind')",
     "status": "supported",
     "summary": "Join a sequence of arrays along a new axis.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "stack",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L512",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L568",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/shape_base.py#L380"
   }
 }

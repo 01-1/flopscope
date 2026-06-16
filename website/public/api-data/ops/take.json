@@ -595,12 +595,12 @@
     "signature": "fnp.take(a, indices, axis=None, out=None, mode='raise')",
     "status": "supported",
     "summary": "Take elements from an array along an axis.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "take",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2426",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2722",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/fromnumeric.py#L109"
   }
 }

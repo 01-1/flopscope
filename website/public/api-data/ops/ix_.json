@@ -326,12 +326,12 @@
     "signature": "fnp.ix_(*args)",
     "status": "supported",
     "summary": "Construct an open mesh from multiple sequences.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "ix_",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2011",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2285",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_index_tricks_impl.py#L34"
   }
 }

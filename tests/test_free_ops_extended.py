@@ -8,7 +8,7 @@ import numpy
 import pytest
 
 import flopscope as flops
-import flopscope._free_ops as ops
+import flopscope._array_ops as ops
 import flopscope.numpy as fnp
 from flopscope._symmetric import SymmetricTensor
 from flopscope.errors import SymmetryLossWarning

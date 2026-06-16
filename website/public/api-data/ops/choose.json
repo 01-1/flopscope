@@ -965,12 +965,12 @@
     "signature": "fnp.choose(a, choices, out=None, mode='raise')",
     "status": "supported",
     "summary": "Construct an array from an index array and a list of arrays to choose from.",
-    "weight": 4.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "choose",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1456",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1712",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/fromnumeric.py#L333"
   }
 }

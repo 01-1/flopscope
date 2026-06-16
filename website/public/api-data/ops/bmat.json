@@ -327,12 +327,12 @@
     "signature": "fnp.bmat(obj, ldict=None, gdict=None)",
     "status": "supported",
     "summary": "Build a matrix object from a string, nested sequence, or array.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "bmat",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L1390",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1646",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/matrixlib/defmatrix.py#L1041"
   }
 }
