@@ -328,17 +328,17 @@
     "flopscope_ref": "fnp.trim_zeros",
     "module": "numpy",
     "name": "trim_zeros",
-    "notes": "Trim leading/trailing zeros from 1-D array. Cost: num trimmed.",
+    "notes": "Trim leading/trailing zeros. Cost: numel(input) (value scan, like nonzero).",
     "numpy_ref": "np.trim_zeros",
     "signature": "fnp.trim_zeros(filt, trim='fb', axis=None)",
     "status": "supported",
     "summary": "Remove values along a dimension which are zero along all other.",
-    "weight": 0.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "trim_zeros",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2756",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2803",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L1889"
   }
 }

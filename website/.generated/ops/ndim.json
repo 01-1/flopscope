@@ -231,7 +231,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.ndim",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2345",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2374",
   "href": "/docs/api/numpy/ndim/",
   "legacy_href": "/docs/api/ops/ndim/",
   "module": "numpy",

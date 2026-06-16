@@ -391,7 +391,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.astype",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1242",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1261",
   "href": "/docs/api/numpy/astype/",
   "import_path": "flopscope.numpy.astype",
   "is_operation_cost_leaf": true,

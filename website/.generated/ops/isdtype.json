@@ -306,7 +306,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.isdtype",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2198",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2227",
   "href": "/docs/api/numpy/isdtype/",
   "legacy_href": "/docs/api/ops/isdtype/",
   "module": "numpy",

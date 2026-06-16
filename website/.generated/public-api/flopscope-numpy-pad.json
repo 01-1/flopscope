@@ -1254,7 +1254,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.pad",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1087",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1099",
   "href": "/docs/api/numpy/pad/",
   "import_path": "flopscope.numpy.pad",
   "is_operation_cost_leaf": true,

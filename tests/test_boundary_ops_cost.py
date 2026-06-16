@@ -132,3 +132,18 @@ def test_copyto_value_changing_cast_charged():
     src = fnp.asarray(np.random.default_rng(0).standard_normal(100))
     # float64 -> int64 cast computes per element -> numel(dst) = 100
     assert billed(lambda: fnp.copyto(dst, src, casting="unsafe")) == 100
+
+
+def test_charged_modes_billed_under_production_weights():
+    from flopscope._weights import load_weights, reset_weights
+
+    load_weights()
+    try:
+        a = fnp.asarray(np.arange(1000.0))
+        assert billed(lambda: fnp.pad(a, (1, 1), mode="mean")) > 0
+        assert billed(lambda: fnp.pad(a, (1, 1), mode="median")) > 0
+        rows = fnp.asarray(np.arange(100) % 10)
+        assert billed(lambda: fnp.ravel_multi_index((rows, rows), (10, 10))) > 0
+        assert billed(lambda: fnp.trim_zeros(a)) > 0
+    finally:
+        reset_weights()

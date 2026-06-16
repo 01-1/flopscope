@@ -52,6 +52,7 @@ _ALLOWLIST = {
     "common_type",
     "can_cast",
     "broadcast_shapes",
+    "broadcast",
     "prod",
     # predicates
     "iterable",

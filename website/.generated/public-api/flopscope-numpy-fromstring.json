@@ -399,7 +399,7 @@
     "source": "derived"
   },
   "flopscope_ref": "flopscope.numpy.fromstring",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2136",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2165",
   "href": "/docs/api/numpy/fromstring/",
   "import_path": "flopscope.numpy.fromstring",
   "is_operation_cost_leaf": true,

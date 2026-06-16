@@ -349,17 +349,17 @@
     "flopscope_ref": "fnp.copyto",
     "module": "numpy",
     "name": "copyto",
-    "notes": "Copy values from src to dst array. Cost: numel(dst), or popcount of broadcast where mask.",
+    "notes": "Copy values into dst. Cost: 0 for same-dtype/where copy; numel(dst) (or popcount where) for a value-changing cast.",
     "numpy_ref": "np.copyto",
     "signature": "fnp.copyto(dst, src, casting='same_kind', where=True)",
     "status": "supported",
     "summary": "Copies values from one array to another, broadcasting as necessary.",
-    "weight": 0.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "copyto",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1816",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1835",
     "numpy": "https://numpy.org/doc/stable/reference/generated/numpy.copyto.html"
   }
 }

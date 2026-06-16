@@ -338,7 +338,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.trim_zeros",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2756",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2803",
   "href": "/docs/api/numpy/trim-zeros/",
   "legacy_href": "/docs/api/ops/trim_zeros/",
   "module": "numpy",
@@ -347,7 +347,7 @@
     "href": "/docs/api/numpy/triu/",
     "label": "fnp.triu"
   },
-  "notes": "Trim leading/trailing zeros from 1-D array. Cost: num trimmed.",
+  "notes": "Trim leading/trailing zeros. Cost: numel(input) (value scan, like nonzero).",
   "notes_sections": [
     "For all-zero arrays, the first axis is trimmed first."
   ],
@@ -407,5 +407,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/lib/_function_base_impl.py#L1889",
-  "weight": 0.0
+  "weight": 1.0
 }

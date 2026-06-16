@@ -277,7 +277,7 @@
   "schema_version": 1,
   "slug": "argwhere",
   "source": {
-    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1406",
+    "flopscope": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L1425",
     "numpy": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/numeric.py#L591"
   }
 }
