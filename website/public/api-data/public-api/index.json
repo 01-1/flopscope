@@ -1591,7 +1591,7 @@
       "import_path": "flopscope.numpy.base_repr",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-base-repr",
       "summary": "Return a string representation of a number in the given base system."
@@ -1603,7 +1603,7 @@
       "import_path": "flopscope.numpy.binary_repr",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-binary-repr",
       "summary": "Return the binary representation of the input number as a string."
@@ -1951,7 +1951,7 @@
       "import_path": "flopscope.numpy.concat",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-concat",
       "summary": "Join a sequence of arrays along an existing axis."
@@ -3007,7 +3007,7 @@
       "import_path": "flopscope.numpy.fromfile",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-fromfile",
       "summary": "Construct an array from data in a text or binary file."
@@ -3043,7 +3043,7 @@
       "import_path": "flopscope.numpy.fromregex",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-fromregex",
       "summary": "Construct an array from a text file, using regular expression parsing."
@@ -3055,7 +3055,7 @@
       "import_path": "flopscope.numpy.fromstring",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-fromstring",
       "summary": "A new 1-D array initialized from text data in a string."
@@ -7231,7 +7231,7 @@
       "import_path": "flopscope.numpy.row_stack",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-row-stack",
       "summary": "Stack arrays in sequence vertically (row wise)."
@@ -9093,7 +9093,7 @@
       "import_path": "flopscope.numpy.base_repr",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-base-repr",
       "summary": "Return a string representation of a number in the given base system."
@@ -9105,7 +9105,7 @@
       "import_path": "flopscope.numpy.binary_repr",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-binary-repr",
       "summary": "Return the binary representation of the input number as a string."
@@ -9405,7 +9405,7 @@
       "import_path": "flopscope.numpy.concat",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-concat",
       "summary": "Join a sequence of arrays along an existing axis."
@@ -10377,7 +10377,7 @@
       "import_path": "flopscope.numpy.fromfile",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-fromfile",
       "summary": "Construct an array from data in a text or binary file."
@@ -10413,7 +10413,7 @@
       "import_path": "flopscope.numpy.fromregex",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-fromregex",
       "summary": "Construct an array from a text file, using regular expression parsing."
@@ -10425,7 +10425,7 @@
       "import_path": "flopscope.numpy.fromstring",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-fromstring",
       "summary": "A new 1-D array initialized from text data in a string."
@@ -14433,7 +14433,7 @@
       "import_path": "flopscope.numpy.row_stack",
       "is_operation_cost_leaf": true,
       "kind": "function",
-      "module": "flopscope._free_ops",
+      "module": "flopscope._array_ops",
       "namespace": "numpy",
       "slug": "flopscope-numpy-row-stack",
       "summary": "Stack arrays in sequence vertically (row wise)."

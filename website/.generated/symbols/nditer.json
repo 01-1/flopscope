@@ -1598,7 +1598,7 @@
   "signature": "fnp.nditer",
   "slug": "nditer",
   "source_url": "",
-  "status_note": "",
+  "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
   "summary": "Efficient multi-dimensional iterator object to iterate over arrays. To get started using this object, see the :ref:`introductory guide to array iteration <arrays.nditer>`.",
   "upstream_source_url": ""
 }

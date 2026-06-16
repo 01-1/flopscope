@@ -607,7 +607,7 @@
   },
   "flopscope_examples_html": "",
   "flopscope_ref": "fnp.take",
-  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_free_ops.py#L2426",
+  "flopscope_source_url": "https://github.com/AIcrowd/flopscope/blob/main/src/flopscope/_array_ops.py#L2722",
   "href": "/docs/api/numpy/take/",
   "legacy_href": "/docs/api/ops/take/",
   "module": "numpy",
@@ -745,5 +745,5 @@
   "upstream_ref_label": "NumPy Ref",
   "upstream_source_label": "numpy source",
   "upstream_source_url": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/_core/fromnumeric.py#L109",
-  "weight": 4.0
+  "weight": 0.0
 }

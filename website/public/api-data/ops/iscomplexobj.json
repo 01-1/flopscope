@@ -212,7 +212,7 @@
     "signature": "fnp.iscomplexobj(x: 'Any') -> 'bool'",
     "status": "supported",
     "summary": "Check for a complex type or an array of complex numbers.",
-    "weight": 1.0
+    "weight": 0.0
   },
   "schema_version": 1,
   "slug": "iscomplexobj",

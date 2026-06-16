@@ -821,7 +821,7 @@
     "signature": "fnp.linalg.lstsq(a: 'ArrayLike', b: 'ArrayLike', rcond: 'float | None' = None) -> 'tuple[FlopscopeArray, FlopscopeArray, int, FlopscopeArray]'",
     "status": "supported",
     "summary": "Return the least-squares solution to a linear matrix equation.",
-    "weight": 4.0
+    "weight": 1.0
   },
   "schema_version": 1,
   "slug": "linalg-lstsq",

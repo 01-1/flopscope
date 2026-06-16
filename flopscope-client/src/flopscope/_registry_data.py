@@ -502,7 +502,7 @@ FUNCTION_CATEGORIES: dict[str, str] = {
     "random.weibull": "counted_custom",
     "random.zipf": "counted_custom",
     "ravel": "free",
-    "ravel_multi_index": "free",
+    "ravel_multi_index": "counted_custom",
     "real": "counted_unary",
     "real_if_close": "counted_unary",
     "reciprocal": "counted_unary",

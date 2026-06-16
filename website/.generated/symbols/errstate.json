@@ -314,7 +314,7 @@
   "signature": "fnp.errstate(*, call=<numpy._core._ufunc_config._unspecified object>, all=None, divide=None, over=None, under=None, invalid=None)",
   "slug": "errstate",
   "source_url": "",
-  "status_note": "",
+  "status_note": "This symbol is exported from flopscope, but it is excluded from the operation registry and therefore does not appear in the operation cost index.",
   "summary": "Context manager for floating-point error handling.",
   "upstream_source_url": ""
 }
