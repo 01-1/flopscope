@@ -21,8 +21,7 @@ differ from the declared tier — see [empirical-weights.md](empirical-weights.m
 1. **[Billing model & design principles](#billing-model--design-principles)** — the one equation and *why* it is split into `flop_cost` and `weight`.
 2. **[Non-exploitability](#non-exploitability)** — the invariants that keep billing sound, and the test that enforces each.
 3. **[Cost by family](#cost-by-family)** — the rule + evidence + representative ops for the family you care about.
-4. **[Calibration & reproducibility](#calibration--reproducibility)** — how the constants and weights are derived
-5. **[Exhaustive per-op reference](#exhaustive-per-op-reference)** — drill into `ops.json` for one op's exact formula.
+4. **[Exhaustive per-op reference](#exhaustive-per-op-reference)** — drill into `ops.json` for one op's exact formula.
 
 **Completeness guarantee:** every billed operation is classified in the registry and
 appears in `ops.json` with a `cost_formula`; `tests/test_cost_model_coverage.py`
@@ -37,7 +36,7 @@ Every operation is charged `charged = int(flop_cost × weight)`.
 
 **Two layers, on purpose.** `flop_cost` carries *all* shape- and algorithm-dependent
 cost (the operation count); `weight` is only a per-element hardware **tier**
-(calibrated — see [Calibration & reproducibility](#calibration--reproducibility)). The
+(calibrated — see [empirical-weights.md](empirical-weights.md)). The
 discipline that makes the model composable and non-gameable: **an algorithm constant
 never hides in a weight** — if a cost depends on a matrix dimension or a loop length it
 lives in `flop_cost`, never in the weight. (Enforced by `tests/test_weight_tier_policy.py`.)
@@ -412,9 +411,8 @@ matrices charge 0.
 ### Linalg iterative (eigen / SVD)
 
 These ops use LAPACK drivers that iterate until convergence; counts are
-leading-order estimates.  All use
-**weight 1.0**.  See [Calibration & reproducibility](#calibration--reproducibility)
-for the derivation and runtime measurements.
+leading-order estimates of the standard operation count.  All use
+**weight 1.0**.
 
 | Op | flop_cost (per matrix) | basis | source |
 |---|---|---|---|
@@ -763,120 +761,6 @@ in the Billing model section for the full rule and both refinements):
   `zeros_like`, `ones_like`, `empty_like`, `full_like`, `meshgrid`.
 
 Source: `src/flopscope/_array_ops.py`.
-
----
-
-## Calibration & reproducibility
-
-How the two layers are pinned down. `flop_cost` **constants** are the standard
-operation counts described per family above. `weight` **tiers** are
-calibrated by EC2 micro-benchmark — methodology and measured values in
-[empirical-weights.md](empirical-weights.md). The recipe at the end lets you
-reproduce any billed number yourself.
-
-### Iterative linalg constants
-
-The charged constants for `eig`, `eigvals`, `eigh`, `eigvalsh`, `svd`, and
-`svdvals` are the standard operation counts. The tables below give the
-per-driver counts and the runtime-scaling measurements.
-
-**Standard operation counts (per LAPACK driver)**
-
-| Op | LAPACK driver | Standard FLOP count |
-|---|---|---|
-| `cholesky` | dpotrf | n³/3 |
-| `solve` | dgesv (= dgetrf + dgetrs) | 2n³/3 + 2n²/RHS |
-| `inv` | dgetrf + dgetri | ≈2n³ |
-| `det`, `slogdet` | dgetrf | 2n³/3 |
-| `qr` (reduced) | dgeqrf + dorgqr | 2(2mn² − 2n³/3), k=min(m,n) |
-| `eig` | dgeev (jobvr=V) | ≈25n³ |
-| `eigvals` | dgeev (jobvl=N, jobvr=N) | 10n³ |
-| `eigh` | dsyevd | ≈9n³ |
-| `eigvalsh` | dsyevd (jobz=N) | ≈4n³/3 |
-| `svd` (thin) | dgesdd | 6ab² + 20b³ |
-| `svd` (full, m≠n) | dgesdd | 4a²b + 22b³ |
-| `svdvals` | dgesdd (jobz=N) | 2ab² + 2b³ |
-
-**Runtime scaling relative to Cholesky**
-
-cholesky ≡ n³/3 FLOPs (dpotrf, anchor).  Implied constant for op X:
-`implied_c = (t_X / t_cholesky) × (1/3)`.  See BLAS caveat below.
-
-| Op | log-log slope | rel/chol @512 | rel/chol @768 | implied c @512 | implied c @768 | charged c | verdict |
-|---|---|---|---|---|---|---|---|
-| `eigvals` | 2.228 | 73.76 | 190.42 | 24.59 | 63.47 | 10.0 | **low** |
-| `eig` | 2.135 | 118.31 | 216.33 | 39.44 | 72.11 | 25.0 | **low** |
-| `eigvalsh` | 2.043 | 8.42 | 12.92 | 2.81 | 4.31 | 1.333 | **low** |
-| `eigh` | 1.584 | 13.31 | 25.88 | 4.44 | 8.63 | 9.0 | **supports** |
-| `svdvals` | 1.491 | 9.43 | 9.99 | 3.14 | 3.33 | 4.0 | **supports** |
-| `svd` | 2.019 | 24.58 | 30.49 | 8.19 | 10.16 | 26.0 | **high** |
-| `cholesky` | 1.594 | 1.00 | 1.00 | 0.333 | 0.333 | 0.333 | **supports** |
-| `solve` | 2.072 | 1.30 | 0.97 | 0.433 | 0.324 | 0.671 | **supports** |
-| `qr` | 1.579 | 4.83 | 7.08 | 1.61 | 2.36 | 2.667 | **supports** |
-| `inv` | 1.505 | 2.22 | 2.98 | 0.739 | 0.992 | 2.0 | **high** |
-| `det` | 1.544 | 1.27 | 0.90 | 0.424 | 0.299 | 0.667 | **supports** |
-
-Raw timings (median of 5 runs, float64, `numpy.random.default_rng(42)`):
-
-| Op | n=192 ms | n=256 ms | n=384 ms | n=512 ms | n=768 ms |
-|---|---|---|---|---|---|
-| `eigvals` | 43.6 | 92.9 | 232.2 | 421.1 | 978.4 |
-| `eig` | 67.3 | 110.1 | 289.0 | 675.4 | 1111.5 |
-| `eigvalsh` | 5.1 | 6.9 | 35.8 | 48.1 | 66.4 |
-| `eigh` | 18.2 | 17.9 | 67.8 | 76.0 | 133.0 |
-| `svdvals` | 9.0 | 9.8 | 32.6 | 53.9 | 51.3 |
-| `svd` | 10.8 | 25.4 | 69.6 | 140.3 | 156.7 |
-| `cholesky` | 0.7 | 1.3 | 3.4 | 5.7 | 5.1 |
-| `solve` | 0.5 | 0.5 | 2.7 | 7.4 | 5.0 |
-| `qr` | 3.1 | 13.7 | 12.3 | 27.6 | 36.4 |
-| `inv` | 1.3 | 7.8 | 3.9 | 12.7 | 15.3 |
-| `det` | 0.6 | 1.8 | 1.1 | 7.3 | 4.6 |
-
-> **BLAS caveat**: wall-clock ratios are informative for compute-bound BLAS-3
-> kernels but do NOT isolate n³ work alone — iteration counts vary per input,
-> cache effects differ by n, and parallel thread counts may differ.  Treat
-> `verdict_hint` as supporting signal, not a definitive count.
-
-**Per-op verdict summary**
-
-| Op | charged constant | runtime verdict | decision |
-|---|---|---|---|
-| `eig` | 25n³ | low (implied ~39–72n³) | keep |
-| `eigvals` | 10n³ | low (implied ~25–63n³) | keep |
-| `eigh` | 9n³ | supports (implied ~4–9n³) | keep |
-| `eigvalsh` | 4n³/3 | low (implied ~3–4n³) | keep |
-| `svd` (thin) | 6ab²+20b³ | high (implied ~8–10n³ vs 26n³ @sq) | keep |
-| `svd` (full) | 4a²b+22b³ | — | keep |
-| `svdvals` | 2ab²+2b³ | supports | keep |
-| `cholesky` | n³/3 | supports | keep |
-| `solve` | 2n³/3+2n²/rhs | supports | keep |
-| `qr` | 2(2mn²−2n³/3) | supports | keep |
-| `inv` | 2n³ | high (implied ~0.7–1.0n³) | overcharges; retained |
-| `det` | 2n³/3 | supports | keep |
-
-### Reproduce any op yourself
-
-1. **Measure billed cost.** Build tracked inputs *outside* the budget (array creation
-   itself bills `numel` under unit weights), then measure only the op:
-
-   ```python
-   import numpy as np, flopscope.numpy as fnp
-   from flopscope import BudgetContext
-   from flopscope._weights import reset_weights, load_weights
-
-   a = fnp.asarray(np.random.default_rng(0).standard_normal(100))  # built outside the budget
-   with BudgetContext(flop_budget=10**12, quiet=True) as b:
-       fnp.exp(a)
-   print(b.flops_used)
-   ```
-
-2. **Raw `flop_cost` vs production billing.** The number above is under whatever weights
-   are loaded. `reset_weights()` gives unit weights (so `flops_used == flop_cost`, the
-   shape cost in this doc's tables); `load_weights()` loads the packaged production table
-   (so `flops_used == flop_cost × weight`, what a participant is charged).
-3. **Cross-check `ops.json`.** That op's `cost_formula × weight` must equal what you
-   measured. For composite ops where `ops.json` records `per-operation`, the family
-   table above gives the closed form.
 
 ---
 
