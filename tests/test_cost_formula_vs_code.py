@@ -869,8 +869,9 @@ class TestFreeOps:
             _cost_of(we.insert, numpy.array([1, 2, 3]), 1, [10, 20]) == 5
         )  # was 2 (values.size only)
 
-    def test_trim_zeros_num_trimmed(self, we):
-        assert _cost_of(we.trim_zeros, numpy.array([0, 0, 1, 2, 0, 0])) == 4
+    def test_trim_zeros_numel_input(self, we):
+        # value scan for the nonzero boundary = numel(input)
+        assert _cost_of(we.trim_zeros, numpy.array([0, 0, 1, 2, 0, 0])) == 6
 
     def test_diag_1d(self, we):
         # 1D->2D: cost = numel(output) = 3*3 = 9

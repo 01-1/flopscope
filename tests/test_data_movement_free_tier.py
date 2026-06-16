@@ -47,7 +47,6 @@ FREE_DATA_MOVEMENT_OPS = [
     "select",
     "extract",
     "fill_diagonal",
-    "trim_zeros",
     "unstack",
     "concat",
     "ix_",

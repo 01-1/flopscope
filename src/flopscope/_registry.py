@@ -1603,7 +1603,7 @@ REGISTRY: dict[str, dict] = {
     "trim_zeros": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Trim leading/trailing zeros from 1-D array. Cost: num trimmed.",
+        "notes": "Trim leading/trailing zeros. Cost: numel(input) (value scan, like nonzero).",
     },
     "resize": {
         "category": "counted_custom",

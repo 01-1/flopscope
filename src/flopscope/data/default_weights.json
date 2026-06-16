@@ -430,7 +430,7 @@
     "tril": 0.0,
     "tril_indices": 0.0,
     "tril_indices_from": 0.0,
-    "trim_zeros": 0.0,
+    "trim_zeros": 1.0,
     "triu": 0.0,
     "triu_indices": 0.0,
     "triu_indices_from": 0.0,

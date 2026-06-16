@@ -113,3 +113,9 @@ def test_ravel_multi_index_clip_adds_n():
         billed(lambda: fnp.ravel_multi_index((rows, cols), (10, 10), mode="clip"))
         == 300
     )
+
+
+def test_trim_zeros_charged():
+    a = fnp.asarray(np.array([0, 0, 1, 2, 3, 0, 0], dtype=float))
+    # value scan = numel(input) = 7
+    assert billed(lambda: fnp.trim_zeros(a)) == 7

@@ -2792,19 +2792,20 @@ attach_docstring(tril_indices_from, _np.tril_indices_from, "free", "0 FLOPs")
 
 @_counted_wrapper
 def trim_zeros(filt: ArrayLike, trim: str = "fb", **kwargs: Any) -> FlopscopeArray:
-    """Trim leading and/or trailing zeros from 1-D array. Cost: num elements trimmed."""
+    """Trim leading/trailing zeros. Cost: numel(input) (value scan for the nonzero
+    boundary, same convention as nonzero/count_nonzero)."""
     budget = require_budget()
-    filt_arr = _np.asarray(filt)
-    with budget.deduct_after("trim_zeros", subscripts=None, shapes=()) as _op:
+    cost = int(_np.asarray(filt).size)
+    with budget.deduct("trim_zeros", flop_cost=cost, subscripts=None, shapes=()):
         result = _call_numpy(
             _np.trim_zeros, _to_base_ndarray(filt), trim=trim, **kwargs
         )  # type: ignore[arg-type]
-        result_arr = _np.asarray(result)
-        _op.set_cost(max(filt_arr.size - result_arr.size, 0))  # num trimmed
     return result
 
 
-attach_docstring(trim_zeros, _np.trim_zeros, "free", "0 FLOPs")
+attach_docstring(
+    trim_zeros, _np.trim_zeros, "counted_custom", "numel(input) (value scan)"
+)
 
 
 def triu_indices(*args, **kwargs):
