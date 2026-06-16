@@ -349,7 +349,7 @@
     "flopscope_ref": "fnp.copyto",
     "module": "numpy",
     "name": "copyto",
-    "notes": "Copy values into dst. Cost: 0 for same-dtype/where copy; numel(dst) (or popcount where) for a value-changing cast.",
+    "notes": "Copy values into dst. Cost: 0 for a lossless copy (same dtype or safe widening); numel(dst) (or popcount where) for a value-changing (lossy) cast.",
     "numpy_ref": "np.copyto",
     "signature": "fnp.copyto(dst, src, casting='same_kind', where=True)",
     "status": "supported",

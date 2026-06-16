@@ -134,6 +134,14 @@ def test_copyto_value_changing_cast_charged():
     assert billed(lambda: fnp.copyto(dst, src, casting="unsafe")) == 100
 
 
+def test_copyto_lossless_widening_free():
+    # lossless widening (float32 -> float64) changes dtype but not values -> free,
+    # mirroring astype
+    dst = fnp.zeros(100, dtype=np.float64)
+    src = fnp.asarray(np.ones(100, dtype=np.float32))
+    assert billed(lambda: fnp.copyto(dst, src)) == 0
+
+
 def test_charged_modes_billed_under_production_weights():
     from flopscope._weights import load_weights, reset_weights
 

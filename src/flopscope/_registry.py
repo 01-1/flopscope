@@ -1906,7 +1906,7 @@ REGISTRY: dict[str, dict] = {
     "copyto": {
         "category": "counted_custom",
         "module": "numpy",
-        "notes": "Copy values into dst. Cost: 0 for same-dtype/where copy; numel(dst) (or popcount where) for a value-changing cast.",
+        "notes": "Copy values into dst. Cost: 0 for a lossless copy (same dtype or safe widening); numel(dst) (or popcount where) for a value-changing (lossy) cast.",
     },
     "unique_all": {
         "category": "counted_custom",
