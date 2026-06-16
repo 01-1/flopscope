@@ -47,6 +47,91 @@ API_DIR = DOCS / "api"
 REF_DIR = DOCS / "reference"
 WEIGHTS_CSV_PATH = ROOT / "src" / "flopscope" / "data" / "weights.csv"
 DEFAULT_WEIGHTS_PATH = ROOT / "src" / "flopscope" / "data" / "default_weights.json"
+# Published FLOP-counting-model page, generated from docs/reference/cost-model.md.
+COST_MODEL_PAGE = (
+    WEBSITE / "content" / "docs" / "understanding" / "flop-counting-model.mdx"
+)
+
+
+def generated_output_paths() -> list[Path]:
+    """Every directory the live generator writes into, EXCEPT the tracked
+    cost-model snapshot website/public/ops.json (which stays tracked + guarded
+    by --check). Directories imply their entire contents. Used to build
+    .gitignore and to enforce the hygiene guards.
+
+    The cost-model-page task appends
+    website/content/docs/understanding/flop-counting-model.mdx here once the
+    generator emits it.
+    """
+    return [
+        GENERATED_DIR,  # website/.generated/
+        PUBLIC_DIR / "api-data",  # website/public/api-data/ (ops/ + public-api/)
+        # The published FLOP-counting-model page is generated from the single
+        # source docs/reference/cost-model.md (so it can't go stale) and is
+        # gitignored — it is regenerated on every build.
+        COST_MODEL_PAGE,
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Cost-model page (generated from docs/reference/cost-model.md)
+# ---------------------------------------------------------------------------
+
+_GITHUB_EMPIRICAL = (
+    "https://github.com/AIcrowd/flopscope/blob/main/docs/reference/empirical-weights.md"
+)
+
+
+def render_cost_model_page(source_md: str) -> str:
+    """Convert docs/reference/cost-model.md into an MDX-safe fumadocs page.
+
+    - rewrites relative .md links to GitHub blob URLs (empirical-weights.md -> GitHub);
+    - escapes MDX-hostile chars (< and {) in prose, leaving code spans/fences intact;
+    - prepends front-matter + a generated-source note.
+    """
+
+    def _rewrite_link(m: re.Match[str]) -> str:
+        text, target = m.group(1), m.group(2)
+        if target.endswith("empirical-weights.md"):
+            return f"[{text}]({_GITHUB_EMPIRICAL})"
+        if target.startswith("#") or target.startswith("http"):
+            return m.group(0)
+        if target.endswith(".md"):
+            name = target.rsplit("/", 1)[-1]
+            return f"[{text}](https://github.com/AIcrowd/flopscope/blob/main/docs/reference/{name})"
+        return m.group(0)
+
+    body = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", _rewrite_link, source_md)
+
+    out_lines: list[str] = []
+    in_fence = False
+    for line in body.splitlines():
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            out_lines.append(line)
+            continue
+        if in_fence:
+            out_lines.append(line)
+            continue
+        parts = line.split("`")
+        for i in range(0, len(parts), 2):  # even indices = outside backticks
+            parts[i] = parts[i].replace("<", "&lt;").replace("{", "&#123;")
+        out_lines.append("`".join(parts))
+    safe_body = "\n".join(out_lines)
+
+    # The provenance note lives INSIDE the front-matter as a YAML comment: it
+    # documents that the page is generated (edit the source, not this file)
+    # without emitting a bare-brace JSX comment into the MDX body — keeping the
+    # rendered region free of MDX-hostile tokens.
+    front = (
+        "---\n"
+        "# GENERATED from docs/reference/cost-model.md - edit that file, not this page.\n"
+        'title: "FLOP Counting Model"\n'
+        'description: "How Flopscope bills compute: the cost model, by family rule."\n'
+        "---\n\n"
+    )
+    return front + safe_body
+
 
 # ---------------------------------------------------------------------------
 # Signature helpers
@@ -2755,6 +2840,20 @@ def resolve_doc_link(
     )
 
 
+def _docstring_of(obj: object | None) -> str:
+    """Return ``obj``'s docstring, or ``""`` when ``obj`` is missing.
+
+    ``inspect.getdoc(None)`` resolves ``None`` to ``type(None)`` and returns the
+    ``NoneType`` docstring ("The type of the None singleton."). That string is
+    truthy, so passing a missing upstream object straight into ``inspect.getdoc``
+    would shadow the real flopscope docstring for flopscope-only ops. Treating a
+    ``None`` object as having no docstring keeps the ``or`` fall-through honest.
+    """
+    if obj is None:
+        return ""
+    return inspect.getdoc(obj) or ""
+
+
 def build_structured_doc(
     name: str,
     module: str,
@@ -2771,9 +2870,14 @@ def build_structured_doc(
     alias_map = alias_map or {}
     supported_ops = supported_ops or set()
     if module == "flopscope.stats":
-        raw_doc = inspect.getdoc(flopscope_obj) or inspect.getdoc(upstream_obj) or ""
+        raw_doc = _docstring_of(flopscope_obj) or _docstring_of(upstream_obj) or ""
     else:
-        raw_doc = inspect.getdoc(upstream_obj) or inspect.getdoc(flopscope_obj) or ""
+        # Prefer the upstream docstring, but fall through to the flopscope
+        # callable for flopscope-only ops (e.g. ``random.symmetric``) where the
+        # upstream object is ``None``. ``inspect.getdoc(None)`` returns the
+        # ``NoneType`` docstring ("The type of the None singleton."), which is
+        # truthy and would otherwise shadow the real docstring (see issue #50).
+        raw_doc = _docstring_of(upstream_obj) or _docstring_of(flopscope_obj) or ""
     parsed = _rewrite_parsed_doc(
         parse_numpy_docstring(raw_doc),
         alias_map=alias_map,
@@ -4815,7 +4919,17 @@ def main():
         default=1,
         help="Use multiple processes to build operation docs (default: 1)",
     )
+    parser.add_argument(
+        "--list-outputs",
+        action="store_true",
+        help="Print every generated output path (one per line) and exit.",
+    )
     args = parser.parse_args()
+
+    if args.list_outputs:
+        for p in generated_output_paths():
+            print(p)
+        sys.exit(0)
 
     assert_supported_docs_env()
     registry = load_registry()
@@ -4869,6 +4983,11 @@ def main():
     write_op_doc_coverage_artifact(records, WEBSITE)
     example_coverage = build_example_coverage(records, API_EXAMPLES_DIR)
     write_example_coverage_artifact(example_coverage, WEBSITE)
+
+    cost_model_src = (ROOT / "docs" / "reference" / "cost-model.md").read_text()
+    cost_model_out = COST_MODEL_PAGE
+    cost_model_out.write_text(render_cost_model_page(cost_model_src))
+    print(f"  Generated {cost_model_out.relative_to(WEBSITE)}")
 
     print("\nDone. Run with --verify to check coverage.")
 
