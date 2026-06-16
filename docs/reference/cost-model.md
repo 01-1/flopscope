@@ -100,7 +100,7 @@ cheap window formula (`hamming`, `hanning`) are billed at weight 8.0.
    `where(1-arg)`, `clip`/`minimum`/`maximum`, set-ops, and *computed creators*
    (`arange`/`linspace`/`geomspace`/`logspace`/`vander`).
 3. **Otherwise** it only relocates / replicates / selects-by-a-given-selector /
-   constant-fills existing values → **Free (0).**  This covers copy/concat/pad/roll/
+   constant-fills existing values → **Free (0).**  This covers copy/concat/roll/
    repeat/tile, gather/scatter & mask-select with a *given* selector, and constant init.
 
 **Key invariant:** any predicate or index feeding a step-3 op was itself produced by a
@@ -124,7 +124,7 @@ Weight 0 now covers four categories:
    other shape/stride/dtype introspection ops.
 2. **Copy / materialize** — data-movement ops that copy or rearrange existing values
    into a new buffer: `concatenate`, `stack`, `hstack`, `vstack`, `column_stack`,
-   `dstack`, `tile`, `repeat`, `pad`, `roll`, `tril`, `triu`, `copy`, and kin.
+   `dstack`, `tile`, `repeat`, `roll`, `tril`, `triu`, `copy`, and kin.
 3. **Gather / scatter & mask-select with a given selector** — ops whose mask or
    index is an *input*: `take`, `take_along_axis`, `put`, `put_along_axis`, `choose`,
    `where(cond, x, y)` (3-arg), `select`, `compress(mask, a)`, `extract(mask, a)`,
@@ -643,11 +643,13 @@ Data-movement ops that copy, rearrange, or select-by-a-given-selector carry **we
 and bill `flop_cost = 0`.  They produce no per-element arithmetic and derive no selector
 by testing values — they only move existing values into a new buffer or layout.  This
 covers: `concatenate`, `stack`, `hstack`, `vstack`, `column_stack`, `dstack`, `block`,
-`bmat`, `tile`, `repeat`, `resize`, `pad`, `roll`, `tril`, `triu`, `insert`, `append`,
-`delete`, `copyto`, `diag` (both extract and construct), `diagflat`, `fill_diagonal`,
-`trim_zeros`, `take`, `take_along_axis`, `put`, `put_along_axis`, `choose`, `compress`,
+`bmat`, `tile`, `repeat`, `resize`, `roll`, `tril`, `triu`, `insert`, `append`,
+`delete`, `diag` (both extract and construct), `diagflat`, `fill_diagonal`,
+`take`, `take_along_axis`, `put`, `put_along_axis`, `choose`, `compress`,
 `extract`, `select`, `place`, `putmask`, `where(cond, x, y)` (3-arg), `unstack`, and
-all other ops from the copy/materialize/gather/scatter families.
+all other ops from the copy/materialize/gather/scatter families.  (`pad`, `copyto`, and
+`trim_zeros` are **not** unconditionally free — see
+[§Boundary ops](#boundary-ops-free-behavior--a-value-computing-path).)
 
 **Selector-deriving siblings are charged** (they test values to produce the selector):
 
@@ -690,10 +692,31 @@ value-arithmetic or perform I/O work beyond pure relocation:
 | `diag` (extract, 2-D) | 0 (free — pure gather of diagonal elements) | DECLARED: no arithmetic | `_array_ops.py` |
 | `diag` (construct, 1-D) | 0 (free — copy into diagonal of new matrix) | DECLARED: no arithmetic | `_array_ops.py` |
 | `diagonal` | 0 (view) | DECLARED: `numpy.diagonal` returns a read-only view | `_array_ops.py` |
-| `copyto` | 0 (free) | DECLARED: pure scatter-write; `where` mask is given | `_array_ops.py` |
+| `copyto` | 0 for same-dtype / `where`-mask copy; `numel(dst)` (or popcount(`where`)) when the cast changes dtype | DERIVED: path-aware — pure scatter-write is free, a dtype-changing cast is value-changing (see [§Boundary ops](#boundary-ops-free-behavior--a-value-computing-path)) | `_array_ops.py` |
 | `packbits` | `numel(input)` (weight 1.0) | DECLARED: per-bit test+shift; value-test per element | `_array_ops.py` |
 | `unpackbits` | `numel(output)` (weight 1.0) | DECLARED: unpacks 8 bits per input byte; proportional to output | `_array_ops.py` |
 | `mask_indices` | `2n² + 8k` (weight 1.0, `k` = selected pairs) | DECLARED: n² mask scan (value test) + gather of 2k index values | `_array_ops.py` |
+
+---
+
+### Boundary ops (free behavior + a value-computing path)
+
+A free (weight-0) classification covers only an op's **pure data-movement / structural**
+behavior. Any parameter, mode, or path that **computes or inspects values** is **charged**
+with a reliable cost reusing the convention for that work; a path we cannot reliably bill
+is **rejected with a clear error**. These four ops carry weight **1.0** with a path-aware
+`flop_cost`:
+
+| Op | free path (`flop_cost = 0`) | charged / rejected path |
+|---|---|---|
+| `pad` | `constant`, `edge`, `empty`, `wrap`, `reflect`/`symmetric` (`reflect_type='even'`) | stat modes `maximum`/`minimum`/`mean`/`median`: `Σᵢ stats_i·stat_len_i·cross_i` (lanes from the input cross-section); `linear_ramp` and `reflect_type='odd'`: `2·(numel_out − numel_in)`; **`mode=<callable>` raises** |
+| `ravel_multi_index` | — | `2·(ndim − 1)·N` (one unit stride), `+N` for `mode='clip'/'wrap'` |
+| `trim_zeros` | — | `numel(input)` (value scan for the nonzero boundary) |
+| `copyto` | same-dtype copy, `where`-mask copy | `numel(dst)` (or popcount(`where`)) when the cast changes dtype (value-changing) |
+
+For `pad` stat modes: `cross_i = numel_in // in_shape[i]`, `stat_len_i = min(stat_length_i,
+in_shape[i])` (default = full axis), summed over padded axes only; a full-axis stat serves
+both sides (one reduction). `mean` adds one divide per stat output cell.
 
 ---
 
@@ -730,9 +753,9 @@ in the Billing model section for the full rule and both refinements):
   `data`, `ctypes`, `strides`, `T`, `linalg.diagonal`, `linalg.matrix_transpose`,
   `fft.fftshift`, `fft.ifftshift`, `isscalar`, `isfortran`.
 - **Copy / materialize**: `concatenate`, `stack`, `hstack`, `vstack`,
-  `column_stack`, `dstack`, `block`, `bmat`, `tile`, `repeat`, `resize`, `pad`,
+  `column_stack`, `dstack`, `block`, `bmat`, `tile`, `repeat`, `resize`,
   `roll`, `tril`, `triu`, `copy`, `insert`, `append`, `delete`, `diagflat`,
-  `fill_diagonal`, `trim_zeros`, `unstack`, and kin.
+  `fill_diagonal`, `unstack`, and kin.
 - **Gather / scatter & mask-select (selector given)**: `take`, `take_along_axis`,
   `put`, `put_along_axis`, `choose`, `where(cond, x, y)` (3-arg), `select`,
   `compress(mask, a)`, `extract(mask, a)`, `place`, `putmask`.
