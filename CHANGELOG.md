@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.0rc1 (2026-06-19)
+
+### Fix
+
+- **client**: numpy-free callable dtype objects + parity guard (#137)
+- **ci**: restore the GitHub Pages deploy step dropped in the CI refactor (#135)
+
 ## v0.8.0rc0 (2026-06-16)
 
 ### Feat
