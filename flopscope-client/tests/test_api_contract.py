@@ -8,7 +8,6 @@ here breaks every submission before participant code runs.
 """
 
 import importlib
-import types
 
 
 def test_flopscope_numpy_importable():
@@ -26,27 +25,47 @@ def test_runner_contract_names_present():
 
 
 def test_numpy_mirrors_top_level_proxyable_surface():
-    # Self-consistency: flopscope.numpy must expose every public proxyable name
-    # the top-level module does (catches numpy.py drifting from the top level).
-    # Submodule attributes (numpy, fft, linalg, random, stats, ...) are excluded:
-    # `numpy` is a self-referential import-machinery artifact (the parent package
-    # sets `flopscope.numpy` only after this module finishes importing, so a plain
-    # `from flopscope import *` cannot mirror it), and the rest are re-exported as
-    # submodules rather than proxyable ops. Comparing only non-module names keeps
-    # the check order-independent and matches the evaluator's `from flopscope
-    # import *` shim byte-for-byte.
+    # Guarantee: flopscope.numpy must expose every proxyable op that is
+    # registered at the top level AND every special-cased top-level function.
+    #
+    # Why not dir(flops)?  dir() includes implementation-internal names
+    # (builtins, struct, get_connection, …) that must NOT leak into the
+    # participant fnp namespace.
+    #
+    # Why not flops.__all__?  numpy.py does ``from flopscope import *``, which
+    # imports exactly the names in flops.__all__ into fnp's namespace.  Checking
+    # ``hasattr(fnp, n) for n in flops.__all__`` is therefore tautological and
+    # cannot catch drift between the top-level surface and flopscope.numpy.
+    #
+    # Independent source of truth: iter_proxyable() comes straight from the
+    # registry (FUNCTION_CATEGORIES), which is completely independent of
+    # __all__ and the star-import.  A proxyable op that exists in the registry
+    # and is wired up at top level (non-dotted name) but is somehow absent from
+    # fnp (e.g. removed from __all__ by mistake, or numpy.py's star-import
+    # replaced by a selective import that omits it) will be caught here.
     import flopscope as flops
+    from flopscope._registry import iter_proxyable
 
     fnp = importlib.import_module("flopscope.numpy")
-    public_top = {
-        n
-        for n in dir(flops)
-        if not n.startswith("_")
-        and not isinstance(getattr(flops, n, None), types.ModuleType)
-    }
-    missing = {n for n in public_top if not hasattr(fnp, n)}
-    assert not missing, (
-        f"flopscope.numpy missing names present at top level: {sorted(missing)}"
+
+    # Special-cased functions defined directly in __init__.py (not generated
+    # from the proxy loop, but still part of the public top-level surface).
+    SPECIAL_CASED = {"array", "einsum", "load", "save", "savez", "savez_compressed"}
+
+    # Registry-driven expected set: all proxyable ops with no dot in the name
+    # (dotted names like "linalg.solve" belong to submodules, not the top level).
+    registry_top = {name for name in iter_proxyable() if "." not in name}
+
+    expected = registry_top | SPECIAL_CASED
+
+    missing_from_flops = {n for n in expected if not hasattr(flops, n)}
+    missing_from_fnp = {n for n in expected if not hasattr(fnp, n)}
+
+    assert not missing_from_flops, (
+        f"top-level flopscope missing proxyable ops: {sorted(missing_from_flops)}"
+    )
+    assert not missing_from_fnp, (
+        f"flopscope.numpy missing names present at top level: {sorted(missing_from_fnp)}"
     )
 
 
