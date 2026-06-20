@@ -8,6 +8,7 @@ operations are dispatched to the server transparently.
 from __future__ import annotations
 
 import struct
+import weakref
 from typing import Any
 
 from flopscope._dispatch import timed_dispatch
@@ -312,13 +313,30 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
         Element data-type string (e.g. ``"float64"``).
     """
 
-    __slots__ = ("_handle_id", "_shape", "_dtype", "_symmetry")
+    # __weakref__ makes instances weak-referenceable (required for the
+    # weakref.finalize below that releases the server handle on GC).
+    __slots__ = ("_handle_id", "_shape", "_dtype", "_symmetry", "__weakref__")
 
     def __init__(self, handle_id: str, shape: tuple, dtype: str, symmetry=None) -> None:
         self._handle_id = handle_id
         self._shape = tuple(shape)
         self._dtype = dtype
         self._symmetry = symmetry
+        if handle_id is not None:
+            # Release the server handle when this proxy is GC'd. The callback
+            # takes handle_id (NOT self), so it never resurrects the instance.
+            # The import is deferred AND guarded: cross-package parity/integration
+            # tests exec this module by file path with `flopscope` resolving to
+            # the full package (which has no `_handles`). There the GC-free is not
+            # needed, so we skip the finalizer rather than fail construction. In
+            # the real client venv `_handles` always resolves, so the leak fix is
+            # active. (ModuleNotFoundError only — a broken `_handles` still raises.)
+            try:
+                from flopscope._handles import enqueue_free
+            except ModuleNotFoundError:
+                pass
+            else:
+                weakref.finalize(self, enqueue_free, handle_id)
 
     # -- cached metadata (no round-trip) ------------------------------------
 
