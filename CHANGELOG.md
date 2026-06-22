@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.0rc2 (2026-06-22)
+
+### Fix
+
+- **server**: connection-lifetime handle store for warm-child handle aliasing (#139)
+- free server array handles on GC; never reuse handle ids (#138)
+
 ## v0.8.0rc1 (2026-06-19)
 
 ### Fix
