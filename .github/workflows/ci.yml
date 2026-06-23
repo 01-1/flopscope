@@ -233,9 +233,10 @@ jobs:
       - name: Generate API docs (untracked; tests validate them)
         run: uv run python scripts/generate_api_docs.py
 
-      - name: Run tests with coverage
-        run: uv run pytest --cov=flopscope --cov-fail-under=85
-
+      # The full flopscope suite is already covered by the `test` job for this
+      # exact py/numpy matrix (3.12 x {2.2,2.3,2.4}); re-running it here is pure
+      # redundancy and only exposes this gate to unrelated flakes. This job runs
+      # the NumPy-borrowed compat suites only.
       - name: "NumPy compat: core umath"
         run: uv run pytest tests/numpy_compat/ --pyargs numpy._core.tests.test_umath -n auto -q
 
@@ -259,6 +260,38 @@ jobs:
 
       - name: "NumPy compat: random"
         run: uv run pytest tests/numpy_compat/ --pyargs numpy.random.tests.test_random -n auto -q
+
+  client-parity:
+    # GATE: targeted participant-parity tests must be green (rc3+).
+    # The full numpy-suite measurement runs non-blocking after the gate step
+    # (make test-client-parity-measure recipe lines start with `-` so they
+    # never fail the build). A single `uv sync --all-extras` gives the root
+    # venv pyzmq/msgpack for both the client (test process) and the server
+    # subprocess (the fixture falls back to the root venv in CI).
+    if: needs.detect-impact.outputs.run_numpy_compat == 'true'
+    needs: [detect-impact]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: "Client-parity GATE: targeted participant-parity tests"
+        run: make test-client-parity
+
+      - name: "Client-parity measurement (non-blocking): numpy's own suite vs the client"
+        run: make test-client-parity-measure
 
   client-server-sync:
     runs-on: ubuntu-latest

@@ -21,6 +21,16 @@ from flopscope._math_compat import prod as _prod
 #: Maps dtype string to (struct format char, byte width).
 #: Complex types use their float-component format char; _bytes_to_list
 #: handles pairing them into Python complex numbers.
+_RAW_BUFFER_MSG = (
+    "'{attr}' exposes a pointer to the array's local memory buffer, which does "
+    "not exist for a flopscope RemoteArray — the data lives on the remote grading "
+    "server, not in this process. If you genuinely need the bytes locally, "
+    "materialize first with arr.tolist() or numpy.asarray(arr)."
+)
+
+#: Maps dtype string to (struct format char, byte width).
+#: Complex types use their float-component format char; _bytes_to_list
+#: handles pairing them into Python complex numbers.
 _DTYPE_INFO: dict[str, tuple[str, int]] = {
     "float64": ("d", 8),
     "float32": ("f", 4),
@@ -40,6 +50,102 @@ _DTYPE_INFO: dict[str, tuple[str, int]] = {
 
 #: dtypes that are stored as pairs of real components.
 _COMPLEX_DTYPES = frozenset({"complex64", "complex128"})
+
+# Accepted dtype string spellings -> canonical wire name (keys of _DTYPE_INFO
+# plus the "bool_" alias). Kept here (not flopscope._dtypes) so _encode_arg can
+# resolve dtype-like args without a circular import.
+_DTYPE_ALIASES: dict[str, str] = {name: name for name in _DTYPE_INFO}
+_DTYPE_ALIASES["bool_"] = "bool"
+
+# Python builtin types -> wire dtype (numpy's defaults).
+_PY_TYPE_TO_WIRE: dict[type, str] = {
+    float: "float64",
+    int: "int64",
+    bool: "bool",
+    complex: "complex128",
+}
+
+
+def _flatten_to_list(nested):
+    """Flatten arbitrarily-nested lists (RemoteArray.tolist() output) to a flat list."""
+    out: list = []
+
+    def _rec(x):
+        if isinstance(x, list):
+            for e in x:
+                _rec(e)
+        else:
+            out.append(x)
+
+    _rec(nested)
+    return out
+
+
+def _resolve_dtype_wire_name(spec: Any) -> str | None:
+    """Return the canonical wire dtype name for a dtype-like *spec*, else None.
+
+    Numpy-free + duck-typed, so it recognizes — without importing numpy — every
+    dtype spelling a participant (or numpy's own code) may pass:
+
+    * flopscope dtype labels/objects (``_flopscope_dtype_name``);
+    * dtype string spellings (``"float64"``, ``"bool_"``);
+    * Python builtin types (``float``/``int``/``bool``/``complex``);
+    * numpy scalar TYPE objects (``np.float64`` -> ``__name__`` == "float64");
+    * numpy dtype objects / numpy 2.x new-style DType instances
+      (``np.dtype("float64")`` / a ``Float64DType`` -> ``.name`` == "float64").
+
+    Exotic/unsupported dtypes (e.g. ``longdouble``, structured) return ``None``;
+    the caller decides whether to reject or fall through.
+    """
+    name = getattr(spec, "_flopscope_dtype_name", None)
+    if isinstance(name, str):
+        return name
+    if isinstance(spec, str):
+        return _DTYPE_ALIASES.get(spec)
+    if isinstance(spec, type):
+        if spec in _PY_TYPE_TO_WIRE:
+            return _PY_TYPE_TO_WIRE[spec]
+        return _DTYPE_ALIASES.get(getattr(spec, "__name__", ""))
+    nm = getattr(spec, "name", None)
+    if isinstance(nm, str):
+        return _DTYPE_ALIASES.get(nm)
+    return None
+
+
+def _dtype_itemsize(dtype_name: str) -> int:
+    return _DTYPE_INFO[dtype_name][1]
+
+
+def _c_strides(shape, itemsize):
+    strides = []
+    acc = itemsize
+    for d in reversed(shape):
+        strides.append(acc)
+        acc *= d
+    return tuple(reversed(strides))
+
+
+class _RemoteFlags:
+    """Read-only numpy-flags-like view over a remote array's layout."""
+
+    def __init__(self, shape, strides, itemsize):
+        c_contig = strides == _c_strides(shape, itemsize)
+        self._d = {
+            "C_CONTIGUOUS": c_contig,
+            "F_CONTIGUOUS": c_contig and len(shape) <= 1,
+            "OWNDATA": False,
+            "WRITEABLE": False,  # client RemoteArray is immutable
+            "ALIGNED": True,
+        }
+
+    def __getitem__(self, key):
+        return self._d[key]
+
+    def __getattr__(self, name):
+        upper = name.upper()
+        if upper in self._d:
+            return self._d[upper]
+        raise AttributeError(name)
 
 
 def _bytes_to_list(data: bytes, shape: tuple[int, ...], dtype: str) -> Any:
@@ -358,6 +464,12 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
         return self._symmetry
 
     @property
+    def is_symmetric(self) -> bool:
+        """True if this array carries symmetry metadata (mirrors native
+        SymmetricTensor.is_symmetric)."""
+        return self._symmetry is not None
+
+    @property
     def ndim(self) -> int:
         return len(self._shape)
 
@@ -369,6 +481,18 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
     def nbytes(self) -> int:
         _, item_size = _DTYPE_INFO[self._dtype]
         return self.size * item_size
+
+    @property
+    def itemsize(self) -> int:
+        return _dtype_itemsize(self._dtype)
+
+    @property
+    def strides(self) -> tuple:
+        return _c_strides(self._shape, self.itemsize)
+
+    @property
+    def flags(self):
+        return _RemoteFlags(self._shape, self.strides, self.itemsize)
 
     @property
     def T(self):
@@ -452,6 +576,44 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
             result = result[0]
         return bool(result)
 
+    # --- conversion / protocol dunders (rc3 parity) ---
+    def __contains__(self, item):
+        return item in _flatten_to_list(self.tolist())
+
+    @timed_dispatch
+    def __complex__(self):
+        # Fetch the scalar and call complex() directly: routing through
+        # float(self) would raise for a genuinely complex size-1 array
+        # (e.g. fnp.array([1 + 2j])), unlike NumPy's complex(arr).
+        if self.size != 1:
+            raise TypeError("only size-1 arrays can be converted to Python scalars")
+        data, shape, dtype = self._fetch_data()
+        result = _bytes_to_list(data, shape, dtype)
+        while isinstance(result, list):
+            result = result[0]
+        return complex(result)
+
+    def __index__(self):
+        return int(self)
+
+    def __divmod__(self, other):
+        return (self // other, self % other)
+
+    def __rdivmod__(self, other):
+        return (other // self, other % self)
+
+    def __copy__(self):
+        return self  # immutable proxy: a copy is the same handle
+
+    def __deepcopy__(self, memo):
+        return self
+
+    def __array__(self, dtype=None):
+        import numpy as _np
+
+        arr = _np.asarray(self.tolist())
+        return arr if dtype is None else arr.astype(dtype)
+
     def __iter__(self):
         if not self._shape:
             raise TypeError("iteration over a 0-d array")
@@ -485,6 +647,54 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
             "or use a whole-array update (arr = arr + x). See "
             "https://aicrowd.github.io/flopscope/docs/getting-started/competition/#immutable-arrays"
         )
+
+    # In-place operators raise, mirroring native FlopscopeArray. Without these,
+    # `a += b` would fall back to __add__ and silently rebind `a` on the client
+    # while raising locally — breaking local==eval immutability parity.
+    def _raise_inplace(self, verb: str, sym: str, func: str):
+        raise TypeError(
+            f"in-place {verb} (arr {sym} x) is not supported; flopscope arrays "
+            f"are immutable. Use arr = fnp.{func}(arr, x) instead."
+        )
+
+    def __iadd__(self, other):
+        self._raise_inplace("add", "+=", "add")
+
+    def __isub__(self, other):
+        self._raise_inplace("subtract", "-=", "subtract")
+
+    def __imul__(self, other):
+        self._raise_inplace("multiply", "*=", "multiply")
+
+    def __itruediv__(self, other):
+        self._raise_inplace("divide", "/=", "true_divide")
+
+    def __ifloordiv__(self, other):
+        self._raise_inplace("floor divide", "//=", "floor_divide")
+
+    def __imod__(self, other):
+        self._raise_inplace("mod", "%=", "mod")
+
+    def __ipow__(self, other):
+        self._raise_inplace("power", "**=", "power")
+
+    def __imatmul__(self, other):
+        self._raise_inplace("matmul", "@=", "matmul")
+
+    def __iand__(self, other):
+        self._raise_inplace("bitwise-and", "&=", "bitwise_and")
+
+    def __ior__(self, other):
+        self._raise_inplace("bitwise-or", "|=", "bitwise_or")
+
+    def __ixor__(self, other):
+        self._raise_inplace("bitwise-xor", "^=", "bitwise_xor")
+
+    def __ilshift__(self, other):
+        self._raise_inplace("left shift", "<<=", "left_shift")
+
+    def __irshift__(self, other):
+        self._raise_inplace("right shift", ">>=", "right_shift")
 
     # -- operator overloads (dispatch to server) ----------------------------
 
@@ -553,8 +763,45 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
     def __neg__(self):
         return self._dispatch_op("negative", self)
 
+    def __pos__(self):
+        return self._dispatch_op("positive", self)
+
     def __abs__(self):
         return self._dispatch_op("abs", self)
+
+    # --- bitwise / shift operators (rc3 parity) ---
+    def __and__(self, other):
+        return self._dispatch_op("bitwise_and", self, other)
+
+    def __rand__(self, other):
+        return self._dispatch_op("bitwise_and", other, self)
+
+    def __or__(self, other):
+        return self._dispatch_op("bitwise_or", self, other)
+
+    def __ror__(self, other):
+        return self._dispatch_op("bitwise_or", other, self)
+
+    def __xor__(self, other):
+        return self._dispatch_op("bitwise_xor", self, other)
+
+    def __rxor__(self, other):
+        return self._dispatch_op("bitwise_xor", other, self)
+
+    def __invert__(self):
+        return self._dispatch_op("invert", self)
+
+    def __lshift__(self, other):
+        return self._dispatch_op("left_shift", self, other)
+
+    def __rlshift__(self, other):
+        return self._dispatch_op("left_shift", other, self)
+
+    def __rshift__(self, other):
+        return self._dispatch_op("right_shift", self, other)
+
+    def __rrshift__(self, other):
+        return self._dispatch_op("right_shift", other, self)
 
     # Comparisons (dispatch to server -- element-wise, returning RemoteArray)
     def __eq__(self, other):
@@ -625,6 +872,113 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
 
     def copy(self):
         return self._dispatch_op("copy", self)
+
+    # --- read-only ndarray methods bridged to server ops (rc3 parity) ---
+    def all(self, *args, **kwargs):
+        return self._dispatch_op("all", self, *args, **kwargs)
+
+    def any(self, *args, **kwargs):
+        return self._dispatch_op("any", self, *args, **kwargs)
+
+    def argmax(self, *args, **kwargs):
+        return self._dispatch_op("argmax", self, *args, **kwargs)
+
+    def argmin(self, *args, **kwargs):
+        return self._dispatch_op("argmin", self, *args, **kwargs)
+
+    def argpartition(self, *args, **kwargs):
+        return self._dispatch_op("argpartition", self, *args, **kwargs)
+
+    def argsort(self, *args, **kwargs):
+        return self._dispatch_op("argsort", self, *args, **kwargs)
+
+    def choose(self, *args, **kwargs):
+        return self._dispatch_op("choose", self, *args, **kwargs)
+
+    def clip(self, *args, **kwargs):
+        return self._dispatch_op("clip", self, *args, **kwargs)
+
+    def compress(self, condition, *args, **kwargs):
+        # ndarray method: a.compress(condition, axis=...) == np.compress(condition, a, axis=...)
+        return self._dispatch_op("compress", condition, self, *args, **kwargs)
+
+    def conj(self, *args, **kwargs):
+        return self._dispatch_op("conj", self, *args, **kwargs)
+
+    def conjugate(self, *args, **kwargs):
+        return self._dispatch_op("conjugate", self, *args, **kwargs)
+
+    def cumprod(self, *args, **kwargs):
+        return self._dispatch_op("cumprod", self, *args, **kwargs)
+
+    def cumsum(self, *args, **kwargs):
+        return self._dispatch_op("cumsum", self, *args, **kwargs)
+
+    def diagonal(self, *args, **kwargs):
+        return self._dispatch_op("diagonal", self, *args, **kwargs)
+
+    def nonzero(self, *args, **kwargs):
+        return self._dispatch_op("nonzero", self, *args, **kwargs)
+
+    def prod(self, *args, **kwargs):
+        return self._dispatch_op("prod", self, *args, **kwargs)
+
+    def repeat(self, *args, **kwargs):
+        return self._dispatch_op("repeat", self, *args, **kwargs)
+
+    def round(self, *args, **kwargs):
+        return self._dispatch_op("round", self, *args, **kwargs)
+
+    def searchsorted(self, *args, **kwargs):
+        return self._dispatch_op("searchsorted", self, *args, **kwargs)
+
+    def squeeze(self, *args, **kwargs):
+        return self._dispatch_op("squeeze", self, *args, **kwargs)
+
+    def std(self, *args, **kwargs):
+        return self._dispatch_op("std", self, *args, **kwargs)
+
+    def swapaxes(self, *args, **kwargs):
+        return self._dispatch_op("swapaxes", self, *args, **kwargs)
+
+    def take(self, *args, **kwargs):
+        return self._dispatch_op("take", self, *args, **kwargs)
+
+    def trace(self, *args, **kwargs):
+        return self._dispatch_op("trace", self, *args, **kwargs)
+
+    def var(self, *args, **kwargs):
+        return self._dispatch_op("var", self, *args, **kwargs)
+
+    def item(self, *args):
+        # No server op: materialize and index (numpy .item() common cases).
+        flat = _flatten_to_list(self.tolist())
+        if not args:
+            if len(flat) != 1:
+                raise ValueError(
+                    "can only convert an array of size 1 to a Python scalar"
+                )
+            return flat[0]
+        if len(args) == 1:
+            return flat[args[0]]
+        raise TypeError("RemoteArray.item() supports item() or item(flat_index)")
+
+    # --- raw-buffer pointer properties: raise a clear error (rc3 parity) ---
+    @property
+    def data(self):
+        raise AttributeError(_RAW_BUFFER_MSG.format(attr="data"))
+
+    @property
+    def ctypes(self):
+        raise AttributeError(_RAW_BUFFER_MSG.format(attr="ctypes"))
+
+    @property
+    def __array_interface__(self):
+        raise AttributeError(_RAW_BUFFER_MSG.format(attr="__array_interface__"))
+
+    @property
+    def __array_struct__(self):
+        raise AttributeError(_RAW_BUFFER_MSG.format(attr="__array_struct__"))
 
     # RemoteArray is not hashable (same as numpy arrays)
     __hash__ = None  # type: ignore[assignment]
@@ -923,15 +1277,18 @@ def _encode_arg(arg):
         return {"__rs__": arg.handle_id}
     if isinstance(arg, RemoteSeedSequence):
         return {"__seq__": arg.handle_id}
-    # Dtype objects (_DtypeLabel / _DType) serialize to their wire name.
-    # Duck-typed to avoid importing flopscope._dtypes (circular).
-    _dtype_name = getattr(arg, "_flopscope_dtype_name", None)
-    if isinstance(_dtype_name, str):
-        return _dtype_name
     from flopscope._perm_group import SymmetryGroup
 
     if isinstance(arg, SymmetryGroup):
         return {"__symmetry_group__": arg.to_payload()}
+    # Dtype-like args serialize to their canonical wire-name string: flopscope
+    # dtype labels/objects, Python builtin types (``float``), numpy scalar types
+    # (``np.float64``), and numpy dtype / new-style DType objects. Strings pass
+    # through unchanged below (the server accepts dtype strings directly).
+    if not isinstance(arg, str):
+        _wire = _resolve_dtype_wire_name(arg)
+        if _wire is not None:
+            return _wire
     if isinstance(arg, (list, tuple)):
         return [_encode_arg(item) for item in arg]
     return arg
