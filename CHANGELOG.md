@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.0rc3 (2026-06-24)
+
+### Feat
+
+- **client**: client/native parity harness, RemoteArray surface, immutability (#140)
+
 ## v0.8.0rc2 (2026-06-22)
 
 ### Fix
