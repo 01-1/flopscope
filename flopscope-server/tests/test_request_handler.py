@@ -130,6 +130,52 @@ def test_handle_einsum(handler, session):
 
 
 # ---------------------------------------------------------------------------
+# Analytical cost estimators (flopscope.accounting) — the client proxies these
+# as flops.* ops. Regression guard for "unknown op: flops.einsum_cost".
+# ---------------------------------------------------------------------------
+
+
+def test_flops_cost_ops_are_whitelisted():
+    from flopscope_server._protocol import WHITELIST
+
+    assert "flops.einsum_cost" in WHITELIST
+    assert "flops.svd_cost" in WHITELIST
+
+
+def test_handle_einsum_cost(handler, session):
+    import flopscope as flops
+
+    resp = handler.handle(
+        {
+            "op": "flops.einsum_cost",
+            "kwargs": {"subscripts": "ij,jk->ik", "shapes": [[4, 5], [5, 6]]},
+        }
+    )
+    assert resp["status"] == "ok"
+    # session BudgetContext is active -> native accounting uses the same weights.
+    assert resp["result"]["value"] == flops.accounting.einsum_cost(
+        "ij,jk->ik", [(4, 5), (5, 6)]
+    )
+    assert resp["result"]["value"] > 0
+
+
+def test_handle_svd_cost(handler, session):
+    import flopscope as flops
+
+    full = handler.handle(
+        {"op": "flops.svd_cost", "kwargs": {"m": 128, "n": 64, "k": 0}}
+    )
+    topk = handler.handle(
+        {"op": "flops.svd_cost", "kwargs": {"m": 128, "n": 64, "k": 8}}
+    )
+    assert full["status"] == "ok" and topk["status"] == "ok"
+    # client surface uses k=0 to mean FULL svd (native k=None), NOT "top-0".
+    assert full["result"]["value"] == flops.accounting.svd_cost(128, 64)
+    assert topk["result"]["value"] == flops.accounting.svd_cost(128, 64, k=8)
+    assert full["result"]["value"] > topk["result"]["value"] > 0
+
+
+# ---------------------------------------------------------------------------
 # create_from_data
 # ---------------------------------------------------------------------------
 
@@ -378,3 +424,15 @@ def test_result_array_size_limit(handler, session, monkeypatch):
     assert resp["status"] == "error"
     assert resp["error_type"] == "ValueError"
     assert "too large" in resp["message"]
+
+
+# ---------------------------------------------------------------------------
+# Ellipsis (...) indexing: client encodes {"__ellipsis__": True}
+# (prod regression sub 310351: "can not serialize 'ellipsis' object")
+# ---------------------------------------------------------------------------
+
+
+def test_decode_index_key_ellipsis(handler):
+    """The {"__ellipsis__": True} wire form decodes to Ellipsis (str + bytes keys)."""
+    assert handler._decode_index_key({"__ellipsis__": True}) is Ellipsis
+    assert handler._decode_index_key({b"__ellipsis__": True}) is Ellipsis

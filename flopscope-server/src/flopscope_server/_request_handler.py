@@ -33,6 +33,8 @@ _ALLOWED_GEN_METHODS = frozenset(
         "gamma",
         "choice",
         "permutation",
+        "permuted",
+        "chisquare",
     }
 )
 
@@ -289,6 +291,37 @@ class RequestHandler:
         return self._pack_result(result)
 
     # ------------------------------------------------------------------
+    # Analytical cost estimators (flopscope.accounting)
+    # ------------------------------------------------------------------
+
+    def _handle_flops_cost(self, op: str, kwargs: dict) -> dict:
+        """Compute a WEIGHTED analytical FLOP cost estimate.
+
+        The client proxies ``flopscope.accounting.einsum_cost`` / ``svd_cost``
+        here. We delegate to native ``flopscope.accounting`` so the returned
+        value uses this session's authoritative weights AND the single-source
+        einsum cost engine — identical to the in-process reference, with no
+        formula duplicated on the client. Pure shape math: no array data, no
+        FLOP budget charged.
+        """
+        kw = {
+            (k.decode("utf-8") if isinstance(k, bytes) else k): v
+            for k, v in kwargs.items()
+        }
+        if op == "flops.einsum_cost":
+            subscripts = kw["subscripts"]
+            if isinstance(subscripts, bytes):
+                subscripts = subscripts.decode("utf-8")
+            shapes = [tuple(s) for s in kw["shapes"]]
+            value = int(flops.accounting.einsum_cost(subscripts, shapes))
+        else:  # flops.svd_cost
+            m, n = int(kw["m"]), int(kw["n"])
+            k = int(kw.get("k") or 0)
+            # Client surface uses k=0 to mean "full SVD"; native uses k=None.
+            value = int(flops.accounting.svd_cost(m, n, None if k == 0 else k))
+        return self._pack_result(value)
+
+    # ------------------------------------------------------------------
     # Flopscope function dispatch
     # ------------------------------------------------------------------
 
@@ -305,6 +338,14 @@ class RequestHandler:
                 dtype = dtype.decode("utf-8")
             result = self._run_kernel(arr.astype, dtype)
             return self._pack_result(result)
+
+        # Analytical cost estimators (flopscope.accounting). The client proxies
+        # these as flops.* ops; compute the WEIGHTED cost via native flopscope's
+        # accounting helpers, which use this session's authoritative weights and
+        # the single-source einsum cost engine (no formula duplicated on the
+        # client). Pure shape math — no array data, no budget charge.
+        if op in ("flops.einsum_cost", "flops.svd_cost"):
+            return self._handle_flops_cost(op, kwargs)
 
         # Generator method calls: op is "Generator.<method>" with the remote
         # generator handle as the first arg. Resolve it and call the method
@@ -430,6 +471,8 @@ class RequestHandler:
                 if isinstance(handle, bytes):
                     handle = handle.decode()
                 return self._session.get_array(handle)
+            if raw_key.get("__ellipsis__") or raw_key.get(b"__ellipsis__"):
+                return Ellipsis
             if "__slice__" in raw_key:
                 parts = raw_key["__slice__"]
                 return slice(*[None if p is None else int(p) for p in parts])
@@ -438,7 +481,13 @@ class RequestHandler:
                 return slice(*[None if p is None else int(p) for p in parts])
         if isinstance(raw_key, list):
             decoded = [self._decode_index_key(item) for item in raw_key]
-            if any(isinstance(d, slice) for d in decoded) or len(decoded) > 1:
+            # A one-element key like ``arr[..., ]`` arrives as ``(Ellipsis,)`` ->
+            # ``[Ellipsis]``; numpy needs the tuple form, so treat Ellipsis (like
+            # a slice) as a marker that this list is a multi-axis index tuple.
+            if (
+                any(isinstance(d, slice) or d is Ellipsis for d in decoded)
+                or len(decoded) > 1
+            ):
                 return tuple(decoded)
             return decoded
         if isinstance(raw_key, (int, float)):
@@ -589,13 +638,22 @@ def _decode_index_key(raw_key):
     - list of the above -> tuple (for multi-dimensional indexing)
     """
     if isinstance(raw_key, dict):
+        if raw_key.get("__ellipsis__") or raw_key.get(b"__ellipsis__"):
+            return Ellipsis
         if "__slice__" in raw_key:
             parts = raw_key["__slice__"]
             return slice(*[None if p is None else int(p) for p in parts])
+        if b"__slice__" in raw_key:
+            parts = raw_key[b"__slice__"]
+            return slice(*[None if p is None else int(p) for p in parts])
     if isinstance(raw_key, list):
         decoded = [_decode_index_key(item) for item in raw_key]
-        # A list of slices/ints -> tuple for multi-dim indexing
-        if any(isinstance(d, slice) for d in decoded) or len(decoded) > 1:
+        # A list of slices/ints (or a one-element Ellipsis like ``arr[..., ]``)
+        # -> tuple for multi-dim indexing; numpy needs the tuple form.
+        if (
+            any(isinstance(d, slice) or d is Ellipsis for d in decoded)
+            or len(decoded) > 1
+        ):
             return tuple(decoded)
         # Single-element list: could be the key itself being a list
         # (e.g., fancy indexing) -- keep as list

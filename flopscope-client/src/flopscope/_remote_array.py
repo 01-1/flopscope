@@ -266,6 +266,18 @@ class RemoteScalar:
     def __int__(self) -> int:
         return int(self._value)
 
+    def __index__(self) -> int:
+        # Only integer/bool scalars can index (numpy parity: float/complex
+        # scalars have no __index__, even for whole values like 2.0). The "int"
+        # substring matches BOTH signed and unsigned widths -- "int64" and
+        # "uint64" both contain "int" -- so unsigned scalars index fine too.
+        if "int" not in self._dtype and self._dtype != "bool":
+            raise TypeError(
+                f"only integer scalars can be used as indices; this RemoteScalar "
+                f"has dtype {self._dtype!r}"
+            )
+        return int(self._value)
+
     def __bool__(self) -> bool:
         return bool(self._value)
 
@@ -308,61 +320,90 @@ class RemoteScalar:
         return hash(self._value)
 
     # -- arithmetic ---------------------------------------------------------
+    #
+    # A scalar combined with an *array* broadcasts to an array, exactly like
+    # numpy (``np.float64(2) * np.array([1, 2])`` -> ``array([2, 4])``). When
+    # ``other`` is a RemoteArray the ``self._value <op> other`` expression is
+    # dispatched through ``RemoteArray.__r<op>__`` and already yields a
+    # RemoteArray; we must return that array UNWRAPPED. Wrapping it back in a
+    # ``RemoteScalar`` would create a malformed "scalar" whose ``_value`` is a
+    # RemoteArray, which later serializes as a raw RemoteArray and crashes the
+    # wire encoder with ``can not serialize 'RemoteArray' object``. The
+    # ``_scalar_result`` helper mirrors numpy: scalar results stay scalars,
+    # array results pass through.
 
     def __add__(self, other):
         other_val = other._value if isinstance(other, RemoteScalar) else other
-        return RemoteScalar(self._value + other_val, self._dtype)
+        return _scalar_result(self._value + other_val, self._dtype)
 
     def __radd__(self, other):
-        return RemoteScalar(other + self._value, self._dtype)
+        return _scalar_result(other + self._value, self._dtype)
 
     def __sub__(self, other):
         other_val = other._value if isinstance(other, RemoteScalar) else other
-        return RemoteScalar(self._value - other_val, self._dtype)
+        return _scalar_result(self._value - other_val, self._dtype)
 
     def __rsub__(self, other):
-        return RemoteScalar(other - self._value, self._dtype)
+        return _scalar_result(other - self._value, self._dtype)
 
     def __mul__(self, other):
         other_val = other._value if isinstance(other, RemoteScalar) else other
-        return RemoteScalar(self._value * other_val, self._dtype)
+        return _scalar_result(self._value * other_val, self._dtype)
 
     def __rmul__(self, other):
-        return RemoteScalar(other * self._value, self._dtype)
+        return _scalar_result(other * self._value, self._dtype)
 
     def __truediv__(self, other):
         other_val = other._value if isinstance(other, RemoteScalar) else other
-        return RemoteScalar(self._value / other_val, self._dtype)
+        return _scalar_result(self._value / other_val, self._dtype)
 
     def __rtruediv__(self, other):
-        return RemoteScalar(other / self._value, self._dtype)
+        return _scalar_result(other / self._value, self._dtype)
 
     def __floordiv__(self, other):
         other_val = other._value if isinstance(other, RemoteScalar) else other
-        return RemoteScalar(self._value // other_val, self._dtype)
+        return _scalar_result(self._value // other_val, self._dtype)
 
     def __rfloordiv__(self, other):
-        return RemoteScalar(other // self._value, self._dtype)
+        return _scalar_result(other // self._value, self._dtype)
 
     def __mod__(self, other):
         other_val = other._value if isinstance(other, RemoteScalar) else other
-        return RemoteScalar(self._value % other_val, self._dtype)
+        return _scalar_result(self._value % other_val, self._dtype)
 
     def __rmod__(self, other):
-        return RemoteScalar(other % self._value, self._dtype)
+        return _scalar_result(other % self._value, self._dtype)
 
     def __pow__(self, other):
         other_val = other._value if isinstance(other, RemoteScalar) else other
-        return RemoteScalar(self._value**other_val, self._dtype)
+        return _scalar_result(self._value**other_val, self._dtype)
 
     def __rpow__(self, other):
-        return RemoteScalar(other**self._value, self._dtype)
+        return _scalar_result(other**self._value, self._dtype)
 
     def __neg__(self):
-        return RemoteScalar(-self._value, self._dtype)
+        return _scalar_result(-self._value, self._dtype)
 
     def __abs__(self):
-        return RemoteScalar(abs(self._value), self._dtype)
+        return _scalar_result(abs(self._value), self._dtype)
+
+
+def _scalar_result(value, dtype):
+    """Wrap a scalar arithmetic result, passing array/proxy results through.
+
+    ``RemoteScalar`` arithmetic with a plain number yields a number, which we
+    re-wrap as a ``RemoteScalar`` (numpy-scalar analog). But ``RemoteScalar``
+    combined with a ``RemoteArray`` broadcasts to a ``RemoteArray`` (the op runs
+    server-side via the array's reflected dunder). That array result must be
+    returned as-is: re-wrapping it would yield a ``RemoteScalar`` holding an
+    array, which the wire encoder later unwraps to a raw ``RemoteArray`` and
+    fails on (``can not serialize 'RemoteArray' object``). ``RemoteScalar``
+    itself passes ``isinstance(_, RemoteArray)`` via the metaclass, so an
+    already-proxy result is also returned unchanged.
+    """
+    if isinstance(value, RemoteArray):
+        return value
+    return RemoteScalar(value, dtype)
 
 
 # ---------------------------------------------------------------------------
@@ -390,6 +431,8 @@ def _encode_index_key(key):
         return [_encode_index_key(k) for k in key]
     if isinstance(key, list):
         return [_encode_index_key(k) for k in key]
+    if key is Ellipsis:
+        return {"__ellipsis__": True}
     return key
 
 
@@ -706,9 +749,25 @@ class RemoteArray(metaclass=_RemoteArrayMeta):
 
         encoded_args = [_encode_arg(a) for a in args]
         encoded_kwargs = {k: _encode_arg(v) for k, v in kwargs.items()}
-        resp = get_connection().send_recv(
-            encode_request(op_name, args=encoded_args, kwargs=encoded_kwargs)
-        )
+        try:
+            request = encode_request(op_name, args=encoded_args, kwargs=encoded_kwargs)
+        except (TypeError, ValueError) as exc:
+            # Mirror the function-dispatch proxy (_make_proxy in __init__): an
+            # unserializable arg leaks an opaque "can not serialize 'X' object"
+            # from msgpack (this is how the RemoteScalar bug surfaced). Surface
+            # a clear error naming the offending type instead. Imported lazily
+            # (error path only) to avoid a circular import: __init__ imports us.
+            from flopscope import _describe_unserializable
+            from flopscope.errors import RemoteSerializationError
+
+            bad = _describe_unserializable(encoded_args, encoded_kwargs)
+            detail = f" {bad}" if bad else ""
+            raise RemoteSerializationError(
+                f"{op_name}() received an argument{detail} that cannot be sent "
+                f"to the remote (client/server) backend. Pass a materialized "
+                f"array or built-in (list / number / str) instead."
+            ) from exc
+        resp = get_connection().send_recv(request)
         return _result_from_response(resp)
 
     # Arithmetic
@@ -1062,6 +1121,12 @@ class RemoteGenerator:
 
     def permutation(self, *args, **kwargs):
         return self._call("permutation", *args, **kwargs)
+
+    def permuted(self, *args, **kwargs):
+        return self._call("permuted", *args, **kwargs)
+
+    def chisquare(self, *args, **kwargs):
+        return self._call("chisquare", *args, **kwargs)
 
 
 # ---------------------------------------------------------------------------
