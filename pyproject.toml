@@ -13,6 +13,7 @@ dependencies = [
 
 [project.optional-dependencies]
 server = ["flopscope-server==0.8.0rc4"]
+gpu = ["cupy-cuda12x>=13.0.0"]
 dev = [
     "commitizen>=4.0",
     "gitlint>=0.19",

@@ -32,7 +32,7 @@ import numpy as _np
 
 from flopscope._registry import REGISTRY_META as _REGISTRY_META
 
-__version__ = f"0.8.0rc4+np{_np.__version__}"
+__version__ = f"0.8.0rc4+gpu.np{_np.__version__}"
 __numpy_version__ = _np.__version__
 __numpy_pinned__ = _REGISTRY_META["numpy_version"]
 __numpy_supported__ = _REGISTRY_META.get("numpy_supported", ">=2.0.0,<2.5.0")
@@ -61,6 +61,12 @@ from flopscope._budget import (  # noqa: F401,E402
 )
 from flopscope._config import configure  # noqa: F401,E402
 from flopscope._display import budget_live, budget_summary  # noqa: F401,E402
+from flopscope._gpu import (  # noqa: F401,E402
+    configure_gpu,
+    gpu_available,
+    gpu_enabled,
+    gpu_status,
+)
 
 # --- Module base class ---
 from flopscope._module import Module  # noqa: F401,E402
@@ -266,9 +272,13 @@ __all__ = [
     "budget_summary_dict",
     "clear_cache",
     "configure",
+    "configure_gpu",
     "einsum_accumulation_cost",
     "einsum_cache_info",
     "einsum_clear_caches",
+    "gpu_available",
+    "gpu_enabled",
+    "gpu_status",
     "is_symmetric",
     "namespace",
     "numpy",
