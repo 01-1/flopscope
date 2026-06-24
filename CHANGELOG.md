@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.0rc4 (2026-06-24)
+
+### Fix
+
+- **client**: client-parity rc4 — recover prod submission failures (#141)
+
 ## v0.8.0rc3 (2026-06-24)
 
 ### Feat
