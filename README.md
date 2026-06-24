@@ -21,6 +21,31 @@
 
 **flopscope** is a drop-in replacement for a subset of NumPy that counts floating-point operations as you compute. Algorithms submitted to the ARC Whitebox Estimation Challenge are scored by their analytical FLOP cost, not wall-clock time, so researchers can focus on **algorithmic innovation** rather than hardware tuning. Every arithmetic call deducts from a fixed budget; exceed it and execution stops immediately.
 
+## Optional GPU execution
+
+This fork adds opt-in CuPy execution for selected backend calls while preserving
+the public CPU `flopscope.numpy.ndarray` contract and analytical FLOP
+accounting. Install the optional extra and enable it locally:
+
+```sh
+pip install "flopscope[gpu]"
+FLOPSCOPE_GPU=1 python your_script.py
+```
+
+or:
+
+```python
+import flopscope as flops
+
+flops.configure_gpu(True)
+print(flops.gpu_status())
+```
+
+Results are copied back to CPU after each offloaded operation. The default gate
+keeps tiny or transfer-heavy calls on CPU with
+`FLOPSCOPE_GPU_MIN_FLOPS=5000000`,
+`FLOPSCOPE_GPU_MIN_FLOPS_PER_BYTE=0.05`, and no transfer-byte floor.
+
 ## Why flopscope?
 
 <table>

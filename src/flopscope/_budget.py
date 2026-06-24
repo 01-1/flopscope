@@ -214,6 +214,21 @@ def _call_numpy(fn: Any, *args: Any, **kwargs: Any) -> Any:
     """
     t0 = time.perf_counter()
     try:
+        from flopscope._gpu import maybe_call_gpu
+
+        flop_cost = None
+        budget = get_active_budget()
+        timer = budget._current_op_timer if budget is not None else None
+        op_index = getattr(timer, "_op_index", None)
+        if op_index is not None:
+            try:
+                flop_cost = budget._op_log[op_index].flop_cost  # type: ignore[union-attr]
+            except (IndexError, TypeError):
+                flop_cost = None
+
+        used_gpu, result = maybe_call_gpu(fn, *args, flop_cost=flop_cost, **kwargs)
+        if used_gpu:
+            return result
         return fn(*args, **kwargs)
     finally:
         d = time.perf_counter() - t0
