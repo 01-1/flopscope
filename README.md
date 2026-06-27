@@ -23,9 +23,9 @@
 
 ## Optional GPU execution
 
-This fork adds opt-in CuPy execution for selected backend calls while preserving
-the public CPU `flopscope.numpy.ndarray` contract and analytical FLOP
-accounting. Install the optional extra and enable it locally:
+flopscope can optionally execute selected backend calls with CuPy while
+preserving the public CPU `flopscope.numpy.ndarray` contract and analytical
+FLOP accounting. Install the optional extra and enable GPU execution locally:
 
 ```sh
 pip install "flopscope[gpu]"

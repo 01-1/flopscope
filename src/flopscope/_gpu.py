@@ -1,4 +1,4 @@
-"""Optional GPU execution helpers for the local flopscope fork.
+"""Optional GPU execution helpers for flopscope.
 
 This module deliberately keeps GPU support behind an opt-in execution boundary.
 ``FlopscopeArray`` is a ``numpy.ndarray`` subclass, so public values still need
